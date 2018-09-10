@@ -76,7 +76,11 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                     StructuredArguments.keyValue("ediLoggId", fellesformat.get<XMLMottakenhetBlokk>().ediLoggId),
                     StructuredArguments.keyValue("msgId", fellesformat.get<XMLMsgHead>().msgInfo.msgId)
             )
-            log.info(it.value())
+            defaultKeyFormat = defaultLogInfo(defaultKeyValues)
+
+            log.info("Received message from {}, $defaultKeyFormat",
+                    StructuredArguments.keyValue("size", it.value().length),
+                    *defaultKeyValues)
         }
         delay(100)
     }
