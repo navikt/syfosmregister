@@ -70,7 +70,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
             val marker = Markers.append("msgId", fellesformat.get<XMLMsgHead>().msgInfo.msgId)
                     .and<LogstashMarker>(Markers.append("organisationNumber", extractOrganisationNumberFromSender(fellesformat)?.id))
-                    .and<LogstashMarker>(Markers.append("ediLoggId", fellesformat.get<XMLMottakenhetBlokk>().ediLoggId))
+                    .and<LogstashMarker>(Markers.append("smId", fellesformat.get<XMLMottakenhetBlokk>().ediLoggId))
             log.info(marker, "Received a SM2013, going to persist in DB")
         }
         delay(100)
