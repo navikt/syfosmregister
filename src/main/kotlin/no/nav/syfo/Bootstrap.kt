@@ -7,8 +7,8 @@ import io.ktor.server.netty.Netty
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import net.logstash.logback.argument.StructuredArgument
-import net.logstash.logback.argument.StructuredArguments
+import net.logstash.logback.marker.LogstashMarker
+import net.logstash.logback.marker.Markers
 import no.kith.xmlstds.msghead._2006_05_24.XMLIdent
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.nav.model.sykemelding2013.HelseOpplysningerArbeidsuforhet
@@ -65,22 +65,14 @@ fun main(args: Array<String>) {
 
 suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaconsumer: KafkaConsumer<String, String>) {
     while (applicationState.running) {
-        var defaultKeyValues = arrayOf(StructuredArguments.keyValue("noMessageIdentifier", true))
-        var defaultKeyFormat = defaultLogInfo(defaultKeyValues)
 
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             log.info("Recived a kafka message:")
             val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
-            defaultKeyValues = arrayOf(
-                    StructuredArguments.keyValue("organisationNumber", extractOrganisationNumberFromSender(fellesformat)?.id),
-                    StructuredArguments.keyValue("ediLoggId", fellesformat.get<XMLMottakenhetBlokk>().ediLoggId),
-                    StructuredArguments.keyValue("msgId", fellesformat.get<XMLMsgHead>().msgInfo.msgId)
-            )
-            defaultKeyFormat = defaultLogInfo(defaultKeyValues)
-
-            log.info("Received message from {}, $defaultKeyFormat",
-                    StructuredArguments.keyValue("size", it.value().length),
-                    *defaultKeyValues)
+            val marker = Markers.append("msgId", fellesformat.get<XMLMsgHead>().msgInfo.msgId)
+                    .and<LogstashMarker>(Markers.append("organisationNumber", extractOrganisationNumberFromSender(fellesformat)?.id))
+                    .and<LogstashMarker>(Markers.append("ediLoggId", fellesformat.get<XMLMottakenhetBlokk>().ediLoggId))
+            log.info(marker, "Received a SM2013, going to persist in DB")
         }
         delay(100)
     }
@@ -100,9 +92,6 @@ fun Application.initRouting(applicationState: ApplicationState) {
 }
 
 inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
-
-fun defaultLogInfo(keyValues: Array<StructuredArgument>): String =
-        (0..(keyValues.size - 1)).joinToString(", ", "(", ")") { "{}" }
 
 fun extractOrganisationNumberFromSender(fellesformat: XMLEIFellesformat): XMLIdent? =
         fellesformat.get<XMLMsgHead>().msgInfo.sender.organisation.ident.find {
