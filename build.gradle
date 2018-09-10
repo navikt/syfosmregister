@@ -7,6 +7,16 @@ buildscript {
     ext.logback_version = '1.2.3'
     ext.prometheus_version = '0.5.0'
     ext.spek_version = "2.0.0-alpha.1"
+    ext.jackson_version = '2.9.6'
+    ext.logstash_encoder_version = '5.1'
+    ext.jaxb_api_version = '2.1'
+    ext.javax_activation_version = '1.1.1'
+    ext.jaxb_basic_ant_version = '1.11.1'
+    ext.jaxb_version = '2.3.0.1'
+    ext.fellesformat_version = '1.0'
+    ext.kith_hodemelding_version = '1.1'
+
+    ext.jaxb2SourceDir = file("$buildDir/generated-sources/jaxb2")
 }
 
 plugins {
@@ -52,28 +62,66 @@ test {
     }
 }
 
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+configurations {
+    generateJaxb2
+}
 
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
-    implementation "io.prometheus:simpleclient_hotspot:$prometheus_version"
-    implementation "io.prometheus:simpleclient_common:$prometheus_version"
-    implementation "io.ktor:ktor-server-netty:$ktor_version"
+class Jaxb2Task extends DefaultTask {
+    @OutputDirectory
+    File outputDir
+    @InputDirectory
+    File sourceDir
 
-    implementation "ch.qos.logback:logback-classic:$logback_version"
+    @TaskAction
+    def generateFiles() {
+        outputDir.deleteDir()
+        outputDir.mkdirs()
+        ant.taskdef(
+                'classpath': project.configurations.generateJaxb2.asPath,
+                'name': 'xjc',
+                'classname': 'org.jvnet.jaxb2_commons.xjc.XJC2Task'
+        )
 
-    implementation "org.apache.kafka:kafka_2.12:$kafka_version"
+        ant.xjc(
+                'destdir': outputDir,
+                'package': 'no.nav.model.sykemelding2013',
+                'schema': "$sourceDir/HelseOpplysningerArbeidsuforhet_2013-10-01.xsd",
+                'encoding': 'UTF-8',
+                'fork': 'true'
+        )
+        ant.xjc(
+                'destdir': outputDir,
+                'package': 'no.nav.model.kith',
+                'schema': "$sourceDir/kith.xsd",
+                'encoding': 'UTF-8',
+                'fork': 'true'
+        )
+        ant.xjc(
+                'destdir': outputDir,
+                'package': 'no.nav.model.felleskomponent1',
+                'schema': "$sourceDir/felleskomponent1.xsd",
+                'encoding': 'UTF-8',
+                'fork': 'true'
+        )
 
-    testImplementation "org.amshove.kluent:kluent:$kluent_version"
-    testImplementation "org.spekframework.spek2:spek-dsl-jvm:$spek_version"
-    testImplementation "io.ktor:ktor-server-test-host:$ktor_version"
-    testImplementation "no.nav:kafka-embedded-env:$kafka_embedded_version"
+    }
+}
 
-    testRuntimeOnly "org.spekframework.spek2:spek-runtime-jvm:$spek_version"
-    testRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:$spek_version"
+task generateJaxb2(type: Jaxb2Task) {
+    outputDir = jaxb2SourceDir
+    sourceDir = file("$projectDir/src/main/resources/xsd")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir jaxb2SourceDir
+        }
+    }
 }
 
 compileKotlin {
+    dependsOn generateJaxb2
     kotlinOptions.jvmTarget = "1.8"
 }
 
@@ -85,4 +133,43 @@ task printVersion() {
     doLast {
         println(version)
     }
+}
+
+dependencies {
+    generateJaxb2 "com.sun.xml.bind:jaxb-xjc:$jaxb_version"
+    generateJaxb2 "org.glassfish.jaxb:jaxb-runtime:$jaxb_version"
+    generateJaxb2 "javax.xml.bind:jaxb-api:$jaxb_api_version"
+    generateJaxb2 "org.jvnet.jaxb2_commons:jaxb2-basics-ant:$jaxb_basic_ant_version"
+    generateJaxb2 "javax.activation:activation:$javax_activation_version"
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    implementation "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jackson_version"
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jackson_version"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+    implementation "io.prometheus:simpleclient_hotspot:$prometheus_version"
+    implementation "io.prometheus:simpleclient_common:$prometheus_version"
+    implementation "io.ktor:ktor-server-netty:$ktor_version"
+
+    implementation "ch.qos.logback:logback-classic:$logback_version"
+    implementation "net.logstash.logback:logstash-logback-encoder:$logstash_encoder_version"
+
+    implementation "org.apache.kafka:kafka_2.12:$kafka_version"
+
+    implementation "javax.xml.bind:jaxb-api:$jaxb_api_version"
+    implementation "org.glassfish.jaxb:jaxb-runtime:$jaxb_version"
+
+    implementation "no.nav.syfo.tjenester:fellesformat:$fellesformat_version"
+    implementation "no.nav.syfo.tjenester:kith-hodemelding:$kith_hodemelding_version"
+
+    testImplementation "org.amshove.kluent:kluent:$kluent_version"
+    testImplementation "org.spekframework.spek2:spek-dsl-jvm:$spek_version"
+    testImplementation "io.ktor:ktor-server-test-host:$ktor_version"
+    testImplementation "no.nav:kafka-embedded-env:$kafka_embedded_version"
+
+    testRuntimeOnly "org.spekframework.spek2:spek-runtime-jvm:$spek_version"
+    testRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:$spek_version"
 }
