@@ -172,4 +172,7 @@ dependencies {
 
     testRuntimeOnly "org.spekframework.spek2:spek-runtime-jvm:$spek_version"
     testRuntimeOnly "org.spekframework.spek2:spek-runner-junit5:$spek_version"
+
+    implementation "org.glassfish.jaxb:jaxb-runtime:$jaxb_version"
+    implementation "javax.activation:activation:$javax_activation_version"
 }
