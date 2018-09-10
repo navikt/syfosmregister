@@ -3,22 +3,24 @@ image: "repo.adeo.no:5443/syfo/syfosmregister"
 replicas:
   min: 1
   max: 4
-  cpuThresholdPercentage: 90
+  cpuThresholdPercentage: 70
 port: 8080
 healthcheck:
   liveness:
     path: /is_alive
-    initialDelay: 10
-    timeout: 1
-    periodSeconds: 10
-    failureThreshold: 3
+    initialDelay: 5
+    periodSeconds: 5
+    failureThreshold: 30
   readiness:
     path: /is_ready
-    initialDelay: 10
-    timeout: 1
+    initialDelay: 5
+    periodSeconds: 5
+    failureThreshold: 30
 prometheus:
   enabled: true
   path: /prometheus
+ingress:
+  enabled: true
 resources:
   limits:
     cpu: 250m
@@ -27,9 +29,8 @@ resources:
     cpu: 100m
     memory: 128Mi
 fasitResources:
-  exposed:
-used:
-  - alias: srvsyfosmregister
-    resourceType: Credential
-  - alias: kafka_bootstrap_servers
-    resourceType: baseurl
+  used:
+    - alias: srvsyfosmregister
+      resourceType: Credential
+    - alias: kafka_bootstrap_servers
+      resourceType: baseurl

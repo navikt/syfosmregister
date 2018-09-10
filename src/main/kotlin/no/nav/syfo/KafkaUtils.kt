@@ -12,7 +12,7 @@ fun readConsumerConfig(
 ) = Properties().apply {
     load(Environment::class.java.getResourceAsStream("/kafka_consumer.properties"))
     this["sasl.jaas.config"] = "org.apache.kafka.common.security.plain.PlainLoginModule required " +
-            "username=\"${env.srvappnameUsername}\" password=\"${env.srvappnamePassword}\";"
+            "username=\"${env.srvsyfosmregisterUsername}\" password=\"${env.srvsyfosmregisterPassword}\";"
     this["key.deserializer"] = keyDeserializer.qualifiedName
     this["value.deserializer"] = valueDeserializer.qualifiedName
     this["bootstrap.servers"] = env.kafkaBootstrapServers
@@ -25,7 +25,7 @@ fun readProducerConfig(
 ) = Properties().apply {
     load(Environment::class.java.getResourceAsStream("/kafka_producer.properties"))
     this["sasl.jaas.config"] = "org.apache.kafka.common.security.plain.PlainLoginModule required " +
-            "username=\"${env.srvappnameUsername}\" password=\"${env.srvappnamePassword}\";"
+            "username=\"${env.srvsyfosmregisterUsername}\" password=\"${env.srvsyfosmregisterPassword}\";"
     this["key.serializer"] = keySerializer.qualifiedName
     this["value.serializer"] = valueSerializer.qualifiedName
     this["bootstrap.servers"] = env.kafkaBootstrapServers
