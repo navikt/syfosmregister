@@ -7,8 +7,7 @@ import io.ktor.server.netty.Netty
 import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import net.logstash.logback.marker.LogstashMarker
-import net.logstash.logback.marker.Markers
+import net.logstash.logback.argument.StructuredArguments
 import no.kith.xmlstds.msghead._2006_05_24.XMLIdent
 import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
 import no.nav.syfo.api.registerNaisApi
@@ -64,14 +63,24 @@ fun main(args: Array<String>) {
 
 suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaconsumer: KafkaConsumer<String, String>) {
     while (applicationState.running) {
+        var logValues = arrayOf(
+                StructuredArguments.keyValue("smId", "missing"),
+                StructuredArguments.keyValue("organizationNumber", "missing"),
+                StructuredArguments.keyValue("msgId", "missing")
+        )
+
+        val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") {
+            "{}"
+        }
 
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
-            log.info("Recived a kafka message:")
             val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
-            val marker = Markers.append("msgId", fellesformat.get<XMLMsgHead>().msgInfo.msgId)
-                    .and<LogstashMarker>(Markers.append("organisationNumber", extractOrganisationNumberFromSender(fellesformat)?.id))
-                    .and<LogstashMarker>(Markers.append("smId", fellesformat.get<XMLMottakenhetBlokk>().ediLoggId))
-            log.info(marker, "Received a SM2013, going to persist in DB")
+            logValues = arrayOf(
+                    StructuredArguments.keyValue("smId", fellesformat.get<XMLMottakenhetBlokk>().ediLoggId),
+                    StructuredArguments.keyValue("organizationNumber", extractOrganisationNumberFromSender(fellesformat)?.id),
+                    StructuredArguments.keyValue("msgId", fellesformat.get<XMLMsgHead>().msgInfo.msgId)
+            )
+            log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
         }
         delay(100)
     }
