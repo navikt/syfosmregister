@@ -1,18 +1,20 @@
 # SYFO Sykemeldings register
-A simple starter application that reades for kafka topics and saves the sykmeldings 2013 into a Database. 
+Application for register sykmelding 2013 i database
 
 ## Technologies used
 * Kotlin
 * Ktor
 * Gradle
 * Spek
+* Kafka
 
 ## Getting started
 ## Running locally
 
+### Building the application
 #### Compile and package application
-To build locally and run the integration tests you can simply run `./gradlew installDist` or  on windows 
-`gradlew.bat installDist`
+To build locally and run the integration tests you can simply run `./gradlew shadowJar` or  on windows 
+`gradlew.bat shadowJar`
 
 #### Creating a docker image
 Creating a docker image should be as simple as `docker build -t syfosmregister .`

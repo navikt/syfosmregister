@@ -1,4 +1,4 @@
-FROM navikt/java:10
-COPY build/install/* /app
-ENV JAVA_OPTS="'-Dlogback.configurationFile=logback-remote.xml'"
-ENTRYPOINT ["/app/bin/syfosmregister"]
+FROM navikt/java:11
+COPY build/libs/syfosmregister-*-all.jar app.jar
+ENV JAVA_OPTS='-Dlogback.configurationFile=logback-remote.xml'
+ENV APPLICATION_PROFILE="remote"
