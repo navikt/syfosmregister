@@ -1,3 +1,4 @@
+team: teamsykefravr
 name: "syfosmregister"
 image: "repo.adeo.no:5443/syfo/syfosmregister"
 replicas:
@@ -28,9 +29,8 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+secrets: true
 fasitResources:
   used:
-    - alias: srvsyfosmregister
-      resourceType: Credential
     - alias: kafka_bootstrap_servers
       resourceType: baseurl
