@@ -4,7 +4,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.Properties
 
-
 private val vaultApplicationPropertiesPath = Paths.get("/var/run/secrets/nais.io/vault/application.properties")
 
 private val config = Properties().apply {
@@ -22,7 +21,6 @@ data class Environment(
     val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
     val kafkaSm2013AutomaticPapirmottakTopic: String = getEnvVar("KAFKA_SM2013_PAPIR_MOTTAK_TOPIC", "privat-syfo-smpapir-automatiskBehandling"),
     val kafkaSm2013AutomaticDigitalHandlingTopic: String = getEnvVar("SM2013_AUTOMATIC_HANDLING_TOPIC", "privat-syfo-sm2013-automatiskBehandling"),
-
 
     val applicationPort: Int = config.getProperty("application.port").toInt(),
     val applicationThreads: Int = config.getProperty("application.threads").toInt(),
