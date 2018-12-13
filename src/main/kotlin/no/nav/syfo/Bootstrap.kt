@@ -1,5 +1,10 @@
 package no.nav.syfo
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.application.Application
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
@@ -9,26 +14,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
-import no.kith.xmlstds.msghead._2006_05_24.XMLIdent
-import no.kith.xmlstds.msghead._2006_05_24.XMLMsgHead
+
 import no.nav.syfo.api.registerNaisApi
-import no.trygdeetaten.xml.eiff._1.XMLEIFellesformat
-import no.trygdeetaten.xml.eiff._1.XMLMottakenhetBlokk
+import no.nav.syfo.model.ReceivedSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
-import java.io.StringReader
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import javax.xml.bind.JAXBContext
-import javax.xml.bind.Unmarshaller
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
-val fellesformatJaxBContext: JAXBContext = JAXBContext.newInstance(XMLEIFellesformat::class.java, XMLMsgHead::class.java)
-val fellesformatUnmarshaller: Unmarshaller = fellesformatJaxBContext.createUnmarshaller()
-
+val objectMapper: ObjectMapper = ObjectMapper().apply {
+    registerKotlinModule()
+    registerModule(JavaTimeModule())
+    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+}
 private val log = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
 fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
@@ -76,11 +78,11 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
         }
 
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
-            val fellesformat = fellesformatUnmarshaller.unmarshal(StringReader(it.value())) as XMLEIFellesformat
+            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
             logValues = arrayOf(
-                    StructuredArguments.keyValue("smId", fellesformat.get<XMLMottakenhetBlokk>().ediLoggId),
-                    StructuredArguments.keyValue("organizationNumber", extractOrganisationNumberFromSender(fellesformat)?.id),
-                    StructuredArguments.keyValue("msgId", fellesformat.get<XMLMsgHead>().msgInfo.msgId)
+                    StructuredArguments.keyValue("msgId", receivedSykmelding.msgId),
+                    StructuredArguments.keyValue("smId", receivedSykmelding.navLogId),
+                    StructuredArguments.keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
             )
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
@@ -102,10 +104,3 @@ fun Application.initRouting(applicationState: ApplicationState) {
         )
     }
 }
-
-inline fun <reified T> XMLEIFellesformat.get() = this.any.find { it is T } as T
-
-fun extractOrganisationNumberFromSender(fellesformat: XMLEIFellesformat): XMLIdent? =
-        fellesformat.get<XMLMsgHead>().msgInfo.sender.organisation.ident.find {
-            it.typeId.v == "ENH"
-        }
