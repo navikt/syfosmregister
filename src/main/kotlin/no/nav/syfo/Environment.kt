@@ -25,6 +25,8 @@ data class Environment(
     val applicationPort: Int = config.getProperty("application.port").toInt(),
     val applicationThreads: Int = config.getProperty("application.threads").toInt(),
     val srvsyfosmregisterUsername: String = config.getProperty("serviceuser.username"),
-    val srvsyfosmregisterPassword: String = config.getProperty("serviceuser.password")
-
+    val srvsyfosmregisterPassword: String = config.getProperty("serviceuser.password"),
+    val databaseUrl: String = config.getProperty("db.url"),
+    val databaseUsername: String = config.getProperty("db.username"),
+    val databasePassword: String = config.getProperty("db.password")
 )

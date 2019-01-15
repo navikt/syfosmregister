@@ -47,7 +47,6 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                 val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(env.kafkaSm2013AutomaticPapirmottakTopic, env.kafkaSm2013AutomaticDigitalHandlingTopic))
-
                 blockingApplicationLogic(applicationState, kafkaconsumer)
             }
         }.toList()
@@ -86,6 +85,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             )
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
+
             // TODO implement postgress DB
         }
     }
