@@ -1,7 +1,5 @@
 # SYFO Sykemeldings register
 
-[![Build Status](https://travis-ci.com/navikt/syfosmregister.svg?branch=master)](https://travis-ci.com/navikt/syfosmregister)
-
 Application for register sykmelding 2013 i database
 
 ## Technologies used
