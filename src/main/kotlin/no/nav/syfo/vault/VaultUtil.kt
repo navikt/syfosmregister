@@ -11,22 +11,16 @@ import java.nio.file.Files
 import java.util.Timer
 import java.util.TimerTask
 
-
-class VaultUtil private constructor() {
-    var client: Vault? = null
-        private set
-    val timer: Timer
-
-    init {
-        timer = Timer("VaultScheduler", true)
-    }
+class VaultUtil {
+    lateinit var client: Vault
+    val timer: Timer = Timer("VaultScheduler", true)
 
     @Throws(VaultError::class)
-    private fun init() {
-        var vaultConfig: VaultConfig? = null
+    fun init() {
+        val vaultConfig: VaultConfig?
         try {
             vaultConfig = VaultConfig()
-                    .address((System.getenv() as java.util.Map<String, String>).getOrDefault("VAULT_ADDR", "https://vault.adeo.no"))
+                    .address((System.getenv() as Map<String, String>).getOrDefault("VAULT_ADDR", "https://vault.adeo.no"))
                     .token(vaultToken)
                     .openTimeout(5)
                     .readTimeout(30)
@@ -41,7 +35,7 @@ class VaultUtil private constructor() {
         // Verify that the token is ok
         val lookupSelf: LookupResponse?
         try {
-            lookupSelf = client!!.auth().lookupSelf()
+            lookupSelf = client.auth().lookupSelf()
         } catch (e: VaultException) {
             if (e.httpStatusCode == 403) {
                 throw VaultError("The application's vault token seems to be invalid", e)
@@ -54,14 +48,13 @@ class VaultUtil private constructor() {
             class RefreshTokenTask : TimerTask() {
                 override fun run() {
                     try {
-                        log.info("Refreshing Vault token (old TTL = " + client!!.auth().lookupSelf().ttl + " seconds)")
-                        val response = client!!.auth().renewSelf()
-                        log.info("Refreshed Vault token (new TTL = " + client!!.auth().lookupSelf().ttl + " seconds)")
+                        log.info("Refreshing Vault token (old TTL = " + client.auth().lookupSelf().ttl + " seconds)")
+                        val response = client.auth().renewSelf()
+                        log.info("Refreshed Vault token (new TTL = " + client.auth().lookupSelf().ttl + " seconds)")
                         timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(response.authLeaseDuration * 1000))
                     } catch (e: VaultException) {
                         log.error("Could not refresh the Vault token", e)
                     }
-
                 }
             }
             log.info("Starting a refresh timer on the vault token (TTL = " + lookupSelf.ttl + " seconds")
@@ -124,7 +117,6 @@ class VaultUtil private constructor() {
                 } catch (e: Exception) {
                     throw RuntimeException("Could not get a vault token for authentication", e)
                 }
-
             }
     }
 }

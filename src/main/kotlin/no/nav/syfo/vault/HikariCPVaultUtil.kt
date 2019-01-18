@@ -1,7 +1,5 @@
 package no.nav.syfo.vault
 
-import org.apache.zookeeper.ZooDefs.OpCode.getData
-import com.bettercloud.vault.response.LogicalResponse
 import com.bettercloud.vault.VaultException
 import com.zaxxer.hikari.HikariDataSource
 import com.bettercloud.vault.Vault
@@ -9,8 +7,7 @@ import com.zaxxer.hikari.HikariConfig
 import org.slf4j.LoggerFactory
 import java.util.TimerTask
 
-
-class HikariCPVaultUtil private constructor(private val hikariConfig: HikariConfig, private val vault: Vault, private val mountPath: String, private val role: String) {
+class HikariCPVaultUtil constructor(private val hikariConfig: HikariConfig, private val vault: Vault, private val mountPath: String, private val role: String) {
 
     private var ds: HikariDataSource? = null
 
@@ -44,8 +41,8 @@ class HikariCPVaultUtil private constructor(private val hikariConfig: HikariConf
 
         @Throws(VaultError::class)
         fun createHikariDataSourceWithVaultIntegration(config: HikariConfig, mountPath: String, role: String): HikariDataSource {
-            val instance = VaultUtil.getInstance()
-            val vault = instance.client
+            val instance = VaultUtil().init() as VaultUtil
+            val vault: Vault = instance.client
 
             val hikariCPVaultUtil = HikariCPVaultUtil(config, vault, mountPath, role)
 
@@ -62,7 +59,6 @@ class HikariCPVaultUtil private constructor(private val hikariConfig: HikariConf
                             log.error("Could not fetch database credentials for role \"$role\"", e)
                         }
                     }
-
                 }
             }
 
