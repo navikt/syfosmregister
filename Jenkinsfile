@@ -3,13 +3,11 @@
 pipeline {
     agent any
 
-    environment {
-        APPLICATION_NAME = 'syfosmregister'
-        FASIT_ENVIRONMENT = 'q1'
-        ZONE = 'fss'
-        DOCKER_SLUG = 'syfo'
-        DISABLE_SLACK_MESSAGES = true
-    }
+     environment {
+           APPLICATION_NAME = 'syfosmregister'
+           DOCKER_SLUG = 'syfo'
+           DISABLE_SLACK_MESSAGES = true
+       }
 
      stages {
         stage('initialize') {
@@ -44,24 +42,20 @@ pipeline {
                 // TODO
             }
         }
-        stage('validate & upload nais.yaml to nexus m2internal') {
-             steps {
-                 nais action: 'validate'
-                 nais action: 'upload'
-             }
-         }
         stage('deploy to preprod') {
-             steps {
-                     deployApp action: 'jiraPreprod'
-             }
-         }
+            steps {
+                deployApp action: 'kubectlApply', cluster: 'preprod-fss', file: 'config/preprod/configmap.yaml'
+                deployApp action: 'kubectlDeploy', cluster: 'preprod-fss', placeholders: ["config_file" : "application-preprod.json"]
+                    }
+                }
         stage('deploy to production') {
             when { environment name: 'DEPLOY_TO', value: 'production' }
             steps {
-                deployApp action: 'jiraProd'
+                deployApp action: 'kubectlApply', cluster: 'prod-fss', file: 'config/prod/configmap.yaml'
+                deployApp action: 'kubectlDeploy', cluster: 'prod-fss', placeholders: ["config_file" : "application-prod.json"]
                 githubStatus action: 'tagRelease'
-            }
-         }
+                    }
+                }
         }
         post {
             always {

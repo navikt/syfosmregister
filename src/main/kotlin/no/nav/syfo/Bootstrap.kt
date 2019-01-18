@@ -20,6 +20,7 @@ import no.nav.syfo.model.ReceivedSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -34,19 +35,20 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 private val log = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
 fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
-    val env = Environment()
+    val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
+    val credentials: VaultCredentials = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
     val applicationState = ApplicationState()
 
-    val applicationServer = embeddedServer(Netty, env.applicationPort) {
+    val applicationServer = embeddedServer(Netty, config.applicationPort) {
         initRouting(applicationState)
     }.start(wait = false)
 
     try {
-        val listeners = (1..env.applicationThreads).map {
+        val listeners = (1..config.applicationThreads).map {
             launch {
-                val consumerProperties = readConsumerConfig(env, valueDeserializer = StringDeserializer::class)
+                val consumerProperties = readConsumerConfig(config, credentials, valueDeserializer = StringDeserializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                kafkaconsumer.subscribe(listOf(env.kafkaSm2013AutomaticPapirmottakTopic, env.kafkaSm2013AutomaticDigitalHandlingTopic))
+                kafkaconsumer.subscribe(listOf(config.kafkaSm2013AutomaticPapirmottakTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
                 blockingApplicationLogic(applicationState, kafkaconsumer)
             }
         }.toList()

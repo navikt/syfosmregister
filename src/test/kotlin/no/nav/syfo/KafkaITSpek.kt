@@ -1,6 +1,8 @@
 package no.nav.syfo
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.common.KafkaEnvironment
+import no.nav.syfo.utils.readProducerConfig
 import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -9,6 +11,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.io.File
 import java.net.ServerSocket
 import java.time.Duration
 
@@ -23,18 +26,15 @@ object KafkaITSpek : Spek({
             topics = listOf(topic)
     )
 
-    val env = Environment(
-            applicationPort = getRandomPort(),
-            srvsyfosmregisterUsername = "unused",
-            srvsyfosmregisterPassword = "unused",
-            kafkaBootstrapServers = embeddedEnvironment.brokersURL
-    )
-    val producer = KafkaProducer<String, String>(readProducerConfig(env, StringSerializer::class).apply {
+    val credentials = VaultCredentials("", "", "", "")
+    val config: ApplicationConfig = objectMapper.readValue(File("application-local.json"))
+
+    val producer = KafkaProducer<String, String>(readProducerConfig(config, credentials, StringSerializer::class).apply {
         remove("security.protocol")
         remove("sasl.mechanism")
     })
 
-    val consumer = KafkaConsumer<String, String>(readConsumerConfig(env, StringDeserializer::class).apply {
+    val consumer = KafkaConsumer<String, String>(readConsumerConfig(config, credentials, StringDeserializer::class).apply {
         remove("security.protocol")
         remove("sasl.mechanism")
     })

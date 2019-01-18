@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.withContext
-import no.nav.syfo.Environment
+import no.nav.syfo.ApplicationConfig
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils.create
@@ -18,12 +18,12 @@ import kotlin.coroutines.CoroutineContext
 object Database {
     private val dispatcher: CoroutineContext = newFixedThreadPoolContext(4, "database-pool")
 
-    fun init(environment: Environment) {
+    fun init(config: ApplicationConfig) {
         Flyway.configure().run {
-            dataSource(environment.databaseUrl, environment.databaseUsername, environment.databasePassword)
+            dataSource("databaseUrl", "databaseUsername", "databasePassword")
             load().migrate()
         }
-        Database.connect(hikari(environment))
+        Database.connect(hikari(config))
         transaction {
             addLogger(StdOutSqlLogger)
             create(
@@ -32,10 +32,10 @@ object Database {
         }
     }
 
-    fun hikari(environment: Environment) = HikariDataSource(HikariConfig().apply {
-        jdbcUrl = environment.databaseUrl
-        username = environment.databaseUsername
-        password = environment.databasePassword
+    fun hikari(config: ApplicationConfig) = HikariDataSource(HikariConfig().apply {
+        jdbcUrl = "databaseUrl"
+        username = "databaseUsername"
+        password = "databasePassword"
         maximumPoolSize = 3
         isAutoCommit = false
         transactionIsolation = "TRANSACTION_REPEATABLE_READ"
