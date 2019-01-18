@@ -46,16 +46,16 @@ pipeline {
             steps {
                 deployApp action: 'kubectlApply', cluster: 'preprod-fss', file: 'config/preprod/configmap.yaml'
                 deployApp action: 'kubectlDeploy', cluster: 'preprod-fss', placeholders: ["config_file" : "application-preprod.json"]
-                    }
-                }
+            }
+        }
         stage('deploy to production') {
             when { environment name: 'DEPLOY_TO', value: 'production' }
             steps {
                 deployApp action: 'kubectlApply', cluster: 'prod-fss', file: 'config/prod/configmap.yaml'
                 deployApp action: 'kubectlDeploy', cluster: 'prod-fss', placeholders: ["config_file" : "application-prod.json"]
                 githubStatus action: 'tagRelease'
-                    }
-                }
+            }
+         }
         }
         post {
             always {

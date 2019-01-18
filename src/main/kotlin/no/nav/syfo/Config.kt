@@ -15,7 +15,5 @@ data class ApplicationConfig(
 
 data class VaultCredentials(
     val serviceuserUsername: String,
-    val serviceuserPassword: String,
-    val mqUsername: String,
-    val mqPassword: String
+    val serviceuserPassword: String
 )
