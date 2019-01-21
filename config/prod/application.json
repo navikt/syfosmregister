@@ -1,3 +1,4 @@
 {
-  "kafkaBootstrapServers": "SASL_SSL://a01apvl00145.adeo.no:8443,SASL_SSL://a01apvl00146.adeo.no:8443,SASL_SSL://a01apvl00147.adeo.no:8443,SASL_SSL://a01apvl00149.adeo.no:8443"
+  "kafkaBootstrapServers": "SASL_SSL://a01apvl00145.adeo.no:8443,SASL_SSL://a01apvl00146.adeo.no:8443,SASL_SSL://a01apvl00147.adeo.no:8443,SASL_SSL://a01apvl00149.adeo.no:8443",
+  "syfosmregisterDBURL": "jdbc:postgresql://A01DBVL005.adeo.no:5432/syfosmregister"
 }

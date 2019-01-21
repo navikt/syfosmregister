@@ -38,6 +38,3 @@ spec:
   env:
     - name: CONFIG_FILE
       value: {{ config_file }}
-  configMaps:
-    files:
-      - syfosmregister-application-json
