@@ -46,7 +46,7 @@ object Database {
         transactionIsolation = "TRANSACTION_REPEATABLE_READ"
         validate()
     },
-            "postgresql/prod-fss", "admin").hikariDataSource
+            "postgresql/preprod-fss", "admin").hikariDataSource
 
     suspend fun <T> dbQuery(block: () -> T): T = withContext(dispatcher) {
         transaction { block() }
