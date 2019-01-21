@@ -10,7 +10,8 @@ data class ApplicationConfig(
     val applicationThreads: Int = 1,
     val kafkaSm2013AutomaticPapirmottakTopic: String = "privat-syfo-smpapir-automatiskBehandling",
     val kafkaSm2013AutomaticDigitalHandlingTopic: String = "privat-syfo-sm2013-automatiskBehandling",
-    val kafkaBootstrapServers: String
+    val kafkaBootstrapServers: String,
+    val syfosmregisterDBURL: String
 )
 
 data class VaultCredentials(
