@@ -17,8 +17,8 @@ import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
 
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.vault.postgresDBUsernamePassword
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
@@ -52,6 +52,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                 val consumerProperties = readConsumerConfig(config, credentials, valueDeserializer = StringDeserializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.kafkaSm2013AutomaticPapirmottakTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
+                Database.init(config)
                 blockingApplicationLogic(applicationState, kafkaconsumer)
             }
         }.toList()
@@ -92,9 +93,10 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
             // TODO Trying to get postgress SQL user, name and token, postgress DB
-            // Somehow this works magic
+            /* Somehow this works magic
             val postgresDBUsernamePassword = postgresDBUsernamePassword()
             log.info("Got credentials (username=${postgresDBUsernamePassword.username})")
+            */
         }
     }
     delay(100)

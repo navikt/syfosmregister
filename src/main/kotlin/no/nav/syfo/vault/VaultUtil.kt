@@ -61,6 +61,12 @@ fun postgresDBUsernamePassword(): PostgresDBUsernamePassword {
         timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(lookupSelf.ttl * 1000))
     }
 
+    /* TODO val mountPath = if (getEnvironmentClass() === P)
+                "postgresql/prod-fss"
+            else
+                "postgresql/preprod-fss"
+            */
+
     val path = "postgresql/preprod-fss/creds/syfosmregister-admin"
     val response = vaultClient.logical().read(path)
     val postgressDBUsername = response.data["username"].orEmpty()
