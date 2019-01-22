@@ -23,7 +23,9 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.vault.VaultError
+import no.nav.syfo.vault.VaultUtil
 import no.nav.syfo.vault.getVaultToken
+import no.nav.syfo.vault.suggestedRefreshInterval
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
@@ -137,13 +139,13 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                         try {
                             log.info("Refreshing Vault token (TTL = " + vaultClient.auth().lookupSelf().ttl + " seconds)")
                             val response = vaultClient.auth().renewSelf()
-                            timer.schedule(RefreshTokenTask(), VaultUtil.suggestedRefreshInterval(response.authLeaseDuration * 1000))
+                            timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(response.authLeaseDuration * 1000))
                         } catch (e: VaultException) {
                             log.error("Could not refresh the Vault token", e)
                         }
                     }
                 }
-                timer.schedule(RefreshTokenTask(), VaultUtil.suggestedRefreshInterval(lookupSelf.ttl * 1000))
+                timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(lookupSelf.ttl * 1000))
             }
             /*
             val vault = VaultUtil().vaultClient
