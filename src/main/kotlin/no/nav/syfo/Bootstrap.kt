@@ -100,7 +100,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
-            log.info("Startet Vault postgres")
+            // TODO Trying to get postgress SQL user, name and token, postgress DB
             val timer = Timer("VaultScheduler", true)
 
             val vaultConfig =
@@ -146,20 +146,14 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                 }
                 timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(lookupSelf.ttl * 1000))
             }
-            /*
-            val vault = VaultUtil().vaultClient
 
             val path = "postgresql/preprod-fss/creds/syfosmregister-admin"
-            log.info("Renewing database credentials for rolea dmin")
-            val response = vault.logical().read(path)
+            val response = vaultClient.logical().read(path)
             val username = response.data["username"]
-            val password = response.data["password"]
+            // val password = response.data["password"]
             log.info("Got new credentials (username=$username)")
-            */
 
-            // TODO Trying to get postgress SQL user, name and token
-
-            // TODO implement postgress DB
+            log.info("IT WORKS!!!")
         }
     }
     delay(100)
