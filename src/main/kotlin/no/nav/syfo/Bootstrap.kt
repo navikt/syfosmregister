@@ -29,6 +29,8 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Duration
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -97,8 +99,8 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
-            val vaultToken = getVaultToken()
-            log.info("Got token (token=$vaultToken)")
+            log.info("Startet Vault postgres")
+            val timer = Timer("VaultScheduler", true)
 
             val vaultConfig =
             try { VaultConfig()
@@ -114,6 +116,8 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
 
             val vaultClient = Vault(vaultConfig)
 
+            log.info("VaultClient Vault REST client OK")
+
             log.info("Verify that the token is ok")
             // Verify that the token is ok
             val lookupSelf =
@@ -126,6 +130,21 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                             throw VaultError("Could not validate the application's vault token", e)
                         }
                     }
+
+            if (lookupSelf!!.isRenewable) {
+                class RefreshTokenTask : TimerTask() {
+                    override fun run() {
+                        try {
+                            log.info("Refreshing Vault token (TTL = " + vaultClient.auth().lookupSelf().ttl + " seconds)")
+                            val response = vaultClient.auth().renewSelf()
+                            timer.schedule(RefreshTokenTask(), VaultUtil.suggestedRefreshInterval(response.authLeaseDuration * 1000))
+                        } catch (e: VaultException) {
+                            log.error("Could not refresh the Vault token", e)
+                        }
+                    }
+                }
+                timer.schedule(RefreshTokenTask(), VaultUtil.suggestedRefreshInterval(lookupSelf.ttl * 1000))
+            }
             /*
             val vault = VaultUtil().vaultClient
 
