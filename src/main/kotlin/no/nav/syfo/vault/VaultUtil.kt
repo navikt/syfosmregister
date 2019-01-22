@@ -78,11 +78,14 @@ fun getVaultToken(): String {
             }
         }
         return if (!env[vaultTokenProperty].isNullOrBlank()) {
+            log.info("Token from: VAULT_TOKEN")
             env[vaultTokenProperty].toString()
         } else if (!env[vaultTokenPath].isNullOrBlank()) {
+            log.info("Token from: VAULT_TOKEN_PATH")
             val encoded = Files.readAllBytes(Paths.get(env[vaultTokenPath]))
             String(encoded, Charsets.UTF_8).trim { it <= ' ' }
         } else if (Files.exists(Paths.get("/var/run/secrets/nais.io/vault/vault_token"))) {
+            log.info("Token from: var/run/secrets/nais.io/vault/vault_token")
             val encoded = Files.readAllBytes(Paths.get("/var/run/secrets/nais.io/vault/vault_token"))
             String(encoded, Charsets.UTF_8).trim { it <= ' ' }
         } else {

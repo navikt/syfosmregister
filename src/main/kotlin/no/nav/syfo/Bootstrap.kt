@@ -18,7 +18,7 @@ import net.logstash.logback.argument.StructuredArguments
 
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.vault.VaultUtil
+import no.nav.syfo.vault.getVaultToken
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
@@ -92,8 +92,10 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
-            log.info("Trying to get Vault token")
+            val vaultToken = getVaultToken()
+            log.info("Got token (token=$vaultToken)")
 
+            /*
             val vault = VaultUtil().vaultClient
 
             val path = "postgresql/preprod-fss/creds/admin"
@@ -102,6 +104,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             val username = response.data["username"]
             val password = response.data["password"]
             log.info("Got new credentials (username=$username)")
+            */
 
             // TODO Trying to get postgress SQL user, name and token
 
