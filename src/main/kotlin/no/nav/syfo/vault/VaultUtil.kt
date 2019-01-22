@@ -11,59 +11,65 @@ import java.util.Timer
 import java.util.TimerTask
 
 data class VaultError(override val message: String, override val cause: Throwable) : Exception(message, cause)
+data class PostgresDBUsernamePassword(val username: String, val password: String)
 private val log = LoggerFactory.getLogger("nav.syfo.vault.VaultUtil")
 
-class VaultUtil {
+fun postgresDBUsernamePassword(): PostgresDBUsernamePassword {
     val timer = Timer("VaultScheduler", true)
-    val vaultClient = getVaultClient(timer)
-}
 
-fun getVaultClient(timer: Timer): Vault {
     val vaultConfig =
-    try { VaultConfig()
-                .address((System.getenv() as Map<String, String>).getOrDefault("VAULT_ADDR", "https://vault.adeo.no"))
-                .token(getVaultToken())
-                .openTimeout(5)
-                .readTimeout(30)
-                .sslConfig(SslConfig().build())
-                .build()
-    } catch (e: VaultException) {
-        throw VaultError("Could not instantiate the Vault REST client", e)
-    }
+            try { VaultConfig()
+                    .address("https://vault.adeo.no")
+                    .token(getVaultToken())
+                    .openTimeout(5)
+                    .readTimeout(30)
+                    .sslConfig(SslConfig().build())
+                    .build()
+            } catch (e: Exception) {
+                throw VaultError("Could not instantiate the Vault REST client", e)
+            }
 
     val vaultClient = Vault(vaultConfig)
 
+    log.info("VaultClient Vault REST client OK")
+
+    log.info("Verify that the token is ok")
     // Verify that the token is ok
     val lookupSelf =
-    try {
-        vaultClient.auth().lookupSelf()
-    } catch (e: VaultException) {
-        if (e.httpStatusCode == 403) {
-            throw VaultError("The application's vault token seems to be invalid", e)
-        } else {
-            throw VaultError("Could not validate the application's vault token", e)
-        }
-    }
+            try {
+                vaultClient.auth().lookupSelf()
+            } catch (e: VaultException) {
+                if (e.httpStatusCode == 403) {
+                    throw VaultError("The application's vault token seems to be invalid", e)
+                } else {
+                    throw VaultError("Could not validate the application's vault token", e)
+                }
+            }
 
     if (lookupSelf!!.isRenewable) {
         class RefreshTokenTask : TimerTask() {
             override fun run() {
                 try {
-                    log.info("Refreshing Vault token (old TTL = " + vaultClient.auth().lookupSelf().ttl + " seconds)")
+                    log.info("Refreshing Vault token (TTL = " + vaultClient.auth().lookupSelf().ttl + " seconds)")
                     val response = vaultClient.auth().renewSelf()
-                    log.info("Refreshed Vault token (new TTL = " + vaultClient.auth().lookupSelf().ttl + " seconds)")
                     timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(response.authLeaseDuration * 1000))
                 } catch (e: VaultException) {
                     log.error("Could not refresh the Vault token", e)
                 }
             }
         }
-        log.info("Starting a refresh timer on the vault token (TTL = " + lookupSelf.ttl + " seconds")
         timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(lookupSelf.ttl * 1000))
-    } else {
-        log.warn("Vault token is not renewable")
     }
-    return vaultClient
+
+    val path = "postgresql/preprod-fss/creds/syfosmregister-admin"
+    val response = vaultClient.logical().read(path)
+    val postgressDBUsername = response.data["username"].orEmpty()
+    val postgressDBPassword = response.data["password"].orEmpty()
+    if (postgressDBUsername.isNotEmpty() && postgressDBPassword.isNotEmpty()) {
+        return PostgresDBUsernamePassword(postgressDBUsername, postgressDBPassword)
+    } else {
+        throw RuntimeException("VaultClient dosent contain username and or password")
+    }
 }
 
 fun getVaultToken(): String {

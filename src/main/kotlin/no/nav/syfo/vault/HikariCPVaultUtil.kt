@@ -1,17 +1,15 @@
 package no.nav.syfo.vault
 
-import com.bettercloud.vault.VaultException
 import com.zaxxer.hikari.HikariDataSource
 import com.bettercloud.vault.Vault
 import com.zaxxer.hikari.HikariConfig
 import org.slf4j.LoggerFactory
-import java.util.TimerTask
 
 private val log = LoggerFactory.getLogger("nav.syfo.vault.HikariCPVaultUtil")
 data class RefreshResult internal constructor(internal val leaseId: String, internal val leaseDuration: Long)
 
 class HikariCPVaultUtil constructor(private val hikariConfig: HikariConfig, private val mountPath: String, private val role: String) {
-    val hikariDataSource = createHikariDataSourceWithVaultIntegration(hikariConfig, mountPath, role)
+    // val hikariDataSource = createHikariDataSourceWithVaultIntegration(hikariConfig, mountPath, role)
 }
 
 fun refreshCredentialsAndReturnRefreshInterval(mountPath: String, role: String, vault: Vault, hikariConfig: HikariConfig, hikariDataSource: HikariDataSource): RefreshResult {
@@ -31,6 +29,7 @@ fun refreshCredentialsAndReturnRefreshInterval(mountPath: String, role: String, 
     return RefreshResult(response.leaseId, response.leaseDuration!!)
 }
 
+/*
 fun createHikariDataSourceWithVaultIntegration(hikariConfig: HikariConfig, mountPath: String, role: String): HikariDataSource {
     val vaultUtil = VaultUtil()
     val hikariCPVaultUtil = HikariCPVaultUtil(hikariConfig, mountPath, role)
@@ -61,3 +60,4 @@ fun createHikariDataSourceWithVaultIntegration(hikariConfig: HikariConfig, mount
 
     return HikariDataSource(hikariConfig)
 }
+        */

@@ -17,8 +17,8 @@ import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
 
 import no.nav.syfo.api.registerNaisApi
-import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.vault.postgresDBUsernamePassword
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
@@ -52,7 +52,6 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                 val consumerProperties = readConsumerConfig(config, credentials, valueDeserializer = StringDeserializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.kafkaSm2013AutomaticPapirmottakTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
-                Database.init(config)
                 blockingApplicationLogic(applicationState, kafkaconsumer)
             }
         }.toList()
@@ -93,62 +92,9 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
             // TODO Trying to get postgress SQL user, name and token, postgress DB
-
-            /* Somehow this works magic
-            val timer = Timer("VaultScheduler", true)
-
-            val vaultConfig =
-            try { VaultConfig()
-                    .address("https://vault.adeo.no")
-                    .token(getVaultToken())
-                    .openTimeout(5)
-                    .readTimeout(30)
-                    .sslConfig(SslConfig().build())
-                    .build()
-            } catch (e: Exception) {
-                throw VaultError("Could not instantiate the Vault REST client", e)
-            }
-
-            val vaultClient = Vault(vaultConfig)
-
-            log.info("VaultClient Vault REST client OK")
-
-            log.info("Verify that the token is ok")
-            // Verify that the token is ok
-            val lookupSelf =
-                    try {
-                        vaultClient.auth().lookupSelf()
-                    } catch (e: VaultException) {
-                        if (e.httpStatusCode == 403) {
-                            throw VaultError("The application's vault token seems to be invalid", e)
-                        } else {
-                            throw VaultError("Could not validate the application's vault token", e)
-                        }
-                    }
-
-            if (lookupSelf!!.isRenewable) {
-                class RefreshTokenTask : TimerTask() {
-                    override fun run() {
-                        try {
-                            log.info("Refreshing Vault token (TTL = " + vaultClient.auth().lookupSelf().ttl + " seconds)")
-                            val response = vaultClient.auth().renewSelf()
-                            timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(response.authLeaseDuration * 1000))
-                        } catch (e: VaultException) {
-                            log.error("Could not refresh the Vault token", e)
-                        }
-                    }
-                }
-                timer.schedule(RefreshTokenTask(), suggestedRefreshInterval(lookupSelf.ttl * 1000))
-            }
-
-            val path = "postgresql/preprod-fss/creds/syfosmregister-admin"
-            val response = vaultClient.logical().read(path)
-            val username = response.data["username"]
-            // val password = response.data["password"]
-            log.info("Got new credentials (username=$username)")
-
-            log.info("IT WORKS!!!")
-            */
+            // Somehow this works magic
+            val postgresDBUsernamePassword = postgresDBUsernamePassword()
+            log.info("Got credentials (username=${postgresDBUsernamePassword.username})")
         }
     }
     delay(100)
