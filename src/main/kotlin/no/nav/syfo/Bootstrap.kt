@@ -23,7 +23,6 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.vault.VaultError
-import no.nav.syfo.vault.VaultUtil
 import no.nav.syfo.vault.getVaultToken
 import no.nav.syfo.vault.suggestedRefreshInterval
 import org.apache.kafka.clients.consumer.KafkaConsumer
