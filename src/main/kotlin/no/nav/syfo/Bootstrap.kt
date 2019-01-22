@@ -129,7 +129,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             /*
             val vault = VaultUtil().vaultClient
 
-            val path = "postgresql/preprod-fss/creds/admin"
+            val path = "postgresql/preprod-fss/creds/syfosmregister-admin"
             log.info("Renewing database credentials for rolea dmin")
             val response = vault.logical().read(path)
             val username = response.data["username"]

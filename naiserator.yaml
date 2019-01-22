@@ -4,7 +4,7 @@ metadata:
   name: "syfosmregister"
   namespace: "default"
   labels:
-    team: "teamsykefravr"
+    team: "sykefravr"
 spec:
   image: "repo.adeo.no:5443/syfo/syfosmregister:@@VERSION@@"
   replicas:
