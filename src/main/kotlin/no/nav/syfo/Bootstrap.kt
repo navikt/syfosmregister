@@ -17,7 +17,6 @@ import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
 
 import no.nav.syfo.api.registerNaisApi
-import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -41,7 +40,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
     val credentials: VaultCredentials = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
     val applicationState = ApplicationState()
-    //Database.init(config)
+    // Database.init(config)
 
     val applicationServer = embeddedServer(Netty, config.applicationPort) {
         initRouting(applicationState)
