@@ -41,7 +41,6 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
     val credentials: VaultCredentials = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
     val applicationState = ApplicationState()
-    // Database.init(config)
 
     val applicationServer = embeddedServer(Netty, config.applicationPort) {
         initRouting(applicationState)
@@ -53,8 +52,8 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                 val consumerProperties = readConsumerConfig(config, credentials, valueDeserializer = StringDeserializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.kafkaSm2013AutomaticPapirmottakTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
-                blockingApplicationLogic(applicationState, kafkaconsumer)
                 Database.init(config)
+                blockingApplicationLogic(applicationState, kafkaconsumer)
             }
         }.toList()
 
