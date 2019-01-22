@@ -1,5 +1,9 @@
 package no.nav.syfo
 
+import com.bettercloud.vault.SslConfig
+import com.bettercloud.vault.Vault
+import com.bettercloud.vault.VaultConfig
+import com.bettercloud.vault.VaultException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -18,6 +22,7 @@ import net.logstash.logback.argument.StructuredArguments
 
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.vault.VaultError
 import no.nav.syfo.vault.getVaultToken
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -95,6 +100,32 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             val vaultToken = getVaultToken()
             log.info("Got token (token=$vaultToken)")
 
+            val vaultConfig =
+            try { VaultConfig()
+                    .address("https://vault.adeo.no")
+                    .token(getVaultToken())
+                    .openTimeout(5)
+                    .readTimeout(30)
+                    .sslConfig(SslConfig().build())
+                    .build()
+            } catch (e: Exception) {
+                throw VaultError("Could not instantiate the Vault REST client", e)
+            }
+
+            val vaultClient = Vault(vaultConfig)
+
+            log.info("Verify that the token is ok")
+            // Verify that the token is ok
+            val lookupSelf =
+                    try {
+                        vaultClient.auth().lookupSelf()
+                    } catch (e: VaultException) {
+                        if (e.httpStatusCode == 403) {
+                            throw VaultError("The application's vault token seems to be invalid", e)
+                        } else {
+                            throw VaultError("Could not validate the application's vault token", e)
+                        }
+                    }
             /*
             val vault = VaultUtil().vaultClient
 
