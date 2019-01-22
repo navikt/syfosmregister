@@ -1,9 +1,5 @@
 package no.nav.syfo
 
-import com.bettercloud.vault.SslConfig
-import com.bettercloud.vault.Vault
-import com.bettercloud.vault.VaultConfig
-import com.bettercloud.vault.VaultException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -21,17 +17,13 @@ import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
 
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.vault.VaultError
-import no.nav.syfo.vault.getVaultToken
-import no.nav.syfo.vault.suggestedRefreshInterval
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Duration
-import java.util.Timer
-import java.util.TimerTask
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -62,6 +54,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.kafkaSm2013AutomaticPapirmottakTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
                 blockingApplicationLogic(applicationState, kafkaconsumer)
+                Database.init(config)
             }
         }.toList()
 
@@ -101,6 +94,8 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
             // TODO Trying to get postgress SQL user, name and token, postgress DB
+
+            /* Somehow this works magic
             val timer = Timer("VaultScheduler", true)
 
             val vaultConfig =
@@ -154,6 +149,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             log.info("Got new credentials (username=$username)")
 
             log.info("IT WORKS!!!")
+            */
         }
     }
     delay(100)

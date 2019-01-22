@@ -15,7 +15,7 @@ class HikariCPVaultUtil constructor(private val hikariConfig: HikariConfig, priv
 }
 
 fun refreshCredentialsAndReturnRefreshInterval(mountPath: String, role: String, vault: Vault, hikariConfig: HikariConfig, hikariDataSource: HikariDataSource): RefreshResult {
-    val path = "$mountPath/creds/$role"
+    val path = "$mountPath/creds/syfosmregister-$role"
     log.info("Renewing database credentials for role \"$role\"")
     val response = vault.logical().read(path)
     val username = response.data["username"]
