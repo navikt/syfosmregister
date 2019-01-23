@@ -12,7 +12,7 @@ object Sykmelding : Table() {
     val msgId = varchar("msgId", length = 50)
     val legekontorOrgNr = varchar("legekontorOrgNr", length = 50)
     val legekontorOrgName = varchar("legekontorOrgName", length = 50)
-    val mottattDato = datetime("mottattDato") // Maybe use
+    val mottattDato = datetime("mottattDato")
 }
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

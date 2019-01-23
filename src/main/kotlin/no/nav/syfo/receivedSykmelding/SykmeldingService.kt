@@ -22,7 +22,7 @@ class SykmeldingService {
                     msgId = row[Sykmelding.msgId],
                     legekontorOrgNr = row[Sykmelding.legekontorOrgNr],
                     legekontorOrgName = row[Sykmelding.legekontorOrgName],
-                    mottattDato = row[Sykmelding.mottattDato].toDateTime()
+                    mottattDato = row[Sykmelding.mottattDato]
             )
 
     suspend fun leggtilSykmelding(nySykmelding: NySykmelding): SykmeldingRespons {
