@@ -6,5 +6,5 @@ CREATE TABLE Sykmelding (
   msgId                  VARCHAR(50) NOT NULL,
   legekontorOrgNr        VARCHAR(50) NOT NULL,
   legekontorOrgName      VARCHAR(50) NOT NULL,
-  mottattDato            TIMESTAMP without time zone NOT NULL,
+  mottattDato            TIMESTAMP NOT NULL,
 );
