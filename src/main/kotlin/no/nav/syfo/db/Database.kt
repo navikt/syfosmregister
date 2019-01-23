@@ -6,6 +6,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.withContext
 import no.nav.syfo.ApplicationConfig
+import no.nav.syfo.receivedSykmelding.Sykmelding
 import no.nav.syfo.vault.postgresDBUsernamePassword
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
@@ -30,7 +31,7 @@ object Database {
         transaction {
             addLogger(StdOutSqlLogger)
             create(
-                    ReceivedSykmelding
+                    Sykmelding
             )
         }
     }

@@ -17,7 +17,7 @@ buildscript {
     ext.h2Version = "1.4.197"
     ext.flywayVersion = "5.2.4"
     ext.hikariVersion = "3.3.0"
-    ext.exposedVersion = "0.11.2"
+    ext.exposedVersion = "0.12.1"
     ext.vaultJavaDriveVersion = "3.1.0"
 }
 

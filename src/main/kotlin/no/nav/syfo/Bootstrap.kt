@@ -19,8 +19,11 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.receivedSykmelding.NySykmelding
+import no.nav.syfo.receivedSykmelding.SykmeldingService
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Duration
@@ -93,6 +96,20 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
             // TODO Trying to get postgress SQL user, name and token, postgress DB
+
+            val vedlegg = SykmeldingService().leggtilSykmelding(
+                    NySykmelding.Sykmelding(
+                            aktoerIdPasient = receivedSykmelding.aktoerIdPasient,
+                            aktoerIdLege = receivedSykmelding.aktoerIdLege,
+                            navLogId = receivedSykmelding.navLogId,
+                            msgId = receivedSykmelding.msgId,
+                            legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
+                            legekontorOrgName = receivedSykmelding.legekontorOrgName,
+                            mottattDato = DateTime(receivedSykmelding.mottattDato)
+                    )
+            )
+            log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
+
             /* Somehow this works magic
             val postgresDBUsernamePassword = postgresDBUsernamePassword()
             log.info("Got credentials (username=${postgresDBUsernamePassword.username})")
