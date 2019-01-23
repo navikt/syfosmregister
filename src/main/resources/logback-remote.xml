@@ -8,8 +8,9 @@
 
     <logger name="no.nav" level="INFO"/>
     <logger name="org.apache.kafka" level="INFO" />
+    <logger name="com.zaxxer.hikari.pool" level="INFO" />
 
-    <root level="TRACE">
+    <root level="INFO">
         <appender-ref ref="stdout_json"/>
     </root>
 </configuration>
