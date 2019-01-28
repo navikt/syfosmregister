@@ -97,7 +97,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
 
             // TODO Trying to get postgress SQL user, name and token, postgress DB
 
-            val vedlegg = SykmeldingService().leggtilSykmelding(
+            SykmeldingService().leggtilSykmelding(
                     NySykmelding.Sykmelding(
                             aktoerIdPasient = receivedSykmelding.aktoerIdPasient,
                             aktoerIdLege = receivedSykmelding.aktoerIdLege,

@@ -1,10 +1,12 @@
 package no.nav.syfo.receivedSykmelding
 
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import no.nav.syfo.db.Database.dbQuery
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 
+@ObsoleteCoroutinesApi
 class SykmeldingService {
 
     suspend fun hentReceivedSykmelding(id: Int): SykmeldingRespons? = dbQuery {

@@ -6,7 +6,6 @@ pipeline {
      environment {
            APPLICATION_NAME = 'syfosmregister'
            DOCKER_SLUG = 'syfo'
-           DISABLE_SLACK_MESSAGES = true
        }
 
      stages {
@@ -31,28 +30,16 @@ pipeline {
                 slackStatus status: 'passed'
             }
         }
-       stage('push docker image') {
-              steps {
-                  dockerUtils action: 'createPushImage'
-              }
-         }
-        stage('Create kafka topics') {
-            steps {
-                sh 'echo TODO'
-                // TODO
-            }
-        }
         stage('deploy to preprod') {
             steps {
-                deployApp action: 'kubectlApply', cluster: 'preprod-fss', file: 'config/preprod/configmap.yaml'
-                deployApp action: 'kubectlDeploy', cluster: 'preprod-fss', placeholders: ["config_file" : "application-preprod.json"]
+                dockerUtils action: 'createPushImage'
+                deployApp action: 'kubectlDeploy', cluster: 'preprod-fss'
             }
         }
         stage('deploy to production') {
             when { environment name: 'DEPLOY_TO', value: 'production' }
             steps {
-                deployApp action: 'kubectlApply', cluster: 'prod-fss', file: 'config/prod/configmap.yaml'
-                deployApp action: 'kubectlDeploy', cluster: 'prod-fss', placeholders: ["config_file" : "application-prod.json"]
+                deployApp action: 'kubectlDeploy', cluster: 'prod-fss', file: 'naiserator-prod.yaml'
                 githubStatus action: 'tagRelease'
             }
          }
