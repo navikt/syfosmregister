@@ -73,6 +73,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     }
 }
 
+@ObsoleteCoroutinesApi
 suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaconsumer: KafkaConsumer<String, String>) {
     while (applicationState.running) {
         var logValues = arrayOf(
@@ -105,7 +106,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                             msgId = receivedSykmelding.msgId,
                             legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
                             legekontorOrgName = receivedSykmelding.legekontorOrgName,
-                            mottattDato = DateTime(receivedSykmelding.mottattDato)
+                            mottattDato = DateTime(receivedSykmelding.mottattDato.year, receivedSykmelding.mottattDato.monthValue, receivedSykmelding.mottattDato.dayOfMonth, receivedSykmelding.mottattDato.hour, receivedSykmelding.mottattDato.minute)
                     )
             )
             log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
