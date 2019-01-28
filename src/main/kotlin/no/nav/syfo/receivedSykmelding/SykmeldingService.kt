@@ -35,9 +35,9 @@ class SykmeldingService {
                         it[aktoerIdPasient] = nySykmelding.aktoerIdPasient
                         it[aktoerIdLege] = nySykmelding.aktoerIdLege
                         it[navLogId] = nySykmelding.navLogId
-                        it[msgId] = nySykmelding.aktoerIdPasient
-                        it[legekontorOrgNr] = nySykmelding.aktoerIdPasient
-                        it[legekontorOrgName] = nySykmelding.aktoerIdPasient
+                        it[msgId] = nySykmelding.msgId
+                        it[legekontorOrgNr] = nySykmelding.legekontorOrgNr
+                        it[legekontorOrgName] = nySykmelding.legekontorOrgName
                         it[mottattDato] = nySykmelding.mottattDato
                     }
                 }

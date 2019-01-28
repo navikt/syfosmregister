@@ -110,11 +110,6 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                     )
             )
             log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
-
-            /* Somehow this works magic
-            val postgresDBUsernamePassword = postgresDBUsernamePassword()
-            log.info("Got credentials (username=${postgresDBUsernamePassword.username})")
-            */
         }
     }
     delay(100)
