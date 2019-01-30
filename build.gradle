@@ -3,7 +3,7 @@ buildscript {
     ext.kafka_version = '2.0.0'
     ext.kafka_embedded_version = '1.0.0'
     ext.kluent_version = '1.39'
-    ext.ktor_version = '1.0.0'
+    ext.ktor_version = '1.1.2'
     ext.logback_version = '1.2.3'
     ext.prometheus_version = '0.5.0'
     ext.spek_version = "2.0.0-alpha.1"
