@@ -6,13 +6,13 @@ import org.joda.time.DateTime
 
 object Sykmelding : Table() {
     val id = integer("id").autoIncrement("sykmeldinger").primaryKey()
-    val aktoerIdPasient = varchar("aktoerIdPasient", length = 50)
-    val aktoerIdLege = varchar("aktoerIdLege", length = 50)
-    val navLogId = varchar("navLogId", length = 50)
-    val msgId = varchar("msgId", length = 50)
-    val legekontorOrgNr = varchar("legekontorOrgNr", length = 50)
-    val legekontorOrgName = varchar("legekontorOrgName", length = 50)
-    val mottattDato = datetime("mottattDato")
+    val aktoerIdPasient = varchar("aktoeridpasient", length = 50)
+    val aktoerIdLege = varchar("aktoeridlege", length = 50)
+    val navLogId = varchar("navlogid", length = 50)
+    val msgId = varchar("msgid", length = 50)
+    val legekontorOrgNr = varchar("legekontororgnr", length = 50)
+    val legekontorOrgName = varchar("legekontororgname", length = 50)
+    val mottattDato = datetime("mottattdato")
 }
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
