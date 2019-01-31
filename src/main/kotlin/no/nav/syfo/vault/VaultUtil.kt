@@ -19,8 +19,8 @@ fun postgresDBUsernamePassword(cluster: String): PostgresDBUsernamePassword {
     log.info("VaultClient Vault REST client OK")
 
     try {
-         log.info("Verify that the token is ok")
-         vaultClient.auth().lookupSelf()
+        log.info("Verify that the token is ok")
+        vaultClient.auth().lookupSelf()
         } catch (e: VaultException) {
                 if (e.httpStatusCode == 403) {
                     log.error("The application's vault token seems to be invalid", e)
