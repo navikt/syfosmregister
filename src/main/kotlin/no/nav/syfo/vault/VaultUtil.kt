@@ -14,6 +14,9 @@ private val log = LoggerFactory.getLogger("nav.syfo.vault.VaultUtil")
 
 fun postgresDBUsernamePassword(cluster: String): PostgresDBUsernamePassword {
 
+    // TODO refreshing the vault token, and refresh the username and password from vault
+    // and make the code more easy to read
+
     val vaultClient = Vault(vaultConfig())
 
     log.info("VaultClient Vault REST client OK")
