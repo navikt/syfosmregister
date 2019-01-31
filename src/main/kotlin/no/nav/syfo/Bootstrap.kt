@@ -98,14 +98,16 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
 
             // TODO Trying to get postgress SQL user, name and token, postgress DB
 
-            Sykmelding.insert {
-                        it[aktoerIdPasient] = receivedSykmelding.aktoerIdPasient
-                        it[aktoerIdLege] = receivedSykmelding.aktoerIdLege
-                        it[navLogId] = receivedSykmelding.navLogId
-                        it[msgId] = receivedSykmelding.msgId
-                        it[legekontorOrgNr] = receivedSykmelding.legekontorOrgNr
-                        it[legekontorOrgName] = receivedSykmelding.legekontorOrgName
-                        it[mottattDato] = DateTime(receivedSykmelding.mottattDato.year, receivedSykmelding.mottattDato.monthValue, receivedSykmelding.mottattDato.dayOfMonth, receivedSykmelding.mottattDato.hour, receivedSykmelding.mottattDato.minute)
+            Database.dbQuery {
+                 Sykmelding.insert {
+                    it[aktoerIdPasient] = receivedSykmelding.aktoerIdPasient
+                    it[aktoerIdLege] = receivedSykmelding.aktoerIdLege
+                    it[navLogId] = receivedSykmelding.navLogId
+                    it[msgId] = receivedSykmelding.msgId
+                    it[legekontorOrgNr] = receivedSykmelding.legekontorOrgNr
+                    it[legekontorOrgName] = receivedSykmelding.legekontorOrgName
+                    it[mottattDato] = DateTime(receivedSykmelding.mottattDato.year, receivedSykmelding.mottattDato.monthValue, receivedSykmelding.mottattDato.dayOfMonth, receivedSykmelding.mottattDato.hour, receivedSykmelding.mottattDato.minute)
+                }
             }
                 /*
             SykmeldingService().leggtilSykmelding(
