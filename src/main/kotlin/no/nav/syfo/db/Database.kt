@@ -37,7 +37,7 @@ object Database {
     }
 
     fun hikari(config: ApplicationConfig) = HikariDataSource(HikariConfig().apply {
-        val postgresDBUsernamePassword = postgresDBUsernamePassword()
+        val postgresDBUsernamePassword = postgresDBUsernamePassword(config.cluster)
         username = postgresDBUsernamePassword.username
         password = postgresDBUsernamePassword.password
         jdbcUrl = config.syfosmregisterDBURL

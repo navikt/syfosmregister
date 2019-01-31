@@ -12,7 +12,8 @@ data class ApplicationConfig(
     val kafkaSm2013AutomaticDigitalHandlingTopic: String = "privat-syfo-sm2013-automatiskBehandling",
     val kafkaBootstrapServers: String,
     val syfosmregisterDBURL: String,
-    val vaultURL: String
+    val vaultURL: String,
+    val cluster: String
 )
 
 data class VaultCredentials(
