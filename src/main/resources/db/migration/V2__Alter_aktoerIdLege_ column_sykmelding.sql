@@ -1,1 +1,0 @@
-ALTER TABLE Sykmelding ALTER COLUMN aktoerIdLege VARCHAR(50) NULL;
