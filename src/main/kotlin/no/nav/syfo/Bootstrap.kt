@@ -99,7 +99,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             // TODO Trying to get postgress SQL user, name and token, postgress DB
 
             Database.dbQuery {
-                 Sykmelding.insert {
+                Sykmelding.insert {
                     it[aktoerIdPasient] = receivedSykmelding.aktoerIdPasient
                     it[aktoerIdLege] = receivedSykmelding.aktoerIdLege
                     it[navLogId] = receivedSykmelding.navLogId
