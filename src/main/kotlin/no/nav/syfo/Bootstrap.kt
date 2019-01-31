@@ -19,10 +19,10 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.receivedSykmelding.NySykmelding
-import no.nav.syfo.receivedSykmelding.SykmeldingService
+import no.nav.syfo.receivedSykmelding.Sykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.jetbrains.exposed.sql.insert
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -98,6 +98,16 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
 
             // TODO Trying to get postgress SQL user, name and token, postgress DB
 
+            Sykmelding.insert {
+                        it[aktoerIdPasient] = receivedSykmelding.aktoerIdPasient
+                        it[aktoerIdLege] = receivedSykmelding.aktoerIdLege
+                        it[navLogId] = receivedSykmelding.navLogId
+                        it[msgId] = receivedSykmelding.msgId
+                        it[legekontorOrgNr] = receivedSykmelding.legekontorOrgNr
+                        it[legekontorOrgName] = receivedSykmelding.legekontorOrgName
+                        it[mottattDato] = DateTime(receivedSykmelding.mottattDato.year, receivedSykmelding.mottattDato.monthValue, receivedSykmelding.mottattDato.dayOfMonth, receivedSykmelding.mottattDato.hour, receivedSykmelding.mottattDato.minute)
+            }
+                /*
             SykmeldingService().leggtilSykmelding(
                     NySykmelding.Sykmelding(
                             aktoerIdPasient = receivedSykmelding.aktoerIdPasient,
@@ -109,6 +119,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                             mottattDato = DateTime(receivedSykmelding.mottattDato.year, receivedSykmelding.mottattDato.monthValue, receivedSykmelding.mottattDato.dayOfMonth, receivedSykmelding.mottattDato.hour, receivedSykmelding.mottattDato.minute)
                     )
             )
+            */
             log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
         }
     }
