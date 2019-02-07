@@ -26,7 +26,7 @@ object KafkaITSpek : Spek({
             topics = listOf(topic)
     )
 
-    val credentials = VaultCredentials("", "")
+    val credentials = VaultSecrets("", "")
     val config: ApplicationConfig = objectMapper.readValue(File("application-local.json"))
 
     val producer = KafkaProducer<String, String>(readProducerConfig(config, credentials, StringSerializer::class).apply {

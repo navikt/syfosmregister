@@ -13,10 +13,11 @@ data class ApplicationConfig(
     val kafkaBootstrapServers: String,
     val syfosmregisterDBURL: String,
     val vaultURL: String,
-    val cluster: String
+    val cluster: String,
+    val databaseName: String = "syfosmregister"
 )
 
-data class VaultCredentials(
+data class VaultSecrets(
     val serviceuserUsername: String,
     val serviceuserPassword: String
 )

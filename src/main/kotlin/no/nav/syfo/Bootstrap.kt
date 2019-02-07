@@ -15,11 +15,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
-
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.db.Sykmelding
+import no.nav.syfo.db.dbQuery
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.jetbrains.exposed.sql.insert
@@ -42,7 +42,7 @@ private val log = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 @ObsoleteCoroutinesApi
 fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
     val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
-    val credentials: VaultCredentials = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
+    val secrets: VaultSecrets = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
     val applicationState = ApplicationState()
 
     val applicationServer = embeddedServer(Netty, config.applicationPort) {
@@ -52,10 +52,16 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     try {
         val listeners = (1..config.applicationThreads).map {
             launch {
-                val consumerProperties = readConsumerConfig(config, credentials, valueDeserializer = StringDeserializer::class)
+                val consumerProperties = readConsumerConfig(config, secrets, valueDeserializer = StringDeserializer::class)
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.kafkaSm2013AutomaticPapirmottakTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
-                Database.init(config)
+                try {
+                    Database(config, secrets).init()
+                } catch (e: Exception) {
+                    log.error("Database error(s)", e)
+                    applicationState.initialized = false
+                    applicationState.running = false
+                }
                 blockingApplicationLogic(applicationState, kafkaconsumer)
             }
         }.toList()
@@ -97,7 +103,7 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
             // TODO make this into a method and use mapping
-            Database.dbQuery {
+            dbQuery {
                 Sykmelding.insert {
                     it[aktoerIdPasient] = receivedSykmelding.aktoerIdPasient
                     it[aktoerIdLege] = receivedSykmelding.aktoerIdLege
