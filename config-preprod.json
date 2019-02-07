@@ -1,6 +1,6 @@
 {
   "kafkaBootstrapServers": "SSL://b27apvl00045.preprod.local:8443,SSL://b27apvl00046.preprod.local:8443,SSL://b27apvl00047.preprod.local:8443",
   "syfosmregisterDBURL": "jdbc:postgresql://B27DBVL003.preprod.local:5432/syfosmregister",
-  "mountPathVault" : "/postgressql/preprod-fss",
+  "mountPathVault" : "/postgresql/preprod-fss",
   "cluster": "preprod-fss"
 }
