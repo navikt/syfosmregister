@@ -12,7 +12,7 @@ data class ApplicationConfig(
     val kafkaSm2013AutomaticDigitalHandlingTopic: String = "privat-syfo-sm2013-automatiskBehandling",
     val kafkaBootstrapServers: String,
     val syfosmregisterDBURL: String,
-    val vaultURL: String,
+    val mountPathVault: String,
     val cluster: String,
     val databaseName: String = "syfosmregister"
 )

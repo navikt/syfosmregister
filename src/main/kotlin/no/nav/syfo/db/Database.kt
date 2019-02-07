@@ -44,7 +44,7 @@ class Database(private val config: ApplicationConfig, private val vaultSecrets: 
             launch { runRenewTokenTask() }
             Flyway.configure().run {
                 val credentials = getNewCredentials(
-                        mountPath = config.vaultURL,
+                        mountPath = config.mountPathVault,
                         databaseName = config.databaseName,
                         role = Role.ADMIN
                 )
@@ -53,7 +53,7 @@ class Database(private val config: ApplicationConfig, private val vaultSecrets: 
                 load().migrate()
             }
             val initialCredentials = getNewCredentials(
-                    mountPath = config.vaultURL,
+                    mountPath = config.mountPathVault,
                     databaseName = config.databaseName,
                     role = Role.USER
             )
@@ -75,7 +75,7 @@ class Database(private val config: ApplicationConfig, private val vaultSecrets: 
                 delay(suggestedRefreshIntervalInMillis(initialCredentials.leaseDuration * 1000))
                 runRenewCredentialsTask(
                         dataSource = hikariDataSource,
-                        mountPath = config.vaultURL,
+                        mountPath = config.mountPathVault,
                         databaseName = config.databaseName,
                         role = Role.USER
                 ) { true }
