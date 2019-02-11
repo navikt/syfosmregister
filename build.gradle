@@ -29,7 +29,7 @@ plugins {
 }
 
 group 'no.nav.syfo'
-version '1.0.3'
+version '1.0.4'
 
 jar.manifest {
     attributes("Main-Class" : "no.nav.syfo.BootstrapKt")
