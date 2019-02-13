@@ -110,6 +110,8 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                     it[navLogId] = receivedSykmelding.navLogId
                     it[msgId] = receivedSykmelding.msgId
                     it[legekontorOrgNr] = receivedSykmelding.legekontorOrgNr
+                    it[legekontorHerId] = receivedSykmelding.legekontorHerId
+                    it[legekontorReshId] = receivedSykmelding.legekontorReshId
                     it[legekontorOrgName] = receivedSykmelding.legekontorOrgName
                     it[mottattDato] = DateTime(receivedSykmelding.mottattDato.year, receivedSykmelding.mottattDato.monthValue, receivedSykmelding.mottattDato.dayOfMonth, receivedSykmelding.mottattDato.hour, receivedSykmelding.mottattDato.minute)
                 }
