@@ -118,8 +118,8 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             }
             log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
         }
+        delay(100)
     }
-    delay(100)
 }
 
 fun Application.initRouting(applicationState: ApplicationState) {
