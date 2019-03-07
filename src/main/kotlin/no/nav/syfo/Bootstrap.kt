@@ -9,6 +9,7 @@ import io.ktor.application.Application
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -49,6 +50,8 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
         initRouting(applicationState)
     }.start(wait = false)
 
+    DefaultExports.initialize()
+
     try {
         val listeners = (1..config.applicationThreads).map {
             launch {
@@ -69,14 +72,12 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
             }
         }.toList()
 
-        runBlocking {
-            Runtime.getRuntime().addShutdownHook(Thread {
-                applicationServer.stop(10, 10, TimeUnit.SECONDS)
-            })
+        applicationState.initialized = true
 
-            applicationState.initialized = true
-            listeners.forEach { it.join() }
-        }
+        Runtime.getRuntime().addShutdownHook(Thread {
+            applicationServer.stop(10, 10, TimeUnit.SECONDS)
+        })
+        runBlocking { listeners.forEach { it.join() } }
     } finally {
         applicationState.running = false
     }
@@ -91,9 +92,8 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
                 StructuredArguments.keyValue("msgId", "missing")
         )
 
-        val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") {
-            "{}"
-        }
+        val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
+        log.info("Received a SM2013 $logKeys", *logValues)
 
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
