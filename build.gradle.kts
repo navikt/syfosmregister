@@ -10,7 +10,8 @@ val jacksonVersion = "2.9.7"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
 val kafkaVersion = "2.0.0"
-val kafkaEmbeddedVersion = "1.0.0"
+val confluentVersion = "5.0.0"
+val kafkaEmbeddedVersion = "2.0.2"
 val kluentVersion = "1.39"
 val ktorVersion = "1.1.3"
 val logbackVersion = "1.2.3"
@@ -77,6 +78,7 @@ dependencies {
     implementation ("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
 
     implementation ("org.apache.kafka:kafka_2.12:$kafkaVersion")
+    implementation ("io.confluent:kafka-avro-serializer:$confluentVersion")
 
     implementation ("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation ("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")

@@ -2,5 +2,10 @@
   "kafkaBootstrapServers": "SSL://b27apvl00045.preprod.local:8443,SSL://b27apvl00046.preprod.local:8443,SSL://b27apvl00047.preprod.local:8443",
   "syfosmregisterDBURL": "jdbc:postgresql://B27DBVL003.preprod.local:5432/syfosmregister",
   "mountPathVault" : "/postgresql/preprod-fss",
-  "cluster": "preprod-fss"
+  "cluster": "preprod-fss",
+  "databaseName" : "syfosmregister",
+  "applicationName" : "syfosmregister",
+  "kafkaSm2013AutomaticPapirmottakTopic" : "privat-syfo-smpapir-automatiskBehandling",
+  "kafkaSm2013AutomaticDigitalHandlingTopic":  "privat-syfo-sm2013-automatiskBehandling",
+  "sm2013ManualHandlingTopic": "privat-syfo-sm2013-manuellBehandling"
 }

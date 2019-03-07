@@ -52,9 +52,12 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     try {
         val listeners = (1..config.applicationThreads).map {
             launch {
-                val consumerProperties = readConsumerConfig(config, secrets, valueDeserializer = StringDeserializer::class)
+
+                val kafkaBaseConfig = loadBaseConfig(config, secrets)
+                val consumerProperties = kafkaBaseConfig.toConsumerConfig("${config.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                kafkaconsumer.subscribe(listOf(config.kafkaSm2013AutomaticPapirmottakTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
+                kafkaconsumer.subscribe(listOf(config.sm2013ManualHandlingTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
                 try {
                     Database(config, secrets).init()
                 } catch (e: Exception) {
@@ -105,8 +108,8 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
             // TODO make this into a method and use mapping
             dbQuery {
                 Sykmelding.insert {
-                    it[aktoerIdPasient] = receivedSykmelding.aktoerIdPasient
-                    it[aktoerIdLege] = receivedSykmelding.aktoerIdLege
+                    it[aktoerIdPasient] = receivedSykmelding.sykmelding.pasientAktoerId
+                    it[aktoerIdLege] = receivedSykmelding.sykmelding.behandler.aktoerId
                     it[navLogId] = receivedSykmelding.navLogId
                     it[msgId] = receivedSykmelding.msgId
                     it[legekontorOrgNr] = receivedSykmelding.legekontorOrgNr

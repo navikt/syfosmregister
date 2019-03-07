@@ -2,5 +2,10 @@
   "kafkaBootstrapServers": "SASL_SSL://a01apvl00145.adeo.no:8443,SASL_SSL://a01apvl00146.adeo.no:8443,SASL_SSL://a01apvl00147.adeo.no:8443,SASL_SSL://a01apvl00149.adeo.no:8443",
   "syfosmregisterDBURL": "jdbc:postgresql://fsspgdb.adeo.no:5432/syfosmregister",
   "mountPathVault" : "/postgresql/prod-fss",
-  "cluster": "prod-fss"
+  "cluster": "prod-fss",
+  "databaseName" : "syfosmregister",
+  "applicationName" : "syfosmregister",
+  "kafkaSm2013AutomaticPapirmottakTopic" : "privat-syfo-smpapir-automatiskBehandling",
+  "kafkaSm2013AutomaticDigitalHandlingTopic":  "privat-syfo-sm2013-automatiskBehandling",
+  "sm2013ManualHandlingTopic": "privat-syfo-sm2013-manuellBehandling"
 }

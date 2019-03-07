@@ -8,8 +8,9 @@ data class Sykmelding(
     val pasientAktoerId: String,
     val medisinskVurdering: MedisinskVurdering,
     val skjermesForPasient: Boolean,
+    val arbeidsgiver: Arbeidsgiver,
     val perioder: List<Periode>,
-    val prognose: Prognose,
+    val prognose: Prognose?,
     val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>,
     val tiltakArbeidsplassen: String?,
     val tiltakNAV: String?,
@@ -23,8 +24,8 @@ data class Sykmelding(
 )
 
 data class MedisinskVurdering(
-    val hovedDiagnose: Diagnose,
-    val bidiagnoser: List<Diagnose>,
+    val hovedDiagnose: Diagnose?,
+    val biDiagnoser: List<Diagnose>,
     val svangerskap: Boolean,
     val yrkesskade: Boolean,
     val yrkesskadeDato: LocalDate?,
@@ -37,9 +38,22 @@ data class Diagnose(
 )
 
 data class AnnenFraversArsak(
-    val beskrivelse: String,
+    val beskrivelse: String?,
     val grunn: List<AnnenFraverGrunn>
 )
+
+data class Arbeidsgiver(
+    val harArbeidsgiver: HarArbeidsgiver,
+    val navn: String?,
+    val yrkesbetegnelse: String?,
+    val stillingsprosent: Int?
+)
+
+enum class HarArbeidsgiver(val codeValue: String, val text: String, val oid: String = "2.16.578.1.12.4.1.1.8130") {
+    EN_ARBEIDSGIVER("1", "Én arbeidsgiver"),
+    FLERE_ARBEIDSGIVERE("2", "Flere arbeidsgivere"),
+    INGEN_ARBEIDSGIVER("3", "Ingen arbeidsgiver")
+}
 
 data class Periode(
     val fom: LocalDate,
@@ -57,12 +71,12 @@ data class AktivitetIkkeMulig(
 )
 
 data class ArbeidsrelatertArsak(
-    val beskrivelse: String,
+    val beskrivelse: String?,
     val arsak: List<ArbeidsrelatertArsakType>
 )
 
 data class MedisinskArsak(
-    val beskrivelse: String,
+    val beskrivelse: String?,
     val arsak: List<MedisinskArsakType>
 )
 
@@ -85,7 +99,7 @@ data class Gradert(
 
 data class Prognose(
     val arbeidsforEtterPeriode: Boolean,
-    val hennsynArbeidsplassen: String?,
+    val hensynArbeidsplassen: String?,
     val erIArbeid: ErIArbeid?,
     val erIkkeIArbeid: ErIkkeIArbeid?
 )

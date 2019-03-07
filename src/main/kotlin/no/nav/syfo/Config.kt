@@ -8,13 +8,15 @@ val vaultApplicationPropertiesPath: Path = Paths.get("/var/run/secrets/nais.io/v
 data class ApplicationConfig(
     val applicationPort: Int = 8080,
     val applicationThreads: Int = 1,
-    val kafkaSm2013AutomaticPapirmottakTopic: String = "privat-syfo-smpapir-automatiskBehandling",
-    val kafkaSm2013AutomaticDigitalHandlingTopic: String = "privat-syfo-sm2013-automatiskBehandling",
+    val kafkaSm2013AutomaticPapirmottakTopic: String,
+    val kafkaSm2013AutomaticDigitalHandlingTopic: String,
     val kafkaBootstrapServers: String,
     val syfosmregisterDBURL: String,
     val mountPathVault: String,
     val cluster: String,
-    val databaseName: String = "syfosmregister"
+    val databaseName: String,
+    val applicationName: String,
+    val sm2013ManualHandlingTopic: String
 )
 
 data class VaultSecrets(

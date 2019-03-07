@@ -3,6 +3,7 @@ package no.nav.syfo.db
 import com.bettercloud.vault.VaultException
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -36,6 +37,7 @@ private enum class Role {
     override fun toString() = name.toLowerCase()
 }
 
+@ObsoleteCoroutinesApi
 class Database(private val config: ApplicationConfig, private val vaultSecrets: VaultSecrets) {
     private val dispatcher: CoroutineContext = newFixedThreadPoolContext(4, "database-pool")
 
