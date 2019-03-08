@@ -105,7 +105,6 @@ suspend fun blockingApplicationLogic(
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
-            // TODO make this into a method and use mapping
             dbQuery {
                 Sykmelding.insert {
                     it[aktoerIdPasient] = receivedSykmelding.sykmelding.pasientAktoerId
