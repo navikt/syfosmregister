@@ -3,14 +3,13 @@ package no.nav.syfo.db
 import com.bettercloud.vault.VaultException
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.withContext
 import no.nav.syfo.ApplicationConfig
-import no.nav.syfo.VaultSecrets
+import no.nav.syfo.ApplicationState
 import no.nav.syfo.vault.runRenewTokenTask
 import no.nav.syfo.vault.suggestedRefreshIntervalInMillis
 import no.nav.syfo.vault.vaultClient
@@ -37,12 +36,9 @@ private enum class Role {
     override fun toString() = name.toLowerCase()
 }
 
-@ObsoleteCoroutinesApi
-class Database(private val config: ApplicationConfig, private val vaultSecrets: VaultSecrets) {
-    private val dispatcher: CoroutineContext = newFixedThreadPoolContext(4, "database-pool")
-
+class Database(private val config: ApplicationConfig, private val applicationState: ApplicationState) {
     suspend fun init() {
-        withContext(dispatcher) {
+        coroutineScope {
             launch { runRenewTokenTask() }
             Flyway.configure().run {
                 val credentials = getNewCredentials(
@@ -80,7 +76,7 @@ class Database(private val config: ApplicationConfig, private val vaultSecrets: 
                         mountPath = config.mountPathVault,
                         databaseName = config.databaseName,
                         role = Role.USER
-                ) { true }
+                ) { applicationState.running }
             }
         }
     }

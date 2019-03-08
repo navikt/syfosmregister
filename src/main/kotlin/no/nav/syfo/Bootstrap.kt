@@ -63,7 +63,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.sm2013ManualHandlingTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
                 try {
-                    Database(config, secrets).init()
+                    Database(config, applicationState).init()
                 } catch (e: Exception) {
                     log.error("Database error(s)", e)
                     applicationState.initialized = false
