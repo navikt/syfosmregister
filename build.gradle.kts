@@ -1,10 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
 version = "1.0.7"
 
-val coroutinesVersion = "1.0.0"
+val coroutinesVersion = "1.0.1"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.9.7"
 val jaxbApiVersion = "2.4.0-b180830.0359"
@@ -35,10 +36,9 @@ tasks.withType<Jar> {
 
 
 plugins {
-    java
-    kotlin("jvm") version "1.3.21"
     id("org.jmailen.kotlinter") version "1.21.0"
-    id("com.diffplug.gradle.spotless") version "3.14.0"
+    kotlin("jvm") version "1.3.21"
+    id("com.diffplug.gradle.spotless") version "3.18.0"
     id("com.github.johnrengelman.shadow") version "4.0.4"
 }
 
@@ -60,6 +60,10 @@ repositories {
     maven (url= "https://kotlin.bintray.com/kotlinx")
     mavenCentral()
     jcenter()
+}
+
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
 }
 
 dependencies {
@@ -134,6 +138,6 @@ tasks {
         useJUnitPlatform {
             includeEngines("spek2")
         }
-        testLogging.events("passed", "skipped", "failed")
+        testLogging.showStandardStreams = true
     }
 }

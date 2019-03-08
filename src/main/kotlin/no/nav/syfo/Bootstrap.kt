@@ -10,6 +10,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.prometheus.client.hotspot.DefaultExports
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -83,8 +84,10 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     }
 }
 
-@ObsoleteCoroutinesApi
-suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaconsumer: KafkaConsumer<String, String>) {
+suspend fun CoroutineScope.blockingApplicationLogic(
+    applicationState: ApplicationState,
+    kafkaconsumer: KafkaConsumer<String, String>
+) {
     while (applicationState.running) {
         var logValues = arrayOf(
                 StructuredArguments.keyValue("smId", "missing"),
@@ -93,7 +96,6 @@ suspend fun blockingApplicationLogic(applicationState: ApplicationState, kafkaco
         )
 
         val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
-        log.info("Received a SM2013 $logKeys", *logValues)
 
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())

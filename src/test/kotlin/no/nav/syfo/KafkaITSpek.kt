@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.common.KafkaEnvironment
 import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -10,7 +9,6 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.io.File
 import java.net.ServerSocket
 import java.time.Duration
 import java.util.Properties
@@ -27,7 +25,19 @@ object KafkaITSpek : Spek({
     )
 
     val credentials = VaultSecrets("", "")
-    val config: ApplicationConfig = objectMapper.readValue(File("application-local.json"))
+    val config = ApplicationConfig(
+            applicationPort = getRandomPort(),
+            applicationThreads = 1,
+            kafkaSm2013AutomaticPapirmottakTopic = "topic1",
+            kafkaSm2013AutomaticDigitalHandlingTopic = "topic3",
+            kafkaBootstrapServers = embeddedEnvironment.brokersURL,
+            syfosmregisterDBURL = "12314.adeo.no",
+            mountPathVault = "vault.adeo.no",
+            cluster = "local",
+            databaseName = "syfosmregister",
+            applicationName = "syfosmregister",
+            sm2013ManualHandlingTopic = "topic2"
+    )
 
     fun Properties.overrideForTest(): Properties = apply {
         remove("security.protocol")
