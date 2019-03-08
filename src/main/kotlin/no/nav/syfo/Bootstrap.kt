@@ -10,8 +10,6 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -41,7 +39,6 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 private val log = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
-@ObsoleteCoroutinesApi
 fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
     val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
     val secrets: VaultSecrets = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
@@ -53,22 +50,21 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
 
     DefaultExports.initialize()
 
+    val kafkaBaseConfig = loadBaseConfig(config, secrets)
+    val consumerProperties = kafkaBaseConfig.toConsumerConfig("${config.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+
+    try {
+        Database(config, applicationState).init()
+    } catch (e: Exception) {
+        log.error("Database error(s)", e)
+        applicationState.running = false
+    }
+
     try {
         val listeners = (1..config.applicationThreads).map {
             launch {
-
-                val kafkaBaseConfig = loadBaseConfig(config, secrets)
-                val consumerProperties = kafkaBaseConfig.toConsumerConfig("${config.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
-
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.sm2013ManualHandlingTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
-                try {
-                    Database(config, applicationState).init()
-                } catch (e: Exception) {
-                    log.error("Database error(s)", e)
-                    applicationState.initialized = false
-                    applicationState.running = false
-                }
                 blockingApplicationLogic(applicationState, kafkaconsumer)
             }
         }.toList()
@@ -84,7 +80,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCo
     }
 }
 
-suspend fun CoroutineScope.blockingApplicationLogic(
+suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaconsumer: KafkaConsumer<String, String>
 ) {
