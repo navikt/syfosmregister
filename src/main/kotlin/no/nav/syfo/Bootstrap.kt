@@ -39,7 +39,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 private val log = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
-fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(2).asCoroutineDispatcher()) {
+fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
     val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
     val secrets: VaultSecrets = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
     val applicationState = ApplicationState()
