@@ -53,11 +53,13 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(4).asCo
     val kafkaBaseConfig = loadBaseConfig(config, secrets)
     val consumerProperties = kafkaBaseConfig.toConsumerConfig("${config.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
 
-    try {
-        Database(config, applicationState).init()
-    } catch (e: Exception) {
-        log.error("Database error(s)", e)
-        applicationState.running = false
+    launch {
+        try {
+            Database(config, applicationState).init()
+        } catch (e: Exception) {
+            log.error("Database error(s)", e)
+            applicationState.running = false
+        }
     }
 
     try {
