@@ -1,2 +1,2 @@
 ALTER TABLE Sykmelding
-ALTER COLUMN legekontorOrgName VARCHAR(100) NOT NULL;
+ALTER COLUMN legekontorOrgName VARCHAR(60) NOT NULL;
