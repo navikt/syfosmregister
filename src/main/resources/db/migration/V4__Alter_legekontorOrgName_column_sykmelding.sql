@@ -1,2 +1,2 @@
 ALTER TABLE Sykmelding
-ALTER COLUMN legekontorOrgName VARCHAR(200);
+ALTER COLUMN legekontorOrgName VARCHAR(100);
