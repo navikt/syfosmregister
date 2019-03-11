@@ -11,6 +11,6 @@ object Sykmelding : Table() {
     val legekontorOrgNr = varchar("legekontororgnr", length = 50).nullable()
     val legekontorHerId = varchar("legekontorherid", length = 50).nullable()
     val legekontorReshId = varchar("legekontorreshid", length = 50).nullable()
-    val legekontorOrgName = varchar("legekontororgname", length = 100)
+    val legekontorOrgName = varchar("legekontororgname", length = 175)
     val mottattDato = datetime("mottattdato")
 }
