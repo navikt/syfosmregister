@@ -35,7 +35,7 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.pr
     it.setString(9, sykmeldingDB.epjSystemNavn)
     it.setString(10, sykmeldingDB.epjSystemVersjon)
     it.setTimestamp(11, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
-    it.setObject(12, sykmeldingDB.sykmelding.toPGObject())
+    it.setObject(12, sykmeldingDB.sykmelding_json.toPGObject())
     it.execute()
 }
 
