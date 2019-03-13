@@ -117,7 +117,7 @@ suspend fun blockingApplicationLogic(
                         epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
                         epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
                         mottattTidspunkt = receivedSykmelding.mottattDato,
-                        sykmelding_json = receivedSykmelding.sykmelding
+                        sykmelding = receivedSykmelding.sykmelding
 
                 ))
             log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)

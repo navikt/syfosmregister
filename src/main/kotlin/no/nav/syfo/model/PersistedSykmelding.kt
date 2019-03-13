@@ -18,7 +18,7 @@ data class PersistedSykmelding(
     val epjSystemNavn: String,
     val epjSystemVersjon: String,
     val mottattTidspunkt: LocalDateTime,
-    val sykmelding_json: Sykmelding
+    val sykmelding: Sykmelding
 )
 
 fun fromResultSet(resultSet: ResultSet) = PersistedSykmelding(
@@ -33,7 +33,7 @@ fun fromResultSet(resultSet: ResultSet) = PersistedSykmelding(
         resultSet.getString("epj_system_navn"),
         resultSet.getString("epj_system_versjon"),
         resultSet.getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
-        objectMapper.readValue(resultSet.getString("sykmelding_json"))
+        objectMapper.readValue(resultSet.getString("sykmelding"))
 )
 
 fun Sykmelding.toPGObject() = PGobject().apply {
