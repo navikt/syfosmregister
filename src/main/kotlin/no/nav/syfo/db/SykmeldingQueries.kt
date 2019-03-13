@@ -19,7 +19,7 @@ INSERT INTO sykmelding(
     epj_system_versjon,
     mottatt_tidspunkt,
     sykmelding
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
 const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
 
