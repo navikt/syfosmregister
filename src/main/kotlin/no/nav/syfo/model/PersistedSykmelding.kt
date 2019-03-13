@@ -7,20 +7,19 @@ import java.sql.ResultSet
 import java.time.LocalDateTime
 
 data class PersistedSykmelding(
-        val pasientFnr: String,
-        val pasientAktoerId: String,
-        val legeFnr: String,
-        val legeAktoerId: String,
-        val mottakId: String,
-        val legekontorOrgNr: String?,
-        val legekontorHerId: String?,
-        val legekontorReshId: String?,
-        val epjSystemNavn: String,
-        val epjSystemVersjon: String,
-        val mottattTidspunkt: LocalDateTime,
-        val sykmelding: Sykmelding
+    val pasientFnr: String,
+    val pasientAktoerId: String,
+    val legeFnr: String,
+    val legeAktoerId: String,
+    val mottakId: String,
+    val legekontorOrgNr: String?,
+    val legekontorHerId: String?,
+    val legekontorReshId: String?,
+    val epjSystemNavn: String,
+    val epjSystemVersjon: String,
+    val mottattTidspunkt: LocalDateTime,
+    val sykmelding: Sykmelding
 )
-
 
 fun fromResultSet(resultSet: ResultSet) = PersistedSykmelding(
         resultSet.getString("pasient_fnr"),

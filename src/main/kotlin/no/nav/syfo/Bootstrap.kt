@@ -119,7 +119,6 @@ suspend fun blockingApplicationLogic(
                         mottattTidspunkt = receivedSykmelding.mottattDato,
                         sykmelding = receivedSykmelding.sykmelding
 
-
                 ))
             log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
         }

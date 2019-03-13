@@ -5,7 +5,6 @@ import no.nav.syfo.model.fromResultSet
 import no.nav.syfo.model.toPGObject
 import java.sql.Timestamp
 
-
 const val INSERT_QUERY = """
 INSERT INTO sykmelding(
     pasient_fnr),
@@ -23,7 +22,6 @@ INSERT INTO sykmelding(
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
 const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
-
 
 fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.prepareStatement(INSERT_QUERY).use {
     it.setString(1, sykmeldingDB.pasientFnr)

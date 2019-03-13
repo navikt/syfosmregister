@@ -7,7 +7,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import no.nav.syfo.ApplicationConfig
 import no.nav.syfo.ApplicationState
 import no.nav.syfo.vault.runRenewTokenTask
@@ -85,7 +84,7 @@ class Database(private val config: ApplicationConfig, private val applicationSta
     }
 }
 
-fun <T> ResultSet.toList(mapper: ResultSet.()->T) = mutableListOf<T>().apply {
+fun <T> ResultSet.toList(mapper: ResultSet.() -> T) = mutableListOf<T>().apply {
     while (next()) {
         add(mapper())
     }
