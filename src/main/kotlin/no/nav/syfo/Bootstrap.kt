@@ -17,13 +17,12 @@ import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.db.Database
+import no.nav.syfo.db.SykemdlingDB
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.db.Sykmelding
 import no.nav.syfo.db.dbQuery
+import no.nav.syfo.db.insert
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.jetbrains.exposed.sql.insert
-import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.Duration
@@ -106,17 +105,23 @@ suspend fun blockingApplicationLogic(
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
             dbQuery {
-                Sykmelding.insert {
-                    it[aktoerIdPasient] = receivedSykmelding.sykmelding.pasientAktoerId
-                    it[aktoerIdLege] = receivedSykmelding.sykmelding.behandler.aktoerId
-                    it[navLogId] = receivedSykmelding.navLogId
-                    it[msgId] = receivedSykmelding.msgId
-                    it[legekontorOrgNr] = receivedSykmelding.legekontorOrgNr
-                    it[legekontorHerId] = receivedSykmelding.legekontorHerId
-                    it[legekontorReshId] = receivedSykmelding.legekontorReshId
-                    it[legekontorOrgName] = receivedSykmelding.legekontorOrgName
-                    it[mottattDato] = DateTime(receivedSykmelding.mottattDato.year, receivedSykmelding.mottattDato.monthValue, receivedSykmelding.mottattDato.dayOfMonth, receivedSykmelding.mottattDato.hour, receivedSykmelding.mottattDato.minute)
-                }
+                insert("sykmelding",SykemdlingDB(
+                        pasientfnr = receivedSykmelding.personNrPasient,
+                        pasientaktorid = receivedSykmelding.sykmelding.pasientAktoerId,
+                        legefnr = receivedSykmelding.personNrLege,
+                        legeaktorid = receivedSykmelding.sykmelding.behandler.aktoerId,
+                        mottakid = receivedSykmelding.navLogId,
+                        legekontororgnr = receivedSykmelding.legekontorOrgNr,
+                        legekontorherid = receivedSykmelding.legekontorHerId,
+                        legekontorreshid = receivedSykmelding.legekontorReshId,
+                        legekontororgname = receivedSykmelding.legekontorOrgName,
+                        epjsystem = receivedSykmelding.sykmelding.avsenderSystem.navn,
+                        epjversjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
+                        mottatttidspunkt = receivedSykmelding.mottattDato,
+                        sykemelding = objectMapper.writeValueAsString(receivedSykmelding.sykmelding)
+
+
+                ))
             }
             log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
         }

@@ -14,9 +14,8 @@ import no.nav.syfo.vault.runRenewTokenTask
 import no.nav.syfo.vault.suggestedRefreshIntervalInMillis
 import no.nav.syfo.vault.vaultClient
 import org.flywaydb.core.Flyway
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.sql.Connection
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
@@ -37,6 +36,8 @@ private enum class Role {
 }
 
 class Database(private val config: ApplicationConfig, private val applicationState: ApplicationState) {
+    lateinit var connection: Connection
+
     suspend fun init() {
         coroutineScope {
             launch { runRenewTokenTask() }
@@ -68,7 +69,8 @@ class Database(private val config: ApplicationConfig, private val applicationSta
                 transactionIsolation = "TRANSACTION_REPEATABLE_READ"
                 validate()
             })
-            Database.connect(hikariDataSource)
+            connection = hikariDataSource.connection
+
             launch {
                 delay(suggestedRefreshIntervalInMillis(initialCredentials.leaseDuration * 1000))
                 runRenewCredentialsTask(
@@ -117,6 +119,7 @@ private suspend fun runRenewCredentialsTask(
     }
 }
 
-    suspend fun <T> dbQuery(block: () -> T): T = withContext(dispatcher) {
+    suspend fun <T> dbQuery(block: Connection.() -> T): T = withContext(dispatcher) {
+        Database.connection
         transaction { block() }
     }

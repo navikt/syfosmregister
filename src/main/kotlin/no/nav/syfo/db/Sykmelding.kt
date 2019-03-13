@@ -1,16 +1,26 @@
 package no.nav.syfo.db
 
-import org.jetbrains.exposed.sql.Table
+import java.time.LocalDateTime
 
-object Sykmelding : Table() {
-    val id = integer("id").autoIncrement("sykmeldinger").primaryKey()
-    val aktoerIdPasient = varchar("aktoeridpasient", length = 50)
-    val aktoerIdLege = varchar("aktoeridlege", length = 50)
-    val navLogId = varchar("navlogid", length = 50)
-    val msgId = varchar("msgid", length = 50)
-    val legekontorOrgNr = varchar("legekontororgnr", length = 50).nullable()
-    val legekontorHerId = varchar("legekontorherid", length = 50).nullable()
-    val legekontorReshId = varchar("legekontorreshid", length = 50).nullable()
-    val legekontorOrgName = varchar("legekontororgname", length = 175)
-    val mottattDato = datetime("mottattdato")
-}
+
+data class SykemdlingDB(
+        val pasientfnr: String,
+        val pasientaktorid: String,
+        val legefnr: String,
+        val legeaktorid: String,
+        val mottakid: String,
+        val legekontororgnr: String?,
+        val legekontorherid: String?,
+        val legekontorreshid: String?,
+        val legekontororgname: String?,
+        val epjsystem: String,
+        val epjversjon: String,
+        val mottatttidspunkt: LocalDateTime,
+        val sykemelding: String
+)
+
+fun insert(table: String, coloums: SykemdlingDB): String =
+        "INSERT INTO $table (pasientfnr,pasientaktorid,legefnr,legeaktorid," +
+                "mottakid,legekontororgnr,legekontorherid,legekontorreshid," +
+                "legekontororgname,epjsystem,epjversjon,mottatttidspunkt,sykemelding) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?', ?, ?, ?')"

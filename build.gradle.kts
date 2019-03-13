@@ -27,7 +27,6 @@ val postgresVersion = "42.2.5"
 val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
-val exposedVersion = "0.12.1"
 val vaultJavaDriveVersion = "3.1.0"
 
 tasks.withType<Jar> {
@@ -94,7 +93,6 @@ dependencies {
     implementation ("com.h2database:h2:$h2Version")
     implementation ("com.zaxxer:HikariCP:$hikariVersion")
     implementation ("org.flywaydb:flyway-core:$flywayVersion")
-    implementation ("org.jetbrains.exposed:exposed:$exposedVersion")
     implementation ("com.bettercloud:vault-java-driver:$vaultJavaDriveVersion")
 
     implementation ("no.nav.helse.xml:sm2013:$sykmeldingVersion")
