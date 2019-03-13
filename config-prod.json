@@ -11,6 +11,6 @@
   "mqHostname": "a01apvl064.adeo.no",
   "mqPort": 1414,
   "mqGatewayName": "MPLSC04",
-  "mqChannelName": "p_SYFOSMREGISTER",
+  "mqChannelName": "P_SYFOSMREGISTER",
   "backoutQueueName": "P_SYFOSMMOTTAK.INPUT_BOQ"
 }
