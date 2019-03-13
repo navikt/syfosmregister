@@ -20,6 +20,9 @@ import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.db.insertSykmelding
 import no.nav.syfo.model.PersistedSykmelding
+import no.nav.syfo.util.connectionFactory
+import no.nav.syfo.util.loadBaseConfig
+import no.nav.syfo.util.toConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
@@ -27,6 +30,8 @@ import java.io.File
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import javax.jms.MessageProducer
+import javax.jms.Session
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -61,12 +66,20 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
         }
     }
 
+    connectionFactory(config).createConnection(secrets.mqUsername, secrets.mqPassword).use { connection ->
+        connection.start()
+
     try {
         val listeners = (1..config.applicationThreads).map {
             launch {
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.sm2013ManualHandlingTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
-                blockingApplicationLogic(applicationState, kafkaconsumer, database)
+
+                val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+                val backoutQueue = session.createQueue(config.backoutQueueName)
+                val backoutProducer = session.createProducer(backoutQueue)
+
+                blockingApplicationLogic(applicationState, kafkaconsumer, database, backoutProducer, session)
             }
         }.toList()
 
@@ -79,12 +92,15 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     } finally {
         applicationState.running = false
     }
+    }
 }
 
 suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
     kafkaconsumer: KafkaConsumer<String, String>,
-    database: Database
+    database: Database,
+    backoutProducer: MessageProducer,
+    session: Session
 ) {
     while (applicationState.running) {
         var logValues = arrayOf(
@@ -104,7 +120,7 @@ suspend fun blockingApplicationLogic(
             )
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
-
+            try {
                 database.insertSykmelding(PersistedSykmelding(
                         pasientFnr = receivedSykmelding.personNrPasient,
                         pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
@@ -121,6 +137,12 @@ suspend fun blockingApplicationLogic(
 
                 ))
             log.info("SM2013, stored in the database, $logKeys", *logValues)
+            } catch (e: Exception) {
+                log.error("Exception caught while handling message, sending to backout $logKeys", *logValues, e)
+                backoutProducer.send(session.createTextMessage().apply {
+                    text = objectMapper.writeValueAsString(receivedSykmelding)
+                })
+            }
         }
         delay(100)
     }

@@ -1,6 +1,8 @@
-package no.nav.syfo
+package no.nav.syfo.util
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
+import no.nav.syfo.ApplicationConfig
+import no.nav.syfo.VaultSecrets
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.Deserializer

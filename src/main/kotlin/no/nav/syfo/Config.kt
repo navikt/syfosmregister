@@ -16,10 +16,17 @@ data class ApplicationConfig(
     val cluster: String,
     val databaseName: String,
     val applicationName: String,
-    val sm2013ManualHandlingTopic: String
+    val sm2013ManualHandlingTopic: String,
+    val mqHostname: String,
+    val mqPort: Int,
+    val mqGatewayName: String,
+    val mqChannelName: String,
+    val backoutQueueName: String
 )
 
 data class VaultSecrets(
     val serviceuserUsername: String,
-    val serviceuserPassword: String
+    val serviceuserPassword: String,
+    val mqUsername: String,
+    val mqPassword: String
 )

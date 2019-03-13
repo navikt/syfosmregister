@@ -1,6 +1,9 @@
 package no.nav.syfo
 
 import no.nav.common.KafkaEnvironment
+import no.nav.syfo.util.loadBaseConfig
+import no.nav.syfo.util.toConsumerConfig
+import no.nav.syfo.util.toProducerConfig
 import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -24,7 +27,7 @@ object KafkaITSpek : Spek({
             topics = listOf(topic)
     )
 
-    val credentials = VaultSecrets("", "")
+    val credentials = VaultSecrets("", "", "", "")
     val config = ApplicationConfig(
             applicationPort = getRandomPort(),
             applicationThreads = 1,
@@ -36,7 +39,12 @@ object KafkaITSpek : Spek({
             cluster = "local",
             databaseName = "syfosmregister",
             applicationName = "syfosmregister",
-            sm2013ManualHandlingTopic = "topic2"
+            sm2013ManualHandlingTopic = "topic2",
+            mqHostname = "mqhost",
+            mqPort = 1414,
+            mqGatewayName = "mwgateway01",
+            mqChannelName = "syfosmeriger_channel",
+            backoutQueueName = "backoutqu"
     )
 
     fun Properties.overrideForTest(): Properties = apply {

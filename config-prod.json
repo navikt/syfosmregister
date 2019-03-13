@@ -7,5 +7,10 @@
   "applicationName" : "syfosmregister",
   "kafkaSm2013AutomaticPapirmottakTopic" : "privat-syfo-smpapir-automatiskBehandling",
   "kafkaSm2013AutomaticDigitalHandlingTopic":  "privat-syfo-sm2013-automatiskBehandling",
-  "sm2013ManualHandlingTopic": "privat-syfo-sm2013-manuellBehandling"
+  "sm2013ManualHandlingTopic": "privat-syfo-sm2013-manuellBehandling",
+  "mqHostname": "a01apvl064.adeo.no",
+  "mqPort": 1414,
+  "mqGatewayName": "MPLSC04",
+  "mqChannelName": "p_SYFOSMREGISTER",
+  "backoutQueueName": "P_SYFOSMMOTTAK.INPUT_BOQ"
 }
