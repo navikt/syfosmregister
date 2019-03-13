@@ -7,7 +7,7 @@ import java.sql.Timestamp
 
 const val INSERT_QUERY = """
 INSERT INTO sykmelding(
-    pasient_fnr),
+    pasient_fnr,
     pasient_aktoer_id,
     lege_fnr,
     lege_aktoer_id,
