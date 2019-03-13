@@ -19,6 +19,7 @@ import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.db.Database
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.db.insertSykmelding
+import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.PersistedSykmelding
 import no.nav.syfo.util.connectionFactory
 import no.nav.syfo.util.loadBaseConfig
@@ -136,7 +137,8 @@ suspend fun blockingApplicationLogic(
                         sykmelding = receivedSykmelding.sykmelding
 
                 ))
-            log.info("SM2013, stored in the database, $logKeys", *logValues)
+                log.info("SM2013, stored in the database, $logKeys", *logValues)
+                MESSAGE_STORED_IN_DB_COUNTER.inc()
             } catch (e: Exception) {
                 log.error("Exception caught while handling message, sending to backout $logKeys", *logValues, e)
                 backoutProducer.send(session.createTextMessage().apply {
