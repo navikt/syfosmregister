@@ -120,7 +120,7 @@ suspend fun blockingApplicationLogic(
                         sykmelding = receivedSykmelding.sykmelding
 
                 ))
-            log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
+            log.info("SM2013, stored in the database, $logKeys", *logValues)
         }
         delay(100)
     }
