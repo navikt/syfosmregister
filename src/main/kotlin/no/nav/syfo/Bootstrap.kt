@@ -17,10 +17,9 @@ import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.db.Database
-import no.nav.syfo.db.SykemdlingDB
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.db.dbQuery
-import no.nav.syfo.db.insert
+import no.nav.syfo.db.insertSykmelding
+import no.nav.syfo.model.PersistedSykmelding
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
@@ -38,7 +37,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 }
 private val log = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
-fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
+fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
     val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
     val secrets: VaultSecrets = objectMapper.readValue(vaultApplicationPropertiesPath.toFile())
     val applicationState = ApplicationState()
@@ -52,9 +51,10 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(4).asCo
     val kafkaBaseConfig = loadBaseConfig(config, secrets)
     val consumerProperties = kafkaBaseConfig.toConsumerConfig("${config.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
 
+    val database = Database(config, applicationState)
     launch {
         try {
-            Database(config, applicationState).init()
+            database.init()
         } catch (e: Exception) {
             log.error("Database error(s)", e)
             applicationState.running = false
@@ -66,7 +66,7 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(4).asCo
             launch {
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(config.sm2013ManualHandlingTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
-                blockingApplicationLogic(applicationState, kafkaconsumer)
+                blockingApplicationLogic(applicationState, kafkaconsumer, database)
             }
         }.toList()
 
@@ -83,7 +83,8 @@ fun main(args: Array<String>) = runBlocking(Executors.newFixedThreadPool(4).asCo
 
 suspend fun blockingApplicationLogic(
     applicationState: ApplicationState,
-    kafkaconsumer: KafkaConsumer<String, String>
+    kafkaconsumer: KafkaConsumer<String, String>,
+    database: Database
 ) {
     while (applicationState.running) {
         var logValues = arrayOf(
@@ -104,25 +105,22 @@ suspend fun blockingApplicationLogic(
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
-            dbQuery {
-                insert("sykmelding",SykemdlingDB(
-                        pasientfnr = receivedSykmelding.personNrPasient,
-                        pasientaktorid = receivedSykmelding.sykmelding.pasientAktoerId,
-                        legefnr = receivedSykmelding.personNrLege,
-                        legeaktorid = receivedSykmelding.sykmelding.behandler.aktoerId,
-                        mottakid = receivedSykmelding.navLogId,
-                        legekontororgnr = receivedSykmelding.legekontorOrgNr,
-                        legekontorherid = receivedSykmelding.legekontorHerId,
-                        legekontorreshid = receivedSykmelding.legekontorReshId,
-                        legekontororgname = receivedSykmelding.legekontorOrgName,
-                        epjsystem = receivedSykmelding.sykmelding.avsenderSystem.navn,
-                        epjversjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
-                        mottatttidspunkt = receivedSykmelding.mottattDato,
-                        sykemelding = objectMapper.writeValueAsString(receivedSykmelding.sykmelding)
+                database.insertSykmelding(PersistedSykmelding(
+                        pasientFnr = receivedSykmelding.personNrPasient,
+                        pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
+                        legeFnr = receivedSykmelding.personNrLege,
+                        legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
+                        mottakId = receivedSykmelding.navLogId,
+                        legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
+                        legekontorHerId = receivedSykmelding.legekontorHerId,
+                        legekontorReshId = receivedSykmelding.legekontorReshId,
+                        epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
+                        epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
+                        mottattTidspunkt = receivedSykmelding.mottattDato,
+                        sykmelding = receivedSykmelding.sykmelding
 
 
                 ))
-            }
             log.info("SM2013, saved i table Sykmelding, $logKeys", *logValues)
         }
         delay(100)

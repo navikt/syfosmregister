@@ -16,6 +16,7 @@ import no.nav.syfo.vault.vaultClient
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import java.sql.Connection
+import java.sql.ResultSet
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
@@ -84,6 +85,12 @@ class Database(private val config: ApplicationConfig, private val applicationSta
     }
 }
 
+fun <T> ResultSet.toList(mapper: ResultSet.()->T) = mutableListOf<T>().apply {
+    while (next()) {
+        add(mapper())
+    }
+}
+
 private fun getNewCredentials(mountPath: String, databaseName: String, role: Role): VaultDBCredentials {
     val path = "$mountPath/creds/$databaseName-$role"
     log.debug("Getting database credentials for path '$path'")
@@ -118,8 +125,3 @@ private suspend fun runRenewCredentialsTask(
         delay(suggestedRefreshIntervalInMillis(credentials.leaseDuration * 1000))
     }
 }
-
-    suspend fun <T> dbQuery(block: Connection.() -> T): T = withContext(dispatcher) {
-        Database.connection
-        transaction { block() }
-    }

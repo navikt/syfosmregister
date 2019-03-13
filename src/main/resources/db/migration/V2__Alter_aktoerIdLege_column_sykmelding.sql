@@ -1,2 +1,0 @@
-ALTER TABLE Sykmelding
-ALTER COLUMN aktoerIdLege DROP NOT NULL;

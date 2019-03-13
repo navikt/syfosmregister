@@ -1,2 +1,0 @@
-ALTER TABLE Sykmelding
-ALTER COLUMN legekontorOrgName SET DATA TYPE VARCHAR(60);
