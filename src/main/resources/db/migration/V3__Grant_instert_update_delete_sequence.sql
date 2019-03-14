@@ -1,3 +1,0 @@
-GRANT INSERT, SELECT ON ALL SEQUENCES IN SCHEMA public TO "syfosmregister-user";
-GRANT UPDATE, SELECT ON ALL SEQUENCES IN SCHEMA public TO "syfosmregister-user";
-GRANT DELETE, SELECT ON ALL SEQUENCES IN SCHEMA public TO "syfosmregister-user";
