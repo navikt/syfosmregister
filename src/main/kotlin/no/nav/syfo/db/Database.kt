@@ -120,6 +120,7 @@ private suspend fun runRenewCredentialsTask(
         dataSource.apply {
             hikariConfigMXBean.setUsername(credentials.username)
             hikariConfigMXBean.setPassword(credentials.password)
+            hikariPoolMXBean.softEvictConnections()
         }
         delay(suggestedRefreshIntervalInMillis(credentials.leaseDuration * 1000))
     }
