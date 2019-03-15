@@ -123,6 +123,7 @@ suspend fun blockingApplicationLogic(
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
             try {
                 database.insertSykmelding(PersistedSykmelding(
+                        id = receivedSykmelding.sykmelding.id,
                         pasientFnr = receivedSykmelding.personNrPasient,
                         pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
                         legeFnr = receivedSykmelding.personNrLege,

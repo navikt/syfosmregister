@@ -7,6 +7,7 @@ import java.sql.ResultSet
 import java.time.LocalDateTime
 
 data class PersistedSykmelding(
+    val id: String,
     val pasientFnr: String,
     val pasientAktoerId: String,
     val legeFnr: String,
@@ -22,6 +23,7 @@ data class PersistedSykmelding(
 )
 
 fun fromResultSet(resultSet: ResultSet) = PersistedSykmelding(
+        resultSet.getString("id"),
         resultSet.getString("pasient_fnr"),
         resultSet.getString("pasient_aktoer_id"),
         resultSet.getString("lege_fnr"),

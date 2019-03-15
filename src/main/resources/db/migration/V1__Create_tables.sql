@@ -1,5 +1,5 @@
 CREATE TABLE sykmelding (
-  id SERIAL PRIMARY KEY,
+  id CHAR(64) PRIMARY KEY,
   pasient_fnr CHAR(11) NOT NULL,
   pasient_aktoer_id CHAR(63) NOT NULL,
   lege_fnr CHAR(11) NOT NULL,
