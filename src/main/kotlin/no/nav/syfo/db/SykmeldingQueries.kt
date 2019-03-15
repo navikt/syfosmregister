@@ -39,6 +39,7 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.pr
     it.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
     it.setObject(13, sykmeldingDB.sykmelding.toPGObject())
     it.executeUpdate()
+    it.connection.commit()
 }
 
 fun Database.find(pasientFNR: String) = connection.prepareStatement(QUERY_FOR_FNR).use {
