@@ -20,23 +20,24 @@ INSERT INTO sykmelding(
     epj_system_versjon,
     mottatt_tidspunkt,
     sykmelding
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
 const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
 
 fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.prepareStatement(INSERT_QUERY).use {
-    it.setString(0, sykmeldingDB.id)
-    it.setString(2, sykmeldingDB.pasientAktoerId)
-    it.setString(3, sykmeldingDB.legeFnr)
-    it.setString(4, sykmeldingDB.legeAktoerId)
-    it.setString(5, sykmeldingDB.mottakId)
-    it.setString(6, sykmeldingDB.legekontorOrgNr)
-    it.setString(7, sykmeldingDB.legekontorHerId)
-    it.setString(8, sykmeldingDB.legekontorReshId)
-    it.setString(9, sykmeldingDB.epjSystemNavn)
-    it.setString(10, sykmeldingDB.epjSystemVersjon)
-    it.setTimestamp(11, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
-    it.setObject(12, sykmeldingDB.sykmelding.toPGObject())
+    it.setString(1, sykmeldingDB.id)
+    it.setString(2, sykmeldingDB.pasientFnr)
+    it.setString(3, sykmeldingDB.pasientAktoerId)
+    it.setString(4, sykmeldingDB.legeFnr)
+    it.setString(5, sykmeldingDB.legeAktoerId)
+    it.setString(6, sykmeldingDB.mottakId)
+    it.setString(7, sykmeldingDB.legekontorOrgNr)
+    it.setString(8, sykmeldingDB.legekontorHerId)
+    it.setString(9, sykmeldingDB.legekontorReshId)
+    it.setString(10, sykmeldingDB.epjSystemNavn)
+    it.setString(11, sykmeldingDB.epjSystemVersjon)
+    it.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
+    it.setObject(13, sykmeldingDB.sykmelding.toPGObject())
     it.execute()
 }
 
