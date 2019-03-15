@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 group = "no.nav.syfo"
 version = "1.0.11"
 
-val coroutinesVersion = "1.0.1"
+val coroutinesVersion = "1.1.1"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.9.7"
 val jaxbApiVersion = "2.4.0-b180830.0359"
@@ -69,7 +69,7 @@ tasks.withType<KotlinCompile> {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
     implementation ("io.prometheus:simpleclient_hotspot:$prometheusVersion")
     implementation ("io.prometheus:simpleclient_common:$prometheusVersion")
 

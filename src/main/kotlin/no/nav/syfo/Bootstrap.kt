@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import com.ctc.wstx.exc.WstxException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -10,6 +11,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.prometheus.client.hotspot.DefaultExports
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -33,6 +35,11 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.jms.MessageProducer
 import javax.jms.Session
+import kotlinx.coroutines.slf4j.MDCContext
+import no.nav.syfo.vault.Vault
+import org.slf4j.Logger
+import java.io.IOException
+import java.lang.IllegalStateException
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -41,7 +48,10 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerModule(JavaTimeModule())
     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 }
-private val log = LoggerFactory.getLogger("nav.syfo.syfosmregister")
+
+val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
+
+private val backgroundTasksContext = Executors.newFixedThreadPool(4).asCoroutineDispatcher() + MDCContext()
 
 fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
     val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
@@ -57,7 +67,21 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     val kafkaBaseConfig = loadBaseConfig(config, secrets)
     val consumerProperties = kafkaBaseConfig.toConsumerConfig("${config.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
 
-    val database = Database(config, applicationState)
+    val database = Database(config)
+
+    launchBackgroundTask(
+            applicationState = applicationState,
+            callName = "Vault - Token Renewal Task"
+    ) {
+        Vault.renewVaultTokenTask(applicationState)
+    }
+    launchBackgroundTask(
+            applicationState = applicationState,
+            callName = "DB - Credentials Renewal Task"
+    ) {
+        database.runRenewCredentialsTask(database.init()) { applicationState.running }
+    }
+
     launch {
         try {
             database.init()
@@ -161,5 +185,22 @@ fun Application.initRouting(applicationState: ApplicationState) {
                     applicationState.running
                 }
         )
+    }
+}
+
+private fun CoroutineScope.launchBackgroundTask(
+    applicationState: ApplicationState,
+    callName: String,
+    block: suspend () -> Any
+) {
+    launch(backgroundTasksContext) {
+        try {
+            retryAsync(callName, IOException::class, WstxException::class, IllegalStateException::class) {
+                block()
+            }
+        } catch (e: Throwable) {
+            log.error("Background task '$callName' was cancelled, failing self tests", e)
+            applicationState.running = false
+        }
     }
 }

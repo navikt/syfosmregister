@@ -3,83 +3,109 @@ package no.nav.syfo.db
 import com.bettercloud.vault.VaultException
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import no.nav.syfo.ApplicationConfig
-import no.nav.syfo.ApplicationState
-import no.nav.syfo.vault.runRenewTokenTask
-import no.nav.syfo.vault.suggestedRefreshIntervalInMillis
-import no.nav.syfo.vault.vaultClient
+import no.nav.syfo.vault.Vault
+import no.nav.syfo.vault.Vault.suggestedRefreshIntervalInMillis
 import org.flywaydb.core.Flyway
 import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.ResultSet
-import java.util.concurrent.Executors
-import kotlin.coroutines.CoroutineContext
 
 private val log = LoggerFactory.getLogger("no.nav.syfo.db")
-private val dispatcher: CoroutineContext = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
 
-private data class VaultDBCredentials(
+private data class VaultCredentials(
     val leaseId: String,
     val leaseDuration: Long,
     val username: String,
     val password: String
 )
 
-private enum class Role {
+data class RenewCredentialsTaskData(
+    val initialDelay: Long,
+    val dataSource: HikariDataSource,
+    val mountPath: String,
+    val databaseName: String,
+    val role: Role
+)
+
+enum class Role {
     ADMIN, USER, READONLY;
 
     override fun toString() = name.toLowerCase()
 }
 
-class Database(private val config: ApplicationConfig, private val applicationState: ApplicationState) {
-    lateinit var connection: Connection
+class Database(private val config: ApplicationConfig) {
 
-    suspend fun init() {
-        coroutineScope {
-            launch { runRenewTokenTask() }
-            Flyway.configure().run {
-                val credentials = getNewCredentials(
-                        mountPath = config.mountPathVault,
-                        databaseName = config.databaseName,
-                        role = Role.ADMIN
-                )
-                dataSource(config.syfosmregisterDBURL, credentials.username, credentials.password)
-                initSql("SET ROLE \"${config.databaseName}-${Role.ADMIN}\"") // required for assigning proper owners for the tables
-                load().migrate()
-            }
-            val initialCredentials = getNewCredentials(
+    lateinit var connection: Connection
+    fun init(): RenewCredentialsTaskData {
+        Flyway.configure().run {
+            val credentials = getNewCredentials(
                     mountPath = config.mountPathVault,
                     databaseName = config.databaseName,
-                    role = Role.USER
+                    role = Role.ADMIN
             )
-            val hikariDataSource = HikariDataSource(HikariConfig().apply {
-                jdbcUrl = config.syfosmregisterDBURL
-                username = initialCredentials.username
-                password = initialCredentials.password
-                maximumPoolSize = 2
-                minimumIdle = 0
-                idleTimeout = 10001
-                connectionTimeout = 250
-                maxLifetime = 30001
-                isAutoCommit = false
-                transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-                validate()
-            })
-            connection = hikariDataSource.connection
+            dataSource(config.syfosmregisterDBURL, credentials.username, credentials.password)
+            initSql("SET ROLE \"${config.databaseName}-${Role.ADMIN}\"") // required for assigning proper owners for the tables
+            load().migrate()
+        }
+        val initialCredentials = getNewCredentials(
+                mountPath = config.mountPathVault,
+                databaseName = config.databaseName,
+                role = Role.USER
+        )
+        val hikariDataSource = HikariDataSource(HikariConfig().apply {
+            jdbcUrl = config.syfosmregisterDBURL
+            username = initialCredentials.username
+            password = initialCredentials.password
+            maximumPoolSize = 2
+            minimumIdle = 0
+            idleTimeout = 10001
+            connectionTimeout = 250
+            maxLifetime = 30001
+            isAutoCommit = false
+            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            validate()
+        })
+        connection = hikariDataSource.connection
 
-            launch {
-                delay(suggestedRefreshIntervalInMillis(initialCredentials.leaseDuration * 1000))
-                runRenewCredentialsTask(
-                        dataSource = hikariDataSource,
-                        mountPath = config.mountPathVault,
-                        databaseName = config.databaseName,
-                        role = Role.USER
-                ) { applicationState.running }
+        return RenewCredentialsTaskData(
+                initialDelay = suggestedRefreshIntervalInMillis(initialCredentials.leaseDuration * 1000),
+                dataSource = hikariDataSource,
+                mountPath = config.mountPathVault,
+                databaseName = config.databaseName,
+                role = Role.USER
+        )
+    }
+
+    private fun getNewCredentials(mountPath: String, databaseName: String, role: Role): VaultCredentials {
+        val path = "$mountPath/creds/$databaseName-$role"
+        log.debug("Getting database credentials for path '$path'")
+        try {
+            val response = Vault.client.logical().read(path)
+            val username = checkNotNull(response.data["username"]) { "Username is not set in response from Vault" }
+            val password = checkNotNull(response.data["password"]) { "Password is not set in response from Vault" }
+            log.debug("Got new credentials (username=$username, leaseDuration=${response.leaseDuration})")
+            return VaultCredentials(response.leaseId, response.leaseDuration, username, password)
+        } catch (e: VaultException) {
+            when (e.httpStatusCode) {
+                403 -> log.error("Vault denied permission to fetch database credentials for path '$path'", e)
+                else -> log.error("Could not fetch database credentials for path '$path'", e)
             }
+            throw e
+        }
+    }
+
+    suspend fun runRenewCredentialsTask(data: RenewCredentialsTaskData, condition: () -> Boolean) {
+        delay(data.initialDelay)
+        while (condition()) {
+            val credentials = getNewCredentials(data.mountPath, data.databaseName, data.role)
+            data.dataSource.apply {
+                hikariConfigMXBean.setUsername(credentials.username)
+                hikariConfigMXBean.setPassword(credentials.password)
+                hikariPoolMXBean.softEvictConnections()
+            }
+            delay(suggestedRefreshIntervalInMillis(credentials.leaseDuration * 1000))
         }
     }
 }
@@ -87,41 +113,5 @@ class Database(private val config: ApplicationConfig, private val applicationSta
 fun <T> ResultSet.toList(mapper: ResultSet.() -> T) = mutableListOf<T>().apply {
     while (next()) {
         add(mapper())
-    }
-}
-
-private fun getNewCredentials(mountPath: String, databaseName: String, role: Role): VaultDBCredentials {
-    val path = "$mountPath/creds/$databaseName-$role"
-    log.debug("Getting database credentials for path '$path'")
-    try {
-        val response = vaultClient.logical().read(path)
-        val username = checkNotNull(response.data["username"]) { "Username is not set in response from Vault" }
-        val password = checkNotNull(response.data["password"]) { "Password is not set in response from Vault" }
-        log.debug("Got new credentials (username=$username, leaseDuration=${response.leaseDuration})")
-        return VaultDBCredentials(response.leaseId, response.leaseDuration, username, password)
-    } catch (e: VaultException) {
-        when (e.httpStatusCode) {
-            403 -> log.error("Vault denied permission to fetch database credentials for path '$path'", e)
-            else -> log.error("Could not fetch database credentials for path '$path'", e)
-        }
-        throw e
-    }
-}
-
-private suspend fun runRenewCredentialsTask(
-    dataSource: HikariDataSource,
-    mountPath: String,
-    databaseName: String,
-    role: Role,
-    condition: () -> Boolean
-) {
-    while (condition()) {
-        val credentials = getNewCredentials(mountPath, databaseName, role)
-        dataSource.apply {
-            hikariConfigMXBean.setUsername(credentials.username)
-            hikariConfigMXBean.setPassword(credentials.password)
-            hikariPoolMXBean.softEvictConnections()
-        }
-        delay(suggestedRefreshIntervalInMillis(credentials.leaseDuration * 1000))
     }
 }
