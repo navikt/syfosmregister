@@ -46,7 +46,9 @@ pipeline {
             }
         }
         stage('create docker image') {
-            dockerUtils action: 'createPushImage'
+            steps {
+                dockerUtils action: 'createPushImage'
+            }
         }
         stage('deploy to preprod') {
             steps {
