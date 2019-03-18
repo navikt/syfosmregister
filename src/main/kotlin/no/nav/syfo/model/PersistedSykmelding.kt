@@ -38,7 +38,7 @@ fun fromResultSet(resultSet: ResultSet) = PersistedSykmelding(
         objectMapper.readValue(resultSet.getString("sykmelding"))
 )
 
-fun Sykmelding.toPGObject() = PGobject().apply {
-    type = "json"
-    value = objectMapper.writeValueAsString(this)
+fun Sykmelding.toPGObject() = PGobject().also {
+    it.type = "json"
+    it.value = objectMapper.writeValueAsString(this)
 }
