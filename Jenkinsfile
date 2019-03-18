@@ -3,16 +3,16 @@
 pipeline {
     agent any
 
-  tools {
-            jdk 'openjdk11'
-        }
+    tools {
+        jdk 'openjdk11'
+    }
 
-     environment {
-           APPLICATION_NAME = 'syfosmregister'
-           DOCKER_SLUG = 'syfo'
-       }
+    environment {
+        APPLICATION_NAME = 'syfosmregister'
+        DOCKER_SLUG = 'syfo'
+    }
 
-     stages {
+    stages {
         stage('initialize') {
             steps {
                 init action: 'default'
@@ -45,9 +45,11 @@ pipeline {
                 slackStatus status: 'passed'
             }
         }
+        stage('create docker image') {
+            dockerUtils action: 'createPushImage'
+        }
         stage('deploy to preprod') {
             steps {
-                dockerUtils action: 'createPushImage'
                 deployApp action: 'kubectlDeploy', cluster: 'preprod-fss'
             }
         }
@@ -57,17 +59,21 @@ pipeline {
                 deployApp action: 'kubectlDeploy', cluster: 'prod-fss', file: 'naiserator-prod.yaml'
                 githubStatus action: 'tagRelease'
             }
-         }
         }
-        post {
-            always {
-                postProcess action: 'always'
-            }
-            success {
-                postProcess action: 'success'
-            }
-            failure {
-                postProcess action: 'failure'
-            }
+    }
+    post {
+        always {
+            postProcess action: 'always'
+            junit '**/build/test-results/test/*.xml'
+            archiveArtifacts artifacts: 'naiserator-deployment-yamls/*'
+            archiveArtifacts artifacts: '**/build/libs/*', allowEmptyArchive: true
+            archiveArtifacts artifacts: '**/build/install/*', allowEmptyArchive: true
         }
+        success {
+            postProcess action: 'success'
+        }
+        failure {
+            postProcess action: 'failure'
+        }
+    }
 }
