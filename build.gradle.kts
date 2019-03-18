@@ -34,14 +34,12 @@ tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
 }
 
-
 plugins {
     id("org.jmailen.kotlinter") version "1.21.0"
     kotlin("jvm") version "1.3.21"
     id("com.diffplug.gradle.spotless") version "3.18.0"
     id("com.github.johnrengelman.shadow") version "4.0.4"
 }
-
 
 buildscript {
     dependencies {
@@ -121,7 +119,6 @@ dependencies {
     }
 
 }
-
 
 tasks {
     create("printVersion") {
