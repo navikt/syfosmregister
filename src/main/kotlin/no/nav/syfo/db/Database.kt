@@ -54,7 +54,7 @@ class Database(private val config: ApplicationConfig) {
             jdbcUrl = config.syfosmregisterDBURL
             username = initialCredentials.username
             password = initialCredentials.password
-            maximumPoolSize = 2
+            maximumPoolSize = 8
             minimumIdle = 0
             idleTimeout = 10001
             connectionTimeout = 250
