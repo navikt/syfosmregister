@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import com.ctc.wstx.exc.WstxException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -11,7 +10,6 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -38,8 +36,6 @@ import javax.jms.Session
 import kotlinx.coroutines.slf4j.MDCContext
 import no.nav.syfo.vault.Vault
 import org.slf4j.Logger
-import java.io.IOException
-import java.lang.IllegalStateException
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -51,7 +47,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
-private val backgroundTasksContext = Executors.newFixedThreadPool(4).asCoroutineDispatcher() + MDCContext()
+val backgroundTasksContext = Executors.newFixedThreadPool(4).asCoroutineDispatcher() + MDCContext()
 
 fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
     val config: ApplicationConfig = objectMapper.readValue(File(System.getenv("CONFIG_FILE")))
@@ -69,24 +65,18 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 
     val database = Database(config)
 
-    launchBackgroundTask(
-            applicationState = applicationState,
-            callName = "Vault - Token Renewal Task"
-    ) {
-        Vault.renewVaultTokenTask(applicationState)
-    }
-    launchBackgroundTask(
-            applicationState = applicationState,
-            callName = "DB - Credentials Renewal Task"
-    ) {
-        database.runRenewCredentialsTask(database.init()) { applicationState.running }
+    launch(backgroundTasksContext) {
+        try {
+            Vault.renewVaultTokenTask(applicationState)
+        } finally {
+            applicationState.running = false
+        }
     }
 
-    launch {
+    launch(backgroundTasksContext) {
         try {
-            database.init()
-        } catch (e: Exception) {
-            log.error("Database error(s)", e)
+            database.runRenewCredentialsTask { applicationState.running }
+        } finally {
             applicationState.running = false
         }
     }
@@ -94,29 +84,29 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     connectionFactory(config).createConnection(secrets.mqUsername, secrets.mqPassword).use { connection ->
         connection.start()
 
-    try {
-        val listeners = (1..config.applicationThreads).map {
-            launch {
-                val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                kafkaconsumer.subscribe(listOf(config.sm2013ManualHandlingTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
+        try {
+            val listeners = (1..config.applicationThreads).map {
+                launch {
+                    val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
+                    kafkaconsumer.subscribe(listOf(config.sm2013ManualHandlingTopic, config.kafkaSm2013AutomaticDigitalHandlingTopic))
 
-                val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
-                val backoutQueue = session.createQueue(config.backoutQueueName)
-                val backoutProducer = session.createProducer(backoutQueue)
+                    val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
+                    val backoutQueue = session.createQueue(config.backoutQueueName)
+                    val backoutProducer = session.createProducer(backoutQueue)
 
-                blockingApplicationLogic(applicationState, kafkaconsumer, database, backoutProducer, session)
-            }
-        }.toList()
+                    blockingApplicationLogic(applicationState, kafkaconsumer, database, backoutProducer, session)
+                }
+            }.toList()
 
-        applicationState.initialized = true
+            applicationState.initialized = true
 
-        Runtime.getRuntime().addShutdownHook(Thread {
-            applicationServer.stop(10, 10, TimeUnit.SECONDS)
-        })
-        runBlocking { listeners.forEach { it.join() } }
-    } finally {
-        applicationState.running = false
-    }
+            Runtime.getRuntime().addShutdownHook(Thread {
+                applicationServer.stop(10, 10, TimeUnit.SECONDS)
+            })
+            runBlocking { listeners.forEach { it.join() } }
+        } finally {
+            applicationState.running = false
+        }
     }
 }
 
@@ -178,29 +168,8 @@ suspend fun blockingApplicationLogic(
 fun Application.initRouting(applicationState: ApplicationState) {
     routing {
         registerNaisApi(
-                readynessCheck = {
-                    applicationState.initialized
-                },
-                livenessCheck = {
-                    applicationState.running
-                }
+                readynessCheck = { applicationState.initialized },
+                livenessCheck = { applicationState.running }
         )
-    }
-}
-
-private fun CoroutineScope.launchBackgroundTask(
-    applicationState: ApplicationState,
-    callName: String,
-    block: suspend () -> Any
-) {
-    launch(backgroundTasksContext) {
-        try {
-            retryAsync(callName, IOException::class, WstxException::class, IllegalStateException::class) {
-                block()
-            }
-        } catch (e: Throwable) {
-            log.error("Background task '$callName' was cancelled, failing self tests", e)
-            applicationState.running = false
-        }
     }
 }

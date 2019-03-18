@@ -36,25 +36,21 @@ enum class Role {
 }
 
 class Database(private val config: ApplicationConfig) {
+    private val dataSource: HikariDataSource
+    private val renewCredentialsTaskData: RenewCredentialsTaskData
 
-    lateinit var connection: Connection
-    fun init(): RenewCredentialsTaskData {
-        Flyway.configure().run {
-            val credentials = getNewCredentials(
-                    mountPath = config.mountPathVault,
-                    databaseName = config.databaseName,
-                    role = Role.ADMIN
-            )
-            dataSource(config.syfosmregisterDBURL, credentials.username, credentials.password)
-            initSql("SET ROLE \"${config.databaseName}-${Role.ADMIN}\"") // required for assigning proper owners for the tables
-            load().migrate()
-        }
+    val connection: Connection
+        get() = dataSource.connection
+
+    init {
+        runFlywayMigrations()
+
         val initialCredentials = getNewCredentials(
                 mountPath = config.mountPathVault,
                 databaseName = config.databaseName,
                 role = Role.USER
         )
-        val hikariDataSource = HikariDataSource(HikariConfig().apply {
+        dataSource = HikariDataSource(HikariConfig().apply {
             jdbcUrl = config.syfosmregisterDBURL
             username = initialCredentials.username
             password = initialCredentials.password
@@ -67,15 +63,25 @@ class Database(private val config: ApplicationConfig) {
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             validate()
         })
-        connection = hikariDataSource.connection
 
-        return RenewCredentialsTaskData(
+        renewCredentialsTaskData = RenewCredentialsTaskData(
                 initialDelay = suggestedRefreshIntervalInMillis(initialCredentials.leaseDuration * 1000),
-                dataSource = hikariDataSource,
+                dataSource = dataSource,
                 mountPath = config.mountPathVault,
                 databaseName = config.databaseName,
                 role = Role.USER
         )
+    }
+
+    private fun runFlywayMigrations() = Flyway.configure().run {
+        val credentials = getNewCredentials(
+                mountPath = config.mountPathVault,
+                databaseName = config.databaseName,
+                role = Role.ADMIN
+        )
+        dataSource(config.syfosmregisterDBURL, credentials.username, credentials.password)
+        initSql("SET ROLE \"${config.databaseName}-${Role.ADMIN}\"") // required for assigning proper owners for the tables
+        load().migrate()
     }
 
     private fun getNewCredentials(mountPath: String, databaseName: String, role: Role): VaultCredentials {
@@ -96,11 +102,12 @@ class Database(private val config: ApplicationConfig) {
         }
     }
 
-    suspend fun runRenewCredentialsTask(data: RenewCredentialsTaskData, condition: () -> Boolean) {
-        delay(data.initialDelay)
+    suspend fun runRenewCredentialsTask(condition: () -> Boolean) {
+        delay(renewCredentialsTaskData.initialDelay)
         while (condition()) {
-            val credentials = getNewCredentials(data.mountPath, data.databaseName, data.role)
-            data.dataSource.apply {
+            val credentials = getNewCredentials(renewCredentialsTaskData.mountPath,
+                    renewCredentialsTaskData.databaseName, renewCredentialsTaskData.role)
+            renewCredentialsTaskData.dataSource.apply {
                 hikariConfigMXBean.setUsername(credentials.username)
                 hikariConfigMXBean.setPassword(credentials.password)
                 hikariPoolMXBean.softEvictConnections()
