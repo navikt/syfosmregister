@@ -50,7 +50,6 @@ object KafkaITSpek : Spek({
     fun Properties.overrideForTest(): Properties = apply {
         remove("security.protocol")
         remove("sasl.mechanism")
-        put("schema.registry.url", embeddedEnvironment.schemaRegistry!!.url)
     }
 
     val baseConfig = loadBaseConfig(config, credentials).overrideForTest()
