@@ -66,10 +66,10 @@ pipeline {
     post {
         always {
             postProcess action: 'always'
-            junit '**/build/test-results/test/*.xml'
             archiveArtifacts artifacts: 'naiserator-deployment-yamls/*'
             archiveArtifacts artifacts: '**/build/libs/*', allowEmptyArchive: true
             archiveArtifacts artifacts: '**/build/install/*', allowEmptyArchive: true
+            junit '**/build/test-results/test/*.xml'
         }
         success {
             postProcess action: 'success'
