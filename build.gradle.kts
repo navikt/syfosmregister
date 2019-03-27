@@ -28,7 +28,6 @@ val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
-val ibmMqVersion = "9.1.0.0"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -82,7 +81,6 @@ dependencies {
     implementation ("org.apache.kafka:kafka_2.12:$kafkaVersion")
     implementation ("io.confluent:kafka-avro-serializer:$confluentVersion")
 
-    implementation ("com.ibm.mq:com.ibm.mq.allclient:$ibmMqVersion")
 
     implementation ("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation ("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")

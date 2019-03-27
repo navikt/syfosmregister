@@ -1,6 +1,6 @@
 # SYFO Sykemeldings register
 
-Application for register sykmelding 2013 i database
+Application for persisting sykmelding 2013 i database
 
 ## Technologies used
 * Kotlin
@@ -8,17 +8,23 @@ Application for register sykmelding 2013 i database
 * Gradle
 * Spek
 * Kafka
+* Mq
+* Vault
+* Postgres
 
 ## Getting started
 ## Running locally
 
 ### Building the application
 #### Compile and package application
-To build locally and run the integration tests you can simply run `./gradlew shadowJar` or  on windows 
+To build locally and run the integration tests you can simply run `./gradlew shadowJar` or on windows 
 `gradlew.bat shadowJar`
 
 #### Creating a docker image
 Creating a docker image should be as simple as `docker build -t syfosmregister .`
+
+#### Running a docker image
+`docker run --rm -it -p 8080:8080 syfosmregister`
 
 #### Starting a local PostgreSQL server
 

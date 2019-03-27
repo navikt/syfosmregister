@@ -1,7 +1,7 @@
 package no.nav.syfo.util
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
-import no.nav.syfo.ApplicationConfig
+import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -11,11 +11,11 @@ import org.apache.kafka.common.serialization.Serializer
 import java.util.Properties
 import kotlin.reflect.KClass
 
-fun loadBaseConfig(config: ApplicationConfig, credentials: VaultSecrets): Properties = Properties().also {
-    it.load(ApplicationConfig::class.java.getResourceAsStream("/kafka_base.properties"))
+fun loadBaseConfig(env: Environment, credentials: VaultSecrets): Properties = Properties().also {
+    it.load(Environment::class.java.getResourceAsStream("/kafka_base.properties"))
     it["sasl.jaas.config"] = "org.apache.kafka.common.security.plain.PlainLoginModule required " +
             "username=\"${credentials.serviceuserUsername}\" password=\"${credentials.serviceuserPassword}\";"
-    it["bootstrap.servers"] = config.kafkaBootstrapServers
+    it["bootstrap.servers"] = env.kafkaBootstrapServers
     it[KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG] = true
 }
 

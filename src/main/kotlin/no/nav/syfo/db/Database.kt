@@ -4,7 +4,7 @@ import com.bettercloud.vault.VaultException
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.delay
-import no.nav.syfo.ApplicationConfig
+import no.nav.syfo.Environment
 import no.nav.syfo.vault.Vault
 import no.nav.syfo.vault.Vault.suggestedRefreshIntervalInMillis
 import org.flywaydb.core.Flyway
@@ -35,7 +35,7 @@ enum class Role {
     override fun toString() = name.toLowerCase()
 }
 
-class Database(private val config: ApplicationConfig) {
+class Database(private val env: Environment) {
     private val dataSource: HikariDataSource
     private val renewCredentialsTaskData: RenewCredentialsTaskData
 
@@ -46,12 +46,12 @@ class Database(private val config: ApplicationConfig) {
         runFlywayMigrations()
 
         val initialCredentials = getNewCredentials(
-                mountPath = config.mountPathVault,
-                databaseName = config.databaseName,
+                mountPath = env.mountPathVault,
+                databaseName = env.databaseName,
                 role = Role.USER
         )
         dataSource = HikariDataSource(HikariConfig().apply {
-            jdbcUrl = config.syfosmregisterDBURL
+            jdbcUrl = env.syfosmregisterDBURL
             username = initialCredentials.username
             password = initialCredentials.password
             maximumPoolSize = 8
@@ -67,20 +67,20 @@ class Database(private val config: ApplicationConfig) {
         renewCredentialsTaskData = RenewCredentialsTaskData(
                 initialDelay = suggestedRefreshIntervalInMillis(initialCredentials.leaseDuration * 1000),
                 dataSource = dataSource,
-                mountPath = config.mountPathVault,
-                databaseName = config.databaseName,
+                mountPath = env.mountPathVault,
+                databaseName = env.databaseName,
                 role = Role.USER
         )
     }
 
     private fun runFlywayMigrations() = Flyway.configure().run {
         val credentials = getNewCredentials(
-                mountPath = config.mountPathVault,
-                databaseName = config.databaseName,
+                mountPath = env.mountPathVault,
+                databaseName = env.databaseName,
                 role = Role.ADMIN
         )
-        dataSource(config.syfosmregisterDBURL, credentials.username, credentials.password)
-        initSql("SET ROLE \"${config.databaseName}-${Role.ADMIN}\"") // required for assigning proper owners for the tables
+        dataSource(env.syfosmregisterDBURL, credentials.username, credentials.password)
+        initSql("SET ROLE \"${env.databaseName}-${Role.ADMIN}\"") // required for assigning proper owners for the tables
         load().migrate()
     }
 

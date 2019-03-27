@@ -28,7 +28,7 @@ object KafkaITSpek : Spek({
     )
 
     val credentials = VaultSecrets("", "", "", "")
-    val config = ApplicationConfig(
+    val env = Environment(
             applicationPort = getRandomPort(),
             applicationThreads = 1,
             kafkaSm2013AutomaticPapirmottakTopic = "topic1",
@@ -39,12 +39,7 @@ object KafkaITSpek : Spek({
             cluster = "local",
             databaseName = "syfosmregister",
             applicationName = "syfosmregister",
-            sm2013ManualHandlingTopic = "topic2",
-            mqHostname = "mqhost",
-            mqPort = 1414,
-            mqGatewayName = "mwgateway01",
-            mqChannelName = "syfosmeriger_channel",
-            backoutQueueName = "backoutqu"
+            sm2013ManualHandlingTopic = "topic2"
     )
 
     fun Properties.overrideForTest(): Properties = apply {
@@ -52,7 +47,7 @@ object KafkaITSpek : Spek({
         remove("sasl.mechanism")
     }
 
-    val baseConfig = loadBaseConfig(config, credentials).overrideForTest()
+    val baseConfig = loadBaseConfig(env, credentials).overrideForTest()
 
     val producerProperties = baseConfig
             .toProducerConfig("spek.integration", valueSerializer = StringSerializer::class)
