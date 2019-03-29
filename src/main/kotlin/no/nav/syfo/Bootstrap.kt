@@ -109,6 +109,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
             applicationState.initialized = true
 
             Runtime.getRuntime().addShutdownHook(Thread {
+                kafkaStream.close()
                 applicationServer.stop(10, 10, TimeUnit.SECONDS)
             })
             runBlocking { listeners.forEach { it.join() } }
