@@ -30,6 +30,7 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.slf4j.MDCContext
+import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.util.envOverrides
 import no.nav.syfo.util.toStreamsConfig
 import no.nav.syfo.vault.Vault
@@ -163,6 +164,8 @@ suspend fun blockingApplicationLogic(
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val behandlingsUtfallReceivedSykmelding: BehandlingsUtfallReceivedSykmelding = objectMapper.readValue(it.value())
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.receivedSykmelding)
+            val validationResult: ValidationResult = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.behandlingsUtfall)
+
             logValues = arrayOf(
                     StructuredArguments.keyValue("msgId", receivedSykmelding.msgId),
                     StructuredArguments.keyValue("smId", receivedSykmelding.navLogId),
@@ -184,7 +187,8 @@ suspend fun blockingApplicationLogic(
                         epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
                         epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
                         mottattTidspunkt = receivedSykmelding.mottattDato,
-                        sykmelding = receivedSykmelding.sykmelding
+                        sykmelding = receivedSykmelding.sykmelding,
+                        behandlingsUtfall = validationResult
 
                 ))
                 log.info("SM2013, stored in the database, $logKeys", *logValues)

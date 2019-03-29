@@ -19,8 +19,9 @@ INSERT INTO sykmelding(
     epj_system_navn,
     epj_system_versjon,
     mottatt_tidspunkt,
-    sykmelding
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    sykmelding,
+    behandlings_utfall
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
 const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
 
@@ -39,6 +40,7 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
     ps.setString(11, sykmeldingDB.epjSystemVersjon)
     ps.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
     ps.setObject(13, sykmeldingDB.sykmelding.toPGObject())
+    ps.setObject(14, sykmeldingDB.behandlingsUtfall.toPGObject())
     ps.executeUpdate()
     it.commit()
 }
