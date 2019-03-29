@@ -30,11 +30,23 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.slf4j.MDCContext
+import no.nav.syfo.util.envOverrides
+import no.nav.syfo.util.toStreamsConfig
 import no.nav.syfo.vault.Vault
+import org.apache.kafka.common.serialization.Serdes
+import org.apache.kafka.streams.KafkaStreams
+import org.apache.kafka.streams.StreamsBuilder
+import org.apache.kafka.streams.kstream.Consumed
+import org.apache.kafka.streams.kstream.JoinWindows
+import org.apache.kafka.streams.kstream.Joined
+import org.apache.kafka.streams.kstream.Produced
 import org.slf4j.Logger
 import java.nio.file.Paths
+import java.util.Properties
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
+
+data class BehandlingsUtfallReceivedSykmelding(val receivedSykmelding: ByteArray, val behandlingsUtfall: ByteArray)
 
 val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerKotlinModule()
@@ -58,7 +70,13 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     DefaultExports.initialize()
 
     val kafkaBaseConfig = loadBaseConfig(env, credentials)
-    val consumerProperties = kafkaBaseConfig.toConsumerConfig("${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+            .envOverrides()
+    val consumerProperties = kafkaBaseConfig.toConsumerConfig(
+            "${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+    val streamProperties = kafkaBaseConfig.toStreamsConfig(env.applicationName, valueSerde = Serdes.StringSerde::class)
+    val kafkaStream = createKafkaStream(streamProperties, env)
+
+    kafkaStream.start()
 
     val database = Database(env)
 
@@ -82,7 +100,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
             val listeners = (1..env.applicationThreads).map {
                 launch {
                     val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                    kafkaconsumer.subscribe(listOf(env.sm2013ManualHandlingTopic, env.kafkaSm2013AutomaticDigitalHandlingTopic))
+                    kafkaconsumer.subscribe(listOf(env.sm2013RegisterTopic))
 
                     blockingApplicationLogic(applicationState, kafkaconsumer, database)
                 }
@@ -97,6 +115,34 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
         } finally {
             applicationState.running = false
         }
+}
+
+fun createKafkaStream(streamProperties: Properties, env: Environment): KafkaStreams {
+    val streamsBuilder = StreamsBuilder()
+
+    val sm2013InputStream = streamsBuilder.stream<String, String>(listOf(
+            env.sm2013ManualHandlingTopic,
+            env.kafkaSm2013AutomaticDigitalHandlingTopic), Consumed.with(Serdes.String(), Serdes.String()))
+
+    val behandlingsUtfallStream = streamsBuilder.stream<String, String>(listOf(
+            env.sm2013BehandlingsUtfallTopic), Consumed.with(Serdes.String(), Serdes.String()))
+
+    val joinWindow = JoinWindows.of(TimeUnit.DAYS.toMillis(14))
+            .until(TimeUnit.DAYS.toMillis(31))
+
+    val joined = Joined.with(
+            Serdes.String(), Serdes.String(), Serdes.String())
+
+    sm2013InputStream.join(behandlingsUtfallStream, { sm2013, behandling ->
+        objectMapper.writeValueAsString(
+                BehandlingsUtfallReceivedSykmelding(
+                        receivedSykmelding = sm2013.toByteArray(Charsets.UTF_8),
+                        behandlingsUtfall = behandling.toByteArray(Charsets.UTF_8)
+                ))
+    }, joinWindow, joined)
+            .to(env.sm2013RegisterTopic, Produced.with(Serdes.String(), Serdes.String()))
+
+    return KafkaStreams(streamsBuilder.build(), streamProperties)
 }
 
 suspend fun blockingApplicationLogic(
@@ -114,7 +160,8 @@ suspend fun blockingApplicationLogic(
         val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
 
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
-            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
+            val behandlingsUtfallReceivedSykmelding: BehandlingsUtfallReceivedSykmelding = objectMapper.readValue(it.value())
+            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.receivedSykmelding)
             logValues = arrayOf(
                     StructuredArguments.keyValue("msgId", receivedSykmelding.msgId),
                     StructuredArguments.keyValue("smId", receivedSykmelding.navLogId),
