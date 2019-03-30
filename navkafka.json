@@ -1,0 +1,12 @@
+{
+  "topics": [
+    {
+      "topicName": "privat-syfo-sm2013-register",
+      "members": [
+        {"member":"srvsyfosmregister", "role":"PRODUCER"},
+        {"member":"srvsyfosmregister", "role":"CONSUMER"}
+      ],
+      "numPartitions": 3
+    }
+  ]
+}
