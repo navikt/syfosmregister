@@ -1,11 +1,12 @@
 apiVersion: "nais.io/v1alpha1"
-kind: "Application"
+kind: Application
 metadata:
-  name: "syfosmregister"
-  namespace: "default"
+  name: syfosmregister
+  namespace: default
   labels:
     team: "teamsykefravr"
 spec:
+  name: "syfosmregister"
   image: "repo.adeo.no:5443/syfo/syfosmregister:@@VERSION@@"
   replicas:
     min: 1
