@@ -11,5 +11,6 @@ CREATE TABLE sykmelding (
   epj_system_navn VARCHAR (63) NOT NULL,
   epj_system_versjon VARCHAR(63) NOT NULL,
   mottatt_tidspunkt TIMESTAMP NOT NULL,
-  sykmelding jsonb NOT NULL
+  sykmelding jsonb NOT NULL,
+  behandlings_utfall jsonb NOT NULL
 );
