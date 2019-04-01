@@ -9,7 +9,9 @@ import io.ktor.application.Application
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -97,26 +99,12 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
         }
     }
 
-        try {
-            val listeners = (1..env.applicationThreads).map {
-                launch {
-                    val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                    kafkaconsumer.subscribe(listOf(env.sm2013RegisterTopic))
+    launchListeners(env, applicationState, consumerProperties, database)
 
-                    blockingApplicationLogic(applicationState, kafkaconsumer, database)
-                }
-            }.toList()
-
-            applicationState.initialized = true
-
-            Runtime.getRuntime().addShutdownHook(Thread {
-                kafkaStream.close()
-                applicationServer.stop(10, 10, TimeUnit.SECONDS)
-            })
-            runBlocking { listeners.forEach { it.join() } }
-        } finally {
-            applicationState.running = false
-        }
+    Runtime.getRuntime().addShutdownHook(Thread {
+        kafkaStream.close()
+        applicationServer.stop(10, 10, TimeUnit.SECONDS)
+    })
 }
 
 fun createKafkaStream(streamProperties: Properties, env: Environment): KafkaStreams {
@@ -145,6 +133,31 @@ fun createKafkaStream(streamProperties: Properties, env: Environment): KafkaStre
             .to(env.sm2013RegisterTopic, Produced.with(Serdes.String(), Serdes.String()))
 
     return KafkaStreams(streamsBuilder.build(), streamProperties)
+}
+
+@KtorExperimentalAPI
+fun CoroutineScope.launchListeners(
+    env: Environment,
+    applicationState: ApplicationState,
+    consumerProperties: Properties,
+    database: Database
+
+) {
+    try {
+        val listeners = (1..env.applicationThreads).map {
+            launch {
+                val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
+                kafkaconsumer.subscribe(listOf(env.sm2013RegisterTopic))
+
+                blockingApplicationLogic(applicationState, kafkaconsumer, database)
+            }
+        }.toList()
+
+        applicationState.initialized = true
+        runBlocking { listeners.forEach { it.join() } }
+    } finally {
+        applicationState.running = false
+    }
 }
 
 suspend fun blockingApplicationLogic(
