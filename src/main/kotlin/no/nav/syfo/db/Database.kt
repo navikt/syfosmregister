@@ -54,11 +54,7 @@ class Database(private val env: Environment) {
             jdbcUrl = env.syfosmregisterDBURL
             username = initialCredentials.username
             password = initialCredentials.password
-            maximumPoolSize = 8
-            minimumIdle = 0
-            idleTimeout = 10001
-            connectionTimeout = 250
-            maxLifetime = 30001
+            maximumPoolSize = 3
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             validate()
