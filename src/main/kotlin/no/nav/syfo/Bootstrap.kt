@@ -112,7 +112,10 @@ fun createKafkaStream(streamProperties: Properties, env: Environment): KafkaStre
 
     val sm2013InputStream = streamsBuilder.stream<String, String>(listOf(
             env.sm2013ManualHandlingTopic,
-            env.kafkaSm2013AutomaticDigitalHandlingTopic), Consumed.with(Serdes.String(), Serdes.String()))
+            env.kafkaSm2013AutomaticDigitalHandlingTopic,
+            env.smpapirManualHandlingTopic,
+            env.kafkaSm2013AutomaticPapirmottakTopic,
+            env.sm2013InvalidHandlingTopic), Consumed.with(Serdes.String(), Serdes.String()))
 
     val behandlingsUtfallStream = streamsBuilder.stream<String, String>(listOf(
             env.sm2013BehandlingsUtfallTopic), Consumed.with(Serdes.String(), Serdes.String()))
