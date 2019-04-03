@@ -28,6 +28,7 @@ val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
+val smCommonVersion = "1.0.5"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -85,6 +86,9 @@ dependencies {
     implementation ("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation ("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
     implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+
+    implementation("no.nav.syfo.sm:syfosm-common-models:$smCommonVersion")
+    implementation("no.nav.syfo.sm:syfosm-common-kafka:$smCommonVersion")
 
     //Database
     implementation ("org.postgresql:postgresql:$postgresVersion")

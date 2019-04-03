@@ -23,8 +23,6 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.db.insertSykmelding
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.PersistedSykmelding
-import no.nav.syfo.util.loadBaseConfig
-import no.nav.syfo.util.toConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.LoggerFactory
@@ -32,9 +30,11 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.slf4j.MDCContext
+import no.nav.syfo.kafka.envOverrides
+import no.nav.syfo.kafka.loadBaseConfig
+import no.nav.syfo.kafka.toConsumerConfig
+import no.nav.syfo.kafka.toStreamsConfig
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.util.envOverrides
-import no.nav.syfo.util.toStreamsConfig
 import no.nav.syfo.vault.Vault
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
