@@ -29,8 +29,6 @@ import no.nav.syfo.kafka.toStreamsConfig
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.PersistedSykmelding
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.vault.Vault
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -184,18 +182,7 @@ suspend fun blockingApplicationLogic(
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val behandlingsUtfallReceivedSykmelding: BehandlingsUtfallReceivedSykmelding = objectMapper.readValue(it.value())
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.receivedSykmelding)
-            // val validationResult: ValidationResult = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.behandlingsUtfall)
-
-            // TODO remove, after read topic is at latest
-            val validationResult = ValidationResult(
-                    status = Status.OK,
-                    ruleHits = listOf(RuleInfo(
-                            messageForSender = "Hello",
-                            messageForUser = "Hello2",
-                            ruleName = "Hello3"
-
-                    ))
-            )
+            val validationResult: ValidationResult = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.behandlingsUtfall)
 
             logValues = arrayOf(
                     StructuredArguments.keyValue("msgId", receivedSykmelding.msgId),
