@@ -184,13 +184,13 @@ suspend fun blockingApplicationLogic(
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val behandlingsUtfallReceivedSykmelding: BehandlingsUtfallReceivedSykmelding = objectMapper.readValue(it.value())
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.receivedSykmelding)
-            //val validationResult: ValidationResult = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.behandlingsUtfall)
+            // val validationResult: ValidationResult = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.behandlingsUtfall)
 
             // TODO remove, after read topic is at latest
             val validationResult = ValidationResult(
                     status = Status.OK,
                     ruleHits = listOf(RuleInfo(
-                             messageForSender = "Hello",
+                            messageForSender = "Hello",
                             messageForUser = "Hello2",
                             ruleName = "Hello3"
 
