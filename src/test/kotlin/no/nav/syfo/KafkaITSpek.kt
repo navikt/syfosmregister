@@ -39,7 +39,9 @@ object KafkaITSpek : Spek({
             cluster = "local",
             databaseName = "syfosmregister",
             applicationName = "syfosmregister",
-            sm2013ManualHandlingTopic = "topic2"
+            sm2013ManualHandlingTopic = "topic2",
+            jwtIssuer = "issuer",
+            jwkKeysUrl = "https://keys.url"
     )
 
     fun Properties.overrideForTest(): Properties = apply {

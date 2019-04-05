@@ -1,10 +1,11 @@
 package no.nav.syfo.api
 
 import io.ktor.application.call
+import io.ktor.auth.authentication
+import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.http.HttpStatusCode
-import io.ktor.request.receiveText
 import io.ktor.response.respond
-import io.ktor.routing.Routing
+import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.db.Database
@@ -15,14 +16,21 @@ import org.slf4j.LoggerFactory
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smregister")
 
 @KtorExperimentalAPI
-fun Routing.registerSykmeldingApi(database: Database) {
-    get("/api/v1/{aktorid}/sykmeldinger") {
+fun Route.registerSykmeldingApi(database: Database) {
+    get("/api/v1/sykmeldinger") {
+        // TODO: Trace interceptor
         log.info("Incomming request get sykmeldinger")
-        val aktorid = call.receiveText()
-        val sykmeldinger = database.find(aktorid)
+        val principal: JWTPrincipal? = call.authentication.principal()
+        val subject = principal?.payload?.subject
+                ?: run {
+                    call.respond(HttpStatusCode.Unauthorized, "Request has no subject")
+                    return@get
+                }
 
-        when (sykmeldinger.isNotEmpty()) {
-            true -> call.respond(sykmeldinger)
+        val sykmeldinger = database.find(subject)
+
+        when {
+            sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)
             else -> call.respond(HttpStatusCode.NoContent)
         }
     }

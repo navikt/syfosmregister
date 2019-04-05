@@ -67,7 +67,7 @@ tasks.withType<KotlinCompile> {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
     implementation ("io.prometheus:simpleclient_hotspot:$prometheusVersion")
     implementation ("io.prometheus:simpleclient_common:$prometheusVersion")
 
@@ -75,6 +75,8 @@ dependencies {
     implementation ("io.ktor:ktor-client-apache:$ktorVersion")
     implementation ("io.ktor:ktor-client-auth-basic:$ktorVersion")
     implementation ("io.ktor:ktor-client-jackson:$ktorVersion")
+    compile ("io.ktor:ktor-auth:$ktorVersion")
+    compile ("io.ktor:ktor-auth-jwt:$ktorVersion")
 
     implementation ("ch.qos.logback:logback-classic:$logbackVersion")
     implementation ("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
