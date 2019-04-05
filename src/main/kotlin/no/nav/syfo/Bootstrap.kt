@@ -16,27 +16,24 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.slf4j.MDCContext
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
+import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
-import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.db.insertSykmelding
-import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
-import no.nav.syfo.model.PersistedSykmelding
-import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.common.serialization.StringDeserializer
-import org.slf4j.LoggerFactory
-import java.time.Duration
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.slf4j.MDCContext
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toStreamsConfig
+import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
+import no.nav.syfo.model.PersistedSykmelding
+import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.vault.Vault
+import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.Serdes
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.kstream.Consumed
@@ -44,8 +41,12 @@ import org.apache.kafka.streams.kstream.JoinWindows
 import org.apache.kafka.streams.kstream.Joined
 import org.apache.kafka.streams.kstream.Produced
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.nio.file.Paths
+import java.time.Duration
 import java.util.Properties
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
 
@@ -61,14 +62,11 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
 val backgroundTasksContext = Executors.newFixedThreadPool(4).asCoroutineDispatcher() + MDCContext()
 
+@KtorExperimentalAPI
 fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
     val env = Environment()
     val credentials = objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
-
-    val applicationServer = embeddedServer(Netty, env.applicationPort) {
-        initRouting(applicationState)
-    }.start(wait = false)
 
     DefaultExports.initialize()
 
@@ -98,6 +96,10 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
             applicationState.running = false
         }
     }
+
+    val applicationServer = embeddedServer(Netty, env.applicationPort) {
+        initRouting(applicationState, database)
+    }.start(wait = false)
 
     launchListeners(env, applicationState, consumerProperties, database)
 
@@ -217,11 +219,10 @@ suspend fun blockingApplicationLogic(
     }
 }
 
-fun Application.initRouting(applicationState: ApplicationState) {
+@KtorExperimentalAPI
+fun Application.initRouting(applicationState: ApplicationState, database: Database) {
     routing {
-        registerNaisApi(
-                readynessCheck = { applicationState.initialized },
-                livenessCheck = { applicationState.running }
-        )
+        registerNaisApi(applicationState)
+        registerSykmeldingApi(database)
     }
 }

@@ -6,19 +6,28 @@ import io.ktor.http.isSuccess
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
+import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.api.registerNaisApi
 import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.net.ServerSocket
 
+@KtorExperimentalAPI
 object SelftestSpek : Spek({
+    fun getRandomPort() = ServerSocket(0).use {
+        it.localPort
+    }
+
     val applicationState = ApplicationState()
 
     describe("Calling selftest with successful liveness and readyness tests") {
         with(TestApplicationEngine()) {
             start()
-            application.initRouting(applicationState)
+            application.routing {
+                registerNaisApi(applicationState)
+            }
 
             it("Returns ok on is_alive") {
                 applicationState.running = true
@@ -60,7 +69,7 @@ object SelftestSpek : Spek({
         with(TestApplicationEngine()) {
             start()
             application.routing {
-                registerNaisApi(readynessCheck = { true }, livenessCheck = { false })
+                registerNaisApi(ApplicationState(running = false))
             }
 
             it("Returns internal server error when liveness check fails") {
@@ -76,7 +85,7 @@ object SelftestSpek : Spek({
         with(TestApplicationEngine()) {
             start()
             application.routing {
-                registerNaisApi(readynessCheck = { false }, livenessCheck = { true })
+                registerNaisApi(ApplicationState(initialized = false))
             }
 
             it("Returns internal server error when readyness check fails") {

@@ -23,7 +23,7 @@ INSERT INTO sykmelding(
     behandlings_utfall
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
-const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
+const val QUERY_FOR_AKTOER_ID = """SELECT * FROM sykmelding WHERE pasient_aktoer_id=?;"""
 
 fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.use {
     val ps = it.prepareStatement(INSERT_QUERY)
@@ -45,7 +45,7 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
     it.commit()
 }
 
-fun Database.find(pasientFNR: String) = connection.prepareStatement(QUERY_FOR_FNR).use {
-    it.setString(1, pasientFNR)
+fun Database.find(aktorid: String) = connection.prepareStatement(QUERY_FOR_AKTOER_ID).use {
+    it.setString(1, aktorid)
     it.executeQuery().toList(::fromResultSet)
 }
