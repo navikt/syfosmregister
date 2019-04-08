@@ -37,7 +37,7 @@ fun fromResultSet(resultSet: ResultSet) = PersistedSykmelding(
         resultSet.getString("epj_system_versjon"),
         resultSet.getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
         objectMapper.readValue(resultSet.getString("sykmelding")),
-        objectMapper.readValue(resultSet.getString("behandlingsUtfall"))
+        objectMapper.readValue(resultSet.getString("behandlings_utfall"))
 )
 
 fun Sykmelding.toPGObject() = PGobject().also {
