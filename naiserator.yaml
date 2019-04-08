@@ -10,7 +10,7 @@ spec:
   image: "repo.adeo.no:5443/syfo/syfosmregister:@@VERSION@@"
   replicas:
     min: 1
-    max: 2
+    max: 4
     cpuThresholdPercentage: 90
   port: 8080
   liveness:
@@ -29,7 +29,7 @@ spec:
     path: /prometheus
   resources:
     limits:
-      cpu: 1000m
+      cpu: 2000m
       memory: 1536Mi
     requests:
       cpu: 100m
