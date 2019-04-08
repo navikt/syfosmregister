@@ -45,14 +45,18 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
     it.commit()
 }
 
-fun Database.find(aktorid: String) = connection.prepareStatement(QUERY_FOR_AKTOER_ID).use {
-    it.setString(1, aktorid)
-    it.executeQuery().toList(::fromResultSet)
+fun Database.find(aktorid: String) = connection.use { connection ->
+    connection.prepareStatement(QUERY_FOR_AKTOER_ID).use {
+        it.setString(1, aktorid)
+        it.executeQuery().toList(::fromResultSet)
+    }
 }
 
 const val QUERY_FOR_SYKMELDINGS_ID = """SELECT * FROM sykmelding WHERE id=?;"""
 
-fun Database.findId(sykemldingsId: String) = connection.prepareStatement(QUERY_FOR_SYKMELDINGS_ID).use {
-    it.setString(1, sykemldingsId)
-    it.executeQuery().toList(::fromResultSet)
+fun Database.findId(sykemldingsId: String) = connection.use { connection ->
+    connection.prepareStatement(QUERY_FOR_SYKMELDINGS_ID).use {
+        it.setString(1, sykemldingsId)
+        it.executeQuery().toList(::fromResultSet)
+    }
 }
