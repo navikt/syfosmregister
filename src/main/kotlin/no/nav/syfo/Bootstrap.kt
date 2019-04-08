@@ -186,11 +186,16 @@ suspend fun blockingApplicationLogic(
 
             logValues = arrayOf(
                     StructuredArguments.keyValue("msgId", receivedSykmelding.msgId),
-                    StructuredArguments.keyValue("smId", receivedSykmelding.navLogId),
-                    StructuredArguments.keyValue("orgNr", receivedSykmelding.legekontorOrgNr)
+                    StructuredArguments.keyValue("mottakId", receivedSykmelding.navLogId),
+                    StructuredArguments.keyValue("orgNr", receivedSykmelding.legekontorOrgNr),
+                    StructuredArguments.keyValue("smId", receivedSykmelding.sykmelding.id)
             )
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
+
+            // TODO add duplicate check
+            // log.warn("Message with {} marked as allready in database $logKeys", keyValue("smId"), *logValues)
+
             try {
                 database.insertSykmelding(PersistedSykmelding(
                         id = receivedSykmelding.sykmelding.id,
