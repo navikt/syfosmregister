@@ -21,6 +21,7 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
+import no.nav.syfo.db.findId
 import no.nav.syfo.db.insertSykmelding
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
@@ -193,31 +194,33 @@ suspend fun blockingApplicationLogic(
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
-            // TODO add duplicate check
-            // log.warn("Message with {} marked as allready in database $logKeys", keyValue("smId"), *logValues)
+            if (database.findId(receivedSykmelding.sykmelding.id).isNotEmpty()) {
+                log.warn("Message with {} marked as already stored in the database, $logKeys", *logValues)
+            } else {
 
-            try {
-                database.insertSykmelding(PersistedSykmelding(
-                        id = receivedSykmelding.sykmelding.id,
-                        pasientFnr = receivedSykmelding.personNrPasient,
-                        pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
-                        legeFnr = receivedSykmelding.personNrLege,
-                        legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
-                        mottakId = receivedSykmelding.navLogId,
-                        legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
-                        legekontorHerId = receivedSykmelding.legekontorHerId,
-                        legekontorReshId = receivedSykmelding.legekontorReshId,
-                        epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
-                        epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
-                        mottattTidspunkt = receivedSykmelding.mottattDato,
-                        sykmelding = receivedSykmelding.sykmelding,
-                        behandlingsUtfall = validationResult
+                try {
+                    database.insertSykmelding(PersistedSykmelding(
+                            id = receivedSykmelding.sykmelding.id,
+                            pasientFnr = receivedSykmelding.personNrPasient,
+                            pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
+                            legeFnr = receivedSykmelding.personNrLege,
+                            legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
+                            mottakId = receivedSykmelding.navLogId,
+                            legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
+                            legekontorHerId = receivedSykmelding.legekontorHerId,
+                            legekontorReshId = receivedSykmelding.legekontorReshId,
+                            epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
+                            epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
+                            mottattTidspunkt = receivedSykmelding.mottattDato,
+                            sykmelding = receivedSykmelding.sykmelding,
+                            behandlingsUtfall = validationResult
 
-                ))
-                log.info("SM2013, stored in the database, $logKeys", *logValues)
-                MESSAGE_STORED_IN_DB_COUNTER.inc()
-            } catch (e: Exception) {
-                log.error("Exception caught while handling message $logKeys", *logValues, e)
+                    ))
+                    log.info("SM2013, stored in the database, $logKeys", *logValues)
+                    MESSAGE_STORED_IN_DB_COUNTER.inc()
+                } catch (e: Exception) {
+                    log.error("Exception caught while handling message $logKeys", *logValues, e)
+                }
             }
         }
         delay(100)

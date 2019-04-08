@@ -49,3 +49,10 @@ fun Database.find(aktorid: String) = connection.prepareStatement(QUERY_FOR_AKTOE
     it.setString(1, aktorid)
     it.executeQuery().toList(::fromResultSet)
 }
+
+const val QUERY_FOR_SYKMELDINGS_ID = """SELECT * FROM sykmelding WHERE id=?;"""
+
+fun Database.findId(sykemldingsId: String) = connection.prepareStatement(QUERY_FOR_SYKMELDINGS_ID).use {
+    it.setString(1, sykemldingsId)
+    it.executeQuery().toList(::fromResultSet)
+}
