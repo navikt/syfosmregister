@@ -54,7 +54,7 @@ fun Database.find(aktorid: String) = connection.use { connection ->
 
 const val QUERY_FOR_SYKMELDINGS_ID = """SELECT * FROM sykmelding WHERE id=?;"""
 
-fun Database.isSykmeldingStored(sykemldingsId: String) = !connection.use { connection ->
+fun Database.isSykmeldingStored(sykemldingsId: String) = connection.use { connection ->
     connection.prepareStatement(QUERY_FOR_SYKMELDINGS_ID).use {
         it.setString(1, sykemldingsId)
         it.executeQuery().next()
