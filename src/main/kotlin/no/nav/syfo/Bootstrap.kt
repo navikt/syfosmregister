@@ -21,8 +21,8 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
-import no.nav.syfo.db.findId
 import no.nav.syfo.db.insertSykmelding
+import no.nav.syfo.db.isSykmeldingStored
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -194,7 +194,7 @@ suspend fun blockingApplicationLogic(
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
-            if (database.findId(receivedSykmelding.sykmelding.id).isNotEmpty()) {
+            if (database.isSykmeldingStored(receivedSykmelding.sykmelding.id)) {
                 log.warn("Message with {} marked as already stored in the database, $logKeys", *logValues)
             } else {
 
