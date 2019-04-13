@@ -41,10 +41,8 @@ Installere [Vault](https://www.vaultproject.io/downloads.html)
 Generere bruker/passord: 
 
 ```
-
 export VAULT_ADDR=https://vault.adeo.no USER=NAV_IDENT
 vault login -method=oidc
-
 
 ```
 
