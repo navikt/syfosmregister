@@ -21,10 +21,16 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
+import no.nav.syfo.db.insertSykmelding
+import no.nav.syfo.db.isSykmeldingStored
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toStreamsConfig
+import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
+import no.nav.syfo.model.PersistedSykmelding
+import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.vault.Vault
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.Serdes
@@ -175,7 +181,6 @@ suspend fun blockingApplicationLogic(
         val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
 
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
-            /*
             val behandlingsUtfallReceivedSykmelding: BehandlingsUtfallReceivedSykmelding = objectMapper.readValue(it.value())
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.receivedSykmelding)
             val validationResult: ValidationResult = objectMapper.readValue(behandlingsUtfallReceivedSykmelding.behandlingsUtfall)
@@ -217,8 +222,6 @@ suspend fun blockingApplicationLogic(
                     log.error("Exception caught while handling message $logKeys", *logValues, e)
                 }
             }
-
-            */
         }
         delay(100)
     }
