@@ -18,13 +18,13 @@ data class Environment(
     override val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
     val syfosmregisterDBURL: String = getEnvVar("SYFOSMREGISTER_DB_URL"),
     val mountPathVault: String = getEnvVar("MOUNT_PATH_VAULT"),
-    val cluster: String = getEnvVar("CLUSTER")
+    val cluster: String = getEnvVar("CLUSTER"),
+    val clientId: String = getEnvVar("CLIENT_ID")
 ) : KafkaConfig
 
 data class VaultSecrets(
     val serviceuserUsername: String,
     val serviceuserPassword: String,
-    val jwtAudience: String,
     val jwtIssuer: String,
     val jwksUri: String
 ) : KafkaCredentials {

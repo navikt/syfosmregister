@@ -48,5 +48,5 @@ spec:
     value: {{MOUNT_PATH_VAULT}}
   - name: CLUSTER
     value: {{CLUSTER}}
-  - name: JWT_ISSUER
-    value: {{JWT_ISSUER}}
+  - name: CLIENT_ID
+    value: {{CLIENT_ID}}

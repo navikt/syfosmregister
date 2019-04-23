@@ -50,12 +50,12 @@ buildscript {
 }
 
 repositories {
-    maven (url= "https://repo.adeo.no/repository/maven-snapshots/")
-    maven (url= "https://repo.adeo.no/repository/maven-releases/")
-    maven (url= "https://dl.bintray.com/kotlin/ktor")
-    maven (url= "https://dl.bintray.com/spekframework/spek-dev")
-    maven (url= "http://packages.confluent.io/maven/")
-    maven (url= "https://kotlin.bintray.com/kotlinx")
+    maven(url = "https://repo.adeo.no/repository/maven-snapshots/")
+    maven(url = "https://repo.adeo.no/repository/maven-releases/")
+    maven(url = "https://dl.bintray.com/kotlin/ktor")
+    maven(url = "https://dl.bintray.com/spekframework/spek-dev")
+    maven(url = "http://packages.confluent.io/maven/")
+    maven(url = "https://kotlin.bintray.com/kotlinx")
     mavenCentral()
     jcenter()
 }
@@ -67,58 +67,58 @@ tasks.withType<KotlinCompile> {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
-    implementation ("io.prometheus:simpleclient_hotspot:$prometheusVersion")
-    implementation ("io.prometheus:simpleclient_common:$prometheusVersion")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
+    implementation("io.prometheus:simpleclient_hotspot:$prometheusVersion")
+    implementation("io.prometheus:simpleclient_common:$prometheusVersion")
 
-    implementation ("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation ("io.ktor:ktor-client-apache:$ktorVersion")
-    implementation ("io.ktor:ktor-client-auth-basic:$ktorVersion")
-    implementation ("io.ktor:ktor-client-jackson:$ktorVersion")
-    implementation ("io.ktor:ktor-jackson:$ktorVersion")
-    compile ("io.ktor:ktor-auth:$ktorVersion")
-    compile ("io.ktor:ktor-auth-jwt:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("io.ktor:ktor-client-auth-basic:$ktorVersion")
+    implementation("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation("io.ktor:ktor-jackson:$ktorVersion")
+    compile("io.ktor:ktor-auth:$ktorVersion")
+    compile("io.ktor:ktor-auth-jwt:$ktorVersion")
 
-    implementation ("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation ("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
 
-    implementation ("org.apache.kafka:kafka_2.12:$kafkaVersion")
-    implementation ("org.apache.kafka:kafka-streams:$kafkaVersion")
+    implementation("org.apache.kafka:kafka_2.12:$kafkaVersion")
+    implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
 
-    implementation ("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
-    implementation ("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation ("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
-    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
     implementation("no.nav.syfo.sm:syfosm-common-models:$smCommonVersion")
     implementation("no.nav.syfo.sm:syfosm-common-kafka:$smCommonVersion")
 
     //Database
-    implementation ("org.postgresql:postgresql:$postgresVersion")
-    implementation ("com.h2database:h2:$h2Version")
-    implementation ("com.zaxxer:HikariCP:$hikariVersion")
-    implementation ("org.flywaydb:flyway-core:$flywayVersion")
-    implementation ("com.bettercloud:vault-java-driver:$vaultJavaDriveVersion")
+    implementation("org.postgresql:postgresql:$postgresVersion")
+    implementation("com.h2database:h2:$h2Version")
+    implementation("com.zaxxer:HikariCP:$hikariVersion")
+    implementation("org.flywaydb:flyway-core:$flywayVersion")
+    implementation("com.bettercloud:vault-java-driver:$vaultJavaDriveVersion")
 
-    implementation ("no.nav.helse.xml:sm2013:$sykmeldingVersion")
+    implementation("no.nav.helse.xml:sm2013:$sykmeldingVersion")
 
-    implementation ("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
-    implementation ("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
-    implementation ("javax.xml.bind:jaxb-api:$jaxbApiVersion")
-    implementation ("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
-    implementation ("javax.activation:activation:$javaxActivationVersion")
+    implementation("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
+    implementation("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
+    implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
+    implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
+    implementation("javax.activation:activation:$javaxActivationVersion")
 
-    testImplementation ("org.amshove.kluent:kluent:$kluentVersion")
-    testImplementation ("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
+    testImplementation("org.amshove.kluent:kluent:$kluentVersion")
+    testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty") // conflicts with WireMock
     }
-    testImplementation ("no.nav:kafka-embedded-env:$kafkaEmbeddedVersion")
+    testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedVersion")
 
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")
     }
-    testRuntimeOnly ("org.spekframework.spek2:spek-runner-junit5:$spekVersion") {
+    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")
     }
 
