@@ -18,7 +18,9 @@ data class Environment(
     override val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
     val syfosmregisterDBURL: String = getEnvVar("SYFOSMREGISTER_DB_URL"),
     val mountPathVault: String = getEnvVar("MOUNT_PATH_VAULT"),
-    val cluster: String = getEnvVar("CLUSTER")
+    val cluster: String = getEnvVar("CLUSTER"),
+    val jwtIssuer: String = getEnvVar("JWT_ISSUER"),
+    val jwkKeysUrl: String = getEnvVar("JWK_KEYS_URL")
 ) : KafkaConfig
 
 data class VaultSecrets(

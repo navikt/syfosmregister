@@ -1,11 +1,17 @@
 package no.nav.syfo
 
+import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.application.Application
+import io.ktor.application.install
+import io.ktor.auth.Authentication
+import io.ktor.auth.authenticate
+import io.ktor.auth.jwt.JWTPrincipal
+import io.ktor.auth.jwt.jwt
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -43,6 +49,7 @@ import org.apache.kafka.streams.kstream.Joined
 import org.apache.kafka.streams.kstream.Produced
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.URL
 import java.nio.file.Paths
 import java.time.Duration
 import java.util.Properties
@@ -99,6 +106,28 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     }
 
     val applicationServer = embeddedServer(Netty, env.applicationPort) {
+        val jwkProvider = JwkProviderBuilder(URL(env.jwkKeysUrl))
+                .cached(10, 24, TimeUnit.HOURS)
+                .rateLimited(10, 1, TimeUnit.MINUTES)
+                .build()
+
+        install(Authentication) {
+            jwt {
+                verifier(jwkProvider, env.jwtIssuer)
+                realm = "Syfosmregister"
+                validate { credentials ->
+                    val appid: String = credentials.payload.getClaim("issuer").asString()
+                    val acr: String = credentials.payload.getClaim("acr").asString()
+                    log.info("authorization attempt for $appid")
+                    if (appid == "selvbetjening" && acr == "Level4") {
+                        log.info("authorization ok")
+                        return@validate JWTPrincipal(credentials.payload)
+                    }
+                    log.info("authorization failed")
+                    return@validate null
+                }
+            }
+        }
         initRouting(applicationState, database)
     }.start(wait = false)
 
@@ -231,6 +260,8 @@ suspend fun blockingApplicationLogic(
 fun Application.initRouting(applicationState: ApplicationState, database: Database) {
     routing {
         registerNaisApi(applicationState)
-        registerSykmeldingApi(database)
+        authenticate {
+            registerSykmeldingApi(database)
+        }
     }
 }
