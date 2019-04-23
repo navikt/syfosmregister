@@ -113,6 +113,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 
         install(Authentication) {
             jwt {
+                log.info("authenticationg incomming request")
                 verifier(jwkProvider, env.jwtIssuer)
                 realm = "Syfosmregister"
                 validate { credentials ->
