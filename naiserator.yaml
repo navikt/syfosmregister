@@ -48,7 +48,5 @@ spec:
     value: {{MOUNT_PATH_VAULT}}
   - name: CLUSTER
     value: {{CLUSTER}}
-  - name: JWK_KEYS_URL
-    value: {{JWK_KEYS_URL}}
   - name: JWT_ISSUER
     value: {{JWT_ISSUER}}
