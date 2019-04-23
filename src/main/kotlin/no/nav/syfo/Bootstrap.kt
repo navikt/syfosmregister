@@ -1,6 +1,5 @@
 package no.nav.syfo
 
-import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -10,8 +9,14 @@ import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
-import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
+import io.ktor.features.CallId
+import io.ktor.features.ContentNegotiation
+import io.ktor.features.origin
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.jackson.JacksonConverter
+import io.ktor.request.ApplicationRequest
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -24,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import net.logstash.logback.argument.StructuredArguments
+import no.nav.syfo.api.JwtConfig
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
@@ -49,10 +55,9 @@ import org.apache.kafka.streams.kstream.Joined
 import org.apache.kafka.streams.kstream.Produced
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.URL
 import java.nio.file.Paths
 import java.time.Duration
-import java.util.Properties
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -73,12 +78,12 @@ val backgroundTasksContext = Executors.newFixedThreadPool(4).asCoroutineDispatch
 @KtorExperimentalAPI
 fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
     val env = Environment()
-    val credentials = objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
+    val vaultSecrets = objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val applicationState = ApplicationState()
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfig = loadBaseConfig(env, credentials)
+    val kafkaBaseConfig = loadBaseConfig(env, vaultSecrets)
             .envOverrides()
     val consumerProperties = kafkaBaseConfig.toConsumerConfig(
             "${env.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
@@ -106,30 +111,26 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     }
 
     val applicationServer = embeddedServer(Netty, env.applicationPort) {
-        val jwkProvider = JwkProviderBuilder(URL(env.jwkKeysUrl))
-                .cached(10, 24, TimeUnit.HOURS)
-                .rateLimited(10, 1, TimeUnit.MINUTES)
-                .build()
-
+        initRouting(applicationState, database)
+        install(ContentNegotiation) {
+            register(ContentType.Application.Json, JacksonConverter(objectMapper))
+        }
         install(Authentication) {
             jwt {
-                log.info("authenticationg incomming request")
-                verifier(jwkProvider, env.jwtIssuer)
-                realm = "Syfosmregister"
+                val jwtConfig = JwtConfig(vaultSecrets)
+                realm = JwtConfig.REALM
+                verifier(jwtConfig.jwkProvider, vaultSecrets.jwtIssuer)
                 validate { credentials ->
-                    val appid: String = credentials.payload.getClaim("issuer").asString()
-                    val acr: String = credentials.payload.getClaim("acr").asString()
-                    log.info("authorization attempt for $appid")
-                    if (appid == "selvbetjening" && acr == "Level4") {
-                        log.info("authorization ok")
-                        return@validate JWTPrincipal(credentials.payload)
-                    }
-                    log.info("authorization failed")
-                    return@validate null
+                    log.debug("Auth: User requested resource '${request.url()}'")
+                    jwtConfig.validate(credentials)
                 }
             }
         }
-        initRouting(applicationState, database)
+        install(CallId) {
+            generate { UUID.randomUUID().toString() }
+            verify { callId: String -> callId.isNotEmpty() }
+            header(HttpHeaders.XCorrelationId)
+        }
     }.start(wait = false)
 
     launchListeners(env, applicationState, consumerProperties, database)
@@ -173,10 +174,10 @@ fun createKafkaStream(streamProperties: Properties, env: Environment): KafkaStre
 
 @KtorExperimentalAPI
 fun CoroutineScope.launchListeners(
-    env: Environment,
-    applicationState: ApplicationState,
-    consumerProperties: Properties,
-    database: Database
+        env: Environment,
+        applicationState: ApplicationState,
+        consumerProperties: Properties,
+        database: Database
 
 ) {
     try {
@@ -197,9 +198,9 @@ fun CoroutineScope.launchListeners(
 }
 
 suspend fun blockingApplicationLogic(
-    applicationState: ApplicationState,
-    kafkaconsumer: KafkaConsumer<String, String>,
-    database: Database
+        applicationState: ApplicationState,
+        kafkaconsumer: KafkaConsumer<String, String>,
+        database: Database
 ) {
     while (applicationState.running) {
         var logValues = arrayOf(
@@ -265,4 +266,12 @@ fun Application.initRouting(applicationState: ApplicationState, database: Databa
             registerSykmeldingApi(database)
         }
     }
+}
+
+internal fun ApplicationRequest.url(): String {
+    val port = when (origin.port) {
+        in listOf(80, 443) -> ""
+        else -> ":${origin.port}"
+    }
+    return "${origin.scheme}://${origin.host}$port${origin.uri}"
 }

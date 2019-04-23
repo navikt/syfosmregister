@@ -75,6 +75,7 @@ dependencies {
     implementation ("io.ktor:ktor-client-apache:$ktorVersion")
     implementation ("io.ktor:ktor-client-auth-basic:$ktorVersion")
     implementation ("io.ktor:ktor-client-jackson:$ktorVersion")
+    implementation ("io.ktor:ktor-jackson:$ktorVersion")
     compile ("io.ktor:ktor-auth:$ktorVersion")
     compile ("io.ktor:ktor-auth-jwt:$ktorVersion")
 
