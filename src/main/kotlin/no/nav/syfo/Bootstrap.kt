@@ -115,7 +115,6 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     }
 
     val applicationServer = embeddedServer(Netty, environment.applicationPort) {
-        initRouting(applicationState, database)
         install(ContentNegotiation) {
             register(ContentType.Application.Json, JacksonConverter(objectMapper))
         }
@@ -135,6 +134,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
             verify { callId: String -> callId.isNotEmpty() }
             header(HttpHeaders.XCorrelationId)
         }
+        initRouting(applicationState, database)
     }.start(wait = false)
 
     launchListeners(environment, applicationState, consumerProperties, database)
