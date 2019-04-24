@@ -10,6 +10,7 @@ import io.ktor.routing.get
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.find
+import no.nav.syfo.model.ValidationResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -27,8 +28,7 @@ fun Route.registerSykmeldingApi(database: Database) {
         val behandlingsutfall = database.find(subject)
             // TODO: Should behandlingsUtfall be hidden for patients with skjermetForPasient
             .filter { !it.sykmelding.skjermesForPasient }
-            .map { it.id to it.behandlingsUtfall }
-            .toMap()
+            .map { BehandlingsutfallResponse(it.id, it.behandlingsUtfall) }
 
         when {
             behandlingsutfall.isNotEmpty() -> call.respond(behandlingsutfall)
@@ -36,3 +36,5 @@ fun Route.registerSykmeldingApi(database: Database) {
         }
     }
 }
+
+data class BehandlingsutfallResponse(val id: String, val behandlingsutfall: ValidationResult)
