@@ -273,11 +273,12 @@ fun Application.initRouting(
     }
     install(Authentication) {
         jwt {
+            log.info("Auth: Starting authentication...")
             val jwtConfig = JwtConfig(vaultSecrets, environment)
             realm = JwtConfig.REALM
             verifier(jwtConfig.jwkProvider, vaultSecrets.jwtIssuer)
             validate { credentials ->
-                log.debug("Auth: User requested resource '${request.url()}'")
+                log.info("Auth: User requested resource '${request.url()}'")
                 jwtConfig.validate(credentials)
             }
         }
