@@ -48,5 +48,3 @@ spec:
     value: {{MOUNT_PATH_VAULT}}
   - name: CLUSTER
     value: {{CLUSTER}}
-  - name: CLIENT_ID
-    value: {{CLIENT_ID}}

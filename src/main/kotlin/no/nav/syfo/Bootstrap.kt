@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -10,6 +11,7 @@ import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
+import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
 import io.ktor.features.CallId
 import io.ktor.features.ContentNegotiation
@@ -32,7 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import net.logstash.logback.argument.StructuredArguments
-import no.nav.syfo.api.JwtConfig
+import no.nav.syfo.api.getWellKnown
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
@@ -58,6 +60,7 @@ import org.apache.kafka.streams.kstream.Joined
 import org.apache.kafka.streams.kstream.Produced
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.URL
 import java.nio.file.Paths
 import java.time.Duration
 import java.util.Properties
@@ -265,6 +268,11 @@ fun Application.initRouting(
     vaultSecrets: VaultSecrets,
     environment: Environment
 ) {
+    val wellKnown = getWellKnown(vaultSecrets.oidcWellKnownUri)
+    val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
+            .cached(10, 24, TimeUnit.HOURS)
+            .rateLimited(10, 1, TimeUnit.MINUTES)
+            .build()
     install(ContentNegotiation) {
         jackson {
             registerKotlinModule()
@@ -274,12 +282,14 @@ fun Application.initRouting(
     install(Authentication) {
         jwt {
             log.info("Auth: Starting authentication...")
-            val jwtConfig = JwtConfig(vaultSecrets, environment)
-            realm = JwtConfig.REALM
-            verifier(jwtConfig.jwkProvider, vaultSecrets.jwtIssuer)
+            verifier(jwkProvider, wellKnown.issuer)
             validate { credentials ->
                 log.info("Auth: User requested resource '${request.url()}'")
-                jwtConfig.validate(credentials)
+                if (!credentials.payload.audience.contains(vaultSecrets.loginserviceClientId)) {
+                    null
+                } else {
+                    JWTPrincipal(credentials.payload)
+                }
             }
         }
     }

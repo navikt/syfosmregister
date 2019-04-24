@@ -39,8 +39,7 @@ object KafkaITSpek : Spek({
         cluster = "local",
         databaseName = "syfosmregister",
         applicationName = "syfosmregister",
-        sm2013ManualHandlingTopic = "topic2",
-        clientId = ""
+        sm2013ManualHandlingTopic = "topic2"
     )
 
     fun Properties.overrideForTest(): Properties = apply {
