@@ -142,4 +142,8 @@ tasks {
         }
         testLogging.showStandardStreams = true
     }
+
+    "check" {
+        dependsOn("formatKotlin")
+    }
 }

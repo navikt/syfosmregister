@@ -39,6 +39,7 @@ spec:
   ingresses:
     - "https://syfosmregister.nais.preprod.local"
     - "https://syfosmregister.nais.adeo.no"
+  webproxy: true
   env:
   - name: KAFKA_BOOTSTRAP_SERVERS_URL
     value: {{KAFKA_BOOTSTRAP_SERVERS_URL}}
