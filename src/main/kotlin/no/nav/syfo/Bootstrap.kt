@@ -6,17 +6,20 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.application.Application
+import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.auth.jwt.jwt
 import io.ktor.features.CallId
 import io.ktor.features.ContentNegotiation
+import io.ktor.features.StatusPages
 import io.ktor.features.origin
-import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.jackson.JacksonConverter
+import io.ktor.http.HttpStatusCode
+import io.ktor.jackson.jackson
 import io.ktor.request.ApplicationRequest
+import io.ktor.response.respond
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -115,26 +118,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     }
 
     val applicationServer = embeddedServer(Netty, environment.applicationPort) {
-        install(ContentNegotiation) {
-            register(ContentType.Application.Json, JacksonConverter(objectMapper))
-        }
-        install(Authentication) {
-            jwt {
-                val jwtConfig = JwtConfig(vaultSecrets, environment)
-                realm = JwtConfig.REALM
-                verifier(jwtConfig.jwkProvider, vaultSecrets.jwtIssuer)
-                validate { credentials ->
-                    log.debug("Auth: User requested resource '${request.url()}'")
-                    jwtConfig.validate(credentials)
-                }
-            }
-        }
-        install(CallId) {
-            generate { UUID.randomUUID().toString() }
-            verify { callId: String -> callId.isNotEmpty() }
-            header(HttpHeaders.XCorrelationId)
-        }
-        initRouting(applicationState, database)
+        initRouting(applicationState, database, vaultSecrets, environment)
     }.start(wait = false)
 
     launchListeners(environment, applicationState, consumerProperties, database)
@@ -275,7 +259,42 @@ suspend fun blockingApplicationLogic(
 }
 
 @KtorExperimentalAPI
-fun Application.initRouting(applicationState: ApplicationState, database: Database) {
+fun Application.initRouting(
+    applicationState: ApplicationState,
+    database: Database,
+    vaultSecrets: VaultSecrets,
+    environment: Environment
+) {
+    install(ContentNegotiation) {
+        jackson {
+            registerKotlinModule()
+            registerModule(JavaTimeModule())
+        }
+    }
+    install(Authentication) {
+        jwt {
+            val jwtConfig = JwtConfig(vaultSecrets, environment)
+            realm = JwtConfig.REALM
+            verifier(jwtConfig.jwkProvider, vaultSecrets.jwtIssuer)
+            validate { credentials ->
+                log.debug("Auth: User requested resource '${request.url()}'")
+                jwtConfig.validate(credentials)
+            }
+        }
+    }
+    install(CallId) {
+        generate { UUID.randomUUID().toString() }
+        verify { callId: String -> callId.isNotEmpty() }
+        header(HttpHeaders.XCorrelationId)
+    }
+    install(StatusPages) {
+        exception<Throwable> { cause ->
+            call.respond(HttpStatusCode.InternalServerError, cause.message ?: "Unknown error")
+
+            log.error("Caught exception", cause)
+            throw cause
+        }
+    }
     routing {
         registerNaisApi(applicationState)
         authenticate {
