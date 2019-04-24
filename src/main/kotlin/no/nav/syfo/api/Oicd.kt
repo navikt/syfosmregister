@@ -1,5 +1,6 @@
 package no.nav.syfo.api
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -31,6 +32,7 @@ val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
 
 fun getWellKnown(wellKnownUrl: String) = runBlocking { HttpClient(Apache, proxyConfig).get<WellKnown>(wellKnownUrl) }
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class WellKnown(
     val authorization_endpoint: String,
     val token_endpoint: String,
