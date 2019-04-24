@@ -34,6 +34,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import net.logstash.logback.argument.StructuredArguments
+import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.syfo.api.getWellKnown
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
@@ -121,7 +122,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     }
 
     val applicationServer = embeddedServer(Netty, environment.applicationPort) {
-        initRouting(applicationState, database, vaultSecrets, environment)
+        initRouting(applicationState, database, vaultSecrets)
     }.start(wait = false)
 
     launchListeners(environment, applicationState, consumerProperties, database)
@@ -265,14 +266,13 @@ suspend fun blockingApplicationLogic(
 fun Application.initRouting(
     applicationState: ApplicationState,
     database: Database,
-    vaultSecrets: VaultSecrets,
-    environment: Environment
+    vaultSecrets: VaultSecrets
 ) {
     val wellKnown = getWellKnown(vaultSecrets.oidcWellKnownUri)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
-            .cached(10, 24, TimeUnit.HOURS)
-            .rateLimited(10, 1, TimeUnit.MINUTES)
-            .build()
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
     install(ContentNegotiation) {
         jackson {
             registerKotlinModule()
@@ -281,11 +281,16 @@ fun Application.initRouting(
     }
     install(Authentication) {
         jwt {
-            log.info("Auth: Starting authentication...")
             verifier(jwkProvider, wellKnown.issuer)
             validate { credentials ->
                 log.info("Auth: User requested resource '${request.url()}'")
                 if (!credentials.payload.audience.contains(vaultSecrets.loginserviceClientId)) {
+                    log.warn(
+                        "Auth: Unexpected audience for jwt {}, {}, {}",
+                        keyValue("issuer", credentials.payload.issuer),
+                        keyValue("audience", credentials.payload.audience),
+                        keyValue("expectedAudience", vaultSecrets.loginserviceClientId)
+                    )
                     null
                 } else {
                     JWTPrincipal(credentials.payload)
