@@ -17,20 +17,21 @@ val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smregister")
 
 @KtorExperimentalAPI
 fun Route.registerSykmeldingApi(database: Database) {
-    get("/api/v1/sykmeldinger") {
-        // TODO: Trace interceptor
-        log.info("Incomming request get sykmeldinger")
-        val principal: JWTPrincipal? = call.authentication.principal()
-        val subject = principal?.payload?.subject
-                ?: run {
-                    call.respond(HttpStatusCode.Unauthorized, "Request has no subject")
-                    return@get
-                }
 
-        val sykmeldinger = database.find(subject)
+    get("/api/v1/behandlingsutfall") {
+        // TODO: Trace interceptor
+        log.info("Incomming request get behandlingsutfall")
+        val principal: JWTPrincipal = call.authentication.principal()!!
+        val subject = principal.payload.subject
+
+        val behandlingsutfall = database.find(subject)
+            // TODO: Should behandlingsUtfall be hidden for patients with skjermetForPasient
+            .filter { !it.sykmelding.skjermesForPasient }
+            .map { it.id to it.behandlingsUtfall }
+            .toMap()
 
         when {
-            sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)
+            behandlingsutfall.isNotEmpty() -> call.respond(behandlingsutfall)
             else -> call.respond(HttpStatusCode.NoContent)
         }
     }
