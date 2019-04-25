@@ -46,9 +46,9 @@ class Database(private val env: Environment) {
         runFlywayMigrations()
 
         val initialCredentials = getNewCredentials(
-                mountPath = env.mountPathVault,
-                databaseName = env.databaseName,
-                role = Role.USER
+            mountPath = env.mountPathVault,
+            databaseName = env.databaseName,
+            role = Role.USER
         )
         dataSource = HikariDataSource(HikariConfig().apply {
             jdbcUrl = env.syfosmregisterDBURL
@@ -61,19 +61,19 @@ class Database(private val env: Environment) {
         })
 
         renewCredentialsTaskData = RenewCredentialsTaskData(
-                initialDelay = suggestedRefreshIntervalInMillis(initialCredentials.leaseDuration * 1000),
-                dataSource = dataSource,
-                mountPath = env.mountPathVault,
-                databaseName = env.databaseName,
-                role = Role.USER
+            initialDelay = suggestedRefreshIntervalInMillis(initialCredentials.leaseDuration * 1000),
+            dataSource = dataSource,
+            mountPath = env.mountPathVault,
+            databaseName = env.databaseName,
+            role = Role.USER
         )
     }
 
     private fun runFlywayMigrations() = Flyway.configure().run {
         val credentials = getNewCredentials(
-                mountPath = env.mountPathVault,
-                databaseName = env.databaseName,
-                role = Role.ADMIN
+            mountPath = env.mountPathVault,
+            databaseName = env.databaseName,
+            role = Role.ADMIN
         )
         dataSource(env.syfosmregisterDBURL, credentials.username, credentials.password)
         initSql("SET ROLE \"${env.databaseName}-${Role.ADMIN}\"") // required for assigning proper owners for the tables
@@ -101,8 +101,10 @@ class Database(private val env: Environment) {
     suspend fun runRenewCredentialsTask(condition: () -> Boolean) {
         delay(renewCredentialsTaskData.initialDelay)
         while (condition()) {
-            val credentials = getNewCredentials(renewCredentialsTaskData.mountPath,
-                    renewCredentialsTaskData.databaseName, renewCredentialsTaskData.role)
+            val credentials = getNewCredentials(
+                renewCredentialsTaskData.mountPath,
+                renewCredentialsTaskData.databaseName, renewCredentialsTaskData.role
+            )
             renewCredentialsTaskData.dataSource.apply {
                 hikariConfigMXBean.setUsername(credentials.username)
                 hikariConfigMXBean.setPassword(credentials.password)
