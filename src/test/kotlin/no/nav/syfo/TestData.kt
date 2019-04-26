@@ -117,7 +117,6 @@ fun generateAktivitetIkkeMulig(
     arbeidsrelatertArsak = arbeidsrelatertArsak
 )
 
-
 fun generateMedisinskArsak(
     beskrivelse: String = "test data",
     arsak: List<MedisinskArsakType> = listOf(MedisinskArsakType.values()[Random.nextInt(MedisinskArsakType.values().size)])

@@ -16,6 +16,7 @@ pipeline {
         stage('initialize') {
             steps {
                 init action: 'default'
+                githubStatus action: 'pending'
                 script {
                     sh(script: './gradlew clean')
                     def applicationVersionGradle = sh(script: './gradlew -q printVersion', returnStdout: true).trim()
@@ -74,9 +75,11 @@ pipeline {
         }
         success {
             postProcess action: 'success'
+            githubStatus action: 'success'
         }
         failure {
             postProcess action: 'failure'
+            githubStatus action: 'failure'
         }
     }
 }
