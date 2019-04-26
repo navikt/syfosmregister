@@ -23,8 +23,8 @@ val sykmeldingVersion = "1.1-SNAPSHOT"
 val jaxwsApiVersion = "2.3.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
-val embeddedPostgresVersion = "0.13.1"
 val postgresVersion = "42.2.5"
+val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
@@ -95,10 +95,10 @@ dependencies {
 
     //Database
     implementation("org.postgresql:postgresql:$postgresVersion")
+    implementation("com.h2database:h2:$h2Version")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     implementation("org.flywaydb:flyway-core:$flywayVersion")
     implementation("com.bettercloud:vault-java-driver:$vaultJavaDriveVersion")
-    testImplementation("com.opentable.components:otj-pg-embedded:$embeddedPostgresVersion")
 
     implementation("no.nav.helse.xml:sm2013:$sykmeldingVersion")
 
