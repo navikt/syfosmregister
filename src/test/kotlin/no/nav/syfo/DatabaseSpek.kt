@@ -73,6 +73,7 @@ object DatabaseSpek : Spek({
 
     )
 
+
     describe("Register database") {
         it("should be able to insert persisted sykemelding") {
             val connection = postgres.getDatabase("postgres", "postgres").connection
