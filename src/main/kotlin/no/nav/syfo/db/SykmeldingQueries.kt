@@ -24,39 +24,46 @@ INSERT INTO sykmelding(
     behandlings_utfall
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
-fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.use {
+fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = insertSykmelding(sykmeldingDB, connection)
+fun insertSykmelding(sykmelding: PersistedSykmelding, connection: Connection) {
+    connection.use {
         val ps = it.prepareStatement(INSERT_QUERY)
-        ps.setString(1, sykmeldingDB.id)
-        ps.setString(2, sykmeldingDB.pasientFnr)
-        ps.setString(3, sykmeldingDB.pasientAktoerId)
-        ps.setString(4, sykmeldingDB.legeFnr)
-        ps.setString(5, sykmeldingDB.legeAktoerId)
-        ps.setString(6, sykmeldingDB.mottakId)
-        ps.setString(7, sykmeldingDB.legekontorOrgNr)
-        ps.setString(8, sykmeldingDB.legekontorHerId)
-        ps.setString(9, sykmeldingDB.legekontorReshId)
-        ps.setString(10, sykmeldingDB.epjSystemNavn)
-        ps.setString(11, sykmeldingDB.epjSystemVersjon)
-        ps.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
-        ps.setObject(13, sykmeldingDB.sykmelding.toPGObject())
-        ps.setObject(14, sykmeldingDB.behandlingsUtfall.toPGObject())
+        ps.setString(1, sykmelding.id)
+        ps.setString(2, sykmelding.pasientFnr)
+        ps.setString(3, sykmelding.pasientAktoerId)
+        ps.setString(4, sykmelding.legeFnr)
+        ps.setString(5, sykmelding.legeAktoerId)
+        ps.setString(6, sykmelding.mottakId)
+        ps.setString(7, sykmelding.legekontorOrgNr)
+        ps.setString(8, sykmelding.legekontorHerId)
+        ps.setString(9, sykmelding.legekontorReshId)
+        ps.setString(10, sykmelding.epjSystemNavn)
+        ps.setString(11, sykmelding.epjSystemVersjon)
+        ps.setTimestamp(12, Timestamp.valueOf(sykmelding.mottattTidspunkt))
+        ps.setObject(13, sykmelding.sykmelding.toPGObject())
+        ps.setObject(14, sykmelding.behandlingsUtfall.toPGObject())
         ps.executeUpdate()
         it.commit()
+    }
 }
 
 const val QUERY_FOR_SYKMELDING_GIVEN_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
-fun Database.findWithFnr(fnr: String): MutableList<PersistedSykmelding> =
-        connection.prepareStatement(QUERY_FOR_SYKMELDING_GIVEN_FNR).use {
-            it.setString(1, fnr)
-            it.executeQuery().toList(::fromResultSet)
-        }
+fun Database.findWithFnr(fnr: String): MutableList<PersistedSykmelding> = findWithFnr(fnr, connection)
+fun findWithFnr(fnr: String, connection: Connection): MutableList<PersistedSykmelding> {
+    return connection.prepareStatement(QUERY_FOR_SYKMELDING_GIVEN_FNR).use {
+        it.setString(1, fnr)
+        it.executeQuery().toList(::fromResultSet)
+    }
+}
 
 const val QUERY_FOR_SYKMELDING_GIVEN_SYKMELDING_ID = """SELECT * FROM sykmelding WHERE id=?;"""
-fun Database.isSykmeldingStored(sykemeldingId: String): Boolean =
-        connection.prepareStatement(QUERY_FOR_SYKMELDING_GIVEN_SYKMELDING_ID).use {
+fun Database.isSykmeldingStored(sykemeldingId: String): Boolean = isSykemeldingStored(sykemeldingId, connection)
+fun isSykemeldingStored(sykemeldingId: String, connection: Connection): Boolean {
+    return connection.prepareStatement(QUERY_FOR_SYKMELDING_GIVEN_SYKMELDING_ID).use {
         it.setString(1, sykemeldingId)
         it.executeQuery().next()
-        }
+    }
+}
 
 const val QUERY_FOR_SYKMELDING_FOR_PERSON_GIVEN_SYKMELDING_ID =
     """SELECT * FROM sykmelding WHERE id=? AND pasient_fnr=?;"""
