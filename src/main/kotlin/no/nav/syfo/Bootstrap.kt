@@ -40,6 +40,7 @@ import no.nav.syfo.api.getWellKnown
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
+import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.db.insertSykmelding
 import no.nav.syfo.db.isSykmeldingStored
 import no.nav.syfo.kafka.envOverrides
@@ -104,7 +105,8 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 
     kafkaStream.start()
 
-    val database = Database(environment)
+    val vaultCredentialService = VaultCredentialService()
+    val database = Database(environment, vaultCredentialService)
 
     launch(backgroundTasksContext) {
         try {
@@ -116,7 +118,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 
     launch(backgroundTasksContext) {
         try {
-            database.runRenewCredentialsTask { applicationState.running }
+            vaultCredentialService.runRenewCredentialsTask { applicationState.running }
         } finally {
             applicationState.running = false
         }
