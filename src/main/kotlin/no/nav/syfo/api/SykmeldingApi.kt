@@ -7,9 +7,12 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
+import io.ktor.routing.post
+import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.find
+import no.nav.syfo.db.registerLestAvBruker
 import no.nav.syfo.model.ValidationResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -18,21 +21,37 @@ val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smregister")
 
 @KtorExperimentalAPI
 fun Route.registerSykmeldingApi(database: Database) {
+    route("/api/v1") {
+        get("/behandlingsutfall") {
+            // TODO: Trace interceptor
+            log.info("Incomming request get behandlingsutfall")
+            val principal: JWTPrincipal = call.authentication.principal()!!
+            val subject = principal.payload.subject
 
-    get("/api/v1/behandlingsutfall") {
-        // TODO: Trace interceptor
-        log.info("Incomming request get behandlingsutfall")
-        val principal: JWTPrincipal = call.authentication.principal()!!
-        val subject = principal.payload.subject
+            val behandlingsutfall = database.find(subject)
+                // TODO: Should behandlingsUtfall be hidden for patients with skjermetForPasient
+                .filter { !it.sykmelding.skjermesForPasient }
+                .map { BehandlingsutfallResponse(it.id, it.behandlingsUtfall) }
 
-        val behandlingsutfall = database.find(subject)
-            // TODO: Should behandlingsUtfall be hidden for patients with skjermetForPasient
-            .filter { !it.sykmelding.skjermesForPasient }
-            .map { BehandlingsutfallResponse(it.id, it.behandlingsUtfall) }
+            when {
+                behandlingsutfall.isNotEmpty() -> call.respond(behandlingsutfall)
+                else -> call.respond(HttpStatusCode.NoContent)
+            }
+        }
 
-        when {
-            behandlingsutfall.isNotEmpty() -> call.respond(behandlingsutfall)
-            else -> call.respond(HttpStatusCode.NoContent)
+        post("/sykmeldinger/{sykmeldingsid}/settLestAvBruker") {
+            val sykmeldingsid = call.parameters["sykmeldingsid"]!!
+            val principal: JWTPrincipal = call.authentication.principal()!!
+            val subject = principal.payload.subject
+
+            log.info("Incomming request post settLestAvBruker for $sykmeldingsid")
+
+            if (database.registerLestAvBruker(sykmeldingsid, subject).isNotEmpty()) {
+                call.respond(HttpStatusCode.Created)
+            } else {
+                call.respond(HttpStatusCode.Forbidden)
+                log.warn("Atempted to set lestAvBruker for not own sykmelding: $sykmeldingsid")
+            }
         }
     }
 }

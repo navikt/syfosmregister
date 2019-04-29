@@ -23,8 +23,6 @@ INSERT INTO sykmelding(
     behandlings_utfall
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
-const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
-
 fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.use {
     val ps = it.prepareStatement(INSERT_QUERY)
     ps.setString(1, sykmeldingDB.id)
@@ -45,6 +43,8 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
     it.commit()
 }
 
+const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
+
 fun Database.find(fnr: String) = connection.use { connection ->
     connection.prepareStatement(QUERY_FOR_FNR).use {
         it.setString(1, fnr)
@@ -58,5 +58,25 @@ fun Database.isSykmeldingStored(sykemldingsId: String) = connection.use { connec
     connection.prepareStatement(QUERY_FOR_SYKMELDINGS_ID).use {
         it.setString(1, sykemldingsId)
         it.executeQuery().next()
+    }
+}
+
+const val INSERT_LEST_AV_BRUKER_QUERY = """
+        INSERT INTO lest_av (sykmeldingsid, lest_av_bruker)
+        SELECT ?, localtimestamp
+        WHERE EXISTS(
+              SELECT id FROM sykmelding WHERE id = ? AND pasient_fnr = ?
+          )
+        RETURNING sykmeldingsid;
+        """
+
+fun Database.registerLestAvBruker(sykmeldingsid: String, fnr: String): List<String> = connection.use { connection ->
+    connection.prepareStatement(INSERT_LEST_AV_BRUKER_QUERY).use {
+        it.setString(1, sykmeldingsid)
+        it.setString(2, sykmeldingsid)
+        it.setString(3, fnr)
+        it.executeQuery().toList {
+            getString("sykmeldingsid")
+        }
     }
 }
