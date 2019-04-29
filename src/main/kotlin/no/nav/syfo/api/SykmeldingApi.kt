@@ -40,7 +40,7 @@ fun Route.registerSykmeldingApi(database: Database) {
             }
         }
 
-        post("/sykmeldinger/{sykmeldingsid}/lestAvBruker") {
+        post("/sykmeldinger/{sykmeldingsid}/bekreftAvvist") {
             val sykmeldingsid = call.parameters["sykmeldingsid"]!!
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
