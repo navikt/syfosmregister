@@ -11,10 +11,10 @@ import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.db.Database
-import no.nav.syfo.db.find
+import no.nav.syfo.db.findBrukerSykmelding
 import no.nav.syfo.db.isSykmeldingOwner
 import no.nav.syfo.db.registerLestAvBruker
-import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.BrukerSykmelding
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -23,16 +23,14 @@ val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smregister")
 @KtorExperimentalAPI
 fun Route.registerSykmeldingApi(database: Database) {
     route("/api/v1") {
-        get("/behandlingsutfall") {
-            // TODO: Trace interceptor
-            log.info("Incomming request get behandlingsutfall")
+
+        get("/sykmeldinger") {
+            log.info("Incomming request get sykmeldinger")
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
 
-            val behandlingsutfall = database.find(subject)
-                // TODO: Should behandlingsUtfall be hidden for patients with skjermetForPasient
-                .filter { !it.sykmelding.skjermesForPasient }
-                .map { BehandlingsutfallResponse(it.id, it.behandlingsUtfall) }
+            val behandlingsutfall = database.findBrukerSykmelding(subject)
+                .map { BrukerSykmelding(it.id, it.bekreftetDato, it.behandlingsutfall) }
 
             when {
                 behandlingsutfall.isNotEmpty() -> call.respond(behandlingsutfall)
@@ -57,5 +55,3 @@ fun Route.registerSykmeldingApi(database: Database) {
         }
     }
 }
-
-data class BehandlingsutfallResponse(val id: String, val behandlingsutfall: ValidationResult)

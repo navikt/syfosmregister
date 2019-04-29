@@ -1,7 +1,9 @@
 package no.nav.syfo.db
 
+import no.nav.syfo.model.BrukerSykmelding
 import no.nav.syfo.model.PersistedSykmelding
-import no.nav.syfo.model.fromResultSet
+import no.nav.syfo.model.brukerSykmeldingFromResultSet
+import no.nav.syfo.model.persistedSykmeldingFromResultSet
 import no.nav.syfo.model.toPGObject
 import java.sql.Timestamp
 
@@ -44,7 +46,7 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
 }
 
 const val INSERT_EMPTY_SYKMELDING_METADATA =
-    """INSERT INTO sykmelding_metadata(sykmeldingsid, avvisning_bekreftet) VALUES (?, NULL)"""
+    """INSERT INTO sykmelding_metadata(sykmeldingsid, bekreftet_dato) VALUES (?, NULL)"""
 
 fun Database.insertEmptySykmeldingMetadata(sykmeldingsid: String) = connection.use { connection ->
     connection.prepareStatement(INSERT_EMPTY_SYKMELDING_METADATA).use {
@@ -58,7 +60,19 @@ const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
 fun Database.find(fnr: String) = connection.use { connection ->
     connection.prepareStatement(QUERY_FOR_FNR).use {
         it.setString(1, fnr)
-        it.executeQuery().toList(::fromResultSet)
+        it.executeQuery().toList(::persistedSykmeldingFromResultSet)
+    }
+}
+
+const val QUERY_FOR_BRUKER_SYKMELDING = """
+    SELECT id, bekreftet_dato, behandlings_utfall
+    FROM sykmelding INNER JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
+    """
+
+fun Database.findBrukerSykmelding(fnr: String): List<BrukerSykmelding> = connection.use { connection ->
+    connection.prepareStatement(QUERY_FOR_BRUKER_SYKMELDING).use {
+        it.setString(1, fnr)
+        it.executeQuery().toList(::brukerSykmeldingFromResultSet)
     }
 }
 
@@ -71,14 +85,14 @@ fun Database.isSykmeldingStored(sykemldingsId: String) = connection.use { connec
     }
 }
 
-const val UPDATE_METADATA_WITH_AVVISNING_BEKREFTET = """
+const val UPDATE_METADATA_WITH_BEKREFTET_DATO = """
         UPDATE sykmelding_metadata
-        SET avvisning_bekreftet = current_timestamp
-        WHERE sykmeldingsid = ? AND avvisning_bekreftet IS NULL;
+        SET bekreftet_dato = current_timestamp
+        WHERE sykmeldingsid = ? AND bekreftet_dato IS NULL;
         """
 
 fun Database.registerLestAvBruker(sykmeldingsid: String): Int = connection.use { connection ->
-    val status = connection.prepareStatement(UPDATE_METADATA_WITH_AVVISNING_BEKREFTET).use {
+    val status = connection.prepareStatement(UPDATE_METADATA_WITH_BEKREFTET_DATO).use {
         it.setString(1, sykmeldingsid)
         it.executeUpdate()
     }

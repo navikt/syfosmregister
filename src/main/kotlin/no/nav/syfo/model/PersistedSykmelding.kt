@@ -23,7 +23,7 @@ data class PersistedSykmelding(
     val behandlingsUtfall: ValidationResult
 )
 
-fun fromResultSet(resultSet: ResultSet) = PersistedSykmelding(
+fun persistedSykmeldingFromResultSet(resultSet: ResultSet) = PersistedSykmelding(
         resultSet.getString("id"),
         resultSet.getString("pasient_fnr"),
         resultSet.getString("pasient_aktoer_id"),
