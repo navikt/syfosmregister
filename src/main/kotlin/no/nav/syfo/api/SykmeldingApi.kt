@@ -12,6 +12,7 @@ import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.find
+import no.nav.syfo.db.isSykmeldingOwner
 import no.nav.syfo.db.registerLestAvBruker
 import no.nav.syfo.model.ValidationResult
 import org.slf4j.Logger
@@ -46,12 +47,14 @@ fun Route.registerSykmeldingApi(database: Database) {
 
             log.info("Incomming request post settLestAvBruker for $sykmeldingsid")
 
-            if (database.registerLestAvBruker(sykmeldingsid, subject).isNotEmpty()) {
-                call.respond(HttpStatusCode.Created)
+            if (database.isSykmeldingOwner(sykmeldingsid, subject)) {
+                if (database.registerLestAvBruker(sykmeldingsid)) {
+                    call.respond(HttpStatusCode.Created)
+                }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
-                log.warn("Atempted to set lestAvBruker for not own sykmelding: $sykmeldingsid")
             }
+
         }
     }
 }

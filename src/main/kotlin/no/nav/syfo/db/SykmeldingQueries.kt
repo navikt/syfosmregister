@@ -62,21 +62,23 @@ fun Database.isSykmeldingStored(sykemldingsId: String) = connection.use { connec
 }
 
 const val INSERT_LEST_AV_BRUKER_QUERY = """
-        INSERT INTO lest_av (sykmeldingsid, lest_av_bruker)
-        SELECT ?, localtimestamp
-        WHERE EXISTS(
-              SELECT id FROM sykmelding WHERE id = ? AND pasient_fnr = ?
-          )
-        RETURNING sykmeldingsid;
+        INSERT INTO sykmelding_metadata (sykmeldingsid, lest_av_bruker)
+        VALUES (?, localtimestamp);
         """
 
-fun Database.registerLestAvBruker(sykmeldingsid: String, fnr: String): List<String> = connection.use { connection ->
+fun Database.registerLestAvBruker(sykmeldingsid: String): Boolean = connection.use { connection ->
     connection.prepareStatement(INSERT_LEST_AV_BRUKER_QUERY).use {
         it.setString(1, sykmeldingsid)
-        it.setString(2, sykmeldingsid)
-        it.setString(3, fnr)
-        it.executeQuery().toList {
-            getString("sykmeldingsid")
-        }
+        it.executeQuery().next()
+    }
+}
+
+const val QUERY_IS_SYKMELDING_OWNER = """SELECT exists(SELECT 1 FROM sykmelding WHERE id=? AND pasient_fnr=?)"""
+
+fun Database.isSykmeldingOwner(sykmeldingsid: String, fnr: String): Boolean = connection.use { connection ->
+    connection.prepareStatement(QUERY_IS_SYKMELDING_OWNER).use {
+        it.setString(1, sykmeldingsid)
+        it.setString(2, fnr)
+        it.executeQuery().next()
     }
 }
