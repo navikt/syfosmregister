@@ -48,7 +48,7 @@ fun Route.registerSykmeldingApi(database: Database) {
             log.info("Incomming request post settLestAvBruker for $sykmeldingsid")
 
             if (database.isSykmeldingOwner(sykmeldingsid, subject)) {
-                if (database.registerLestAvBruker(sykmeldingsid)) {
+                if (database.registerLestAvBruker(sykmeldingsid) > 0) {
                     call.respond(HttpStatusCode.Created)
                 }
             } else {

@@ -41,6 +41,7 @@ import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.VaultCredentialService
+import no.nav.syfo.db.insertEmptySykmeldingMetadata
 import no.nav.syfo.db.insertSykmelding
 import no.nav.syfo.db.isSykmeldingStored
 import no.nav.syfo.kafka.envOverrides
@@ -254,6 +255,7 @@ suspend fun blockingApplicationLogic(
 
                         )
                     )
+                    database.insertEmptySykmeldingMetadata(receivedSykmelding.sykmelding.id)
                     log.info("SM2013, stored in the database, $logKeys", *logValues)
                     MESSAGE_STORED_IN_DB_COUNTER.inc()
                 } catch (e: Exception) {

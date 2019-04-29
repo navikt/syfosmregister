@@ -43,6 +43,15 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
     it.commit()
 }
 
+const val INSERT_EMPTY_SYKMELDING_METADATA = """INSERT INTO sykmelding_metadata(sykmeldingsid, avvisning_bekreftet) VALUES (?, NULL)"""
+
+fun Database.insertEmptySykmeldingMetadata(sykmeldingsid: String) = connection.use {connection ->
+    connection.prepareStatement(INSERT_EMPTY_SYKMELDING_METADATA).use {
+        it.setString(1, sykmeldingsid)
+    }
+    connection.commit()
+}
+
 const val QUERY_FOR_FNR = """SELECT * FROM sykmelding WHERE pasient_fnr=?;"""
 
 fun Database.find(fnr: String) = connection.use { connection ->
@@ -67,11 +76,13 @@ const val UPDATE_METADATA_WITH_AVVISNING_BEKREFTET = """
         WHERE sykmeldingsid = ? AND avvisning_bekreftet IS NULL;
         """
 
-fun Database.registerLestAvBruker(sykmeldingsid: String): Boolean = connection.use { connection ->
-    connection.prepareStatement(UPDATE_METADATA_WITH_AVVISNING_BEKREFTET).use {
+fun Database.registerLestAvBruker(sykmeldingsid: String): Int = connection.use { connection ->
+    val status = connection.prepareStatement(UPDATE_METADATA_WITH_AVVISNING_BEKREFTET).use {
         it.setString(1, sykmeldingsid)
-        it.executeQuery().next()
+        it.executeUpdate()
     }
+    connection.commit()
+    return status
 }
 
 const val QUERY_IS_SYKMELDING_OWNER = """SELECT exists(SELECT 1 FROM sykmelding WHERE id=? AND pasient_fnr=?)"""
