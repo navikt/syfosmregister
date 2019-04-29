@@ -43,9 +43,10 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
     it.commit()
 }
 
-const val INSERT_EMPTY_SYKMELDING_METADATA = """INSERT INTO sykmelding_metadata(sykmeldingsid, avvisning_bekreftet) VALUES (?, NULL)"""
+const val INSERT_EMPTY_SYKMELDING_METADATA =
+    """INSERT INTO sykmelding_metadata(sykmeldingsid, avvisning_bekreftet) VALUES (?, NULL)"""
 
-fun Database.insertEmptySykmeldingMetadata(sykmeldingsid: String) = connection.use {connection ->
+fun Database.insertEmptySykmeldingMetadata(sykmeldingsid: String) = connection.use { connection ->
     connection.prepareStatement(INSERT_EMPTY_SYKMELDING_METADATA).use {
         it.setString(1, sykmeldingsid)
     }

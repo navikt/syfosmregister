@@ -49,12 +49,11 @@ fun Route.registerSykmeldingApi(database: Database) {
 
             if (database.isSykmeldingOwner(sykmeldingsid, subject)) {
                 if (database.registerLestAvBruker(sykmeldingsid) > 0) {
-                    call.respond(HttpStatusCode.Created)
+                    call.respond(HttpStatusCode.OK)
                 }
             } else {
                 call.respond(HttpStatusCode.Forbidden)
             }
-
         }
     }
 }
