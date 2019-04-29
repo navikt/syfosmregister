@@ -61,13 +61,14 @@ fun Database.isSykmeldingStored(sykemldingsId: String) = connection.use { connec
     }
 }
 
-const val INSERT_LEST_AV_BRUKER_QUERY = """
-        INSERT INTO sykmelding_metadata (sykmeldingsid, lest_av_bruker)
-        VALUES (?, localtimestamp);
+const val UPDATE_METADATA_WITH_AVVISNING_BEKREFTET = """
+        UPDATE sykmelding_metadata
+        SET avvisning_bekreftet = current_timestamp
+        WHERE sykmeldingsid = ? AND avvisning_bekreftet IS NULL;
         """
 
 fun Database.registerLestAvBruker(sykmeldingsid: String): Boolean = connection.use { connection ->
-    connection.prepareStatement(INSERT_LEST_AV_BRUKER_QUERY).use {
+    connection.prepareStatement(UPDATE_METADATA_WITH_AVVISNING_BEKREFTET).use {
         it.setString(1, sykmeldingsid)
         it.executeQuery().next()
     }
