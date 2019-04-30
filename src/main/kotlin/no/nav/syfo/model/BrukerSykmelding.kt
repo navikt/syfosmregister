@@ -14,7 +14,7 @@ data class BrukerSykmelding(
 fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
     return BrukerSykmelding(
         resultSet.getString("id"),
-        resultSet.getTimestamp("bekreftet").toLocalDateTime(),
+        resultSet.getTimestamp("bekreftet_dato").toLocalDateTime(),
         objectMapper.readValue(resultSet.getString("behandlings_utfall"))
     )
 }
