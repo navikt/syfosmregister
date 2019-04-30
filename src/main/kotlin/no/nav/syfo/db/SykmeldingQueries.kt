@@ -67,6 +67,7 @@ fun Database.find(fnr: String) = connection.use { connection ->
 const val QUERY_FOR_BRUKER_SYKMELDING = """
     SELECT id, bekreftet_dato, behandlings_utfall
     FROM sykmelding INNER JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
+    WHERE pasient_fnr=?
     """
 
 fun Database.findBrukerSykmelding(fnr: String): List<BrukerSykmelding> = connection.use { connection ->
