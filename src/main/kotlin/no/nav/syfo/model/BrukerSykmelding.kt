@@ -14,10 +14,8 @@ data class BrukerSykmelding(
     val legekontorOrgnummer: String,
     val legeNavn: String,
     val arbeidsgiverNavn: String,
-    val sykmeldingsperioder: List<SykmeldingPeriode>
+    val sykmeldingsperioder: String
 )
-
-data class SykmeldingPeriode(val fom: LocalDate, val tom: LocalDate)
 
 fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
     return BrukerSykmelding(
@@ -27,14 +25,7 @@ fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
         legekontorOrgnummer = resultSet.getString("legekontor_org_nr"),
         legeNavn = getLegenavn(resultSet),
         arbeidsgiverNavn = resultSet.getString("arbeidsgivernavn"),
-        sykmeldingsperioder = resultSet.toList { sykmeldingPeriodeMapper() }
-    )
-}
-
-private fun ResultSet.sykmeldingPeriodeMapper(): SykmeldingPeriode {
-    return SykmeldingPeriode(
-        getDate("fom").toLocalDate(),
-        getDate("tom").toLocalDate()
+        sykmeldingsperioder = resultSet.getString("perioder")
     )
 }
 
