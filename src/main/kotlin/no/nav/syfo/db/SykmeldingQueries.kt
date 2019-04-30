@@ -65,7 +65,16 @@ fun Database.find(fnr: String) = connection.use { connection ->
 }
 
 const val QUERY_FOR_BRUKER_SYKMELDING = """
-    SELECT id, bekreftet_dato, behandlings_utfall
+    SELECT
+    id,
+    bekreftet_dato,
+    behandlings_utfall,
+    legekontor_org_nr,
+    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb->>'fornavn' as lege_fornavn,
+    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb->>'mellomnavn' as lege_mellomnavn,
+    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb->>'etternavn' as lege_etternavn,
+    jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb->>'navn' as arbeidsgivernavn,
+    jsonb_extract_path_text(sykmelding.sykmelding, 'perioder') as perioder
     FROM sykmelding INNER JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
     """

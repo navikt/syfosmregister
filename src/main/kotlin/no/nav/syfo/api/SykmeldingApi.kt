@@ -30,7 +30,7 @@ fun Route.registerSykmeldingApi(database: Database) {
             val subject = principal.payload.subject
 
             val behandlingsutfall = database.findBrukerSykmelding(subject)
-                .map { BrukerSykmelding(it.id, it.bekreftetDato, it.behandlingsutfall) }
+                .map { BrukerSykmelding(it.id, it.bekreftetDato, it.behandlingsutfall, it.legekontorOrgnummer, it.legeNavn, it.arbeidsgiverNavn, it.sykmeldingsperioder) }
 
             when {
                 behandlingsutfall.isNotEmpty() -> call.respond(behandlingsutfall)
