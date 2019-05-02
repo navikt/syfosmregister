@@ -25,24 +25,25 @@ INSERT INTO sykmelding(
     behandlings_utfall
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
-fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.use {
-    val ps = it.prepareStatement(INSERT_QUERY)
-    ps.setString(1, sykmeldingDB.id)
-    ps.setString(2, sykmeldingDB.pasientFnr)
-    ps.setString(3, sykmeldingDB.pasientAktoerId)
-    ps.setString(4, sykmeldingDB.legeFnr)
-    ps.setString(5, sykmeldingDB.legeAktoerId)
-    ps.setString(6, sykmeldingDB.mottakId)
-    ps.setString(7, sykmeldingDB.legekontorOrgNr)
-    ps.setString(8, sykmeldingDB.legekontorHerId)
-    ps.setString(9, sykmeldingDB.legekontorReshId)
-    ps.setString(10, sykmeldingDB.epjSystemNavn)
-    ps.setString(11, sykmeldingDB.epjSystemVersjon)
-    ps.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
-    ps.setObject(13, sykmeldingDB.sykmelding.toPGObject())
-    ps.setObject(14, sykmeldingDB.behandlingsUtfall.toPGObject())
-    ps.executeUpdate()
-    it.commit()
+fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.use { connection ->
+    connection.prepareStatement(INSERT_QUERY).use {
+        it.setString(1, sykmeldingDB.id)
+        it.setString(2, sykmeldingDB.pasientFnr)
+        it.setString(3, sykmeldingDB.pasientAktoerId)
+        it.setString(4, sykmeldingDB.legeFnr)
+        it.setString(5, sykmeldingDB.legeAktoerId)
+        it.setString(6, sykmeldingDB.mottakId)
+        it.setString(7, sykmeldingDB.legekontorOrgNr)
+        it.setString(8, sykmeldingDB.legekontorHerId)
+        it.setString(9, sykmeldingDB.legekontorReshId)
+        it.setString(10, sykmeldingDB.epjSystemNavn)
+        it.setString(11, sykmeldingDB.epjSystemVersjon)
+        it.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
+        it.setObject(13, sykmeldingDB.sykmelding.toPGObject())
+        it.setObject(14, sykmeldingDB.behandlingsUtfall.toPGObject())
+        it.executeUpdate()
+    }
+    connection.commit()
 }
 
 const val INSERT_EMPTY_SYKMELDING_METADATA =
@@ -79,7 +80,6 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
                  SELECT jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{fom}' as fom,
                         jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}' as tom
                  FROM sykmelding
-                 WHERE id = '1'
              ) as periode)
     FROM sykmelding INNER JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
