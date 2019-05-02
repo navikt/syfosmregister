@@ -65,16 +65,23 @@ fun Database.find(fnr: String) = connection.use { connection ->
 }
 
 const val QUERY_FOR_BRUKER_SYKMELDING = """
-    SELECT
-    id,
-    bekreftet_dato,
-    behandlings_utfall,
-    legekontor_org_nr,
-    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb->>'fornavn' as lege_fornavn,
-    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb->>'mellomnavn' as lege_mellomnavn,
-    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb->>'etternavn' as lege_etternavn,
-    jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb->>'navn' as arbeidsgivernavn,
-    jsonb_extract_path_text(sykmelding.sykmelding, 'perioder') as perioder
+    SELECT id,
+       bekreftet_dato,
+       behandlings_utfall,
+       legekontor_org_nr,
+       jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'fornavn'    as lege_fornavn,
+       jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
+       jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
+       jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb ->> 'navn'    as arbeidsgivernavn,
+       jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{fom}'          as fom,
+       jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}'          as tom,
+       (SELECT json_agg(to_jsonb(periode)) as perioder
+        FROM (
+                 SELECT jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{fom}' as fom,
+                        jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}' as tom
+                 FROM sykmelding
+                 WHERE id = '1'
+             ) as periode)
     FROM sykmelding INNER JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
     """

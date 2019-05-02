@@ -1,10 +1,8 @@
 package no.nav.syfo.model
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.syfo.db.toList
 import no.nav.syfo.objectMapper
 import java.sql.ResultSet
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class BrukerSykmelding(
@@ -30,4 +28,4 @@ fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
 }
 
 private fun getLegenavn(resultSet: ResultSet) =
-    resultSet.getString("lege_fornavn") + resultSet.getString("lege_mellomnavn") + resultSet.getString("lege_etternavn")
+    resultSet.getString("lege_fornavn") + " " + resultSet.getString("lege_mellomnavn") + " " + resultSet.getString("lege_etternavn")
