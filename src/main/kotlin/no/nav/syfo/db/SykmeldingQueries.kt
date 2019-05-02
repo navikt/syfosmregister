@@ -51,6 +51,7 @@ const val INSERT_EMPTY_SYKMELDING_METADATA =
 fun Database.insertEmptySykmeldingMetadata(sykmeldingsid: String) = connection.use { connection ->
     connection.prepareStatement(INSERT_EMPTY_SYKMELDING_METADATA).use {
         it.setString(1, sykmeldingsid)
+        it.executeUpdate()
     }
     connection.commit()
 }
