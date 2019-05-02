@@ -17,13 +17,13 @@ data class BrukerSykmelding(
 
 fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
     return BrukerSykmelding(
-        id = resultSet.getString("id"),
+        id = resultSet.getString("id").trim(),
         bekreftetDato = resultSet.getTimestamp("bekreftet_dato")?.toLocalDateTime(),
         behandlingsutfall = objectMapper.readValue(resultSet.getString("behandlings_utfall")),
-        legekontorOrgnummer = resultSet.getString("legekontor_org_nr"),
+        legekontorOrgnummer = resultSet.getString("legekontor_org_nr").trim(),
         legeNavn = getLegenavn(resultSet),
-        arbeidsgiverNavn = resultSet.getString("arbeidsgivernavn"),
-        sykmeldingsperioder = resultSet.getString("perioder")
+        arbeidsgiverNavn = resultSet.getString("arbeidsgivernavn").trim(),
+        sykmeldingsperioder = resultSet.getString("perioder").trim()
     )
 }
 

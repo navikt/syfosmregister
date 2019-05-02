@@ -24,17 +24,17 @@ data class PersistedSykmelding(
 )
 
 fun persistedSykmeldingFromResultSet(resultSet: ResultSet) = PersistedSykmelding(
-        resultSet.getString("id"),
-        resultSet.getString("pasient_fnr"),
-        resultSet.getString("pasient_aktoer_id"),
-        resultSet.getString("lege_fnr"),
-        resultSet.getString("lege_aktoer_id"),
-        resultSet.getString("mottak_id"),
-        resultSet.getString("legekontor_org_nr"),
-        resultSet.getString("legekontor_her_id"),
-        resultSet.getString("legekontor_resh_id"),
-        resultSet.getString("epj_system_navn"),
-        resultSet.getString("epj_system_versjon"),
+        resultSet.getString("id").trim(),
+        resultSet.getString("pasient_fnr").trim(),
+        resultSet.getString("pasient_aktoer_id").trim(),
+        resultSet.getString("lege_fnr").trim(),
+        resultSet.getString("lege_aktoer_id").trim(),
+        resultSet.getString("mottak_id").trim(),
+        resultSet.getString("legekontor_org_nr").trim(),
+        resultSet.getString("legekontor_her_id").trim(),
+        resultSet.getString("legekontor_resh_id").trim(),
+        resultSet.getString("epj_system_navn").trim(),
+        resultSet.getString("epj_system_versjon").trim(),
         resultSet.getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
         objectMapper.readValue(resultSet.getString("sykmelding")),
         objectMapper.readValue(resultSet.getString("behandlings_utfall"))
