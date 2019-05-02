@@ -73,8 +73,6 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
        jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
        jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
        jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb ->> 'navn'    as arbeidsgivernavn,
-       jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{fom}'          as fom,
-       jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}'          as tom,
        (SELECT json_agg(to_jsonb(periode)) as perioder
         FROM (
                  SELECT jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{fom}' as fom,
