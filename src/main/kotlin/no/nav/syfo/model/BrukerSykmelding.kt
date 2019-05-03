@@ -23,7 +23,7 @@ fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
         legekontorOrgnummer = resultSet.getString("legekontor_org_nr").trim(),
         legeNavn = getLegenavn(resultSet),
         arbeidsgiverNavn = resultSet.getString("arbeidsgivernavn").trim(),
-        sykmeldingsperioder = objectMapper.readTree(resultSet.getString("perioder")).asText()
+        sykmeldingsperioder = resultSet.getString("perioder")
     )
 }
 
