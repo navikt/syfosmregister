@@ -26,6 +26,7 @@ import no.nav.syfo.testutil.TestDB
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 
 @KtorExperimentalAPI
@@ -54,27 +55,41 @@ object AuthenticateSpek : Spek({
         with(TestApplicationEngine()) {
             start()
 
-            application.initRouting(ApplicationState(), database, VaultSecrets(
+            application.initRouting(
+                ApplicationState(), database, VaultSecrets(
                     serviceuserUsername = "username",
                     serviceuserPassword = "password",
                     oidcWellKnownUri = "http://localhost:9000/fake.jwt",
                     loginserviceClientId = "clientId",
                     syfomockUsername = "syfomock",
                     syfomockPassword = "test"
-                    ),
-                    cluster = "dev-fss"
-
+                ),
+                cluster = "dev-fss"
             )
 
             it("Validerer syfomock servicebruker") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId") {
-                    addHeader(HttpHeaders.Authorization, "Basic c3lmb21vY2s6dGVzdA==") //syfomock:test
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Basic ${Base64.getEncoder().encodeToString("syfomock:test".toByteArray())}"
+                    )
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
             }
 
-            it("Feiler ugyldig servicebruker") {
+            it("Validerer ikke ugyldig servicebruker") {
+                with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId") {
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Basic ${Base64.getEncoder().encodeToString("feil:passord".toByteArray())}"
+                    ) // feil:passord
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
+                }
+            }
+
+            it("Feiler om det mangler auth-header") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId")) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
@@ -86,11 +101,13 @@ object AuthenticateSpek : Spek({
 @KtorExperimentalAPI
 fun Route.fakeJWT() {
     get("fake.jwt") {
-        call.respond(WellKnown(
+        call.respond(
+            WellKnown(
                 authorization_endpoint = "http://auth.url",
                 token_endpoint = "http://token.url",
                 jwks_uri = "https://jwks.url",
                 issuer = "NAV"
-        ))
+            )
+        )
     }
 }
