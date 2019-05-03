@@ -13,10 +13,10 @@ enum class Role {
     override fun toString() = name.toLowerCase()
 }
 
-class Database(private val env: Environment, private val vaultCredentialService: VaultCredentialService) {
+class Database(private val env: Environment, private val vaultCredentialService: VaultCredentialService) : DatabaseInterface {
     private val dataSource: HikariDataSource
 
-    val connection: Connection
+    override val connection: Connection
         get() = dataSource.connection
 
     init {
@@ -61,4 +61,8 @@ fun <T> ResultSet.toList(mapper: ResultSet.() -> T) = mutableListOf<T>().apply {
     while (next()) {
         add(mapper())
     }
+}
+
+interface DatabaseInterface {
+    val connection: Connection
 }

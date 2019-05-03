@@ -1,10 +1,7 @@
 package no.nav.syfo.db
 
-import no.nav.syfo.model.BrukerSykmelding
-import no.nav.syfo.model.PersistedSykmelding
-import no.nav.syfo.model.brukerSykmeldingFromResultSet
-import no.nav.syfo.model.persistedSykmeldingFromResultSet
-import no.nav.syfo.model.toPGObject
+import no.nav.syfo.model.*
+import java.sql.Connection
 import java.sql.Timestamp
 
 const val INSERT_QUERY = """
@@ -46,8 +43,37 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
     connection.commit()
 }
 
+fun Connection.opprettSykmelding(sykmeldingDB: PersistedSykmelding) {
+    use { connection ->
+        connection.prepareStatement(INSERT_QUERY).use {
+            it.setString(1, sykmeldingDB.id)
+            it.setString(2, sykmeldingDB.pasientFnr)
+            it.setString(3, sykmeldingDB.pasientAktoerId)
+            it.setString(4, sykmeldingDB.legeFnr)
+            it.setString(5, sykmeldingDB.legeAktoerId)
+            it.setString(6, sykmeldingDB.mottakId)
+            it.setString(7, sykmeldingDB.legekontorOrgNr)
+            it.setString(8, sykmeldingDB.legekontorHerId)
+            it.setString(9, sykmeldingDB.legekontorReshId)
+            it.setString(10, sykmeldingDB.epjSystemNavn)
+            it.setString(11, sykmeldingDB.epjSystemVersjon)
+            it.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
+            it.setObject(13, sykmeldingDB.sykmelding.toPGObject())
+            it.setObject(14, sykmeldingDB.behandlingsUtfall.toPGObject())
+            it.executeUpdate()
+        }
+
+        connection.prepareStatement(INSERT_EMPTY_SYKMELDING_METADATA).use {
+            it.setString(1, sykmeldingDB.id)
+            it.executeUpdate()
+        }
+
+        connection.commit()
+    }
+}
+
 const val INSERT_EMPTY_SYKMELDING_METADATA =
-    """INSERT INTO sykmelding_metadata(sykmeldingsid, bekreftet_dato) VALUES (?, NULL)"""
+        """INSERT INTO sykmelding_metadata(sykmeldingsid, bekreftet_dato) VALUES (?, NULL)"""
 
 fun Database.insertEmptySykmeldingMetadata(sykmeldingsid: String) = connection.use { connection ->
     connection.prepareStatement(INSERT_EMPTY_SYKMELDING_METADATA).use {
@@ -89,6 +115,15 @@ fun Database.findBrukerSykmelding(fnr: String): List<BrukerSykmelding> = connect
     connection.prepareStatement(QUERY_FOR_BRUKER_SYKMELDING).use {
         it.setString(1, fnr)
         it.executeQuery().toList(::brukerSykmeldingFromResultSet)
+    }
+}
+
+fun Connection.finnBrukersSykmeldinger(fnr: String): List<BrukerSykmelding> {
+    return use { connection ->
+        connection.prepareStatement(QUERY_FOR_BRUKER_SYKMELDING).use {
+            it.setString(1, fnr)
+            it.executeQuery().toList(::brukerSykmeldingFromResultSet)
+        }
     }
 }
 
