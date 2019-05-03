@@ -10,7 +10,7 @@ data class BrukerSykmelding(
     val bekreftetDato: LocalDateTime?,
     val behandlingsutfall: ValidationResult,
     val legekontorOrgnummer: String,
-    val legeNavn: String,
+    val legeNavn: String?,
     val arbeidsgiverNavn: String,
     val sykmeldingsperioder: String
 )
@@ -23,9 +23,24 @@ fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
         legekontorOrgnummer = resultSet.getString("legekontor_org_nr").trim(),
         legeNavn = getLegenavn(resultSet),
         arbeidsgiverNavn = resultSet.getString("arbeidsgivernavn").trim(),
-        sykmeldingsperioder = resultSet.getString("perioder").trim()
+        sykmeldingsperioder = objectMapper.readTree(resultSet.getString("perioder")).asText()
     )
 }
 
-private fun getLegenavn(resultSet: ResultSet) =
-    resultSet.getString("lege_fornavn") + " " + resultSet.getString("lege_mellomnavn") + " " + resultSet.getString("lege_etternavn")
+fun getLegenavn(resultSet: ResultSet): String? {
+    val fornavn = when (val value = resultSet.getString("lege_fornavn")) {
+        null -> ""
+        else -> value.plus(" ")
+    }
+    val mellomnavn = when (val value = resultSet.getString("lege_mellomnavn")) {
+        null -> ""
+        else -> value.plus(" ")
+    }
+    val etternavn = when (val value = resultSet.getString("lege_etternavn")) {
+        null -> ""
+        else -> value
+    }
+    val navn = "$fornavn$mellomnavn$etternavn"
+
+    return if (navn.isBlank()) null else navn
+}

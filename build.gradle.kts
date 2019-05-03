@@ -29,6 +29,7 @@ val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "1.0.12"
+val mockkVersion = "1.9"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -109,6 +110,7 @@ dependencies {
     implementation("javax.activation:activation:$javaxActivationVersion")
 
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
+    testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty") // conflicts with WireMock
