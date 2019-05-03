@@ -22,10 +22,12 @@ data class Environment(
 ) : KafkaConfig
 
 data class VaultSecrets(
-    val serviceuserUsername: String,
-    val serviceuserPassword: String,
-    val oidcWellKnownUri: String,
-    val loginserviceClientId: String
+        val serviceuserUsername: String,
+        val serviceuserPassword: String,
+        val syfomockUsername: String,
+        val syfomockPassword: String,
+        val oidcWellKnownUri: String,
+        val loginserviceClientId: String
 ) : KafkaCredentials {
     override val kafkaUsername: String = serviceuserUsername
     override val kafkaPassword: String = serviceuserPassword

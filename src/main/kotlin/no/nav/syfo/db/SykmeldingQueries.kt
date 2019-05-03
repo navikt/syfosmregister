@@ -111,15 +111,8 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
     WHERE pasient_fnr=?
     """
 
-fun Database.findBrukerSykmelding(fnr: String): List<BrukerSykmelding> = connection.use { connection ->
-    connection.prepareStatement(QUERY_FOR_BRUKER_SYKMELDING).use {
-        it.setString(1, fnr)
-        it.executeQuery().toList(::brukerSykmeldingFromResultSet)
-    }
-}
-
-fun Connection.finnBrukersSykmeldinger(fnr: String): List<BrukerSykmelding> {
-    return use { connection ->
+fun DatabaseInterface.finnBrukersSykmeldinger(fnr: String): List<BrukerSykmelding> {
+    return connection.use { connection ->
         connection.prepareStatement(QUERY_FOR_BRUKER_SYKMELDING).use {
             it.setString(1, fnr)
             it.executeQuery().toList(::brukerSykmeldingFromResultSet)
@@ -142,7 +135,7 @@ const val UPDATE_METADATA_WITH_BEKREFTET_DATO = """
         WHERE sykmeldingsid = ? AND bekreftet_dato IS NULL;
         """
 
-fun Database.registerLestAvBruker(sykmeldingsid: String): Int = connection.use { connection ->
+fun DatabaseInterface.registerLestAvBruker(sykmeldingsid: String): Int = connection.use { connection ->
     val status = connection.prepareStatement(UPDATE_METADATA_WITH_BEKREFTET_DATO).use {
         it.setString(1, sykmeldingsid)
         it.executeUpdate()
@@ -153,7 +146,7 @@ fun Database.registerLestAvBruker(sykmeldingsid: String): Int = connection.use {
 
 const val QUERY_IS_SYKMELDING_OWNER = """SELECT exists(SELECT 1 FROM sykmelding WHERE id=? AND pasient_fnr=?)"""
 
-fun Database.isSykmeldingOwner(sykmeldingsid: String, fnr: String): Boolean = connection.use { connection ->
+fun DatabaseInterface.isSykmeldingOwner(sykmeldingsid: String, fnr: String): Boolean = connection.use { connection ->
     connection.prepareStatement(QUERY_IS_SYKMELDING_OWNER).use {
         it.setString(1, sykmeldingsid)
         it.setString(2, fnr)

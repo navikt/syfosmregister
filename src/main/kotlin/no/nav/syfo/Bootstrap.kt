@@ -11,7 +11,9 @@ import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.Authentication
+import io.ktor.auth.UserIdPrincipal
 import io.ktor.auth.authenticate
+import io.ktor.auth.basic
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
 import io.ktor.features.CallId
@@ -28,22 +30,15 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.coroutines.slf4j.MDCContext
 import net.logstash.logback.argument.StructuredArguments
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.syfo.api.getWellKnown
+import no.nav.syfo.api.registerNullstillApi
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
-import no.nav.syfo.db.Database
-import no.nav.syfo.db.VaultCredentialService
-import no.nav.syfo.db.insertEmptySykmeldingMetadata
-import no.nav.syfo.db.insertSykmelding
-import no.nav.syfo.db.isSykmeldingStored
+import no.nav.syfo.db.*
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -67,8 +62,7 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.nio.file.Paths
 import java.time.Duration
-import java.util.Properties
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -127,7 +121,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     }
 
     val applicationServer = embeddedServer(Netty, environment.applicationPort) {
-        initRouting(applicationState, database, vaultSecrets)
+        initRouting(applicationState, database, vaultSecrets, environment.cluster)
     }.start(wait = false)
 
     launchListeners(environment, applicationState, consumerProperties, database)
@@ -271,8 +265,9 @@ suspend fun blockingApplicationLogic(
 @KtorExperimentalAPI
 fun Application.initRouting(
     applicationState: ApplicationState,
-    database: Database,
-    vaultSecrets: VaultSecrets
+    database: DatabaseInterface,
+    vaultSecrets: VaultSecrets,
+    cluster: String
 ) {
     val wellKnown = getWellKnown(vaultSecrets.oidcWellKnownUri)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
@@ -287,7 +282,7 @@ fun Application.initRouting(
         }
     }
     install(Authentication) {
-        jwt {
+        jwt(name = "jwt") {
             verifier(jwkProvider, wellKnown.issuer)
             validate { credentials ->
                 log.info("Auth: User requested resource '${request.url()}'")
@@ -302,6 +297,11 @@ fun Application.initRouting(
                 } else {
                     JWTPrincipal(credentials.payload)
                 }
+            }
+        }
+        basic(name ="basic") {
+            validate { credentials ->
+                if (credentials.name == vaultSecrets.syfomockUsername && credentials.password == vaultSecrets.syfomockPassword) { UserIdPrincipal(credentials.name) } else null
             }
         }
     }
@@ -320,8 +320,11 @@ fun Application.initRouting(
     }
     routing {
         registerNaisApi(applicationState)
-        authenticate {
+        authenticate("jwt") {
             registerSykmeldingApi(database)
+        }
+        authenticate("basic") {
+            registerNullstillApi(database, cluster)
         }
     }
 }

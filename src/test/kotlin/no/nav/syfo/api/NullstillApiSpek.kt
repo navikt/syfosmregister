@@ -1,6 +1,7 @@
 package no.nav.syfo.api
 
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
@@ -24,43 +25,66 @@ import java.time.LocalDateTime
 @KtorExperimentalAPI
 object NullstillApiSpek : Spek({
 
+    val database = TestDB()
+
     afterGroup {
-        TestDB.cleanUp()
+        database.stop()
     }
 
-    describe("NullstillApi") {
+    describe("NullstillApi - testkontekts") {
         with(TestApplicationEngine()) {
             start()
             application.routing {
-                registerNullstillApi(TestDB)
+                registerNullstillApi(database, "dev-fss")
             }
 
             beforeEachTest {
-                TestDB.connection.setupTestData()
+                database.connection.setupTestData()
             }
 
             afterEachTest {
-                TestDB.connection.dropData()
+                database.connection.dropData()
             }
 
             it("Nullstiller bruker") {
-                TestDB.connection.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
                     response.status()?.isSuccess() shouldEqual true
                 }
 
-                TestDB.connection.finnBrukersSykmeldinger("pasientFnr").shouldBeEmpty()
+                database.finnBrukersSykmeldinger("pasientFnr").shouldBeEmpty()
             }
 
             it("Nullstiller ikke annen brukers sykmeldinger") {
-                TestDB.connection.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/annenAktor")) {
                     response.status()?.isSuccess() shouldEqual true
                 }
 
-                TestDB.connection.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+            }
+
+            it("Er tilgjengelig i test") {
+                with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
+                    response.status()?.isSuccess() shouldEqual true
+                }
+            }
+        }
+    }
+
+    describe("NullstillApi - prodkontekts") {
+        with(TestApplicationEngine()) {
+            start()
+            application.routing {
+                registerNullstillApi(database, "prod-fss")
+            }
+
+            it("Er ikke tilgjengelig i prod") {
+                with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
+                    response.status() shouldEqual HttpStatusCode.Forbidden
+                }
             }
         }
     }

@@ -5,20 +5,21 @@ import no.nav.syfo.db.DatabaseInterface
 import org.flywaydb.core.Flyway
 import java.sql.Connection
 
-object TestDB : DatabaseInterface {
-    private val pg: EmbeddedPostgres = EmbeddedPostgres.start()
+class TestDB : DatabaseInterface {
+    private var pg: EmbeddedPostgres? = null
     override val connection: Connection
-        get() = pg.postgresDatabase.connection.apply { autoCommit = false }
+        get() = pg!!.postgresDatabase.connection.apply { autoCommit = false }
 
 
     init {
+        pg = EmbeddedPostgres.start()
         Flyway.configure().run {
-            dataSource(pg.postgresDatabase).load().migrate()
+            dataSource(pg?.postgresDatabase).load().migrate()
         }
     }
 
-    fun cleanUp() {
-        pg.close()
+    fun stop() {
+        pg?.close()
     }
 }
 
