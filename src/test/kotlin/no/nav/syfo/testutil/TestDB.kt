@@ -10,7 +10,6 @@ class TestDB : DatabaseInterface {
     override val connection: Connection
         get() = pg!!.postgresDatabase.connection.apply { autoCommit = false }
 
-
     init {
         pg = EmbeddedPostgres.start()
         Flyway.configure().run {

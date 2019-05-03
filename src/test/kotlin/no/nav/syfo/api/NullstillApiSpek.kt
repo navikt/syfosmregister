@@ -9,7 +9,19 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.db.finnBrukersSykmeldinger
 import no.nav.syfo.db.opprettSykmelding
-import no.nav.syfo.model.*
+import no.nav.syfo.model.Adresse
+import no.nav.syfo.model.AktivitetIkkeMulig
+import no.nav.syfo.model.Arbeidsgiver
+import no.nav.syfo.model.AvsenderSystem
+import no.nav.syfo.model.Behandler
+import no.nav.syfo.model.HarArbeidsgiver
+import no.nav.syfo.model.KontaktMedPasient
+import no.nav.syfo.model.MedisinskVurdering
+import no.nav.syfo.model.Periode
+import no.nav.syfo.model.PersistedSykmelding
+import no.nav.syfo.model.Status
+import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import org.amshove.kluent.shouldBeEmpty
@@ -20,7 +32,6 @@ import org.spekframework.spek2.style.specification.describe
 import java.sql.Connection
 import java.time.LocalDate
 import java.time.LocalDateTime
-
 
 @KtorExperimentalAPI
 object NullstillApiSpek : Spek({
@@ -91,7 +102,8 @@ object NullstillApiSpek : Spek({
 })
 
 private fun Connection.setupTestData() {
-    opprettSykmelding(PersistedSykmelding(
+    opprettSykmelding(
+        PersistedSykmelding(
             id = "uuid",
             pasientFnr = "pasientFnr",
             pasientAktoerId = "pasientAktorId",
@@ -151,7 +163,8 @@ private fun Connection.setupTestData() {
                     meldingTilNAV = null,
                     msgId = "msgId",
                     pasientAktoerId = "pasientAktoerId",
-                    perioder = listOf(Periode(
+                    perioder = listOf(
+                        Periode(
                             fom = LocalDate.now(),
                             tom = LocalDate.now(),
                             aktivitetIkkeMulig = AktivitetIkkeMulig(
@@ -162,7 +175,8 @@ private fun Connection.setupTestData() {
                             behandlingsdager = null,
                             gradert = null,
                             reisetilskudd = false
-                    )),
+                    )
+                    ),
                     prognose = null,
                     signaturDato = LocalDateTime.now(),
                     skjermesForPasient = false,
@@ -172,5 +186,6 @@ private fun Connection.setupTestData() {
                     utdypendeOpplysninger = emptyMap()
             ),
             behandlingsUtfall = ValidationResult(Status.OK, emptyList())
-    ))
+    )
+    )
 }

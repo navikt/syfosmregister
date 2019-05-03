@@ -10,7 +10,10 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
-import no.nav.syfo.db.*
+import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.db.finnBrukersSykmeldinger
+import no.nav.syfo.db.isSykmeldingOwner
+import no.nav.syfo.db.registerLestAvBruker
 import no.nav.syfo.model.BrukerSykmelding
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

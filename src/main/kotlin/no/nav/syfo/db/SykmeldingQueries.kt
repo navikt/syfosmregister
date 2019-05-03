@@ -1,6 +1,10 @@
 package no.nav.syfo.db
 
-import no.nav.syfo.model.*
+import no.nav.syfo.model.BrukerSykmelding
+import no.nav.syfo.model.PersistedSykmelding
+import no.nav.syfo.model.brukerSykmeldingFromResultSet
+import no.nav.syfo.model.persistedSykmeldingFromResultSet
+import no.nav.syfo.model.toPGObject
 import java.sql.Connection
 import java.sql.Timestamp
 
@@ -73,7 +77,7 @@ fun Connection.opprettSykmelding(sykmeldingDB: PersistedSykmelding) {
 }
 
 const val INSERT_EMPTY_SYKMELDING_METADATA =
-        """INSERT INTO sykmelding_metadata(sykmeldingsid, bekreftet_dato) VALUES (?, NULL)"""
+    """INSERT INTO sykmelding_metadata(sykmeldingsid, bekreftet_dato) VALUES (?, NULL)"""
 
 fun Database.insertEmptySykmeldingMetadata(sykmeldingsid: String) = connection.use { connection ->
     connection.prepareStatement(INSERT_EMPTY_SYKMELDING_METADATA).use {

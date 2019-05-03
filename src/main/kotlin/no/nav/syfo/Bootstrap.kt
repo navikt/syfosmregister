@@ -30,7 +30,11 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import net.logstash.logback.argument.StructuredArguments
 import net.logstash.logback.argument.StructuredArguments.keyValue
@@ -38,7 +42,12 @@ import no.nav.syfo.api.getWellKnown
 import no.nav.syfo.api.registerNullstillApi
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
-import no.nav.syfo.db.*
+import no.nav.syfo.db.Database
+import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.db.VaultCredentialService
+import no.nav.syfo.db.insertEmptySykmeldingMetadata
+import no.nav.syfo.db.insertSykmelding
+import no.nav.syfo.db.isSykmeldingStored
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -62,7 +71,8 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.nio.file.Paths
 import java.time.Duration
-import java.util.*
+import java.util.Properties
+import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -299,7 +309,7 @@ fun Application.initRouting(
                 }
             }
         }
-        basic(name ="basic") {
+        basic(name = "basic") {
             validate { credentials ->
                 if (credentials.name == vaultSecrets.syfomockUsername && credentials.password == vaultSecrets.syfomockPassword) { UserIdPrincipal(credentials.name) } else null
             }
