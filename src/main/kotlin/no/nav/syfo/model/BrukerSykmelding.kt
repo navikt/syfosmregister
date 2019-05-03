@@ -3,6 +3,7 @@ package no.nav.syfo.model
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.syfo.objectMapper
 import java.sql.ResultSet
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class BrukerSykmelding(
@@ -12,8 +13,10 @@ data class BrukerSykmelding(
     val legekontorOrgnummer: String,
     val legeNavn: String?,
     val arbeidsgiverNavn: String,
-    val sykmeldingsperioder: String
+    val sykmeldingsperioder: List<Sykmeldingsperiode>
 )
+
+data class Sykmeldingsperiode(val fom: LocalDate, val tom: LocalDate)
 
 fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
     return BrukerSykmelding(
@@ -23,8 +26,12 @@ fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
         legekontorOrgnummer = resultSet.getString("legekontor_org_nr").trim(),
         legeNavn = getLegenavn(resultSet),
         arbeidsgiverNavn = resultSet.getString("arbeidsgivernavn").trim(),
-        sykmeldingsperioder = resultSet.getString("perioder")
+        sykmeldingsperioder = getSyknmeldingsperioder(resultSet)
     )
+}
+
+fun getSyknmeldingsperioder(resultSet: ResultSet): List<Sykmeldingsperiode> {
+    return objectMapper.readValue(resultSet.getString("perioder"))
 }
 
 fun getLegenavn(resultSet: ResultSet): String? {
