@@ -67,11 +67,6 @@ fun Connection.opprettSykmelding(sykmeldingDB: PersistedSykmelding) {
             it.executeUpdate()
         }
 
-        connection.prepareStatement(INSERT_EMPTY_SYKMELDING_METADATA).use {
-            it.setString(1, sykmeldingDB.id)
-            it.executeUpdate()
-        }
-
         connection.commit()
     }
 }
@@ -111,7 +106,7 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
                         jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}' as tom
                  FROM sykmelding
              ) as periode)
-    FROM sykmelding INNER JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
+    FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
     """
 
