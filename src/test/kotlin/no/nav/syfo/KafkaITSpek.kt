@@ -27,7 +27,7 @@ object KafkaITSpek : Spek({
         topics = listOf(topic)
     )
 
-    val credentials = VaultSecrets("", "", "", "")
+    val credentials = VaultSecrets("", "", "", "", "", "")
     val env = Environment(
         applicationPort = getRandomPort(),
         applicationThreads = 1,

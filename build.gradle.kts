@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransf
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
-version = "1.0.22"
+version = "1.0.23-SNAPSHOT"
 
 val coroutinesVersion = "1.1.1"
 val javaxActivationVersion = "1.1.1"
@@ -13,12 +13,12 @@ val jaxbVersion = "2.3.0.1"
 val kafkaVersion = "2.0.0"
 val confluentVersion = "5.0.0"
 val kafkaEmbeddedVersion = "2.0.2"
-val kluentVersion = "1.39"
+val kluentVersion = "1.49"
 val ktorVersion = "1.1.5"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.5.0"
-val spekVersion = "2.0.0"
+val spekVersion = "2.0.2"
 val sykmeldingVersion = "1.1-SNAPSHOT"
 val jaxwsApiVersion = "2.3.1"
 val javaxAnnotationApiVersion = "1.3.2"
@@ -29,6 +29,7 @@ val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "1.0.12"
+val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9"
 
 tasks.withType<Jar> {
@@ -116,6 +117,7 @@ dependencies {
         exclude(group = "org.eclipse.jetty") // conflicts with WireMock
     }
     testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedVersion")
+    testImplementation("com.opentable.components:otj-pg-embedded:$postgresEmbeddedVersion")
 
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")

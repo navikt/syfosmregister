@@ -10,8 +10,8 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
-import no.nav.syfo.db.Database
-import no.nav.syfo.db.findBrukerSykmelding
+import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.db.finnBrukersSykmeldinger
 import no.nav.syfo.db.isSykmeldingOwner
 import no.nav.syfo.db.registerLestAvBruker
 import no.nav.syfo.model.BrukerSykmelding
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smregister")
 
 @KtorExperimentalAPI
-fun Route.registerSykmeldingApi(database: Database) {
+fun Route.registerSykmeldingApi(database: DatabaseInterface) {
     route("/api/v1") {
 
         get("/sykmeldinger") {
@@ -29,7 +29,7 @@ fun Route.registerSykmeldingApi(database: Database) {
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
 
-            val behandlingsutfall = database.findBrukerSykmelding(subject)
+            val behandlingsutfall = database.finnBrukersSykmeldinger(subject)
                 .map { BrukerSykmelding(it.id, it.bekreftetDato, it.behandlingsutfall, it.legekontorOrgnummer, it.legeNavn, it.arbeidsgiverNavn, it.sykmeldingsperioder) }
 
             when {

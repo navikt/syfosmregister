@@ -24,6 +24,8 @@ data class Environment(
 data class VaultSecrets(
     val serviceuserUsername: String,
     val serviceuserPassword: String,
+    val syfomockUsername: String,
+    val syfomockPassword: String,
     val oidcWellKnownUri: String,
     val loginserviceClientId: String
 ) : KafkaCredentials {

@@ -11,7 +11,9 @@ import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.Authentication
+import io.ktor.auth.UserIdPrincipal
 import io.ktor.auth.authenticate
+import io.ktor.auth.basic
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
 import io.ktor.features.CallId
@@ -37,9 +39,11 @@ import kotlinx.coroutines.slf4j.MDCContext
 import net.logstash.logback.argument.StructuredArguments
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.syfo.api.getWellKnown
+import no.nav.syfo.api.registerNullstillApi
 import no.nav.syfo.api.registerNaisApi
 import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
+import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.db.insertEmptySykmeldingMetadata
 import no.nav.syfo.db.insertSykmelding
@@ -127,7 +131,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     }
 
     val applicationServer = embeddedServer(Netty, environment.applicationPort) {
-        initRouting(applicationState, database, vaultSecrets)
+        initRouting(applicationState, database, vaultSecrets, environment.cluster)
     }.start(wait = false)
 
     launchListeners(environment, applicationState, consumerProperties, database)
@@ -271,8 +275,9 @@ suspend fun blockingApplicationLogic(
 @KtorExperimentalAPI
 fun Application.initRouting(
     applicationState: ApplicationState,
-    database: Database,
-    vaultSecrets: VaultSecrets
+    database: DatabaseInterface,
+    vaultSecrets: VaultSecrets,
+    cluster: String
 ) {
     val wellKnown = getWellKnown(vaultSecrets.oidcWellKnownUri)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
@@ -287,7 +292,7 @@ fun Application.initRouting(
         }
     }
     install(Authentication) {
-        jwt {
+        jwt(name = "jwt") {
             verifier(jwkProvider, wellKnown.issuer)
             validate { credentials ->
                 log.info("Auth: User requested resource '${request.url()}'")
@@ -302,6 +307,11 @@ fun Application.initRouting(
                 } else {
                     JWTPrincipal(credentials.payload)
                 }
+            }
+        }
+        basic(name = "basic") {
+            validate { credentials ->
+                if (credentials.name == vaultSecrets.syfomockUsername && credentials.password == vaultSecrets.syfomockPassword) { UserIdPrincipal(credentials.name) } else null
             }
         }
     }
@@ -320,8 +330,11 @@ fun Application.initRouting(
     }
     routing {
         registerNaisApi(applicationState)
-        authenticate {
+        authenticate("jwt") {
             registerSykmeldingApi(database)
+        }
+        authenticate("basic") {
+            registerNullstillApi(database, cluster)
         }
     }
 }

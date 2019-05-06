@@ -5,6 +5,7 @@ import no.nav.syfo.model.PersistedSykmelding
 import no.nav.syfo.model.brukerSykmeldingFromResultSet
 import no.nav.syfo.model.persistedSykmeldingFromResultSet
 import no.nav.syfo.model.toPGObject
+import java.sql.Connection
 import java.sql.Timestamp
 
 const val INSERT_QUERY = """
@@ -46,6 +47,30 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
     connection.commit()
 }
 
+fun Connection.opprettSykmelding(sykmeldingDB: PersistedSykmelding) {
+    use { connection ->
+        connection.prepareStatement(INSERT_QUERY).use {
+            it.setString(1, sykmeldingDB.id)
+            it.setString(2, sykmeldingDB.pasientFnr)
+            it.setString(3, sykmeldingDB.pasientAktoerId)
+            it.setString(4, sykmeldingDB.legeFnr)
+            it.setString(5, sykmeldingDB.legeAktoerId)
+            it.setString(6, sykmeldingDB.mottakId)
+            it.setString(7, sykmeldingDB.legekontorOrgNr)
+            it.setString(8, sykmeldingDB.legekontorHerId)
+            it.setString(9, sykmeldingDB.legekontorReshId)
+            it.setString(10, sykmeldingDB.epjSystemNavn)
+            it.setString(11, sykmeldingDB.epjSystemVersjon)
+            it.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
+            it.setObject(13, sykmeldingDB.sykmelding.toPGObject())
+            it.setObject(14, sykmeldingDB.behandlingsUtfall.toPGObject())
+            it.executeUpdate()
+        }
+
+        connection.commit()
+    }
+}
+
 const val INSERT_EMPTY_SYKMELDING_METADATA =
     """INSERT INTO sykmelding_metadata(sykmeldingsid, bekreftet_dato) VALUES (?, NULL)"""
 
@@ -81,14 +106,16 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
                         jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}' as tom
                  FROM sykmelding
              ) as periode)
-    FROM sykmelding INNER JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
+    FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
     """
 
-fun Database.findBrukerSykmelding(fnr: String): List<BrukerSykmelding> = connection.use { connection ->
-    connection.prepareStatement(QUERY_FOR_BRUKER_SYKMELDING).use {
-        it.setString(1, fnr)
-        it.executeQuery().toList(::brukerSykmeldingFromResultSet)
+fun DatabaseInterface.finnBrukersSykmeldinger(fnr: String): List<BrukerSykmelding> {
+    return connection.use { connection ->
+        connection.prepareStatement(QUERY_FOR_BRUKER_SYKMELDING).use {
+            it.setString(1, fnr)
+            it.executeQuery().toList(::brukerSykmeldingFromResultSet)
+        }
     }
 }
 
@@ -107,7 +134,7 @@ const val UPDATE_METADATA_WITH_BEKREFTET_DATO = """
         WHERE sykmeldingsid = ? AND bekreftet_dato IS NULL;
         """
 
-fun Database.registerLestAvBruker(sykmeldingsid: String): Int = connection.use { connection ->
+fun DatabaseInterface.registerLestAvBruker(sykmeldingsid: String): Int = connection.use { connection ->
     val status = connection.prepareStatement(UPDATE_METADATA_WITH_BEKREFTET_DATO).use {
         it.setString(1, sykmeldingsid)
         it.executeUpdate()
@@ -118,7 +145,7 @@ fun Database.registerLestAvBruker(sykmeldingsid: String): Int = connection.use {
 
 const val QUERY_IS_SYKMELDING_OWNER = """SELECT exists(SELECT 1 FROM sykmelding WHERE id=? AND pasient_fnr=?)"""
 
-fun Database.isSykmeldingOwner(sykmeldingsid: String, fnr: String): Boolean = connection.use { connection ->
+fun DatabaseInterface.isSykmeldingOwner(sykmeldingsid: String, fnr: String): Boolean = connection.use { connection ->
     connection.prepareStatement(QUERY_IS_SYKMELDING_OWNER).use {
         it.setString(1, sykmeldingsid)
         it.setString(2, fnr)
