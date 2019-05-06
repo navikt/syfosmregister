@@ -26,6 +26,7 @@ import no.nav.syfo.testutil.TestDB
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.net.ServerSocket
 import java.util.Base64
 import java.util.concurrent.TimeUnit
 
@@ -33,7 +34,8 @@ import java.util.concurrent.TimeUnit
 object AuthenticateSpek : Spek({
 
     val database = TestDB()
-    val fakeApi = embeddedServer(Netty, 9000) {
+    val randomPort = ServerSocket(0).use { it.localPort }
+    val fakeApi = embeddedServer(Netty, randomPort) {
         install(ContentNegotiation) {
             jackson {
                 registerKotlinModule()
@@ -59,7 +61,7 @@ object AuthenticateSpek : Spek({
                 ApplicationState(), database, VaultSecrets(
                     serviceuserUsername = "username",
                     serviceuserPassword = "password",
-                    oidcWellKnownUri = "http://localhost:9000/fake.jwt",
+                    oidcWellKnownUri = "http://localhost:$randomPort/fake.jwt",
                     loginserviceClientId = "clientId",
                     syfomockUsername = "syfomock",
                     syfomockPassword = "test"
