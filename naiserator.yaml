@@ -47,5 +47,3 @@ spec:
     value: {{SYFOSMREGISTER_DB_URL}}
   - name: MOUNT_PATH_VAULT
     value: {{MOUNT_PATH_VAULT}}
-  - name: CLUSTER
-    value: {{CLUSTER}}
