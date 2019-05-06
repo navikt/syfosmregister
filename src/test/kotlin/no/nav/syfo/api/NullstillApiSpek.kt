@@ -1,7 +1,6 @@
 package no.nav.syfo.api
 
 import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
@@ -24,6 +23,7 @@ import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
+import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotBeEmpty
@@ -42,7 +42,7 @@ object NullstillApiSpek : Spek({
         database.stop()
     }
 
-    describe("NullstillApi - testkontekts") {
+    describe("NullstillApi - testkontekst") {
         with(TestApplicationEngine()) {
             start()
             application.routing {
@@ -85,7 +85,7 @@ object NullstillApiSpek : Spek({
         }
     }
 
-    describe("NullstillApi - prodkontekts") {
+    describe("NullstillApi - prodkontekst") {
         with(TestApplicationEngine()) {
             start()
             application.routing {
@@ -94,7 +94,7 @@ object NullstillApiSpek : Spek({
 
             it("Er ikke tilgjengelig i prod") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status() shouldEqual HttpStatusCode.Forbidden
+                    response.status() shouldBe null
                 }
             }
         }
