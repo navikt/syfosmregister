@@ -105,6 +105,7 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
                  SELECT jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{fom}' as fom,
                         jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}' as tom
                  FROM sykmelding
+                 WHERE sykmelding.id = metadata.sykmeldingsid
              ) as periode)
     FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
