@@ -12,9 +12,6 @@ Application for persisting sykmelding 2013 i database
 * Vault
 * Postgres
 
-## Getting started
-## Running locally
-
 ### Building the application
 #### Compile and package application
 To build locally and run the integration tests you can simply run `./gradlew shadowJar` or on windows 
@@ -40,28 +37,20 @@ The application uses dynamically generated user / passwords for the database.
 To connect to the database one must generate user / password (which lasts for one hour)
 as follows:
 
-Install [Vault](https://www.vaultproject.io/downloads.html)
+Use The Vault Browser CLI that is build in https://vault.adeo.no
 
-
-Generate user / password:
-
-```
-export VAULT_ADDR=https://vault.adeo.no USER=NAV_IDENT
-vault login -method=oidc
-
-```
 
 Preprod credentials:
 
 ```
-vault read postgresql/preprod-fss/creds/syfosmregler-admin
+vault read postgresql/preprod-fss/creds/syfosmregister-admin
 
 ```
 
 Prod credentials:
 
 ```
-vault read postgresql/prod-fss/creds/syfosmregler-admin
+vault read postgresql/prod-fss/creds/syfosmregister-admin
 
 ```
 
