@@ -21,7 +21,7 @@ object BrukerSykmeldingSpek : Spek({
                     "\"messageForUser\": \"text\", " +
                     "\"messageForSender\": \"text\"}]}"
             val perioderJson = "" +
-                    "[{\"fom\": \"2018-01-01\", \"tom\": \"2018-01-20\"}, " +
+                    "[{\"fom\": \"2018-01-01\", \"tom\": \"2018-01-20\", \"grad\": 80}, " +
                     "{\"fom\": \"2018-02-01\", \"tom\": \"2018-02-20\"}]"
             every { mock.getString("id") } returns "id"
             every {
@@ -36,8 +36,8 @@ object BrukerSykmeldingSpek : Spek({
             every { mock.getString("perioder") } returns perioderJson
 
             val expectedPerioder: List<Sykmeldingsperiode> = listOf(
-                Sykmeldingsperiode(of(2018, 1, 1), of(2018, 1, 20)),
-                Sykmeldingsperiode(of(2018, 2, 1), of(2018, 2, 20))
+                Sykmeldingsperiode(of(2018, 1, 1), of(2018, 1, 20), 80),
+                Sykmeldingsperiode(of(2018, 2, 1), of(2018, 2, 20), null)
             )
 
             val brukerSykmelding = brukerSykmeldingFromResultSet(mock)

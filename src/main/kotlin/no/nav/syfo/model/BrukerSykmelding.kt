@@ -16,7 +16,7 @@ data class BrukerSykmelding(
     val sykmeldingsperioder: List<Sykmeldingsperiode>
 )
 
-data class Sykmeldingsperiode(val fom: LocalDate, val tom: LocalDate)
+data class Sykmeldingsperiode(val fom: LocalDate, val tom: LocalDate, val grad: Int?)
 
 fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
     return BrukerSykmelding(

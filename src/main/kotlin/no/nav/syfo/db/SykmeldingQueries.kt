@@ -103,7 +103,8 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
        (SELECT json_agg(to_jsonb(periode)) as perioder
         FROM (
                  SELECT jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{fom}' as fom,
-                        jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}' as tom
+                        jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}' as tom,
+                        (jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{gradert}')::jsonb ->> 'grad' as grad
              ) as periode)
     FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
