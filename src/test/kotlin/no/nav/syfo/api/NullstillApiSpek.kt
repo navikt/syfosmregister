@@ -1,7 +1,7 @@
 package no.nav.syfo.api
 
 import io.ktor.http.HttpMethod
-import io.ktor.http.isSuccess
+import io.ktor.http.HttpStatusCode
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
@@ -61,7 +61,7 @@ object NullstillApiSpek : Spek({
                 database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status()?.isSuccess() shouldEqual true
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
 
                 database.finnBrukersSykmeldinger("pasientFnr").shouldBeEmpty()
@@ -71,7 +71,7 @@ object NullstillApiSpek : Spek({
                 database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/annenAktor")) {
-                    response.status()?.isSuccess() shouldEqual true
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
 
                 database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
@@ -79,7 +79,7 @@ object NullstillApiSpek : Spek({
 
             it("Er tilgjengelig i test") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status()?.isSuccess() shouldEqual true
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
             }
         }

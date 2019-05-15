@@ -16,7 +16,20 @@ data class BrukerSykmelding(
     val sykmeldingsperioder: List<Sykmeldingsperiode>
 )
 
-data class Sykmeldingsperiode(val fom: LocalDate, val tom: LocalDate, val grad: Int?)
+data class Sykmeldingsperiode(
+    val fom: LocalDate,
+    val tom: LocalDate,
+    val grad: Int?,
+    val type: Periodetype
+)
+
+enum class Periodetype {
+    AKTIVITET_IKKE_MULIG,
+    AVVENTENDE,
+    BEHANDLINGSDAGER,
+    GRADERT,
+    REISETILSKUDD,
+}
 
 fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
     return BrukerSykmelding(
@@ -26,11 +39,26 @@ fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmelding {
         legekontorOrgnummer = resultSet.getString("legekontor_org_nr").trim(),
         legeNavn = getLegenavn(resultSet),
         arbeidsgiverNavn = resultSet.getString("arbeidsgivernavn").trim(),
-        sykmeldingsperioder = getSyknmeldingsperioder(resultSet)
+        sykmeldingsperioder = getSyknmeldingsperioder(resultSet).map { modelPeriodeTilSykmeldingsperiode(it) }
     )
 }
 
-fun getSyknmeldingsperioder(resultSet: ResultSet): List<Sykmeldingsperiode> {
+fun modelPeriodeTilSykmeldingsperiode(periode: Periode): Sykmeldingsperiode {
+    return Sykmeldingsperiode(periode.fom, periode.tom, periode.gradert?.grad, finnPeriodetype(periode))
+}
+
+fun finnPeriodetype(periode: Periode): Periodetype {
+    return when {
+        periode.aktivitetIkkeMulig != null -> Periodetype.AKTIVITET_IKKE_MULIG
+        periode.avventendeInnspillTilArbeidsgiver != null -> Periodetype.AVVENTENDE
+        periode.behandlingsdager != null -> Periodetype.BEHANDLINGSDAGER
+        periode.gradert != null -> Periodetype.GRADERT
+        periode.reisetilskudd -> Periodetype.REISETILSKUDD
+        else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode")
+    }
+}
+
+fun getSyknmeldingsperioder(resultSet: ResultSet): List<Periode> {
     return objectMapper.readValue(resultSet.getString("perioder"))
 }
 

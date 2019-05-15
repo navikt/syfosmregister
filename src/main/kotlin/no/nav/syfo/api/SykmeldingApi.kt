@@ -29,11 +29,11 @@ fun Route.registerSykmeldingApi(database: DatabaseInterface) {
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
 
-            val behandlingsutfall = database.finnBrukersSykmeldinger(subject)
+            val sykmeldinger = database.finnBrukersSykmeldinger(subject)
                 .map { BrukerSykmelding(it.id, it.bekreftetDato, it.behandlingsutfall, it.legekontorOrgnummer, it.legeNavn, it.arbeidsgiverNavn, it.sykmeldingsperioder) }
 
             when {
-                behandlingsutfall.isNotEmpty() -> call.respond(behandlingsutfall)
+                sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)
                 else -> call.respond(HttpStatusCode.NoContent)
             }
         }

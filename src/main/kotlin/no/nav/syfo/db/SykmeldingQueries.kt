@@ -100,12 +100,7 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
        jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
        jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
        jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb ->> 'navn'    as arbeidsgivernavn,
-       (SELECT json_agg(to_jsonb(periode)) as perioder
-        FROM (
-                 SELECT jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{fom}' as fom,
-                        jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{tom}' as tom,
-                        (jsonb_array_elements(sykmelding.sykmelding -> 'perioder') #>> '{gradert}')::jsonb ->> 'grad' as grad
-             ) as periode)
+       jsonb_extract_path(sykmelding.sykmelding, 'perioder')::jsonb                   as perioder
     FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
     """
