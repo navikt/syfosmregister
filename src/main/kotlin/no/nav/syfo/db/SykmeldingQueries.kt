@@ -1,6 +1,6 @@
 package no.nav.syfo.db
 
-import no.nav.syfo.model.BrukerSykmelding
+import no.nav.syfo.model.BrukerSykmeldingDTO
 import no.nav.syfo.model.PersistedSykmelding
 import no.nav.syfo.model.brukerSykmeldingFromResultSet
 import no.nav.syfo.model.persistedSykmeldingFromResultSet
@@ -99,13 +99,13 @@ const val QUERY_FOR_BRUKER_SYKMELDING = """
        jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'fornavn'    as lege_fornavn,
        jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
        jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
-       jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb ->> 'navn'    as arbeidsgivernavn,
+       jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb               as arbeidsgiver,
        jsonb_extract_path(sykmelding.sykmelding, 'perioder')::jsonb                   as perioder
     FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
     WHERE pasient_fnr=?
     """
 
-fun DatabaseInterface.finnBrukersSykmeldinger(fnr: String): List<BrukerSykmelding> {
+fun DatabaseInterface.finnBrukersSykmeldinger(fnr: String): List<BrukerSykmeldingDTO> {
     return connection.use { connection ->
         connection.prepareStatement(QUERY_FOR_BRUKER_SYKMELDING).use {
             it.setString(1, fnr)

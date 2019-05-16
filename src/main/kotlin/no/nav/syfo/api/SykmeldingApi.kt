@@ -14,7 +14,6 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.finnBrukersSykmeldinger
 import no.nav.syfo.db.isSykmeldingOwner
 import no.nav.syfo.db.registerLestAvBruker
-import no.nav.syfo.model.BrukerSykmelding
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -30,7 +29,6 @@ fun Route.registerSykmeldingApi(database: DatabaseInterface) {
             val subject = principal.payload.subject
 
             val sykmeldinger = database.finnBrukersSykmeldinger(subject)
-                .map { BrukerSykmelding(it.id, it.bekreftetDato, it.behandlingsutfall, it.legekontorOrgnummer, it.legeNavn, it.arbeidsgiverNavn, it.sykmeldingsperioder) }
 
             when {
                 sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)

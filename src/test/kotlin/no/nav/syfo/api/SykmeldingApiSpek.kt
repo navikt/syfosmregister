@@ -24,12 +24,12 @@ import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.Arbeidsgiver
 import no.nav.syfo.model.AvsenderSystem
 import no.nav.syfo.model.Behandler
-import no.nav.syfo.model.BrukerSykmelding
+import no.nav.syfo.model.BrukerSykmeldingDTO
 import no.nav.syfo.model.HarArbeidsgiver
 import no.nav.syfo.model.KontaktMedPasient
 import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.Periode
-import no.nav.syfo.model.Periodetype
+import no.nav.syfo.model.PeriodetypeDTO
 import no.nav.syfo.model.PersistedSykmelding
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.Sykmelding
@@ -96,9 +96,9 @@ object SykmeldingApiSpek : Spek({
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
-                    objectMapper.readValue<List<BrukerSykmelding>>(response.content!!)[0]
+                    objectMapper.readValue<List<BrukerSykmeldingDTO>>(response.content!!)[0]
                         .sykmeldingsperioder[0]
-                        .type shouldEqual Periodetype.AKTIVITET_IKKE_MULIG
+                        .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
                 }
             }
         }
