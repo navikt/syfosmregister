@@ -1,4 +1,4 @@
-package no.nav.syfo.api
+package no.nav.syfo.nullstilling
 
 import io.ktor.application.call
 import io.ktor.response.respondText
@@ -6,8 +6,8 @@ import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
+import no.nav.syfo.aksessering.api.log
 import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.db.nullstillSykmeldinger
 
 @KtorExperimentalAPI
 fun Route.registerNullstillApi(database: DatabaseInterface, clusterName: String) {

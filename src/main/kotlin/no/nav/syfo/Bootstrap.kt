@@ -36,26 +36,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
-import net.logstash.logback.argument.StructuredArguments
 import net.logstash.logback.argument.StructuredArguments.keyValue
+import no.nav.syfo.aksessering.api.registerSykmeldingApi
 import no.nav.syfo.api.getWellKnown
-import no.nav.syfo.api.registerNullstillApi
 import no.nav.syfo.api.registerNaisApi
-import no.nav.syfo.api.registerSykmeldingApi
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.VaultCredentialService
-import no.nav.syfo.db.insertEmptySykmeldingMetadata
-import no.nav.syfo.db.insertSykmelding
-import no.nav.syfo.db.isSykmeldingStored
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toStreamsConfig
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
-import no.nav.syfo.model.PersistedSykmelding
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.nullstilling.registerNullstillApi
+import no.nav.syfo.persistering.PersistedSykmelding
+import no.nav.syfo.persistering.insertEmptySykmeldingMetadata
+import no.nav.syfo.persistering.insertSykmelding
+import no.nav.syfo.persistering.isSykmeldingStored
 import no.nav.syfo.vault.Vault
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.Serdes
@@ -212,9 +211,9 @@ suspend fun blockingApplicationLogic(
 ) {
     while (applicationState.running) {
         var logValues = arrayOf(
-            StructuredArguments.keyValue("smId", "missing"),
-            StructuredArguments.keyValue("organizationNumber", "missing"),
-            StructuredArguments.keyValue("msgId", "missing")
+            keyValue("smId", "missing"),
+            keyValue("organizationNumber", "missing"),
+            keyValue("msgId", "missing")
         )
 
         val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
@@ -228,10 +227,10 @@ suspend fun blockingApplicationLogic(
                 objectMapper.readValue(behandlingsUtfallReceivedSykmelding.behandlingsUtfall)
 
             logValues = arrayOf(
-                StructuredArguments.keyValue("msgId", receivedSykmelding.msgId),
-                StructuredArguments.keyValue("mottakId", receivedSykmelding.navLogId),
-                StructuredArguments.keyValue("orgNr", receivedSykmelding.legekontorOrgNr),
-                StructuredArguments.keyValue("smId", receivedSykmelding.sykmelding.id)
+                keyValue("msgId", receivedSykmelding.msgId),
+                keyValue("mottakId", receivedSykmelding.navLogId),
+                keyValue("orgNr", receivedSykmelding.legekontorOrgNr),
+                keyValue("smId", receivedSykmelding.sykmelding.id)
             )
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)

@@ -1,5 +1,6 @@
-package no.nav.syfo.db
+package no.nav.syfo.nullstilling
 
+import no.nav.syfo.db.DatabaseInterface
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 

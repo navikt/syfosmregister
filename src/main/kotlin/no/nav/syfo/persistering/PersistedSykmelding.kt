@@ -1,6 +1,8 @@
-package no.nav.syfo.model
+package no.nav.syfo.persistering
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
 import org.postgresql.util.PGobject
 import java.sql.ResultSet
@@ -24,20 +26,20 @@ data class PersistedSykmelding(
 )
 
 fun persistedSykmeldingFromResultSet(resultSet: ResultSet) = PersistedSykmelding(
-        resultSet.getString("id").trim(),
-        resultSet.getString("pasient_fnr").trim(),
-        resultSet.getString("pasient_aktoer_id").trim(),
-        resultSet.getString("lege_fnr").trim(),
-        resultSet.getString("lege_aktoer_id").trim(),
-        resultSet.getString("mottak_id").trim(),
-        resultSet.getString("legekontor_org_nr").trim(),
-        resultSet.getString("legekontor_her_id").trim(),
-        resultSet.getString("legekontor_resh_id").trim(),
-        resultSet.getString("epj_system_navn").trim(),
-        resultSet.getString("epj_system_versjon").trim(),
-        resultSet.getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
-        objectMapper.readValue(resultSet.getString("sykmelding")),
-        objectMapper.readValue(resultSet.getString("behandlings_utfall"))
+    resultSet.getString("id").trim(),
+    resultSet.getString("pasient_fnr").trim(),
+    resultSet.getString("pasient_aktoer_id").trim(),
+    resultSet.getString("lege_fnr").trim(),
+    resultSet.getString("lege_aktoer_id").trim(),
+    resultSet.getString("mottak_id").trim(),
+    resultSet.getString("legekontor_org_nr").trim(),
+    resultSet.getString("legekontor_her_id").trim(),
+    resultSet.getString("legekontor_resh_id").trim(),
+    resultSet.getString("epj_system_navn").trim(),
+    resultSet.getString("epj_system_versjon").trim(),
+    resultSet.getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
+    objectMapper.readValue(resultSet.getString("sykmelding")),
+    objectMapper.readValue(resultSet.getString("behandlings_utfall"))
 )
 
 fun Sykmelding.toPGObject() = PGobject().also {

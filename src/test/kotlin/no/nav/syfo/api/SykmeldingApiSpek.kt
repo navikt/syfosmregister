@@ -18,23 +18,24 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.syfo.db.opprettSykmelding
+import no.nav.syfo.aksessering.api.PeriodetypeDTO
+import no.nav.syfo.aksessering.api.SykmeldingDTO
+import no.nav.syfo.aksessering.api.registerSykmeldingApi
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.Arbeidsgiver
 import no.nav.syfo.model.AvsenderSystem
 import no.nav.syfo.model.Behandler
-import no.nav.syfo.model.BrukerSykmeldingDTO
 import no.nav.syfo.model.HarArbeidsgiver
 import no.nav.syfo.model.KontaktMedPasient
 import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.Periode
-import no.nav.syfo.model.PeriodetypeDTO
-import no.nav.syfo.model.PersistedSykmelding
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.nullstilling.opprettSykmelding
 import no.nav.syfo.objectMapper
+import no.nav.syfo.persistering.PersistedSykmelding
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import org.amshove.kluent.shouldEqual
@@ -96,7 +97,7 @@ object SykmeldingApiSpek : Spek({
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
-                    objectMapper.readValue<List<BrukerSykmeldingDTO>>(response.content!!)[0]
+                    objectMapper.readValue<List<SykmeldingDTO>>(response.content!!)[0]
                         .sykmeldingsperioder[0]
                         .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
                 }

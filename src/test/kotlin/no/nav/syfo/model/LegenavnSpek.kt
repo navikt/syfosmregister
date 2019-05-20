@@ -2,15 +2,16 @@ package no.nav.syfo.model
 
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.syfo.aksessering.db.getLegenavn
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.sql.ResultSet
 import kotlin.test.assertEquals
 
-object BrukerSykmeldingSpek : Spek({
+object LegenavnSpek : Spek({
     val mock = mockk<ResultSet>()
 
-    describe("Brukersykmelding domain object mapper") {
+    describe("Legenavn") {
 
         it("should be able to parse legenavn withut mellomnavn") {
             every { mock.getString("lege_fornavn") } returns "Fornavn"
