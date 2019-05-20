@@ -44,7 +44,7 @@ enum class PeriodetypeDTO {
 }
 
 fun brukerSykmeldingFromResultSet(resultSet: ResultSet): BrukerSykmeldingDTO =
-     BrukerSykmeldingDTO(
+    BrukerSykmeldingDTO(
         id = resultSet.getString("id").trim(),
         bekreftetDato = resultSet.getTimestamp("bekreftet_dato")?.toLocalDateTime(),
         behandlingsutfall = objectMapper.readValue(resultSet.getString("behandlings_utfall")),
@@ -74,10 +74,10 @@ fun periodeTilSykmeldingsperiodeDTO(periode: Periode): SykmeldingsperiodeDTO =
     )
 
 fun gradertTilGradertDTO(gradert: Gradert?): GradertDTO? =
-        gradert?.let { GradertDTO(grad = it.grad, reisetilskudd = it.reisetilskudd) }
+    gradert?.let { GradertDTO(grad = it.grad, reisetilskudd = it.reisetilskudd) }
 
 fun finnPeriodetypeDTO(periode: Periode): PeriodetypeDTO =
-     when {
+    when {
         periode.aktivitetIkkeMulig != null -> PeriodetypeDTO.AKTIVITET_IKKE_MULIG
         periode.avventendeInnspillTilArbeidsgiver != null -> PeriodetypeDTO.AVVENTENDE
         periode.behandlingsdager != null -> PeriodetypeDTO.BEHANDLINGSDAGER
@@ -86,10 +86,8 @@ fun finnPeriodetypeDTO(periode: Periode): PeriodetypeDTO =
         else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode")
     }
 
-
 fun getSyknmeldingsperioder(resultSet: ResultSet): List<Periode> =
     objectMapper.readValue(resultSet.getString("perioder"))
-
 
 fun getLegenavn(resultSet: ResultSet): String? {
     val fornavn = when (val value = resultSet.getString("lege_fornavn")) {
