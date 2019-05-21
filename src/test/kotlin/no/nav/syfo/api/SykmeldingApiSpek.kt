@@ -1,12 +1,26 @@
 package no.nav.syfo.api
 
+import com.auth0.jwt.interfaces.Payload
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.ktor.application.install
+import io.ktor.auth.authentication
+import io.ktor.auth.jwt.JWTPrincipal
+import io.ktor.features.ContentNegotiation
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.jackson.jackson
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import no.nav.syfo.aksessering.db.finnBrukersSykmeldinger
+import io.mockk.every
+import io.mockk.mockk
+import no.nav.syfo.aksessering.api.PeriodetypeDTO
+import no.nav.syfo.aksessering.api.SykmeldingDTO
+import no.nav.syfo.aksessering.api.registerSykmeldingApi
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.Arbeidsgiver
@@ -20,14 +34,11 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.nullstilling.opprettSykmelding
-import no.nav.syfo.nullstilling.registerNullstillApi
+import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.PersistedSykmelding
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
-import org.amshove.kluent.shouldBe
-import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldEqual
-import org.amshove.kluent.shouldNotBeEmpty
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.sql.Connection
@@ -35,7 +46,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @KtorExperimentalAPI
-object NullstillApiSpek : Spek({
+object SykmeldingApiSpek : Spek({
 
     val database = TestDB()
 
@@ -43,11 +54,20 @@ object NullstillApiSpek : Spek({
         database.stop()
     }
 
-    describe("NullstillApi - testkontekst") {
+    describe("SykmeldingApi") {
         with(TestApplicationEngine()) {
             start()
+
+            application.install(ContentNegotiation) {
+                jackson {
+                    registerKotlinModule()
+                    registerModule(JavaTimeModule())
+                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                }
+            }
+
             application.routing {
-                registerNullstillApi(database, "dev-fss")
+                registerSykmeldingApi(database)
             }
 
             beforeEachTest {
@@ -58,44 +78,28 @@ object NullstillApiSpek : Spek({
                 database.connection.dropData()
             }
 
-            it("Nullstiller bruker") {
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+            val mockPayload = mockk<Payload>()
 
-                with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status() shouldEqual HttpStatusCode.OK
-                }
+            it("skal returnere status no content hvis bruker ikke har sykmeldinger") {
+                every { mockPayload.subject } returns "AnnetPasientFnr"
 
-                database.finnBrukersSykmeldinger("pasientFnr").shouldBeEmpty()
-            }
-
-            it("Nullstiller ikke annen brukers sykmeldinger") {
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
-
-                with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/annenAktor")) {
-                    response.status() shouldEqual HttpStatusCode.OK
-                }
-
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
-            }
-
-            it("Er tilgjengelig i test") {
-                with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status() shouldEqual HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.NoContent
                 }
             }
-        }
-    }
 
-    describe("NullstillApi - prodkontekst") {
-        with(TestApplicationEngine()) {
-            start()
-            application.routing {
-                registerNullstillApi(database, "prod-fss")
-            }
+            it("skal hente sykmeldinger for bruker") {
+                every { mockPayload.subject } returns "pasientFnr"
 
-            it("Er ikke tilgjengelig i prod") {
-                with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status() shouldBe null
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    objectMapper.readValue<List<SykmeldingDTO>>(response.content!!)[0]
+                        .sykmeldingsperioder[0]
+                        .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
                 }
             }
         }

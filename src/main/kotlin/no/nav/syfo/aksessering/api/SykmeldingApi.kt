@@ -1,4 +1,4 @@
-package no.nav.syfo.api
+package no.nav.syfo.aksessering.api
 
 import io.ktor.application.call
 import io.ktor.auth.authentication
@@ -10,11 +10,12 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
+import no.nav.syfo.aksessering.db.erEier
+import no.nav.syfo.aksessering.db.finnBrukersSykmeldinger
+import no.nav.syfo.aksessering.db.registrerLestAvBruker
+import no.nav.syfo.aksessering.db.toSykmelding
 import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.db.finnBrukersSykmeldinger
-import no.nav.syfo.db.isSykmeldingOwner
-import no.nav.syfo.db.registerLestAvBruker
-import no.nav.syfo.model.BrukerSykmelding
+import no.nav.syfo.domain.toDTO
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -29,11 +30,11 @@ fun Route.registerSykmeldingApi(database: DatabaseInterface) {
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
 
-            val behandlingsutfall = database.finnBrukersSykmeldinger(subject)
-                .map { BrukerSykmelding(it.id, it.bekreftetDato, it.behandlingsutfall, it.legekontorOrgnummer, it.legeNavn, it.arbeidsgiverNavn, it.sykmeldingsperioder) }
+            val sykmeldinger: List<SykmeldingDTO> =
+                database.finnBrukersSykmeldinger(subject).map { it.toSykmelding().toDTO() }
 
             when {
-                behandlingsutfall.isNotEmpty() -> call.respond(behandlingsutfall)
+                sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)
                 else -> call.respond(HttpStatusCode.NoContent)
             }
         }
@@ -45,8 +46,8 @@ fun Route.registerSykmeldingApi(database: DatabaseInterface) {
 
             log.info("Incomming request post settLestAvBruker for $sykmeldingsid")
 
-            if (database.isSykmeldingOwner(sykmeldingsid, subject)) {
-                if (database.registerLestAvBruker(sykmeldingsid) > 0) {
+            if (database.erEier(sykmeldingsid, subject)) {
+                if (database.registrerLestAvBruker(sykmeldingsid) > 0) {
                     call.respond(HttpStatusCode.OK)
                 }
             } else {
