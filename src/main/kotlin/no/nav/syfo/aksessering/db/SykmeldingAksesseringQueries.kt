@@ -26,7 +26,7 @@ fun DatabaseInterface.finnBrukersSykmeldinger(fnr: String): List<Brukersykmeldin
     }
 }
 
-fun DatabaseInterface.registerLestAvBruker(sykmeldingsid: String): Int =
+fun DatabaseInterface.registrerLestAvBruker(sykmeldingsid: String): Int =
     connection.use { connection ->
         val status = connection.prepareStatement(
             """

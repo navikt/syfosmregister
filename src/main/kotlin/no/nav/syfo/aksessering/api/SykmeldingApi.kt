@@ -12,7 +12,7 @@ import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.aksessering.db.erEier
 import no.nav.syfo.aksessering.db.finnBrukersSykmeldinger
-import no.nav.syfo.aksessering.db.registerLestAvBruker
+import no.nav.syfo.aksessering.db.registrerLestAvBruker
 import no.nav.syfo.aksessering.db.toSykmelding
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.domain.toDTO
@@ -47,7 +47,7 @@ fun Route.registerSykmeldingApi(database: DatabaseInterface) {
             log.info("Incomming request post settLestAvBruker for $sykmeldingsid")
 
             if (database.erEier(sykmeldingsid, subject)) {
-                if (database.registerLestAvBruker(sykmeldingsid) > 0) {
+                if (database.registrerLestAvBruker(sykmeldingsid) > 0) {
                     call.respond(HttpStatusCode.OK)
                 }
             } else {

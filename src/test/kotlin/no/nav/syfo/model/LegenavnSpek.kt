@@ -13,7 +13,7 @@ object LegenavnSpek : Spek({
 
     describe("Legenavn") {
 
-        it("should be able to parse legenavn withut mellomnavn") {
+        it("should be able to parse legenavn without mellomnavn") {
             every { mock.getString("lege_fornavn") } returns "Fornavn"
             every { mock.getString("lege_mellomnavn") } returns null
             every { mock.getString("lege_etternavn") } returns "Etternavn"
@@ -21,7 +21,7 @@ object LegenavnSpek : Spek({
             assertEquals("Fornavn Etternavn", getLegenavn(mock))
         }
 
-        it("should be able to parse legenavn withut any names") {
+        it("should be able to parse legenavn without any names") {
             every { mock.getString("lege_fornavn") } returns null
             every { mock.getString("lege_mellomnavn") } returns null
             every { mock.getString("lege_etternavn") } returns null
@@ -29,7 +29,7 @@ object LegenavnSpek : Spek({
             assertEquals(null, getLegenavn(mock))
         }
 
-        it("should be able to parse legenavn whith fornavn, mellomnavn and etternavn") {
+        it("should be able to parse legenavn with fornavn, mellomnavn and etternavn") {
             every { mock.getString("lege_fornavn") } returns "Fornavn"
             every { mock.getString("lege_mellomnavn") } returns "Mellomnavn"
             every { mock.getString("lege_etternavn") } returns "Etternavn"

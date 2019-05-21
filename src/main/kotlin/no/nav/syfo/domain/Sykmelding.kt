@@ -63,8 +63,6 @@ enum class Periodetype {
     REISETILSKUDD,
 }
 
-// Konverter Sykmelding til SykmeldingDTO
-
 fun Sykmelding.toDTO(): SykmeldingDTO =
     SykmeldingDTO(
         id = id,
