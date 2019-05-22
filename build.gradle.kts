@@ -28,7 +28,7 @@ val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.0.18"
+val smCommonVersion = "1.0.19"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9"
 
