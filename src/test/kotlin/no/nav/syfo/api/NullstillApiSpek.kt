@@ -186,7 +186,8 @@ private fun Connection.setupTestData() {
                 tiltakNAV = "tiltakNAV",
                 utdypendeOpplysninger = emptyMap()
             ),
-            behandlingsUtfall = ValidationResult(Status.OK, emptyList())
+            behandlingsUtfall = ValidationResult(Status.OK, emptyList()),
+            tssid = "21455"
         )
     )
 }

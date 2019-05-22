@@ -255,8 +255,8 @@ suspend fun blockingApplicationLogic(
                             epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
                             mottattTidspunkt = receivedSykmelding.mottattDato,
                             sykmelding = receivedSykmelding.sykmelding,
-                            behandlingsUtfall = validationResult
-
+                            behandlingsUtfall = validationResult,
+                            tssid = receivedSykmelding.tssid
                         )
                     )
                     database.insertEmptySykmeldingMetadata(receivedSykmelding.sykmelding.id)

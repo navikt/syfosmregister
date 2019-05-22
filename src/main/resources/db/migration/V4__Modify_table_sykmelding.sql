@@ -1,0 +1,1 @@
+ALTER TABLE sykmelding ADD COLUMN tss_id CHAR(63);

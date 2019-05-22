@@ -18,8 +18,9 @@ INSERT INTO sykmelding(
     epj_system_versjon,
     mottatt_tidspunkt,
     sykmelding,
-    behandlings_utfall
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+    behandlings_utfall,
+    tss_id
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
 fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.use { connection ->
     connection.prepareStatement(INSERT_QUERY).use {
@@ -37,6 +38,7 @@ fun Database.insertSykmelding(sykmeldingDB: PersistedSykmelding) = connection.us
         it.setTimestamp(12, Timestamp.valueOf(sykmeldingDB.mottattTidspunkt))
         it.setObject(13, sykmeldingDB.sykmelding.toPGObject())
         it.setObject(14, sykmeldingDB.behandlingsUtfall.toPGObject())
+        it.setObject(15, sykmeldingDB.tssid)
         it.executeUpdate()
     }
     connection.commit()
