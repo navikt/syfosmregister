@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 
 data class SykmeldingDTO(
     val id: String,
+    val mottattTidspunkt: LocalDateTime,
     val bekreftetDato: LocalDateTime?,
     val behandlingsutfall: BehandlingsutfallDTO,
     val legekontorOrgnummer: String,

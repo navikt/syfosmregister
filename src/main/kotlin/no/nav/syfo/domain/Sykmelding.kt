@@ -13,12 +13,13 @@ import java.time.LocalDateTime
 
 data class Sykmelding(
     val id: String,
-    val bekreftetDato: LocalDateTime?,
+    val mottattTidspunkt: LocalDateTime,
     val behandlingsutfall: Behandlingsutfall,
     val legekontorOrgnummer: String,
     val legeNavn: String?,
     val arbeidsgiver: Arbeidsgiver?,
-    val sykmeldingsperioder: List<Sykmeldingsperiode>
+    val sykmeldingsperioder: List<Sykmeldingsperiode>,
+    val bekreftetDato: LocalDateTime?
 )
 
 data class Behandlingsutfall(
@@ -66,6 +67,7 @@ enum class Periodetype {
 fun Sykmelding.toDTO(): SykmeldingDTO =
     SykmeldingDTO(
         id = id,
+        mottattTidspunkt = mottattTidspunkt,
         bekreftetDato = bekreftetDato,
         behandlingsutfall = behandlingsutfall.toDTO(),
         legekontorOrgnummer = legekontorOrgnummer,

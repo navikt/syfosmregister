@@ -20,7 +20,10 @@ import no.nav.syfo.model.Gradert as ModelGradert
 
 data class Brukersykmelding(
     val id: String,
+    val mottakId: String,
+    val msgId: String,
     val bekreftetDato: LocalDateTime?,
+    val mottattTidspunkt: LocalDateTime,
     val behandlingsutfall: Brukerbehandlingsutfall,
     val legekontorOrgnummer: String,
     val legeNavn: String?,
@@ -31,6 +34,7 @@ data class Brukersykmelding(
 fun Brukersykmelding.toSykmelding(): Sykmelding =
     Sykmelding(
         id = id,
+        mottattTidspunkt = mottattTidspunkt,
         bekreftetDato = bekreftetDato,
         behandlingsutfall = behandlingsutfall.toSykmelding(),
         legekontorOrgnummer = legekontorOrgnummer,
@@ -125,6 +129,9 @@ fun Brukerperiodetype.toSykmelding(): Periodetype =
 fun brukersykmeldingFromResultSet(resultSet: ResultSet): Brukersykmelding =
     Brukersykmelding(
         id = resultSet.getString("id").trim(),
+        mottakId = resultSet.getString("mottak_id").trim(),
+        msgId = resultSet.getString("msg_id").trim(),
+        mottattTidspunkt = resultSet.getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
         bekreftetDato = resultSet.getTimestamp("bekreftet_dato")?.toLocalDateTime(),
         behandlingsutfall = objectMapper.readValue(resultSet.getString("behandlings_utfall")),
         legekontorOrgnummer = resultSet.getString("legekontor_org_nr").trim(),

@@ -34,7 +34,9 @@ fun Route.registerSykmeldingApi(database: DatabaseInterface) {
                 database.finnBrukersSykmeldinger(subject).map { it.toSykmelding().toDTO() }
 
             when {
-                sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)
+                sykmeldinger.isNotEmpty() ->
+                    call.respond(sykmeldinger)
+                        .run { log.info(sykmeldinger.map { it.id }.toString()) }
                 else -> call.respond(HttpStatusCode.NoContent)
             }
         }
