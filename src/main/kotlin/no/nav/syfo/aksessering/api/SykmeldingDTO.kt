@@ -30,7 +30,7 @@ enum class BehandlingsutfallStatusDTO {
 
 data class ArbeidsgiverDTO(
     val navn: String,
-    val stillingsprosent: Int
+    val stillingsprosent: Int?
 )
 
 data class SykmeldingsperiodeDTO(

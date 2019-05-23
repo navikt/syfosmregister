@@ -72,7 +72,7 @@ fun BrukerbehandlingsutfallStatus.toSykmelding(): BehandlingsutfallStatus =
 
 data class Brukerarbeidsgiver(
     val navn: String,
-    val stillingsprosent: Int
+    val stillingsprosent: Int?
 )
 
 fun Brukerarbeidsgiver.toSykmelding(): Arbeidsgiver =
@@ -146,8 +146,8 @@ fun brukersykmeldingFromResultSet(resultSet: ResultSet): Brukersykmelding =
 fun arbeidsgiverModelTilBrukerarbeidsgiver(arbeidsgiver: ModelArbeidsgiver): Brukerarbeidsgiver? {
     return if (arbeidsgiver.harArbeidsgiver != HarArbeidsgiver.INGEN_ARBEIDSGIVER) {
         Brukerarbeidsgiver(
-            navn = arbeidsgiver.navn!!,
-            stillingsprosent = arbeidsgiver.stillingsprosent!!
+            navn = arbeidsgiver.navn ?: "",
+            stillingsprosent = arbeidsgiver.stillingsprosent
         )
     } else null
 }
