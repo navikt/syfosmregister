@@ -18,7 +18,7 @@ fun DatabaseInterface.finnBrukersSykmeldinger(fnr: String): List<Brukersykmeldin
                     bekreftet_dato,
                     behandlings_utfall,
                     legekontor_org_nr,
-                    jsonb_extract_path(sykmelding.sykmelding, 'msgId')::jsonb                      as msg_id,
+                    jsonb_extract_path_text(sykmelding.sykmelding, 'msgId')                        as msg_id,
                     jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'fornavn'    as lege_fornavn,
                     jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
                     jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
