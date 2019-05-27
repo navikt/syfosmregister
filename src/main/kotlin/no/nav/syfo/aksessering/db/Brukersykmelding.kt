@@ -25,7 +25,7 @@ data class Brukersykmelding(
     val bekreftetDato: LocalDateTime?,
     val mottattTidspunkt: LocalDateTime,
     val behandlingsutfall: Brukerbehandlingsutfall,
-    val legekontorOrgnummer: String,
+    val legekontorOrgnummer: String?,
     val legeNavn: String?,
     val arbeidsgiver: Brukerarbeidsgiver?,
     val sykmeldingsperioder: List<Brukersykmeldingsperiode>

@@ -8,7 +8,7 @@ data class SykmeldingDTO(
     val mottattTidspunkt: LocalDateTime,
     val bekreftetDato: LocalDateTime?,
     val behandlingsutfall: BehandlingsutfallDTO,
-    val legekontorOrgnummer: String,
+    val legekontorOrgnummer: String?,
     val legeNavn: String?,
     val arbeidsgiver: ArbeidsgiverDTO?,
     val sykmeldingsperioder: List<SykmeldingsperiodeDTO>

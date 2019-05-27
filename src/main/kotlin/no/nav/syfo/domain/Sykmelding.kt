@@ -15,7 +15,7 @@ data class Sykmelding(
     val id: String,
     val mottattTidspunkt: LocalDateTime,
     val behandlingsutfall: Behandlingsutfall,
-    val legekontorOrgnummer: String,
+    val legekontorOrgnummer: String?,
     val legeNavn: String?,
     val arbeidsgiver: Arbeidsgiver?,
     val sykmeldingsperioder: List<Sykmeldingsperiode>,
