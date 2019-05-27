@@ -94,6 +94,7 @@ dependencies {
 
     implementation("no.nav.syfo.sm:syfosm-common-models:$smCommonVersion")
     implementation("no.nav.syfo.sm:syfosm-common-kafka:$smCommonVersion")
+    implementation("no.nav.syfo.sm:syfosm-common-diagnosis-codes:$smCommonVersion")
 
     //Database
     implementation("org.postgresql:postgresql:$postgresVersion")

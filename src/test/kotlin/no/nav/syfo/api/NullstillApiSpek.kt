@@ -12,6 +12,7 @@ import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.Arbeidsgiver
 import no.nav.syfo.model.AvsenderSystem
 import no.nav.syfo.model.Behandler
+import no.nav.syfo.model.Diagnose
 import no.nav.syfo.model.HarArbeidsgiver
 import no.nav.syfo.model.KontaktMedPasient
 import no.nav.syfo.model.MedisinskVurdering
@@ -153,7 +154,7 @@ private fun Connection.setupTestData() {
                     begrunnelseIkkeKontakt = null
                 ),
                 medisinskVurdering = MedisinskVurdering(
-                    hovedDiagnose = null,
+                    hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01"),
                     biDiagnoser = emptyList(),
                     svangerskap = false,
                     yrkesskade = false,

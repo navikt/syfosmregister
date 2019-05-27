@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.syfo.domain.Arbeidsgiver
 import no.nav.syfo.domain.Behandlingsutfall
 import no.nav.syfo.domain.BehandlingsutfallStatus
+import no.nav.syfo.domain.Diagnose
 import no.nav.syfo.domain.Gradert
 import no.nav.syfo.domain.Periodetype
 import no.nav.syfo.domain.Regelinfo
@@ -28,7 +29,9 @@ data class Brukersykmelding(
     val legekontorOrgnummer: String?,
     val legeNavn: String?,
     val arbeidsgiver: Brukerarbeidsgiver?,
-    val sykmeldingsperioder: List<Brukersykmeldingsperiode>
+    val sykmeldingsperioder: List<Brukersykmeldingsperiode>,
+    val diagnose: Brukerdiagnose?,
+    val biDiagnoser: List<Brukerdiagnose>
 )
 
 fun Brukersykmelding.toSykmelding(): Sykmelding =
@@ -40,7 +43,9 @@ fun Brukersykmelding.toSykmelding(): Sykmelding =
         legekontorOrgnummer = legekontorOrgnummer,
         legeNavn = legeNavn,
         arbeidsgiver = arbeidsgiver?.toSykmelding(),
-        sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() }
+        sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() },
+        diagnose = diagnose?.toSykmelding(),
+        biDiagnoser = biDiagnoser.map { it.toSykmelding() }
     )
 
 data class Brukerbehandlingsutfall(
@@ -126,6 +131,14 @@ enum class Brukerperiodetype {
 fun Brukerperiodetype.toSykmelding(): Periodetype =
     Periodetype.valueOf(this.name)
 
+data class Brukerdiagnose(
+    val kode: String,
+    val system: String
+)
+
+fun Brukerdiagnose.toSykmelding(): Diagnose =
+        Diagnose(kode, system)
+
 fun brukersykmeldingFromResultSet(resultSet: ResultSet): Brukersykmelding =
     Brukersykmelding(
         id = resultSet.getString("id").trim(),
@@ -144,10 +157,10 @@ fun brukersykmeldingFromResultSet(resultSet: ResultSet): Brukersykmelding =
             )
         ),
         sykmeldingsperioder = getSykmeldingsperioder(resultSet).map {
-            periodeTilBrukersykmeldingsperiode(
-                it
-            )
-        }
+            periodeTilBrukersykmeldingsperiode(it)
+        },
+        diagnose = objectMapper.readValue(resultSet.getString("hoved_diagnose")),
+        biDiagnoser = objectMapper.readValue(resultSet.getString("bi_diagnoser"))
     )
 
 fun arbeidsgiverModelTilBrukerarbeidsgiver(arbeidsgiver: ModelArbeidsgiver): Brukerarbeidsgiver? {

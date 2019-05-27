@@ -11,7 +11,9 @@ data class SykmeldingDTO(
     val legekontorOrgnummer: String?,
     val legeNavn: String?,
     val arbeidsgiver: ArbeidsgiverDTO?,
-    val sykmeldingsperioder: List<SykmeldingsperiodeDTO>
+    val sykmeldingsperioder: List<SykmeldingsperiodeDTO>,
+    val diagnose: DiagnoseDTO?,
+    val biDiagnoser: List<DiagnoseDTO>
 )
 
 data class BehandlingsutfallDTO(
@@ -55,3 +57,8 @@ enum class PeriodetypeDTO {
     GRADERT,
     REISETILSKUDD,
 }
+
+data class DiagnoseDTO(
+    val diagnosekode: String,
+    val diagnosetekst: String
+)

@@ -18,12 +18,14 @@ fun DatabaseInterface.finnBrukersSykmeldinger(fnr: String): List<Brukersykmeldin
                     bekreftet_dato,
                     behandlings_utfall,
                     legekontor_org_nr,
-                    jsonb_extract_path_text(sykmelding.sykmelding, 'msgId')                        as msg_id,
-                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'fornavn'    as lege_fornavn,
-                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
-                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
-                    jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb               as arbeidsgiver,
-                    jsonb_extract_path(sykmelding.sykmelding, 'perioder')::jsonb                   as perioder
+                    jsonb_extract_path_text(sykmelding.sykmelding, 'msgId')                                     as msg_id,
+                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'fornavn'                 as lege_fornavn,
+                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'mellomnavn'              as lege_mellomnavn,
+                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'               as lege_etternavn,
+                    jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb                            as arbeidsgiver,
+                    jsonb_extract_path(sykmelding.sykmelding, 'perioder')::jsonb                                as perioder,
+                    jsonb_extract_path(sykmelding.sykmelding, 'medisinskVurdering')::jsonb ->> 'hovedDiagnose'  as hoved_diagnose,
+                    jsonb_extract_path(sykmelding.sykmelding, 'medisinskVurdering')::jsonb ->> 'biDiagnoser'    as bi_diagnoser
                 FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
                 WHERE pasient_fnr=?
                 """
