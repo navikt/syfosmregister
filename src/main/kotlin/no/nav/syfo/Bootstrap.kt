@@ -187,21 +187,21 @@ fun CoroutineScope.launchListeners(
     consumerProperties: Properties,
     database: Database
 ) {
-    try {
-        val listeners = (1..env.applicationThreads).map {
-            launch {
+    val listeners = (1..env.applicationThreads).map {
+        launch {
+            try {
                 val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
                 kafkaconsumer.subscribe(listOf(env.sm2013RegisterTopic))
 
                 blockingApplicationLogic(applicationState, kafkaconsumer, database)
+            } finally {
+                applicationState.running = false
             }
-        }.toList()
+        }
+    }.toList()
 
-        applicationState.initialized = true
-        runBlocking { listeners.forEach { it.join() } }
-    } finally {
-        applicationState.running = false
-    }
+    applicationState.initialized = true
+    runBlocking { listeners.forEach { it.join() } }
 }
 
 suspend fun blockingApplicationLogic(
