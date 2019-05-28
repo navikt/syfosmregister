@@ -15,7 +15,6 @@ import no.nav.syfo.model.Gradert as ModelGradert
 import no.nav.syfo.model.HarArbeidsgiver as ModelHarArbeidsgiver
 import no.nav.syfo.model.Periode as ModelPeriode
 
-
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
     connection.use { connection ->
         connection.prepareStatement(
@@ -40,7 +39,6 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
             it.executeQuery().toList { toSykmelding() }
         }
     }
-
 
 fun DatabaseInterface.registrerLestAvBruker(sykmeldingsid: String): Int =
     connection.use { connection ->
@@ -92,7 +90,6 @@ fun ResultSet.toSykmelding(): Sykmelding =
         diagnose = objectMapper.readValue(getString("hoved_diagnose")),
         biDiagnoser = objectMapper.readValue(getString("bi_diagnoser"))
     )
-
 
 fun arbeidsgiverModelTilSykmeldingarbeidsgiver(arbeidsgiver: ModelArbeidsgiver): Arbeidsgiver? {
     return if (arbeidsgiver.harArbeidsgiver != ModelHarArbeidsgiver.INGEN_ARBEIDSGIVER) {
