@@ -6,7 +6,7 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import no.nav.syfo.aksessering.db.finnBrukersSykmeldinger
+import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.Arbeidsgiver
@@ -60,23 +60,23 @@ object NullstillApiSpek : Spek({
             }
 
             it("Nullstiller bruker") {
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
 
-                database.finnBrukersSykmeldinger("pasientFnr").shouldBeEmpty()
+                database.hentSykmeldinger("pasientFnr").shouldBeEmpty()
             }
 
             it("Nullstiller ikke annen brukers sykmeldinger") {
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/annenAktor")) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
 
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
             }
 
             it("Er tilgjengelig i test") {
