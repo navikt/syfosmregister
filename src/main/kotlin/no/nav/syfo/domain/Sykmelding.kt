@@ -136,8 +136,8 @@ fun Diagnose.toDto(): DiagnoseDTO =
 fun getDiagnosetekst(diagnose: Diagnose): String =
     when (diagnose.system) {
         ICD10_CODE ->
-            (Diagnosekoder.icd10[diagnose.kode] ?: error("Finner ikke diagnosekodetekst for ${diagnose.kode}")).text
+            (Diagnosekoder.icd10[diagnose.kode])?.text ?: "Ukjennt"
         ICPC2_CODE ->
-            (Diagnosekoder.icpc2[diagnose.kode] ?: error("Finner ikke diagnosekodetekst for ${diagnose.kode}")).text
-        else -> ""
+            (Diagnosekoder.icpc2[diagnose.kode])?.text ?: "Ukjennt"
+        else -> "Ukjennt"
     }
