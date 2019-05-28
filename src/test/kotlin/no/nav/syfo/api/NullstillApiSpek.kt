@@ -6,12 +6,13 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import no.nav.syfo.aksessering.db.finnBrukersSykmeldinger
+import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.Arbeidsgiver
 import no.nav.syfo.model.AvsenderSystem
 import no.nav.syfo.model.Behandler
+import no.nav.syfo.model.Diagnose
 import no.nav.syfo.model.HarArbeidsgiver
 import no.nav.syfo.model.KontaktMedPasient
 import no.nav.syfo.model.MedisinskVurdering
@@ -59,23 +60,23 @@ object NullstillApiSpek : Spek({
             }
 
             it("Nullstiller bruker") {
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
 
-                database.finnBrukersSykmeldinger("pasientFnr").shouldBeEmpty()
+                database.hentSykmeldinger("pasientFnr").shouldBeEmpty()
             }
 
             it("Nullstiller ikke annen brukers sykmeldinger") {
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/annenAktor")) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
 
-                database.finnBrukersSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
             }
 
             it("Er tilgjengelig i test") {
@@ -153,7 +154,7 @@ private fun Connection.setupTestData() {
                     begrunnelseIkkeKontakt = null
                 ),
                 medisinskVurdering = MedisinskVurdering(
-                    hovedDiagnose = null,
+                    hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01"),
                     biDiagnoser = emptyList(),
                     svangerskap = false,
                     yrkesskade = false,

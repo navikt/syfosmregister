@@ -11,9 +11,8 @@ import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.aksessering.db.erEier
-import no.nav.syfo.aksessering.db.finnBrukersSykmeldinger
+import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.aksessering.db.registrerLestAvBruker
-import no.nav.syfo.aksessering.db.toSykmelding
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.domain.toDTO
 import org.slf4j.Logger
@@ -26,12 +25,11 @@ fun Route.registerSykmeldingApi(database: DatabaseInterface) {
     route("/api/v1") {
 
         get("/sykmeldinger") {
-            log.info("Incomming request get sykmeldinger")
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
 
             val sykmeldinger: List<SykmeldingDTO> =
-                database.finnBrukersSykmeldinger(subject).map { it.toSykmelding().toDTO() }
+                database.hentSykmeldinger(subject).map { it.toDTO() }
 
             when {
                 sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)
@@ -43,8 +41,6 @@ fun Route.registerSykmeldingApi(database: DatabaseInterface) {
             val sykmeldingsid = call.parameters["sykmeldingsid"]!!
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
-
-            log.info("Incomming request post settLestAvBruker for $sykmeldingsid")
 
             if (database.erEier(sykmeldingsid, subject)) {
                 if (database.registrerLestAvBruker(sykmeldingsid) > 0) {

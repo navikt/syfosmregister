@@ -3,11 +3,15 @@ package no.nav.syfo.domain
 import no.nav.syfo.aksessering.api.ArbeidsgiverDTO
 import no.nav.syfo.aksessering.api.BehandlingsutfallDTO
 import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
+import no.nav.syfo.aksessering.api.DiagnoseDTO
 import no.nav.syfo.aksessering.api.GradertDTO
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.aksessering.api.RegelinfoDTO
 import no.nav.syfo.aksessering.api.SykmeldingDTO
 import no.nav.syfo.aksessering.api.SykmeldingsperiodeDTO
+import no.nav.syfo.sm.Diagnosekoder
+import no.nav.syfo.sm.Diagnosekoder.ICD10_CODE
+import no.nav.syfo.sm.Diagnosekoder.ICPC2_CODE
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -19,7 +23,9 @@ data class Sykmelding(
     val legeNavn: String?,
     val arbeidsgiver: Arbeidsgiver?,
     val sykmeldingsperioder: List<Sykmeldingsperiode>,
-    val bekreftetDato: LocalDateTime?
+    val bekreftetDato: LocalDateTime?,
+    val diagnose: Diagnose?,
+    val biDiagnoser: List<Diagnose>
 )
 
 data class Behandlingsutfall(
@@ -64,6 +70,11 @@ enum class Periodetype {
     REISETILSKUDD,
 }
 
+data class Diagnose(
+    val kode: String,
+    val system: String
+)
+
 fun Sykmelding.toDTO(): SykmeldingDTO =
     SykmeldingDTO(
         id = id,
@@ -73,7 +84,9 @@ fun Sykmelding.toDTO(): SykmeldingDTO =
         legekontorOrgnummer = legekontorOrgnummer,
         legeNavn = legeNavn,
         arbeidsgiver = arbeidsgiver?.toDTO(),
-        sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() }
+        sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() },
+        diagnose = diagnose?.toDto(),
+        biDiagnoser = biDiagnoser.map { it.toDto() }
     )
 
 fun Behandlingsutfall.toDTO(): BehandlingsutfallDTO =
@@ -116,3 +129,15 @@ fun Gradert.toDTO(): GradertDTO =
 
 fun Periodetype.toDTO(): PeriodetypeDTO =
     PeriodetypeDTO.valueOf(this.name)
+
+fun Diagnose.toDto(): DiagnoseDTO =
+    DiagnoseDTO(kode, getDiagnosetekst(this))
+
+fun getDiagnosetekst(diagnose: Diagnose): String =
+    when (diagnose.system) {
+        ICD10_CODE ->
+            (Diagnosekoder.icd10[diagnose.kode] ?: error("Finner ikke diagnosekodetekst for ${diagnose.kode}")).text
+        ICPC2_CODE ->
+            (Diagnosekoder.icpc2[diagnose.kode] ?: error("Finner ikke diagnosekodetekst for ${diagnose.kode}")).text
+        else -> ""
+    }
