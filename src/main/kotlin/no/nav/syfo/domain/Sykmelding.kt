@@ -4,10 +4,12 @@ import no.nav.syfo.aksessering.api.ArbeidsgiverDTO
 import no.nav.syfo.aksessering.api.BehandlingsutfallDTO
 import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
 import no.nav.syfo.aksessering.api.DiagnoseDTO
+import no.nav.syfo.aksessering.api.FullstendigSykmeldingDTO
 import no.nav.syfo.aksessering.api.GradertDTO
+import no.nav.syfo.aksessering.api.MedisinskVurderingDTO
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.aksessering.api.RegelinfoDTO
-import no.nav.syfo.aksessering.api.SykmeldingDTO
+import no.nav.syfo.aksessering.api.SkjermetSykmeldingDTO
 import no.nav.syfo.aksessering.api.SykmeldingsperiodeDTO
 import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sm.Diagnosekoder.ICD10_CODE
@@ -17,6 +19,7 @@ import java.time.LocalDateTime
 
 data class Sykmelding(
     val id: String,
+    val skjermesForPasient: Boolean,
     val mottattTidspunkt: LocalDateTime,
     val behandlingsutfall: Behandlingsutfall,
     val legekontorOrgnummer: String?,
@@ -24,9 +27,35 @@ data class Sykmelding(
     val arbeidsgiver: Arbeidsgiver?,
     val sykmeldingsperioder: List<Sykmeldingsperiode>,
     val bekreftetDato: LocalDateTime?,
-    val diagnose: Diagnose?,
-    val biDiagnoser: List<Diagnose>
+    val medisinskVurdering: MedisinskVurdering
 )
+
+data class MedisinskVurdering(
+    val diagnose: Diagnose?,
+    val biDiagnoser: List<Diagnose>,
+    val svangerskap: Boolean,
+    val yrkesskade: Boolean,
+    val yrkesskadedato: LocalDate?,
+    val annenFravarsarsak: AnnenFravarsarsak?
+)
+
+data class AnnenFravarsarsak(
+    val beskrivelse: String?,
+    val grunn: Fravarsgrunn?
+)
+
+enum class Fravarsgrunn {
+    GODKJENT_HELSEINSTITUSJON,
+    BEHANDLING_FORHINDRER_ARBEID,
+    ARBEIDSRETTET_TILTAK,
+    MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND,
+    NODVENDIG_KONTROLLUNDENRSOKELSE,
+    SMITTEFARE,
+    ABORT,
+    UFOR_GRUNNET_BARNLOSHET,
+    DONOR,
+    BEHANDLING_STERILISERING
+}
 
 data class Behandlingsutfall(
     val ruleHits: List<Regelinfo>,
@@ -75,8 +104,8 @@ data class Diagnose(
     val system: String
 )
 
-fun Sykmelding.toDTO(): SykmeldingDTO =
-    SykmeldingDTO(
+fun Sykmelding.toFullstendigDTO(): FullstendigSykmeldingDTO =
+    FullstendigSykmeldingDTO(
         id = id,
         mottattTidspunkt = mottattTidspunkt,
         bekreftetDato = bekreftetDato,
@@ -85,9 +114,26 @@ fun Sykmelding.toDTO(): SykmeldingDTO =
         legeNavn = legeNavn,
         arbeidsgiver = arbeidsgiver?.toDTO(),
         sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() },
-        diagnose = diagnose?.toDto(),
-        biDiagnoser = biDiagnoser.map { it.toDto() }
+        medisinskVurdering = medisinskVurdering.toDTO()
     )
+
+fun Sykmelding.toSkjermetDTO(): SkjermetSykmeldingDTO =
+    SkjermetSykmeldingDTO(
+        id = id,
+        mottattTidspunkt = mottattTidspunkt,
+        bekreftetDato = bekreftetDato,
+        behandlingsutfall = behandlingsutfall.toDTO(),
+        legekontorOrgnummer = legekontorOrgnummer,
+        legeNavn = legeNavn,
+        arbeidsgiver = arbeidsgiver?.toDTO(),
+        sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() }
+    )
+
+fun MedisinskVurdering.toDTO(): MedisinskVurderingDTO =
+        MedisinskVurderingDTO(
+            diagnose = diagnose?.toDTO(),
+            biDiagnoser = biDiagnoser.map { it.toDTO() }
+        )
 
 fun Behandlingsutfall.toDTO(): BehandlingsutfallDTO =
     BehandlingsutfallDTO(
@@ -130,7 +176,7 @@ fun Gradert.toDTO(): GradertDTO =
 fun Periodetype.toDTO(): PeriodetypeDTO =
     PeriodetypeDTO.valueOf(this.name)
 
-fun Diagnose.toDto(): DiagnoseDTO =
+fun Diagnose.toDTO(): DiagnoseDTO =
     DiagnoseDTO(kode, getDiagnosetekst(this))
 
 fun getDiagnosetekst(diagnose: Diagnose): String =

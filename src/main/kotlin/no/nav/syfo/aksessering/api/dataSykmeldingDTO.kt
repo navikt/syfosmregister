@@ -3,7 +3,7 @@ package no.nav.syfo.aksessering.api
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class SykmeldingDTO(
+abstract class SykmeldingDTO(
     val id: String,
     val mottattTidspunkt: LocalDateTime,
     val bekreftetDato: LocalDateTime?,
@@ -11,7 +11,51 @@ data class SykmeldingDTO(
     val legekontorOrgnummer: String?,
     val legeNavn: String?,
     val arbeidsgiver: ArbeidsgiverDTO?,
-    val sykmeldingsperioder: List<SykmeldingsperiodeDTO>,
+    val sykmeldingsperioder: List<SykmeldingsperiodeDTO>
+)
+
+class SkjermetSykmeldingDTO(
+    id: String,
+    mottattTidspunkt: LocalDateTime,
+    bekreftetDato: LocalDateTime?,
+    behandlingsutfall: BehandlingsutfallDTO,
+    legekontorOrgnummer: String?,
+    legeNavn: String?,
+    arbeidsgiver: ArbeidsgiverDTO?,
+    sykmeldingsperioder: List<SykmeldingsperiodeDTO>
+) : SykmeldingDTO(
+    id,
+    mottattTidspunkt,
+    bekreftetDato,
+    behandlingsutfall,
+    legekontorOrgnummer,
+    legeNavn,
+    arbeidsgiver,
+    sykmeldingsperioder
+)
+
+class FullstendigSykmeldingDTO(
+    id: String,
+    mottattTidspunkt: LocalDateTime,
+    bekreftetDato: LocalDateTime?,
+    behandlingsutfall: BehandlingsutfallDTO,
+    legekontorOrgnummer: String?,
+    legeNavn: String?,
+    arbeidsgiver: ArbeidsgiverDTO?,
+    sykmeldingsperioder: List<SykmeldingsperiodeDTO>,
+    val medisinskVurdering: MedisinskVurderingDTO
+) : SykmeldingDTO(
+    id,
+    mottattTidspunkt,
+    bekreftetDato,
+    behandlingsutfall,
+    legekontorOrgnummer,
+    legeNavn,
+    arbeidsgiver,
+    sykmeldingsperioder
+)
+
+data class MedisinskVurderingDTO(
     val diagnose: DiagnoseDTO?,
     val biDiagnoser: List<DiagnoseDTO>
 )

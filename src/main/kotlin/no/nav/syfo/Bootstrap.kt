@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import net.logstash.logback.argument.StructuredArguments.keyValue
+import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.registerSykmeldingApi
 import no.nav.syfo.api.getWellKnown
 import no.nav.syfo.api.registerNaisApi
@@ -327,10 +328,12 @@ fun Application.initRouting(
             throw cause
         }
     }
+
+    val sykmeldingService = SykmeldingService(database)
     routing {
         registerNaisApi(applicationState)
         authenticate("jwt") {
-            registerSykmeldingApi(database)
+            registerSykmeldingApi(sykmeldingService)
         }
         authenticate("basic") {
             registerNullstillApi(database, cluster)
