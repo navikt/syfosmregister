@@ -295,7 +295,6 @@ fun Application.initRouting(
         jwt(name = "jwt") {
             verifier(jwkProvider, wellKnown.issuer)
             validate { credentials ->
-                log.info("Auth: User requested resource '${request.url()}'")
                 if (!credentials.payload.audience.contains(vaultSecrets.loginserviceClientId)) {
                     log.warn(
                         "Auth: Unexpected audience for jwt {}, {}, {}",
