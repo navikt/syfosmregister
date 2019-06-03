@@ -76,7 +76,7 @@ fun ResultSet.toSykmelding(): Sykmelding =
         mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
         bekreftetDato = getTimestamp("bekreftet_dato")?.toLocalDateTime(),
         behandlingsutfall = objectMapper.readValue(getString("behandlings_utfall")),
-        legekontorOrgnummer = getString("legekontor_org_nr").trim(),
+        legekontorOrgnummer = getString("legekontor_org_nr")?.trim(),
         legeNavn = getLegenavn(this),
         arbeidsgiver = arbeidsgiverModelTilSykmeldingarbeidsgiver(
             objectMapper.readValue(

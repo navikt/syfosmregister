@@ -177,7 +177,10 @@ fun Periodetype.toDTO(): PeriodetypeDTO =
     PeriodetypeDTO.valueOf(this.name)
 
 fun Diagnose.toDTO(): DiagnoseDTO =
-    DiagnoseDTO(kode, getDiagnosetekst(this))
+    DiagnoseDTO(
+        diagnosekode = kode,
+        diagnosesystem = system,
+        diagnosetekst = getDiagnosetekst(this))
 
 fun getDiagnosetekst(diagnose: Diagnose): String =
     when (diagnose.system) {

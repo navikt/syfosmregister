@@ -104,5 +104,6 @@ enum class PeriodetypeDTO {
 
 data class DiagnoseDTO(
     val diagnosekode: String,
+    val diagnosesystem: String,
     val diagnosetekst: String
 )
