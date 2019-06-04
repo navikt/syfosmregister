@@ -179,7 +179,7 @@ fun Periodetype.toDTO(): PeriodetypeDTO =
 fun Diagnose.toDTO(): DiagnoseDTO =
     DiagnoseDTO(
         diagnosekode = kode,
-        diagnosesystem = system,
+        diagnosesystem = getDiagnosesystem(system),
         diagnosetekst = getDiagnosetekst(this))
 
 fun getDiagnosetekst(diagnose: Diagnose): String =
@@ -190,3 +190,10 @@ fun getDiagnosetekst(diagnose: Diagnose): String =
             (Diagnosekoder.icpc2[diagnose.kode])?.text ?: "Ukjennt"
         else -> "Ukjennt"
     }
+
+fun getDiagnosesystem(system: String): String =
+        when (system) {
+            ICD10_CODE -> "ICD-10"
+            ICPC2_CODE -> "ICPC-2"
+            else -> "Ukjennt"
+        }
