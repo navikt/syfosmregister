@@ -56,7 +56,7 @@ class FullstendigSykmeldingDTO(
 )
 
 data class MedisinskVurderingDTO(
-    val diagnose: DiagnoseDTO?,
+    val hovedDiagnose: DiagnoseDTO?,
     val biDiagnoser: List<DiagnoseDTO>
 )
 

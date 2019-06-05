@@ -99,9 +99,13 @@ object SykmeldingApiSpek : Spek({
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
-                    objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
-                        .sykmeldingsperioder[0]
+                    val actual =
+                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+
+                    actual.sykmeldingsperioder[0]
                         .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+                    actual.medisinskVurdering.hovedDiagnose
+                        ?.diagnosekode shouldEqual sykmelding.sykmelding.medisinskVurdering.hovedDiagnose?.kode
                 }
             }
 
@@ -113,7 +117,8 @@ object SykmeldingApiSpek : Spek({
                         sykmelding = sykmelding.sykmelding.copy(
                             id = "id2",
                             skjermesForPasient = true
-                        ))
+                        )
+                    )
                 )
                 every { mockPayload.subject } returns "PasientFnr1"
 

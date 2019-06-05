@@ -31,7 +31,7 @@ data class Sykmelding(
 )
 
 data class MedisinskVurdering(
-    val diagnose: Diagnose?,
+    val hovedDiagnose: Diagnose?,
     val biDiagnoser: List<Diagnose>,
     val svangerskap: Boolean,
     val yrkesskade: Boolean,
@@ -131,7 +131,7 @@ fun Sykmelding.toSkjermetDTO(): SkjermetSykmeldingDTO =
 
 fun MedisinskVurdering.toDTO(): MedisinskVurderingDTO =
         MedisinskVurderingDTO(
-            diagnose = diagnose?.toDTO(),
+            hovedDiagnose = hovedDiagnose?.toDTO(),
             biDiagnoser = biDiagnoser.map { it.toDTO() }
         )
 

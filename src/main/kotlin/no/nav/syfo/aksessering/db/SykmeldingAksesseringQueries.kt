@@ -30,7 +30,7 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
                     jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'   as lege_etternavn,
                     jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb                as arbeidsgiver,
                     jsonb_extract_path(sykmelding.sykmelding, 'perioder')::jsonb                    as perioder,
-                    jsonb_extract_path(sykmelding.sykmelding, 'medisinskVurdering')::jsonb          as medisinskvurdering
+                    jsonb_extract_path(sykmelding.sykmelding, 'medisinskVurdering')::jsonb          as medisinsk_vurdering
                 FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
                 WHERE pasient_fnr=?
                 """
@@ -88,7 +88,7 @@ fun ResultSet.toSykmelding(): Sykmelding =
         sykmeldingsperioder = getSykmeldingsperioder(this).map {
             periodeTilBrukersykmeldingsperiode(it)
         },
-        medisinskVurdering = objectMapper.readValue(getString("medisinskvurdering"))
+        medisinskVurdering = objectMapper.readValue(getString("medisinsk_vurdering"))
     )
 
 fun arbeidsgiverModelTilSykmeldingarbeidsgiver(arbeidsgiver: ModelArbeidsgiver): Arbeidsgiver? {
