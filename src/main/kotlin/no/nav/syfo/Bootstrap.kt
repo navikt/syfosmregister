@@ -111,7 +111,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     )
 
     val kafkaconsumerBehandlingsutfall = KafkaConsumer<String, String>(consumerProperties)
-    kafkaconsumerRecievedSykmelding.subscribe(
+    kafkaconsumerBehandlingsutfall.subscribe(
         listOf(
             environment.sm2013BehandlingsUtfallTopic
         )
