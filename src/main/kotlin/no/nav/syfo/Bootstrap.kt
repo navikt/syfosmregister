@@ -67,6 +67,7 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.nio.file.Paths
 import java.time.Duration
+import java.util.Properties
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -99,24 +100,6 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
         "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
 
-    val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
-    kafkaconsumerRecievedSykmelding.subscribe(
-        listOf(
-            environment.sm2013ManualHandlingTopic,
-            environment.kafkaSm2013AutomaticDigitalHandlingTopic,
-            environment.smpapirManualHandlingTopic,
-            environment.kafkaSm2013AutomaticPapirmottakTopic,
-            environment.sm2013InvalidHandlingTopic
-        )
-    )
-
-    val kafkaconsumerBehandlingsutfall = KafkaConsumer<String, String>(consumerProperties)
-    kafkaconsumerBehandlingsutfall.subscribe(
-        listOf(
-            environment.sm2013BehandlingsUtfallTopic
-        )
-    )
-
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
 
@@ -144,8 +127,7 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
         environment,
         applicationState,
         database,
-        kafkaconsumerRecievedSykmelding,
-        kafkaconsumerBehandlingsutfall
+        consumerProperties
     )
 
     Runtime.getRuntime().addShutdownHook(Thread {
@@ -167,19 +149,37 @@ fun CoroutineScope.launchListeners(
     env: Environment,
     applicationState: ApplicationState,
     database: Database,
-    kafkaconsumerRecievedSykmelding: KafkaConsumer<String, String>,
-    kafkaconsumerBehandlingsutfall: KafkaConsumer<String, String>
+    consumerProperties: Properties
 ) {
     val recievedSykmeldingListeners = (1..env.applicationThreads).map {
         createListener(applicationState) {
+            val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
+
+            kafkaconsumerRecievedSykmelding.subscribe(
+                listOf(
+                    env.sm2013ManualHandlingTopic,
+                    env.kafkaSm2013AutomaticDigitalHandlingTopic,
+                    env.smpapirManualHandlingTopic,
+                    env.kafkaSm2013AutomaticPapirmottakTopic,
+                    env.sm2013InvalidHandlingTopic
+                )
+            )
             blockingApplicationLogicRecievedSykmelding(applicationState, kafkaconsumerRecievedSykmelding, database)
         }
     }.toList()
+
     val behandlingsutfallListeners = 1.until(env.applicationThreads).map {
+        val kafkaconsumerBehandlingsutfall = KafkaConsumer<String, String>(consumerProperties)
+
+        kafkaconsumerBehandlingsutfall.subscribe(
+            listOf(
+                env.sm2013BehandlingsUtfallTopic
+            )
+        )
         createListener(applicationState) {
             blockingApplicationLogicBehandlingsutfall(applicationState, kafkaconsumerBehandlingsutfall, database)
         }
-    }
+    }.toList()
 
     applicationState.initialized = true
     runBlocking { (recievedSykmeldingListeners + behandlingsutfallListeners).forEach { it.join() } }
