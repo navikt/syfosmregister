@@ -151,24 +151,25 @@ fun CoroutineScope.launchListeners(
     database: Database,
     consumerProperties: Properties
 ) {
-    val recievedSykmeldingListeners = (1..env.applicationThreads).map {
-        createListener(applicationState) {
-            val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
+    val recievedSykmeldingListeners = 0.until(env.applicationThreads).map {
+        val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
 
-            kafkaconsumerRecievedSykmelding.subscribe(
-                listOf(
-                    env.sm2013ManualHandlingTopic,
-                    env.kafkaSm2013AutomaticDigitalHandlingTopic,
-                    env.smpapirManualHandlingTopic,
-                    env.kafkaSm2013AutomaticPapirmottakTopic,
-                    env.sm2013InvalidHandlingTopic
-                )
+        kafkaconsumerRecievedSykmelding.subscribe(
+            listOf(
+                env.sm2013ManualHandlingTopic,
+                env.kafkaSm2013AutomaticDigitalHandlingTopic,
+                env.smpapirManualHandlingTopic,
+                env.kafkaSm2013AutomaticPapirmottakTopic,
+                env.sm2013InvalidHandlingTopic
             )
+        )
+
+        createListener(applicationState) {
             blockingApplicationLogicRecievedSykmelding(applicationState, kafkaconsumerRecievedSykmelding, database)
         }
     }.toList()
 
-    val behandlingsutfallListeners = 1.until(env.applicationThreads).map {
+    val behandlingsutfallListeners = 0.until(env.applicationThreads).map {
         val kafkaconsumerBehandlingsutfall = KafkaConsumer<String, String>(consumerProperties)
 
         kafkaconsumerBehandlingsutfall.subscribe(
@@ -176,6 +177,7 @@ fun CoroutineScope.launchListeners(
                 env.sm2013BehandlingsUtfallTopic
             )
         )
+
         createListener(applicationState) {
             blockingApplicationLogicBehandlingsutfall(applicationState, kafkaconsumerBehandlingsutfall, database)
         }
