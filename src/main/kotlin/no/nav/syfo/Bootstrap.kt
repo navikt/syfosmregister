@@ -19,11 +19,9 @@ import io.ktor.auth.jwt.jwt
 import io.ktor.features.CallId
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
-import io.ktor.features.origin
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
-import io.ktor.request.ApplicationRequest
 import io.ktor.response.respond
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
@@ -31,6 +29,7 @@ import io.ktor.server.netty.Netty
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -47,7 +46,6 @@ import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
-import no.nav.syfo.kafka.toStreamsConfig
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.ValidationResult
@@ -55,34 +53,25 @@ import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
-import no.nav.syfo.persistering.erSykmeldingLagret
+import no.nav.syfo.persistering.erBehandlingsutfallLagret
+import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
 import no.nav.syfo.persistering.opprettTomSykmeldingsmetadata
 import no.nav.syfo.vault.Vault
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.streams.KafkaStreams
-import org.apache.kafka.streams.StreamsBuilder
-import org.apache.kafka.streams.kstream.Consumed
-import org.apache.kafka.streams.kstream.JoinWindows
-import org.apache.kafka.streams.kstream.Joined
-import org.apache.kafka.streams.kstream.Produced
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.nio.file.Paths
 import java.time.Duration
-import java.util.Properties
 import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 data class ApplicationState(var running: Boolean = true, var initialized: Boolean = false)
-
-data class BehandlingsUtfallReceivedSykmelding(val receivedSykmelding: ByteArray, val behandlingsUtfall: ByteArray)
 
 val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerKotlinModule()
@@ -109,11 +98,24 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     val consumerProperties = kafkaBaseConfig.toConsumerConfig(
         "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
-    val streamProperties =
-        kafkaBaseConfig.toStreamsConfig(environment.applicationName, valueSerde = Serdes.String()::class)
-    val kafkaStream = createKafkaStream(streamProperties, environment)
 
-    kafkaStream.start()
+    val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
+    kafkaconsumerRecievedSykmelding.subscribe(
+        listOf(
+            environment.sm2013ManualHandlingTopic,
+            environment.kafkaSm2013AutomaticDigitalHandlingTopic,
+            environment.smpapirManualHandlingTopic,
+            environment.kafkaSm2013AutomaticPapirmottakTopic,
+            environment.sm2013InvalidHandlingTopic
+        )
+    )
+
+    val kafkaconsumerBehandlingsutfall = KafkaConsumer<String, String>(consumerProperties)
+    kafkaconsumerRecievedSykmelding.subscribe(
+        listOf(
+            environment.sm2013BehandlingsUtfallTopic
+        )
+    )
 
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
@@ -138,110 +140,72 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
         initRouting(applicationState, database, vaultSecrets, environment.cluster)
     }.start(wait = false)
 
-    launchListeners(environment, applicationState, consumerProperties, database)
+    launchListeners(
+        environment,
+        applicationState,
+        database,
+        kafkaconsumerRecievedSykmelding,
+        kafkaconsumerBehandlingsutfall
+    )
 
     Runtime.getRuntime().addShutdownHook(Thread {
-        kafkaStream.close()
         applicationServer.stop(10, 10, TimeUnit.SECONDS)
     })
 }
 
-fun createKafkaStream(streamProperties: Properties, env: Environment): KafkaStreams {
-    val streamsBuilder = StreamsBuilder()
-
-    val sm2013InputStream = streamsBuilder.stream<String, String>(
-        listOf(
-            env.sm2013ManualHandlingTopic,
-            env.kafkaSm2013AutomaticDigitalHandlingTopic,
-            env.smpapirManualHandlingTopic,
-            env.kafkaSm2013AutomaticPapirmottakTopic,
-            env.sm2013InvalidHandlingTopic
-        ), Consumed.with(Serdes.String(), Serdes.String())
-    )
-
-    val behandlingsUtfallStream = streamsBuilder.stream<String, String>(
-        listOf(
-            env.sm2013BehandlingsUtfallTopic
-        ), Consumed.with(Serdes.String(), Serdes.String())
-    )
-
-    val joinWindow = JoinWindows.of(TimeUnit.DAYS.toMillis(14))
-        .until(TimeUnit.DAYS.toMillis(31))
-
-    val joined = Joined.with(
-        Serdes.String(), Serdes.String(), Serdes.String()
-    )
-
-    sm2013InputStream.join(behandlingsUtfallStream, { sm2013, behandling ->
-        objectMapper.writeValueAsString(
-            BehandlingsUtfallReceivedSykmelding(
-                receivedSykmelding = sm2013.toByteArray(Charsets.UTF_8),
-                behandlingsUtfall = behandling.toByteArray(Charsets.UTF_8)
-            )
-        )
-    }, joinWindow, joined)
-        .to(env.sm2013RegisterTopic, Produced.with(Serdes.String(), Serdes.String()))
-
-    return KafkaStreams(streamsBuilder.build(), streamProperties)
-}
+fun CoroutineScope.createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
+    launch {
+        try {
+            action()
+        } finally {
+            applicationState.running = false
+        }
+    }
 
 @KtorExperimentalAPI
 fun CoroutineScope.launchListeners(
     env: Environment,
     applicationState: ApplicationState,
-    consumerProperties: Properties,
-    database: Database
+    database: Database,
+    kafkaconsumerRecievedSykmelding: KafkaConsumer<String, String>,
+    kafkaconsumerBehandlingsutfall: KafkaConsumer<String, String>
 ) {
-    val listeners = (1..env.applicationThreads).map {
-        launch {
-            try {
-                val kafkaconsumer = KafkaConsumer<String, String>(consumerProperties)
-                kafkaconsumer.subscribe(listOf(env.sm2013RegisterTopic))
-
-                blockingApplicationLogic(applicationState, kafkaconsumer, database)
-            } finally {
-                applicationState.running = false
-            }
+    val recievedSykmeldingListeners = (1..env.applicationThreads).map {
+        createListener(applicationState) {
+            blockingApplicationLogicRecievedSykmelding(applicationState, kafkaconsumerRecievedSykmelding, database)
         }
     }.toList()
+    val behandlingsutfallListeners = 1.until(env.applicationThreads).map {
+        createListener(applicationState) {
+            blockingApplicationLogicBehandlingsutfall(applicationState, kafkaconsumerBehandlingsutfall, database)
+        }
+    }
 
     applicationState.initialized = true
-    runBlocking { listeners.forEach { it.join() } }
+    runBlocking { (recievedSykmeldingListeners + behandlingsutfallListeners).forEach { it.join() } }
 }
 
-suspend fun blockingApplicationLogic(
+suspend fun blockingApplicationLogicRecievedSykmelding(
     applicationState: ApplicationState,
     kafkaconsumer: KafkaConsumer<String, String>,
     database: Database
 ) {
     while (applicationState.running) {
-        var logValues = arrayOf(
-            keyValue("smId", "missing"),
-            keyValue("organizationNumber", "missing"),
-            keyValue("msgId", "missing")
-        )
-
-        val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
-
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
-            val behandlingsUtfallReceivedSykmelding: BehandlingsUtfallReceivedSykmelding =
-                objectMapper.readValue(it.value())
-            val receivedSykmelding: ReceivedSykmelding =
-                objectMapper.readValue(behandlingsUtfallReceivedSykmelding.receivedSykmelding)
-            val validationResult: ValidationResult =
-                objectMapper.readValue(behandlingsUtfallReceivedSykmelding.behandlingsUtfall)
+            val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
 
-            logValues = arrayOf(
+            val logValues = arrayOf(
                 keyValue("msgId", receivedSykmelding.msgId),
                 keyValue("mottakId", receivedSykmelding.navLogId),
                 keyValue("orgNr", receivedSykmelding.legekontorOrgNr),
                 keyValue("smId", receivedSykmelding.sykmelding.id)
             )
+            val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
 
-            log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
+            log.info("Mottatt sykmelding SM2013, $logKeys", *logValues)
 
-            if (database.connection.erSykmeldingLagret(receivedSykmelding.sykmelding.id)) {
-                log.error("Message with {} marked as already stored in the database, $logKeys", *logValues)
+            if (database.connection.erSykmeldingsopplysningerLagret(receivedSykmelding.sykmelding.id)) {
+                log.error("Sykmelding med id {} allerede lagret i databasen, $logKeys", *logValues)
             } else {
 
                 try {
@@ -269,17 +233,52 @@ suspend fun blockingApplicationLogic(
                         )
                     )
                     database.connection.opprettTomSykmeldingsmetadata(receivedSykmelding.sykmelding.id)
+
+                    log.info("Sykmelding SM2013 lagret i databasen, $logKeys", *logValues)
+                    MESSAGE_STORED_IN_DB_COUNTER.inc()
+                } catch (e: Exception) {
+                    log.error("Feil ved behandling av medling $logKeys", *logValues, e)
+                }
+            }
+        }
+        delay(100)
+    }
+}
+
+suspend fun blockingApplicationLogicBehandlingsutfall(
+    applicationState: ApplicationState,
+    kafkaconsumer: KafkaConsumer<String, String>,
+    database: Database
+) {
+    while (applicationState.running) {
+        kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
+            val sykmeldingsid = it.key()
+            val validationResult: ValidationResult = objectMapper.readValue(it.value())
+
+            val logValues = arrayOf(keyValue("smId", sykmeldingsid))
+            val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
+
+            log.info("Mottatt behandlingsutfall, $logKeys", *logValues)
+
+            if (database.connection.erBehandlingsutfallLagret(sykmeldingsid)) {
+                log.error(
+                    "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, $logKeys",
+                    *logValues
+                )
+            } else {
+
+                try {
                     database.connection.opprettBehandlingsutfall(
                         Behandlingsutfall(
-                            id = receivedSykmelding.sykmelding.id,
+                            id = sykmeldingsid,
                             behandlingsutfall = validationResult
                         )
                     )
 
-                    log.info("SM2013, stored in the database, $logKeys", *logValues)
+                    log.info("Behandlingsutfall lagret i databasen, $logKeys", *logValues)
                     MESSAGE_STORED_IN_DB_COUNTER.inc()
                 } catch (e: Exception) {
-                    log.error("Exception caught while handling message $logKeys", *logValues, e)
+                    log.error("Feil ved behandling av medling $logKeys", *logValues, e)
                 }
             }
         }
@@ -355,12 +354,4 @@ fun Application.initRouting(
             registerNullstillApi(database, cluster)
         }
     }
-}
-
-internal fun ApplicationRequest.url(): String {
-    val port = when (origin.port) {
-        in listOf(80, 443) -> ""
-        else -> ":${origin.port}"
-    }
-    return "${origin.scheme}://${origin.host}$port${origin.uri}"
 }

@@ -89,17 +89,30 @@ fun Connection.opprettBehandlingsutfall(behandlingsutfall: Behandlingsutfall) =
         connection.commit()
     }
 
-fun Connection.erSykmeldingLagret(sykemldingsid: String) =
+fun Connection.erSykmeldingsopplysningerLagret(sykmeldingsid: String) =
     use { connection ->
         connection.prepareStatement(
             """
                 SELECT *
-                FROM SYKMELDINGSOPPLYSNINGER AS OPPLYSNINGER
-                INNER JOIN BEHANDLINGSUTFALL AS UTFALL ON OPPLYSNINGER.id = UTFALL.id
-                WHERE OPPLYSNINGER.id=?;
+                FROM SYKMELDINGSOPPLYSNINGER
+                WHERE id=?;
                 """
         ).use {
-            it.setString(1, sykemldingsid)
+            it.setString(1, sykmeldingsid)
+            it.executeQuery().next()
+        }
+    }
+
+fun Connection.erBehandlingsutfallLagret(sykmeldingsid: String) =
+    use { connection ->
+        connection.prepareStatement(
+            """
+                SELECT *
+                FROM BEHANDLINGSUTFALL
+                WHERE id=?;
+                """
+        ).use {
+            it.setString(1, sykmeldingsid)
             it.executeQuery().next()
         }
     }
