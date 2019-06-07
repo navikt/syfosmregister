@@ -52,10 +52,14 @@ import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.nullstilling.registerNullstillApi
-import no.nav.syfo.persistering.PersistedSykmelding
-import no.nav.syfo.persistering.insertEmptySykmeldingMetadata
-import no.nav.syfo.persistering.insertSykmelding
-import no.nav.syfo.persistering.isSykmeldingStored
+import no.nav.syfo.persistering.Behandlingsutfall
+import no.nav.syfo.persistering.Sykmeldingsdokument
+import no.nav.syfo.persistering.Sykmeldingsopplysninger
+import no.nav.syfo.persistering.erSykmeldingLagret
+import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.persistering.opprettSykmeldingsdokument
+import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
+import no.nav.syfo.persistering.opprettTomSykmeldingsmetadata
 import no.nav.syfo.vault.Vault
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.Serdes
@@ -236,13 +240,13 @@ suspend fun blockingApplicationLogic(
 
             log.info("Received a SM2013, going to persist it in DB, $logKeys", *logValues)
 
-            if (database.isSykmeldingStored(receivedSykmelding.sykmelding.id)) {
-                log.warn("Message with {} marked as already stored in the database, $logKeys", *logValues)
+            if (database.connection.erSykmeldingLagret(receivedSykmelding.sykmelding.id)) {
+                log.error("Message with {} marked as already stored in the database, $logKeys", *logValues)
             } else {
 
                 try {
-                    database.insertSykmelding(
-                        PersistedSykmelding(
+                    database.connection.opprettSykmeldingsopplysninger(
+                        Sykmeldingsopplysninger(
                             id = receivedSykmelding.sykmelding.id,
                             pasientFnr = receivedSykmelding.personNrPasient,
                             pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
@@ -255,12 +259,23 @@ suspend fun blockingApplicationLogic(
                             epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
                             epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
                             mottattTidspunkt = receivedSykmelding.mottattDato,
-                            sykmelding = receivedSykmelding.sykmelding,
-                            behandlingsUtfall = validationResult,
                             tssid = receivedSykmelding.tssid
                         )
                     )
-                    database.insertEmptySykmeldingMetadata(receivedSykmelding.sykmelding.id)
+                    database.connection.opprettSykmeldingsdokument(
+                        Sykmeldingsdokument(
+                            id = receivedSykmelding.sykmelding.id,
+                            sykmelding = receivedSykmelding.sykmelding
+                        )
+                    )
+                    database.connection.opprettTomSykmeldingsmetadata(receivedSykmelding.sykmelding.id)
+                    database.connection.opprettBehandlingsutfall(
+                        Behandlingsutfall(
+                            id = receivedSykmelding.sykmelding.id,
+                            behandlingsutfall = validationResult
+                        )
+                    )
+
                     log.info("SM2013, stored in the database, $logKeys", *logValues)
                     MESSAGE_STORED_IN_DB_COUNTER.inc()
                 } catch (e: Exception) {
@@ -310,7 +325,9 @@ fun Application.initRouting(
         }
         basic(name = "basic") {
             validate { credentials ->
-                if (credentials.name == vaultSecrets.syfomockUsername && credentials.password == vaultSecrets.syfomockPassword) { UserIdPrincipal(credentials.name) } else null
+                if (credentials.name == vaultSecrets.syfomockUsername && credentials.password == vaultSecrets.syfomockPassword) {
+                    UserIdPrincipal(credentials.name)
+                } else null
             }
         }
     }

@@ -19,20 +19,23 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
     connection.use { connection ->
         connection.prepareStatement(
             """
-                SELECT id,
-                    mottatt_tidspunkt,
-                    bekreftet_dato,
-                    behandlings_utfall,
-                    legekontor_org_nr,
-                    jsonb_extract_path(sykmelding.sykmelding, 'skjermesForPasient')::jsonb          as skjermes_for_pasient,
-                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'fornavn'     as lege_fornavn,
-                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'mellomnavn'  as lege_mellomnavn,
-                    jsonb_extract_path(sykmelding.sykmelding, 'behandler')::jsonb ->> 'etternavn'   as lege_etternavn,
-                    jsonb_extract_path(sykmelding.sykmelding, 'arbeidsgiver')::jsonb                as arbeidsgiver,
-                    jsonb_extract_path(sykmelding.sykmelding, 'perioder')::jsonb                    as perioder,
-                    jsonb_extract_path(sykmelding.sykmelding, 'medisinskVurdering')::jsonb          as medisinsk_vurdering
-                FROM sykmelding LEFT JOIN sykmelding_metadata metadata on sykmelding.id = metadata.sykmeldingsid
-                WHERE pasient_fnr=?
+                SELECT OPPLYSNINGER.id,
+                       mottatt_tidspunkt,
+                       bekreftet_dato,
+                       behandlingsutfall,
+                       legekontor_org_nr,
+                       jsonb_extract_path(DOKUMENT.sykmelding, 'skjermesForPasient')::jsonb         as skjermes_for_pasient,
+                       jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'fornavn'    as lege_fornavn,
+                       jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
+                       jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
+                       jsonb_extract_path(DOKUMENT.sykmelding, 'arbeidsgiver')::jsonb               as arbeidsgiver,
+                       jsonb_extract_path(DOKUMENT.sykmelding, 'perioder')::jsonb                   as perioder,
+                       jsonb_extract_path(DOKUMENT.sykmelding, 'medisinskVurdering')::jsonb         as medisinsk_vurdering
+                FROM SYKMELDINGSOPPLYSNINGER as OPPLYSNINGER
+                         INNER JOIN SYKMELDINGSDOKUMENT as DOKUMENT on OPPLYSNINGER.id = DOKUMENT.id
+                         INNER JOIN SYKMELDINGSMETADATA as METADATA on OPPLYSNINGER.id = METADATA.id
+                         INNER JOIN BEHANDLINGSUTFALL as UTFALL on OPPLYSNINGER.id = UTFALL.id
+                WHERE pasient_fnr=?;
                 """
         ).use {
             it.setString(1, fnr)
@@ -44,9 +47,9 @@ fun DatabaseInterface.registrerLestAvBruker(sykmeldingsid: String): Int =
     connection.use { connection ->
         val status = connection.prepareStatement(
             """
-            UPDATE sykmelding_metadata
+            UPDATE SYKMELDINGSMETADATA
             SET bekreftet_dato = current_timestamp
-            WHERE sykmeldingsid = ? AND bekreftet_dato IS NULL;
+            WHERE id = ? AND bekreftet_dato IS NULL;
             """
         ).use {
             it.setString(1, sykmeldingsid)
@@ -60,7 +63,7 @@ fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
     connection.use { connection ->
         connection.prepareStatement(
             """
-            SELECT exists(SELECT 1 FROM sykmelding WHERE id=? AND pasient_fnr=?)
+            SELECT exists(SELECT 1 FROM SYKMELDINGSOPPLYSNINGER WHERE id=? AND pasient_fnr=?)
             """
         ).use {
             it.setString(1, sykmeldingsid)
@@ -75,7 +78,7 @@ fun ResultSet.toSykmelding(): Sykmelding =
         skjermesForPasient = getBoolean("skjermes_for_pasient"),
         mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
         bekreftetDato = getTimestamp("bekreftet_dato")?.toLocalDateTime(),
-        behandlingsutfall = objectMapper.readValue(getString("behandlings_utfall")),
+        behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall")),
         legekontorOrgnummer = getString("legekontor_org_nr")?.trim(),
         legeNavn = getLegenavn(this),
         arbeidsgiver = arbeidsgiverModelTilSykmeldingarbeidsgiver(

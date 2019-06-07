@@ -23,29 +23,19 @@ import no.nav.syfo.aksessering.api.FullstendigSykmeldingDTO
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.aksessering.api.SkjermetSykmeldingDTO
 import no.nav.syfo.aksessering.api.registerSykmeldingApi
-import no.nav.syfo.model.Adresse
-import no.nav.syfo.model.AktivitetIkkeMulig
-import no.nav.syfo.model.Arbeidsgiver
-import no.nav.syfo.model.AvsenderSystem
-import no.nav.syfo.model.Behandler
-import no.nav.syfo.model.Diagnose
-import no.nav.syfo.model.HarArbeidsgiver
-import no.nav.syfo.model.KontaktMedPasient
-import no.nav.syfo.model.MedisinskVurdering
-import no.nav.syfo.model.Periode
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.Sykmelding
-import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.nullstilling.opprettSykmelding
 import no.nav.syfo.objectMapper
-import no.nav.syfo.persistering.PersistedSykmelding
+import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.persistering.opprettSykmeldingsdokument
+import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
+import no.nav.syfo.persistering.opprettTomSykmeldingsmetadata
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
+import no.nav.syfo.testutil.testBehandlingsutfall
+import no.nav.syfo.testutil.testSykmeldingsdokument
+import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 @KtorExperimentalAPI
 object SykmeldingApiSpek : Spek({
@@ -73,7 +63,10 @@ object SykmeldingApiSpek : Spek({
             }
 
             beforeEachTest {
-                database.connection.opprettSykmelding(sykmelding)
+                database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
+                database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
+                database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+                database.connection.opprettTomSykmeldingsmetadata("uuid")
             }
 
             afterEachTest {
@@ -105,21 +98,29 @@ object SykmeldingApiSpek : Spek({
                     actual.sykmeldingsperioder[0]
                         .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
                     actual.medisinskVurdering.hovedDiagnose
-                        ?.diagnosekode shouldEqual sykmelding.sykmelding.medisinskVurdering.hovedDiagnose?.kode
+                        ?.diagnosekode shouldEqual testSykmeldingsdokument.sykmelding.medisinskVurdering.hovedDiagnose?.kode
                 }
             }
 
             it("skal ikke sende med medisinsk vurdering hvis sykmeldingen er skjermet") {
-                database.connection.opprettSykmelding(
-                    sykmelding.copy(
+                database.connection.opprettSykmeldingsopplysninger(
+                    testSykmeldingsopplysninger.copy(
                         id = "uuid2",
-                        pasientFnr = "PasientFnr1",
-                        sykmelding = sykmelding.sykmelding.copy(
+                        pasientFnr = "PasientFnr1"
+                    )
+                )
+                database.connection.opprettSykmeldingsdokument(
+                    testSykmeldingsdokument.copy(
+                        id = "uuid2",
+                        sykmelding = testSykmeldingsdokument.sykmelding.copy(
                             id = "id2",
                             skjermesForPasient = true
                         )
                     )
                 )
+                database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
+                database.connection.opprettTomSykmeldingsmetadata("uuid2")
+
                 every { mockPayload.subject } returns "PasientFnr1"
 
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
@@ -134,89 +135,3 @@ object SykmeldingApiSpek : Spek({
         }
     }
 })
-
-val sykmelding = PersistedSykmelding(
-    id = "uuid",
-    pasientFnr = "pasientFnr",
-    pasientAktoerId = "pasientAktorId",
-    legeFnr = "legeFnr",
-    legeAktoerId = "legeAktorId",
-    mottakId = "eid-1",
-    legekontorOrgNr = "lege-orgnummer",
-    legekontorHerId = "legekontorHerId",
-    legekontorReshId = "legekontorReshId",
-    epjSystemNavn = "epjSystemNavn",
-    epjSystemVersjon = "epjSystemVersjon",
-    mottattTidspunkt = LocalDateTime.now(),
-    sykmelding = Sykmelding(
-        andreTiltak = "andreTiltak",
-        arbeidsgiver = Arbeidsgiver(
-            harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
-            navn = "Arbeidsgiver AS",
-            yrkesbetegnelse = "aktiv",
-            stillingsprosent = 100
-        ),
-        avsenderSystem = AvsenderSystem(
-            navn = "avsenderSystem",
-            versjon = "versjon-1.0"
-        ),
-        behandler = Behandler(
-            fornavn = "Fornavn",
-            mellomnavn = "Mellomnavn",
-            aktoerId = "legeAktorId",
-            etternavn = "Etternavn",
-            adresse = Adresse(
-                gate = null,
-                postboks = null,
-                postnummer = null,
-                kommune = null,
-                land = null
-            ),
-            fnr = "legeFnr",
-            hpr = "hpr",
-            her = "her",
-            tlf = "tlf"
-        ),
-        behandletTidspunkt = LocalDateTime.now(),
-        id = "id",
-        kontaktMedPasient = KontaktMedPasient(
-            kontaktDato = null,
-            begrunnelseIkkeKontakt = null
-        ),
-        medisinskVurdering = MedisinskVurdering(
-            hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01"),
-            biDiagnoser = emptyList(),
-            svangerskap = false,
-            yrkesskade = false,
-            yrkesskadeDato = null,
-            annenFraversArsak = null
-        ),
-        meldingTilArbeidsgiver = "",
-        meldingTilNAV = null,
-        msgId = "msgId",
-        pasientAktoerId = "pasientAktoerId",
-        perioder = listOf(
-            Periode(
-                fom = LocalDate.now(),
-                tom = LocalDate.now(),
-                aktivitetIkkeMulig = AktivitetIkkeMulig(
-                    medisinskArsak = null,
-                    arbeidsrelatertArsak = null
-                ),
-                avventendeInnspillTilArbeidsgiver = null,
-                behandlingsdager = null,
-                gradert = null,
-                reisetilskudd = false
-            )
-        ),
-        prognose = null,
-        signaturDato = LocalDateTime.now(),
-        skjermesForPasient = false,
-        syketilfelleStartDato = LocalDate.now(),
-        tiltakArbeidsplassen = "tiltakArbeidsplassen",
-        tiltakNAV = "tiltakNAV",
-        utdypendeOpplysninger = emptyMap()
-    ),
-    behandlingsUtfall = ValidationResult(Status.OK, emptyList()),
-    tssid = "13455"
-)
