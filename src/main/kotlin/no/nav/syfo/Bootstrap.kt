@@ -59,7 +59,6 @@ import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
 import no.nav.syfo.persistering.opprettTomSykmeldingsmetadata
-import no.nav.syfo.vault.Vault
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
@@ -103,13 +102,14 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
 
+    /*
     launch(backgroundTasksContext) {
         try {
             Vault.renewVaultTokenTask(applicationState)
         } finally {
             applicationState.running = false
         }
-    }
+    } */
 
     launch(backgroundTasksContext) {
         try {
