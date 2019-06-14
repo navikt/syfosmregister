@@ -36,7 +36,6 @@ spec:
       memory: 128Mi
   vault:
     enabled: true
-    sidecar: true
   ingresses:
     - "https://syfosmregister.nais.preprod.local"
     - "https://syfosmregister.nais.adeo.no"
