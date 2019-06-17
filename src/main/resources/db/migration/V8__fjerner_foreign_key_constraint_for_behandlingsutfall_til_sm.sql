@@ -1,0 +1,1 @@
+ALTER TABLE BEHANDLINGSUTFALL DROP CONSTRAINT behandlingsutfall_id_fkey;
