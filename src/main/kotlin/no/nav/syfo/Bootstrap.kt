@@ -240,7 +240,7 @@ suspend fun blockingApplicationLogicRecievedSykmelding(
                     log.info("Sykmelding SM2013 lagret i databasen, $logKeys", *logValues)
                     MESSAGE_STORED_IN_DB_COUNTER.inc()
                 } catch (e: Exception) {
-                    log.error("Feil ved behandling av medling $logKeys", *logValues, e)
+                    log.error("Feil ved behandling av melding $logKeys", *logValues, e)
                 }
             }
         }
@@ -281,7 +281,7 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
                     log.info("Behandlingsutfall lagret i databasen, $logKeys", *logValues)
                     MESSAGE_STORED_IN_DB_COUNTER.inc()
                 } catch (e: Exception) {
-                    log.error("Feil ved behandling av medling $logKeys", *logValues, e)
+                    log.error("Feil ved behandling av melding $logKeys", *logValues, e)
                 }
             }
         }
