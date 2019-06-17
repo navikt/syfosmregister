@@ -103,7 +103,6 @@ fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
 
-
     launch(backgroundTasksContext) {
         try {
             Vault.renewVaultTokenTask(applicationState)

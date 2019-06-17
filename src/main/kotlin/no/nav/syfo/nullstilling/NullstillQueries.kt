@@ -10,11 +10,19 @@ fun DatabaseInterface.nullstillSykmeldinger(aktorId: String) {
         log.info("Nullstiller sykmeldinger på aktor: {}", aktorId)
         connection.prepareStatement(
             """
+                DELETE FROM behandlingsutfall
+                WHERE id IN (
+                    SELECT id
+                    FROM sykmeldingsopplysninger
+                    WHERE pasient_aktoer_id=?
+                );
+
                 DELETE FROM SYKMELDINGSOPPLYSNINGER
-                WHERE pasient_aktoer_id=?
+                WHERE pasient_aktoer_id=?;
             """
         ).use {
             it.setString(1, aktorId)
+            it.setString(2, aktorId)
             it.execute()
         }
         connection.commit()
