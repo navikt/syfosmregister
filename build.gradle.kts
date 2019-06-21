@@ -14,7 +14,7 @@ val kafkaVersion = "2.0.0"
 val confluentVersion = "5.0.0"
 val kafkaEmbeddedVersion = "2.0.2"
 val kluentVersion = "1.49"
-val ktorVersion = "1.1.5"
+val ktorVersion = "1.2.0"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.5.0"
@@ -28,7 +28,7 @@ val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.0.19"
+val smCommonVersion = "1.0.20"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9"
 
@@ -37,8 +37,8 @@ tasks.withType<Jar> {
 }
 
 plugins {
-    id("org.jmailen.kotlinter") version "1.21.0"
-    kotlin("jvm") version "1.3.21"
+    id("org.jmailen.kotlinter") version "1.26.0"
+    kotlin("jvm") version "1.3.40"
     id("com.diffplug.gradle.spotless") version "3.18.0"
     id("com.github.johnrengelman.shadow") version "4.0.4"
 }
