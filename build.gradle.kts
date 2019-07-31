@@ -3,9 +3,9 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransf
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
-version = "1.2.2"
+version = "1.2.3"
 
-val coroutinesVersion = "1.1.1"
+val coroutinesVersion = "1.2.2"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.9.7"
 val jaxbApiVersion = "2.4.0-b180830.0359"
@@ -14,7 +14,7 @@ val kafkaVersion = "2.0.0"
 val confluentVersion = "5.0.0"
 val kafkaEmbeddedVersion = "2.0.2"
 val kluentVersion = "1.49"
-val ktorVersion = "1.2.0"
+val ktorVersion = "1.2.2"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.5.0"
