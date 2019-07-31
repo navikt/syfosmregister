@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransf
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
-version = "1.2.1"
+version = "1.2.2"
 
 val coroutinesVersion = "1.1.1"
 val javaxActivationVersion = "1.1.1"
@@ -19,7 +19,7 @@ val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.5.0"
 val spekVersion = "2.0.2"
-val sykmeldingVersion = "1.1-SNAPSHOT"
+val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val jaxwsApiVersion = "2.3.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
@@ -28,7 +28,7 @@ val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.0.20"
+val smCommonVersion = "1.0.22"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9"
 
@@ -52,14 +52,13 @@ buildscript {
 }
 
 repositories {
-    maven(url = "https://repo.adeo.no/repository/maven-snapshots/")
-    maven(url = "https://repo.adeo.no/repository/maven-releases/")
+    mavenCentral()
+    jcenter()
     maven(url = "https://dl.bintray.com/kotlin/ktor")
     maven(url = "https://dl.bintray.com/spekframework/spek-dev")
     maven(url = "http://packages.confluent.io/maven/")
     maven(url = "https://kotlin.bintray.com/kotlinx")
-    mavenCentral()
-    jcenter()
+    maven(url = "https://oss.sonatype.org/content/groups/staging/")
 }
 
 tasks.withType<KotlinCompile> {
