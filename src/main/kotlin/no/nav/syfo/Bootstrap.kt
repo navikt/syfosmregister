@@ -219,7 +219,7 @@ suspend fun handleMessageSykmelding(
         log.info("Mottatt sykmelding SM2013, {}", fields(loggingMeta))
 
         if (database.connection.erSykmeldingsopplysningerLagret(receivedSykmelding.sykmelding.id)) {
-            log.error("Sykmelding med id {} allerede lagret i databasen, {}", fields(loggingMeta))
+            log.error("Sykmelding med id {} allerede lagret i databasen, {}", receivedSykmelding.sykmelding.id, fields(loggingMeta))
         } else {
 
             try {
