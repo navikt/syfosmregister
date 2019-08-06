@@ -31,10 +31,12 @@ import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
+import net.logstash.logback.argument.StructuredArguments.fields
 import net.logstash.logback.argument.StructuredArguments.keyValue
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.registerSykmeldingApi
@@ -196,54 +198,62 @@ suspend fun blockingApplicationLogicRecievedSykmelding(
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
 
-            val logValues = arrayOf(
-                keyValue("msgId", receivedSykmelding.msgId),
-                keyValue("mottakId", receivedSykmelding.navLogId),
-                keyValue("orgNr", receivedSykmelding.legekontorOrgNr),
-                keyValue("smId", receivedSykmelding.sykmelding.id)
+            val loggingMeta = LoggingMeta(
+                    mottakId = receivedSykmelding.navLogId,
+                    orgNr = receivedSykmelding.legekontorOrgNr,
+                    msgId = receivedSykmelding.msgId,
+                    sykmeldingId = receivedSykmelding.sykmelding.id
             )
-            val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
-
-            log.info("Mottatt sykmelding SM2013, $logKeys", *logValues)
-
-            if (database.connection.erSykmeldingsopplysningerLagret(receivedSykmelding.sykmelding.id)) {
-                log.error("Sykmelding med id {} allerede lagret i databasen, $logKeys", *logValues)
-            } else {
-
-                try {
-                    database.connection.opprettSykmeldingsopplysninger(
-                        Sykmeldingsopplysninger(
-                            id = receivedSykmelding.sykmelding.id,
-                            pasientFnr = receivedSykmelding.personNrPasient,
-                            pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
-                            legeFnr = receivedSykmelding.personNrLege,
-                            legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
-                            mottakId = receivedSykmelding.navLogId,
-                            legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
-                            legekontorHerId = receivedSykmelding.legekontorHerId,
-                            legekontorReshId = receivedSykmelding.legekontorReshId,
-                            epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
-                            epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
-                            mottattTidspunkt = receivedSykmelding.mottattDato,
-                            tssid = receivedSykmelding.tssid
-                        )
-                    )
-                    database.connection.opprettSykmeldingsdokument(
-                        Sykmeldingsdokument(
-                            id = receivedSykmelding.sykmelding.id,
-                            sykmelding = receivedSykmelding.sykmelding
-                        )
-                    )
-                    database.connection.opprettTomSykmeldingsmetadata(receivedSykmelding.sykmelding.id)
-
-                    log.info("Sykmelding SM2013 lagret i databasen, $logKeys", *logValues)
-                    MESSAGE_STORED_IN_DB_COUNTER.inc()
-                } catch (e: Exception) {
-                    log.error("Feil ved behandling av melding $logKeys", *logValues, e)
-                }
-            }
+            handleMessageSykmelding(receivedSykmelding, database, loggingMeta)
         }
         delay(100)
+    }
+}
+
+suspend fun handleMessageSykmelding(
+    receivedSykmelding: ReceivedSykmelding,
+    database: Database,
+    loggingMeta: LoggingMeta
+) = coroutineScope {
+    wrapExceptions(loggingMeta) {
+        log.info("Mottatt sykmelding SM2013, {}", fields(loggingMeta))
+
+        if (database.connection.erSykmeldingsopplysningerLagret(receivedSykmelding.sykmelding.id)) {
+            log.error("Sykmelding med id {} allerede lagret i databasen, {}", receivedSykmelding.sykmelding.id, fields(loggingMeta))
+        } else {
+
+            try {
+                database.connection.opprettSykmeldingsopplysninger(
+                        Sykmeldingsopplysninger(
+                                id = receivedSykmelding.sykmelding.id,
+                                pasientFnr = receivedSykmelding.personNrPasient,
+                                pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
+                                legeFnr = receivedSykmelding.personNrLege,
+                                legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
+                                mottakId = receivedSykmelding.navLogId,
+                                legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
+                                legekontorHerId = receivedSykmelding.legekontorHerId,
+                                legekontorReshId = receivedSykmelding.legekontorReshId,
+                                epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
+                                epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
+                                mottattTidspunkt = receivedSykmelding.mottattDato,
+                                tssid = receivedSykmelding.tssid
+                        )
+                )
+                database.connection.opprettSykmeldingsdokument(
+                        Sykmeldingsdokument(
+                                id = receivedSykmelding.sykmelding.id,
+                                sykmelding = receivedSykmelding.sykmelding
+                        )
+                )
+                database.connection.opprettTomSykmeldingsmetadata(receivedSykmelding.sykmelding.id)
+
+                log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
+                MESSAGE_STORED_IN_DB_COUNTER.inc()
+            } catch (e: Exception) {
+                log.error("Feil ved behandling av melding {}, {}", e, fields(loggingMeta))
+            }
+        }
     }
 }
 
@@ -257,34 +267,48 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
             val sykmeldingsid = it.key()
             val validationResult: ValidationResult = objectMapper.readValue(it.value())
 
-            val logValues = arrayOf(keyValue("smId", sykmeldingsid))
-            val logKeys = logValues.joinToString(prefix = "(", postfix = ")", separator = ",") { "{}" }
+            val loggingMeta = LoggingMeta(
+                    mottakId = "",
+                    orgNr = "",
+                    msgId = "",
+                    sykmeldingId = sykmeldingsid
+            )
 
-            log.info("Mottatt behandlingsutfall, $logKeys", *logValues)
-
-            if (database.connection.erBehandlingsutfallLagret(sykmeldingsid)) {
-                log.error(
-                    "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, $logKeys",
-                    *logValues
-                )
-            } else {
-
-                try {
-                    database.connection.opprettBehandlingsutfall(
-                        Behandlingsutfall(
-                            id = sykmeldingsid,
-                            behandlingsutfall = validationResult
-                        )
-                    )
-
-                    log.info("Behandlingsutfall lagret i databasen, $logKeys", *logValues)
-                    MESSAGE_STORED_IN_DB_COUNTER.inc()
-                } catch (e: Exception) {
-                    log.error("Feil ved behandling av melding $logKeys", *logValues, e)
-                }
-            }
+            handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta)
         }
         delay(100)
+    }
+}
+
+suspend fun handleMessageBehandlingsutfall(
+    validationResult: ValidationResult,
+    sykmeldingsid: String,
+    database: Database,
+    loggingMeta: LoggingMeta
+) = coroutineScope {
+    wrapExceptions(loggingMeta) {
+        log.info("Mottatt behandlingsutfall, {}", fields(loggingMeta))
+
+        if (database.connection.erBehandlingsutfallLagret(sykmeldingsid)) {
+            log.error(
+                    "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}", fields(loggingMeta)
+            )
+        } else {
+
+            try {
+                database.connection.opprettBehandlingsutfall(
+                        Behandlingsutfall(
+                                id = sykmeldingsid,
+                                behandlingsutfall = validationResult
+                        )
+                )
+
+                log.info("Behandlingsutfall lagret i databasen, {}", fields(loggingMeta))
+                MESSAGE_STORED_IN_DB_COUNTER.inc()
+            } catch (e: Exception) {
+                log.error("Feil ved behandling av melding {}, {}", e, fields(loggingMeta))
+            }
+        }
     }
 }
 
