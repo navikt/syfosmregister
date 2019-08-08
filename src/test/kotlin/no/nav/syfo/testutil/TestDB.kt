@@ -133,7 +133,8 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
         syketilfelleStartDato = LocalDate.now(),
         tiltakArbeidsplassen = "tiltakArbeidsplassen",
         tiltakNAV = "tiltakNAV",
-        utdypendeOpplysninger = emptyMap()
+        utdypendeOpplysninger = emptyMap(),
+        navnFastlege = "Per Hansen"
     )
 )
 
