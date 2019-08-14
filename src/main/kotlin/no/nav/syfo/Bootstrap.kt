@@ -141,6 +141,8 @@ fun CoroutineScope.createListener(applicationState: ApplicationState, action: su
     launch {
         try {
             action()
+        } catch (e: TrackableException) {
+            log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
         } finally {
             applicationState.running = false
         }
@@ -222,7 +224,6 @@ suspend fun handleMessageSykmelding(
             log.error("Sykmelding med id {} allerede lagret i databasen, {}", receivedSykmelding.sykmelding.id, fields(loggingMeta))
         } else {
 
-            try {
                 database.connection.opprettSykmeldingsopplysninger(
                         Sykmeldingsopplysninger(
                                 id = receivedSykmelding.sykmelding.id,
@@ -250,9 +251,6 @@ suspend fun handleMessageSykmelding(
 
                 log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
                 MESSAGE_STORED_IN_DB_COUNTER.inc()
-            } catch (e: Exception) {
-                log.error("Feil ved behandling av melding {}, {}", e, fields(loggingMeta))
-            }
         }
     }
 }
@@ -295,7 +293,6 @@ suspend fun handleMessageBehandlingsutfall(
             )
         } else {
 
-            try {
                 database.connection.opprettBehandlingsutfall(
                         Behandlingsutfall(
                                 id = sykmeldingsid,
@@ -305,9 +302,6 @@ suspend fun handleMessageBehandlingsutfall(
 
                 log.info("Behandlingsutfall lagret i databasen, {}", fields(loggingMeta))
                 MESSAGE_STORED_IN_DB_COUNTER.inc()
-            } catch (e: Exception) {
-                log.error("Feil ved behandling av melding {}, {}", e, fields(loggingMeta))
-            }
         }
     }
 }
