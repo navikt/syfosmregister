@@ -43,25 +43,17 @@ Use The Vault Browser CLI that is build in https://vault.adeo.no
 Preprod credentials:
 
 ```
-vault read postgresql/preprod-fss/creds/syfosmregister-admin
+read postgresql/preprod-fss/creds/syfosmregister-admin
 
 ```
 
 Prod credentials:
 
 ```
-vault read postgresql/prod-fss/creds/syfosmregister-admin
+read postgresql/prod-fss/creds/syfosmregister-admin
 
 ```
 
-The user / password combination can be used to connect to the relevant databases (From developer image ...)
-e.g.
-
-```
-
-psql -d $DATABASE_NAME -h $DATABASE_HOST -U $GENERERT_USER_NAME
-
-```
 
 ## Contact us
 ### Code/project related questions can be sent to
