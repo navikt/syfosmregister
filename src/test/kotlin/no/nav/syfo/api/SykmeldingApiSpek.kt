@@ -75,13 +75,14 @@ object SykmeldingApiSpek : Spek({
 
             val mockPayload = mockk<Payload>()
 
-            it("skal returnere status no content hvis bruker ikke har sykmeldinger") {
+            it("skal returnere tom liste hvis bruker ikke har sykmeldinger") {
                 every { mockPayload.subject } returns "AnnetPasientFnr"
 
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
-                    response.status() shouldEqual HttpStatusCode.NoContent
+                    response.status() shouldEqual HttpStatusCode.OK
+                    objectMapper.readValue<List<SkjermetSykmeldingDTO>>(response.content!!) shouldEqual emptyList()
                 }
             }
 

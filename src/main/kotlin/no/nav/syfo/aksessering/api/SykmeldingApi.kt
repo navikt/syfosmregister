@@ -28,7 +28,7 @@ fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService) {
 
             when {
                 sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)
-                else -> call.respond(HttpStatusCode.NoContent)
+                else -> call.respond(emptyList<SykmeldingDTO>())
             }
         }
 
