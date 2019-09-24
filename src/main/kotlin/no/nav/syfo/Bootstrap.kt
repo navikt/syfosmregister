@@ -301,7 +301,6 @@ suspend fun handleMessageBehandlingsutfall(
                 )
 
                 log.info("Behandlingsutfall lagret i databasen, {}", fields(loggingMeta))
-                MESSAGE_STORED_IN_DB_COUNTER.inc()
         }
     }
 }
