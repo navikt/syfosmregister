@@ -1,5 +1,6 @@
 package no.nav.syfo.aksessering.api
 
+import no.nav.syfo.domain.BehandlingsutfallStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -68,7 +69,8 @@ data class BehandlingsutfallDTO(
 data class RegelinfoDTO(
     val messageForSender: String,
     val messageForUser: String,
-    val ruleName: String
+    val ruleName: String,
+    val ruleStatus: BehandlingsutfallStatus
 )
 
 enum class BehandlingsutfallStatusDTO {
