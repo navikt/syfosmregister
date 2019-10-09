@@ -65,7 +65,8 @@ data class Behandlingsutfall(
 data class Regelinfo(
     val messageForSender: String,
     val messageForUser: String,
-    val ruleName: String
+    val ruleName: String,
+    val ruleStatus: BehandlingsutfallStatus?
 )
 
 enum class BehandlingsutfallStatus {
@@ -145,7 +146,8 @@ fun Regelinfo.toDTO(): RegelinfoDTO =
     RegelinfoDTO(
         messageForSender = messageForSender,
         messageForUser = messageForUser,
-        ruleName = ruleName
+        ruleName = ruleName,
+        ruleStatus = ruleStatus
     )
 
 fun BehandlingsutfallStatus.toDTO(): BehandlingsutfallStatusDTO =
