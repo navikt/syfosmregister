@@ -12,10 +12,10 @@ import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.log
 
-fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider) {
+fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, issuer: String) {
     install(Authentication) {
         jwt(name = "jwt") {
-            verifier(jwkProvider, vaultSecrets.oidcWellKnownUri)
+            verifier(jwkProvider, issuer)
             validate { credentials ->
                 if (!credentials.payload.audience.contains(vaultSecrets.loginserviceClientId)) {
                     log.warn(

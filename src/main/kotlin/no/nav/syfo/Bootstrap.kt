@@ -23,6 +23,7 @@ import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
+import no.nav.syfo.application.getWellKnown
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.kafka.envOverrides
@@ -59,7 +60,8 @@ fun main() {
     val environment = Environment()
     val vaultSecrets =
         objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
-    val jwkProvider = JwkProviderBuilder(URL(environment.jwkKeysUrl))
+    val wellKnown = getWellKnown(vaultSecrets.oidcWellKnownUri)
+    val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
         .cached(10, 24, TimeUnit.HOURS)
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
@@ -84,6 +86,7 @@ fun main() {
         database,
         vaultSecrets,
         jwkProvider,
+        wellKnown.issuer,
         environment.cluster
     )
     val applicationServer = ApplicationServer(applicationEngine)

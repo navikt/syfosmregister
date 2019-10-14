@@ -35,6 +35,7 @@ fun createApplicationEngine(
     database: DatabaseInterface,
     vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
+    issuer: String,
     cluster: String
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
@@ -46,7 +47,7 @@ fun createApplicationEngine(
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
-        setupAuth(vaultSecrets, jwkProvider)
+        setupAuth(vaultSecrets, jwkProvider, issuer)
         install(CallId) {
             generate { UUID.randomUUID().toString() }
             verify { callId: String -> callId.isNotEmpty() }

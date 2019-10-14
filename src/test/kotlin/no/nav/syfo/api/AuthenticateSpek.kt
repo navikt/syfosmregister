@@ -71,7 +71,7 @@ object AuthenticateSpek : Spek({
                 loginserviceClientId = "clientId",
                 syfomockUsername = "syfomock",
                 syfomockPassword = "test"
-            ), jwkProvider)
+            ), jwkProvider, "https://sts.issuer.net/myid")
             application.routing {
                 authenticate("jwt") {
                     registerSykmeldingApi(sykmeldingService)
