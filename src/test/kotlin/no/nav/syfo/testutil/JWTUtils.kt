@@ -5,8 +5,9 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import java.io.IOException
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.nio.file.Path
+import java.nio.file.Paths
 import java.text.ParseException
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -48,10 +49,12 @@ private fun getDefaultRSAKey(): RSAKey {
 
 private fun getJWKSet(): JWKSet {
     try {
-        return JWKSet.parse(Files.readString(Path.of("src/test/resources/jwkset.json")))
+        return JWKSet.parse(getFileAsString("src/test/resources/jwkset.json"))
     } catch (io: IOException) {
         throw RuntimeException(io)
     } catch (io: ParseException) {
         throw RuntimeException(io)
     }
 }
+
+fun getFileAsString(filePath: String) = String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8)

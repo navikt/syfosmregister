@@ -15,7 +15,7 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.Base64
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.SykmeldingService
@@ -40,7 +40,7 @@ import org.spekframework.spek2.style.specification.describe
 object AuthenticateSpek : Spek({
 
     val path = "src/test/resources/jwkset.json"
-    val uri = Path.of(path).toUri().toURL()
+    val uri = Paths.get(path).toUri().toURL()
     val jwkProvider = JwkProviderBuilder(uri).build()
 
     val database = TestDB()
