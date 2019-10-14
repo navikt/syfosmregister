@@ -13,15 +13,12 @@ import java.net.URL
 import java.nio.file.Paths
 import java.time.Duration
 import java.util.Properties
-import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
@@ -58,7 +55,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
 @KtorExperimentalAPI
-fun main() = runBlocking(Executors.newFixedThreadPool(4).asCoroutineDispatcher()) {
+fun main() {
     val environment = Environment()
     val vaultSecrets =
         objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
