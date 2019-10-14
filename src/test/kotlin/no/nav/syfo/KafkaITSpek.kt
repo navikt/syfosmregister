@@ -1,9 +1,12 @@
 package no.nav.syfo
 
+import java.time.Duration
+import java.util.Properties
 import no.nav.common.KafkaEnvironment
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
+import no.nav.syfo.testutil.getRandomPort
 import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -12,15 +15,9 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.net.ServerSocket
-import java.time.Duration
-import java.util.Properties
 
 object KafkaITSpek : Spek({
     val topic = "aapen-test-topic"
-    fun getRandomPort() = ServerSocket(0).use {
-        it.localPort
-    }
 
     val embeddedEnvironment = KafkaEnvironment(
         autoStart = false,
@@ -30,7 +27,6 @@ object KafkaITSpek : Spek({
     val credentials = VaultSecrets("", "", "", "", "", "")
     val env = Environment(
         applicationPort = getRandomPort(),
-        applicationThreads = 1,
         kafkaSm2013AutomaticPapirmottakTopic = "topic1",
         kafkaSm2013AutomaticDigitalHandlingTopic = "topic3",
         kafkaBootstrapServers = embeddedEnvironment.brokersURL,

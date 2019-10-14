@@ -1,6 +1,7 @@
 package no.nav.syfo.aksessering.db
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.sql.ResultSet
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.domain.Arbeidsgiver
@@ -8,12 +9,11 @@ import no.nav.syfo.domain.Gradert
 import no.nav.syfo.domain.Periodetype
 import no.nav.syfo.domain.Sykmelding
 import no.nav.syfo.domain.Sykmeldingsperiode
-import no.nav.syfo.objectMapper
-import java.sql.ResultSet
 import no.nav.syfo.model.Arbeidsgiver as ModelArbeidsgiver
 import no.nav.syfo.model.Gradert as ModelGradert
 import no.nav.syfo.model.HarArbeidsgiver as ModelHarArbeidsgiver
 import no.nav.syfo.model.Periode as ModelPeriode
+import no.nav.syfo.objectMapper
 
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
     connection.use { connection ->

@@ -1,5 +1,7 @@
 package no.nav.syfo.domain
 
+import java.time.LocalDate
+import java.time.LocalDateTime
 import no.nav.syfo.aksessering.api.ArbeidsgiverDTO
 import no.nav.syfo.aksessering.api.BehandlingsutfallDTO
 import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
@@ -14,8 +16,6 @@ import no.nav.syfo.aksessering.api.SykmeldingsperiodeDTO
 import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sm.Diagnosekoder.ICD10_CODE
 import no.nav.syfo.sm.Diagnosekoder.ICPC2_CODE
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 data class Sykmelding(
     val id: String,
