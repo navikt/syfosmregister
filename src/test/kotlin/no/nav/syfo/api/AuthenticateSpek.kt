@@ -1,73 +1,92 @@
 package no.nav.syfo.api
 
+import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.auth.authenticate
 import io.ktor.features.ContentNegotiation
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
-import io.ktor.response.respond
-import io.ktor.routing.Route
-import io.ktor.routing.get
 import io.ktor.routing.routing
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import no.nav.syfo.ApplicationState
+import java.nio.file.Paths
+import java.util.Base64
 import no.nav.syfo.VaultSecrets
-import no.nav.syfo.initRouting
+import no.nav.syfo.aksessering.SykmeldingService
+import no.nav.syfo.aksessering.api.registerSykmeldingApi
+import no.nav.syfo.application.setupAuth
+import no.nav.syfo.nullstilling.registerNullstillApi
+import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.persistering.opprettSykmeldingsdokument
+import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
+import no.nav.syfo.persistering.opprettTomSykmeldingsmetadata
 import no.nav.syfo.testutil.TestDB
+import no.nav.syfo.testutil.dropData
+import no.nav.syfo.testutil.generateJWT
+import no.nav.syfo.testutil.testBehandlingsutfall
+import no.nav.syfo.testutil.testSykmeldingsdokument
+import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.net.ServerSocket
-import java.util.Base64
-import java.util.concurrent.TimeUnit
 
 @KtorExperimentalAPI
 object AuthenticateSpek : Spek({
 
+    val path = "src/test/resources/jwkset.json"
+    val uri = Paths.get(path).toUri().toURL()
+    val jwkProvider = JwkProviderBuilder(uri).build()
+
     val database = TestDB()
-    val randomPort = ServerSocket(0).use { it.localPort }
-    val fakeApi = embeddedServer(Netty, randomPort) {
-        install(ContentNegotiation) {
-            jackson {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            }
-        }
-        routing {
-            fakeJWT()
-        }
-    }.start(wait = false)
+    val sykmeldingService = SykmeldingService(database)
+
+    beforeEachTest {
+        database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
+        database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
+        database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+        database.connection.opprettTomSykmeldingsmetadata("uuid")
+    }
+
+    afterEachTest {
+        database.connection.dropData()
+    }
 
     afterGroup {
-        fakeApi.stop(0L, 0L, TimeUnit.SECONDS)
         database.stop()
     }
 
     describe("Authenticate basicauth") {
         with(TestApplicationEngine()) {
             start()
-
-            application.initRouting(
-                ApplicationState(), database, VaultSecrets(
-                    serviceuserUsername = "username",
-                    serviceuserPassword = "password",
-                    oidcWellKnownUri = "http://localhost:$randomPort/fake.jwt",
-                    loginserviceClientId = "clientId",
-                    syfomockUsername = "syfomock",
-                    syfomockPassword = "test"
-                ),
-                cluster = "dev-fss"
-            )
+            application.setupAuth(VaultSecrets(
+                serviceuserUsername = "username",
+                serviceuserPassword = "password",
+                oidcWellKnownUri = "https://sts.issuer.net/myid",
+                loginserviceClientId = "clientId",
+                syfomockUsername = "syfomock",
+                syfomockPassword = "test"
+            ), jwkProvider, "https://sts.issuer.net/myid")
+            application.routing {
+                authenticate("jwt") {
+                    registerSykmeldingApi(sykmeldingService)
+                }
+                authenticate("basic") {
+                    registerNullstillApi(database, "dev-fss")
+                }
+            }
+            application.install(ContentNegotiation) {
+                jackson {
+                    registerKotlinModule()
+                    registerModule(JavaTimeModule())
+                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                }
+            }
 
             it("Validerer syfomock servicebruker") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId") {
@@ -96,20 +115,28 @@ object AuthenticateSpek : Spek({
                     response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
+
+            it("Aksepterer gyldig JWT med riktig audience") {
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer ${generateJWT("2", "clientId")}"
+                    )
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                }
+            }
+
+            it("Gyldig JWT med feil audience gir Unauthorized") {
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    addHeader(
+                        HttpHeaders.Authorization,
+                        "Bearer ${generateJWT("2", "annenClientId")}"
+                    )
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
+                }
+            }
         }
     }
 })
-
-@KtorExperimentalAPI
-fun Route.fakeJWT() {
-    get("fake.jwt") {
-        call.respond(
-            WellKnown(
-                authorization_endpoint = "http://auth.url",
-                token_endpoint = "http://token.url",
-                jwks_uri = "https://jwks.url",
-                issuer = "NAV"
-            )
-        )
-    }
-}

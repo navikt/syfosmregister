@@ -1,6 +1,7 @@
-package no.nav.syfo.api
+package no.nav.syfo.application
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -11,9 +12,9 @@ import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.request.get
+import java.net.ProxySelector
 import kotlinx.coroutines.runBlocking
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner
-import java.net.ProxySelector
 
 val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
     install(JsonFeature) {
@@ -21,6 +22,7 @@ val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
             registerKotlinModule()
             registerModule(JavaTimeModule())
             configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
     }
     engine {

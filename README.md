@@ -1,3 +1,5 @@
+[![Build status](https://github.com/navikt/syfosmregister/workflows/Deploy%20to%20dev%20and%20prod/badge.svg)](https://github.com/navikt/syfosmregister/workflows/Deploy%20to%20dev%20and%20prod/badge.svg)
+
 # SYFO Sykemeldings register
 
 Application for persisting sykmelding 2013 i database

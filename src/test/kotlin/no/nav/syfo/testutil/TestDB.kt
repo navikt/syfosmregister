@@ -1,6 +1,10 @@
 package no.nav.syfo.testutil
 
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
+import java.net.ServerSocket
+import java.sql.Connection
+import java.time.LocalDate
+import java.time.LocalDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
@@ -19,9 +23,6 @@ import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import org.flywaydb.core.Flyway
-import java.sql.Connection
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 class TestDB : DatabaseInterface {
     private var pg: EmbeddedPostgres? = null
@@ -142,3 +143,7 @@ val testBehandlingsutfall = Behandlingsutfall(
     id = "uuid",
     behandlingsutfall = ValidationResult(Status.OK, emptyList())
 )
+
+fun getRandomPort() = ServerSocket(0).use {
+    it.localPort
+}

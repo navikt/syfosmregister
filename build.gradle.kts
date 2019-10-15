@@ -14,11 +14,11 @@ val kafkaVersion = "2.0.0"
 val confluentVersion = "5.0.0"
 val kafkaEmbeddedVersion = "2.0.2"
 val kluentVersion = "1.49"
-val ktorVersion = "1.2.3"
+val ktorVersion = "1.2.5"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
-val prometheusVersion = "0.5.0"
-val spekVersion = "2.0.2"
+val prometheusVersion = "0.6.0"
+val spekVersion = "2.0.8"
 val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val jaxwsApiVersion = "2.3.1"
 val javaxAnnotationApiVersion = "1.3.2"
@@ -31,15 +31,16 @@ val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "2019.09.25-05-44-08e26429f4e37cd57d99ba4d39fc74099a078b97"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9"
+val nimbusdsVersion = "7.5.1"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
 }
 
 plugins {
-    id("org.jmailen.kotlinter") version "1.26.0"
-    kotlin("jvm") version "1.3.40"
-    id("com.diffplug.gradle.spotless") version "3.18.0"
+    id("org.jmailen.kotlinter") version "2.1.1"
+    kotlin("jvm") version "1.3.50"
+    id("com.diffplug.gradle.spotless") version "3.23.1"
     id("com.github.johnrengelman.shadow") version "4.0.4"
 }
 
@@ -118,6 +119,7 @@ dependencies {
     }
     testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedVersion")
     testImplementation("com.opentable.components:otj-pg-embedded:$postgresEmbeddedVersion")
+    testImplementation ("com.nimbusds:nimbus-jose-jwt:$nimbusdsVersion")
 
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")

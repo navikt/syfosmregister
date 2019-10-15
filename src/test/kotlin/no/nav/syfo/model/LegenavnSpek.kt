@@ -2,11 +2,11 @@ package no.nav.syfo.model
 
 import io.mockk.every
 import io.mockk.mockk
+import java.sql.ResultSet
+import kotlin.test.assertEquals
 import no.nav.syfo.aksessering.db.getLegenavn
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.sql.ResultSet
-import kotlin.test.assertEquals
 
 object LegenavnSpek : Spek({
     val mock = mockk<ResultSet>()

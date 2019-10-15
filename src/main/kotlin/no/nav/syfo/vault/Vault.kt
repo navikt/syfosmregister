@@ -4,10 +4,10 @@ import com.bettercloud.vault.SslConfig
 import com.bettercloud.vault.Vault
 import com.bettercloud.vault.VaultConfig
 import com.bettercloud.vault.VaultException
-import kotlinx.coroutines.delay
-import no.nav.syfo.ApplicationState
-import org.slf4j.LoggerFactory
 import java.io.File
+import kotlinx.coroutines.delay
+import no.nav.syfo.application.ApplicationState
+import org.slf4j.LoggerFactory
 
 private val log = LoggerFactory.getLogger("no.nav.syfo.vault")
 object Vault {
@@ -29,7 +29,7 @@ object Vault {
         val lookupSelf = client.auth().lookupSelf()
         if (lookupSelf.isRenewable) {
             delay(suggestedRefreshIntervalInMillis(lookupSelf.ttl * 1000))
-            while (applicationState.running) {
+            while (applicationState.ready) {
                 try {
                     log.debug("Refreshing Vault token (old TTL: ${client.auth().lookupSelf().ttl} seconds)")
                     val response = client.auth().renewSelf()
