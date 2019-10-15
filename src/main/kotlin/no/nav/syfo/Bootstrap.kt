@@ -92,6 +92,7 @@ fun main() {
     val applicationServer = ApplicationServer(applicationEngine)
 
     applicationServer.start()
+    applicationState.ready = true
 
     launchListeners(
         environment,
@@ -99,8 +100,6 @@ fun main() {
         database,
         consumerProperties
     )
-
-    applicationState.ready = true
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
