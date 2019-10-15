@@ -109,6 +109,8 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
             action()
         } catch (e: TrackableException) {
             log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
+        } catch (ex: Exception) {
+            log.error("Noe gikk galt", ex.message)
         } finally {
             applicationState.alive = false
         }
@@ -177,34 +179,33 @@ suspend fun handleMessageSykmelding(
         if (database.connection.erSykmeldingsopplysningerLagret(receivedSykmelding.sykmelding.id)) {
             log.error("Sykmelding med id {} allerede lagret i databasen, {}", receivedSykmelding.sykmelding.id, fields(loggingMeta))
         } else {
-
-                database.connection.opprettSykmeldingsopplysninger(
-                        Sykmeldingsopplysninger(
-                                id = receivedSykmelding.sykmelding.id,
-                                pasientFnr = receivedSykmelding.personNrPasient,
-                                pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
-                                legeFnr = receivedSykmelding.personNrLege,
-                                legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
-                                mottakId = receivedSykmelding.navLogId,
-                                legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
-                                legekontorHerId = receivedSykmelding.legekontorHerId,
-                                legekontorReshId = receivedSykmelding.legekontorReshId,
-                                epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
-                                epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
-                                mottattTidspunkt = receivedSykmelding.mottattDato,
-                                tssid = receivedSykmelding.tssid
-                        )
+            database.connection.opprettSykmeldingsopplysninger(
+                Sykmeldingsopplysninger(
+                    id = receivedSykmelding.sykmelding.id,
+                    pasientFnr = receivedSykmelding.personNrPasient,
+                    pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
+                    legeFnr = receivedSykmelding.personNrLege,
+                    legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
+                    mottakId = receivedSykmelding.navLogId,
+                    legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
+                    legekontorHerId = receivedSykmelding.legekontorHerId,
+                    legekontorReshId = receivedSykmelding.legekontorReshId,
+                    epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
+                    epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
+                    mottattTidspunkt = receivedSykmelding.mottattDato,
+                    tssid = receivedSykmelding.tssid
                 )
-                database.connection.opprettSykmeldingsdokument(
-                        Sykmeldingsdokument(
-                                id = receivedSykmelding.sykmelding.id,
-                                sykmelding = receivedSykmelding.sykmelding
-                        )
+            )
+            database.connection.opprettSykmeldingsdokument(
+                Sykmeldingsdokument(
+                    id = receivedSykmelding.sykmelding.id,
+                    sykmelding = receivedSykmelding.sykmelding
                 )
-                database.connection.opprettTomSykmeldingsmetadata(receivedSykmelding.sykmelding.id)
+            )
+            database.connection.opprettTomSykmeldingsmetadata(receivedSykmelding.sykmelding.id)
 
-                log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
-                MESSAGE_STORED_IN_DB_COUNTER.inc()
+            log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
+            MESSAGE_STORED_IN_DB_COUNTER.inc()
         }
     }
 }
