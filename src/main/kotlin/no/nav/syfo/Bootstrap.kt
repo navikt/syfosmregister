@@ -89,7 +89,7 @@ fun main() {
         wellKnown.issuer,
         environment.cluster
     )
-    val applicationServer = ApplicationServer(applicationEngine)
+    val applicationServer = ApplicationServer(applicationEngine, applicationState)
 
     applicationServer.start()
     applicationState.ready = true
