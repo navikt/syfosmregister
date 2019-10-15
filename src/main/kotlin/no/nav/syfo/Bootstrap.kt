@@ -156,10 +156,10 @@ suspend fun blockingApplicationLogicReceivedSykmelding(
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
             val loggingMeta = LoggingMeta(
-                    mottakId = receivedSykmelding.navLogId,
-                    orgNr = receivedSykmelding.legekontorOrgNr,
-                    msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id
+                mottakId = receivedSykmelding.navLogId,
+                orgNr = receivedSykmelding.legekontorOrgNr,
+                msgId = receivedSykmelding.msgId,
+                sykmeldingId = receivedSykmelding.sykmelding.id
             )
             handleMessageSykmelding(receivedSykmelding, database, loggingMeta)
         }
@@ -219,10 +219,10 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
             val sykmeldingsid = it.key()
             val validationResult: ValidationResult = objectMapper.readValue(it.value())
             val loggingMeta = LoggingMeta(
-                    mottakId = "",
-                    orgNr = "",
-                    msgId = "",
-                    sykmeldingId = sykmeldingsid
+                mottakId = "",
+                orgNr = "",
+                msgId = "",
+                sykmeldingId = sykmeldingsid
             )
 
             handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta)
