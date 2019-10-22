@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.authenticate
@@ -27,6 +28,7 @@ import no.nav.syfo.aksessering.api.registerSykmeldingApi
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
+import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.nullstilling.registerNullstillApi
 
 fun createApplicationEngine(
@@ -72,4 +74,5 @@ fun createApplicationEngine(
                 registerNullstillApi(database, cluster)
             }
         }
+        intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())
     }
