@@ -45,3 +45,9 @@ spec:
       value: jdbc:postgresql://fsspgdb.adeo.no:5432/syfosmregister
     - name: MOUNT_PATH_VAULT
       value: /postgresql/prod-fss
+    - name: JWT_ISSUER
+      value:
+    - name: CLIENT_ID
+      value:
+    - name: ALLOWED_APP_IDS
+      value:
