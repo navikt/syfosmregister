@@ -30,7 +30,7 @@ val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "2019.09.25-05-44-08e26429f4e37cd57d99ba4d39fc74099a078b97"
 val postgresEmbeddedVersion = "0.13.1"
-val mockkVersion = "1.9"
+val mockkVersion = "1.9.3"
 val nimbusdsVersion = "7.5.1"
 
 tasks.withType<Jar> {
