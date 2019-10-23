@@ -27,7 +27,7 @@ fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, 
             }
         }
         jwt(name = "rerun") {
-            verifier(jwkProvider, issuer)
+            verifier(jwkProvider, env.jwtIssuer)
             validate { credentials ->
                 when {
                     hasValidSystemToken(credentials, env) -> JWTPrincipal(credentials.payload)

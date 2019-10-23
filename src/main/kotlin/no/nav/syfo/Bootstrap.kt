@@ -9,11 +9,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
-import java.net.URL
-import java.nio.file.Paths
-import java.time.Duration
-import java.util.Properties
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -50,6 +45,11 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.URL
+import java.nio.file.Paths
+import java.time.Duration
+import java.util.Properties
+import java.util.concurrent.TimeUnit
 
 val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerKotlinModule()
@@ -100,7 +100,7 @@ fun main() {
             wellKnown.issuer,
             environment.cluster,
             rerunKafkaService
-            )
+    )
     val applicationServer = ApplicationServer(applicationEngine, applicationState)
 
     applicationServer.start()
@@ -129,10 +129,10 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
 
 @KtorExperimentalAPI
 fun launchListeners(
-    env: Environment,
-    applicationState: ApplicationState,
-    database: Database,
-    consumerProperties: Properties
+        env: Environment,
+        applicationState: ApplicationState,
+        database: Database,
+        consumerProperties: Properties
 ) {
     val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
     kafkaconsumerRecievedSykmelding.subscribe(
@@ -160,9 +160,9 @@ fun launchListeners(
 }
 
 suspend fun blockingApplicationLogicReceivedSykmelding(
-    applicationState: ApplicationState,
-    kafkaconsumer: KafkaConsumer<String, String>,
-    database: Database
+        applicationState: ApplicationState,
+        kafkaconsumer: KafkaConsumer<String, String>,
+        database: Database
 ) {
     while (applicationState.ready) {
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
@@ -180,9 +180,9 @@ suspend fun blockingApplicationLogicReceivedSykmelding(
 }
 
 suspend fun handleMessageSykmelding(
-    receivedSykmelding: ReceivedSykmelding,
-    database: Database,
-    loggingMeta: LoggingMeta
+        receivedSykmelding: ReceivedSykmelding,
+        database: Database,
+        loggingMeta: LoggingMeta
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Mottatt sykmelding SM2013, {}", fields(loggingMeta))
@@ -222,9 +222,9 @@ suspend fun handleMessageSykmelding(
 }
 
 suspend fun blockingApplicationLogicBehandlingsutfall(
-    applicationState: ApplicationState,
-    kafkaconsumer: KafkaConsumer<String, String>,
-    database: Database
+        applicationState: ApplicationState,
+        kafkaconsumer: KafkaConsumer<String, String>,
+        database: Database
 ) {
     while (applicationState.ready) {
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
@@ -244,10 +244,10 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
 }
 
 suspend fun handleMessageBehandlingsutfall(
-    validationResult: ValidationResult,
-    sykmeldingsid: String,
-    database: Database,
-    loggingMeta: LoggingMeta
+        validationResult: ValidationResult,
+        sykmeldingsid: String,
+        database: Database,
+        loggingMeta: LoggingMeta
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Mottatt behandlingsutfall, {}", fields(loggingMeta))

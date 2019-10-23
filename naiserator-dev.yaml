@@ -35,6 +35,9 @@ spec:
       memory: 128Mi
   vault:
     enabled: true
+    paths:
+      - mountPath: /var/run/secrets/nais.io/azuread
+        kvPath: /azuread/data/dev/creds/syfosmregister
   ingresses:
     - "https://syfosmregister.nais.preprod.local"
   webproxy: true
@@ -46,8 +49,8 @@ spec:
     - name: MOUNT_PATH_VAULT
       value: /postgresql/preprod-fss
     - name: JWT_ISSUER
-      value:
+      value: https://sts.windows.net/966ac572-f5b7-4bbe-aa88-c76419c0f851/
     - name: CLIENT_ID
-      value:
+      value: 543ceb1e-eb69-4089-9458-bdec61160afa
     - name: ALLOWED_APP_IDS
-      value:
+      value: 543ceb1e-eb69-4089-9458-bdec61160afa
