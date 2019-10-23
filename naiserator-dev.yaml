@@ -38,6 +38,8 @@ spec:
     paths:
       - mountPath: /var/run/secrets/nais.io/azuread
         kvPath: /azuread/data/dev/creds/syfosmregister
+      - mountPath: /var/run/secrets/nais.io/vault
+        kvPath: /kv/preprod/fss/syfosmregister/default
   ingresses:
     - "https://syfosmregister.nais.preprod.local"
   webproxy: true
