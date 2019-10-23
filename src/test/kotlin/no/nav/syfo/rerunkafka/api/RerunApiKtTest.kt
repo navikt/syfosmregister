@@ -80,7 +80,7 @@ class RerunApiKtTest : Spek({
                 }
             }
 
-            application.routing { authenticate("jwt") { registerRerunKafkaApi(rerunKafkaService) } }
+            application.routing { authenticate("rerun") { registerRerunKafkaApi(rerunKafkaService) } }
 
             it("Should authenticate") {
                 with(handleRequest(HttpMethod.Post, "api/v1/rerun") {

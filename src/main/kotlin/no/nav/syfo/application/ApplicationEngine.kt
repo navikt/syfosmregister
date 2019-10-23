@@ -70,6 +70,8 @@ fun createApplicationEngine(
             registerNaisApi(applicationState)
             authenticate("jwt") {
                 registerSykmeldingApi(sykmeldingService)
+            }
+            authenticate("rerun") {
                 registerRerunKafkaApi(rerunKafkaService)
             }
             authenticate("basic") {
