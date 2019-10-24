@@ -59,7 +59,7 @@ fun hasLoginserviceClientIdAudience(credentials: JWTCredential, vaultSecrets: Va
 }
 
 fun hasValidSystemToken(credentials: JWTCredential, env: Environment): Boolean {
-    val appId: String = credentials.payload.getClaim("appid").asString()
+    val appId: String = credentials.payload.getClaim("azp").asString()
     log.info("authorization attempt for $appId")
     if (appId in env.appIds && env.clientId in credentials.payload.audience) {
         log.info("authorization ok")
