@@ -17,7 +17,14 @@ data class Environment(
     override val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
     val syfosmregisterDBURL: String = getEnvVar("SYFOSMREGISTER_DB_URL"),
     val mountPathVault: String = getEnvVar("MOUNT_PATH_VAULT"),
-    val cluster: String = getEnvVar("NAIS_CLUSTER_NAME")
+    val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
+    val jwtIssuer: String = getEnvVar("JWT_ISSUER"),
+    val appIds: List<String> = getEnvVar("ALLOWED_APP_IDS")
+            .split(",")
+            .map { it.trim() },
+    val clientId: String = getEnvVar("CLIENT_ID"),
+    val kafkaRerunTopic: String = getEnvVar("KAFKA_RERUN_TOPIC", "privat-syfo-register-rerun-tmp"),
+    val jwkKeysUrl: String = getEnvVar("JWKKEYS_URL", "https://login.microsoftonline.com/common/discovery/keys")
 ) : KafkaConfig
 
 data class VaultSecrets(

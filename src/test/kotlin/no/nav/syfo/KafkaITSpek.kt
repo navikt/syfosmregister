@@ -20,23 +20,26 @@ object KafkaITSpek : Spek({
     val topic = "aapen-test-topic"
 
     val embeddedEnvironment = KafkaEnvironment(
-        autoStart = false,
-        topics = listOf(topic)
+            autoStart = false,
+            topics = listOf(topic)
     )
 
     val credentials = VaultSecrets("", "", "", "", "", "")
     val env = Environment(
-        applicationPort = getRandomPort(),
-        kafkaSm2013AutomaticPapirmottakTopic = "topic1",
-        kafkaSm2013AutomaticDigitalHandlingTopic = "topic3",
-        kafkaBootstrapServers = embeddedEnvironment.brokersURL,
-        syfosmregisterDBURL = "12314.adeo.no",
-        mountPathVault = "vault.adeo.no",
-        cluster = "local",
-        databaseName = "syfosmregister",
-        applicationName = "syfosmregister",
-        sm2013ManualHandlingTopic = "topic2"
-    )
+            applicationPort = getRandomPort(),
+            kafkaSm2013AutomaticPapirmottakTopic = "topic1",
+            kafkaSm2013AutomaticDigitalHandlingTopic = "topic3",
+            kafkaBootstrapServers = embeddedEnvironment.brokersURL,
+            syfosmregisterDBURL = "12314.adeo.no",
+            mountPathVault = "vault.adeo.no",
+            cluster = "local",
+            databaseName = "syfosmregister",
+            applicationName = "syfosmregister",
+            sm2013ManualHandlingTopic = "topic2",
+            jwtIssuer = "",
+            appIds = listOf("123"),
+            clientId = ""
+            )
 
     fun Properties.overrideForTest(): Properties = apply {
         remove("security.protocol")
@@ -46,11 +49,11 @@ object KafkaITSpek : Spek({
     val baseConfig = loadBaseConfig(env, credentials).overrideForTest()
 
     val producerProperties = baseConfig
-        .toProducerConfig("spek.integration", valueSerializer = StringSerializer::class)
+            .toProducerConfig("spek.integration", valueSerializer = StringSerializer::class)
     val producer = KafkaProducer<String, String>(producerProperties)
 
     val consumerProperties = baseConfig
-        .toConsumerConfig("spek.integration-consumer", valueDeserializer = StringDeserializer::class)
+            .toConsumerConfig("spek.integration-consumer", valueDeserializer = StringDeserializer::class)
     val consumer = KafkaConsumer<String, String>(consumerProperties)
 
     consumer.subscribe(listOf(topic))

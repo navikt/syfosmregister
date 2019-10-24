@@ -30,6 +30,8 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.nullstilling.registerNullstillApi
+import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
+import no.nav.syfo.rerunkafka.service.RerunKafkaService
 
 fun createApplicationEngine(
     env: Environment,
@@ -38,7 +40,9 @@ fun createApplicationEngine(
     vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
     issuer: String,
-    cluster: String
+    cluster: String,
+    rerunKafkaService: RerunKafkaService,
+    jwkProviderForRerun: JwkProvider
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -49,7 +53,7 @@ fun createApplicationEngine(
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
-        setupAuth(vaultSecrets, jwkProvider, issuer)
+        setupAuth(vaultSecrets, jwkProvider, issuer, env, jwkProviderForRerun)
         install(CallId) {
             generate { UUID.randomUUID().toString() }
             verify { callId: String -> callId.isNotEmpty() }
@@ -69,6 +73,9 @@ fun createApplicationEngine(
             registerNaisApi(applicationState)
             authenticate("jwt") {
                 registerSykmeldingApi(sykmeldingService)
+            }
+            authenticate("rerun") {
+                registerRerunKafkaApi(rerunKafkaService)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)

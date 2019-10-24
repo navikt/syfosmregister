@@ -4,9 +4,35 @@
       "topicName": "privat-syfo-sm2013-register",
       "members": [
         {"member":"srvsyfosmregister", "role":"PRODUCER"},
-        {"member":"srvsyfosmregister", "role":"CONSUMER"}
+        {"member":"srvsyfosmregister", "role":"CONSUMER"},
+        {"member":"s151890", "role":"MANAGER"},
+        {"member":"k143566", "role":"MANAGER"},
+        {"member":"f133008", "role":"MANAGER"},
+        {"member":"n157016", "role":"MANAGER"},
+        {"member":"k157140", "role":"MANAGER"},
+        {"member":"g153850", "role":"MANAGER"}
       ],
-      "numPartitions": 3
+      "numPartitions": 3,
+      "configEntries": {
+        "retention.ms": "-1"
+      }
+    },
+    {
+      "topicName": "privat-syfo-register-rerun-tmp",
+      "members": [
+        {"member":"srvsyfosmsak", "role":"CONSUMER"},
+        {"member":"srvsyfosmregister", "role":"PRODUCER"},
+        {"member":"s151890", "role":"MANAGER"},
+        {"member":"k143566", "role":"MANAGER"},
+        {"member":"f133008", "role":"MANAGER"},
+        {"member":"n157016", "role":"MANAGER"},
+        {"member":"k157140", "role":"MANAGER"},
+        {"member":"g153850", "role":"MANAGER"}
+      ],
+      "numPartitions": 3,
+      "configEntries": {
+        "retention.ms": "-1"
+      }
     }
   ]
 }

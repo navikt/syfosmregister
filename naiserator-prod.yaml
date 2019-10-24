@@ -35,6 +35,11 @@ spec:
       memory: 128Mi
   vault:
     enabled: true
+    paths:
+      - mountPath: /var/run/secrets/nais.io/azuread
+        kvPath: /azuread/data/prod/creds/syfosmregister
+      - mountPath: /var/run/secrets/nais.io/vault
+        kvPath: /kv/prod/fss/syfosmregister/default
   ingresses:
     - "https://syfosmregister.nais.adeo.no"
   webproxy: true
@@ -45,3 +50,9 @@ spec:
       value: jdbc:postgresql://fsspgdb.adeo.no:5432/syfosmregister
     - name: MOUNT_PATH_VAULT
       value: /postgresql/prod-fss
+    - name: JWT_ISSUER
+      value: https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b/v2.0
+    - name: CLIENT_ID
+      value: 96a10e4e-4437-47a2-ae9c-2f1c1634340e
+    - name: ALLOWED_APP_IDS
+      value: 96a10e4e-4437-47a2-ae9c-2f1c1634340e

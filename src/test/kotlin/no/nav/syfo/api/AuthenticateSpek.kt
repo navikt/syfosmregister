@@ -17,6 +17,7 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
 import java.nio.file.Paths
 import java.util.Base64
+import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.registerSykmeldingApi
@@ -42,7 +43,13 @@ object AuthenticateSpek : Spek({
     val path = "src/test/resources/jwkset.json"
     val uri = Paths.get(path).toUri().toURL()
     val jwkProvider = JwkProviderBuilder(uri).build()
-
+    val env = Environment(clientId = "1",
+            appIds = listOf("10", "11"),
+            jwtIssuer = "issuer",
+            cluster = "cluster",
+            mountPathVault = "",
+            kafkaBootstrapServers = "",
+            syfosmregisterDBURL = "")
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
 
@@ -65,13 +72,13 @@ object AuthenticateSpek : Spek({
         with(TestApplicationEngine()) {
             start()
             application.setupAuth(VaultSecrets(
-                serviceuserUsername = "username",
-                serviceuserPassword = "password",
-                oidcWellKnownUri = "https://sts.issuer.net/myid",
-                loginserviceClientId = "clientId",
-                syfomockUsername = "syfomock",
-                syfomockPassword = "test"
-            ), jwkProvider, "https://sts.issuer.net/myid")
+                    serviceuserUsername = "username",
+                    serviceuserPassword = "password",
+                    oidcWellKnownUri = "https://sts.issuer.net/myid",
+                    loginserviceClientId = "clientId",
+                    syfomockUsername = "syfomock",
+                    syfomockPassword = "test"
+            ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider)
             application.routing {
                 authenticate("jwt") {
                     registerSykmeldingApi(sykmeldingService)
@@ -91,8 +98,8 @@ object AuthenticateSpek : Spek({
             it("Validerer syfomock servicebruker") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId") {
                     addHeader(
-                        HttpHeaders.Authorization,
-                        "Basic ${Base64.getEncoder().encodeToString("syfomock:test".toByteArray())}"
+                            HttpHeaders.Authorization,
+                            "Basic ${Base64.getEncoder().encodeToString("syfomock:test".toByteArray())}"
                     )
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
@@ -102,8 +109,8 @@ object AuthenticateSpek : Spek({
             it("Validerer ikke ugyldig servicebruker") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId") {
                     addHeader(
-                        HttpHeaders.Authorization,
-                        "Basic ${Base64.getEncoder().encodeToString("feil:passord".toByteArray())}"
+                            HttpHeaders.Authorization,
+                            "Basic ${Base64.getEncoder().encodeToString("feil:passord".toByteArray())}"
                     ) // feil:passord
                 }) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized
@@ -119,8 +126,8 @@ object AuthenticateSpek : Spek({
             it("Aksepterer gyldig JWT med riktig audience") {
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
                     addHeader(
-                        HttpHeaders.Authorization,
-                        "Bearer ${generateJWT("2", "clientId")}"
+                            HttpHeaders.Authorization,
+                            "Bearer ${generateJWT("2", "clientId")}"
                     )
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
@@ -130,8 +137,8 @@ object AuthenticateSpek : Spek({
             it("Gyldig JWT med feil audience gir Unauthorized") {
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
                     addHeader(
-                        HttpHeaders.Authorization,
-                        "Bearer ${generateJWT("2", "annenClientId")}"
+                            HttpHeaders.Authorization,
+                            "Bearer ${generateJWT("2", "annenClientId")}"
                     )
                 }) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized
