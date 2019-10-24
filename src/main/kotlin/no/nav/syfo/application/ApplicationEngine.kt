@@ -19,6 +19,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.SykmeldingService
@@ -29,7 +30,6 @@ import no.nav.syfo.log
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
-import java.util.UUID
 
 fun createApplicationEngine(
     env: Environment,
@@ -39,7 +39,8 @@ fun createApplicationEngine(
     jwkProvider: JwkProvider,
     issuer: String,
     cluster: String,
-    rerunKafkaService: RerunKafkaService
+    rerunKafkaService: RerunKafkaService,
+    jwkProviderForRerun: JwkProvider
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -50,7 +51,7 @@ fun createApplicationEngine(
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
-        setupAuth(vaultSecrets, jwkProvider, issuer, env)
+        setupAuth(vaultSecrets, jwkProvider, issuer, env, jwkProviderForRerun)
         install(CallId) {
             generate { UUID.randomUUID().toString() }
             verify { callId: String -> callId.isNotEmpty() }

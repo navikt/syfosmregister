@@ -4,6 +4,8 @@ import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.verify
+import java.time.LocalDateTime
+import java.util.UUID
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.Arbeidsgiver
@@ -19,8 +21,6 @@ import no.nav.syfo.rerunkafka.database.getSykmeldingerByIds
 import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDateTime
-import java.util.UUID
 
 class RerunKafkaServiceTest : Spek({
     val sykmeldingServic = mockkClass(DatabaseInterface::class)

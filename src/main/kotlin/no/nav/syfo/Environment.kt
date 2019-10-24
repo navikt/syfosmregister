@@ -23,7 +23,8 @@ data class Environment(
             .split(",")
             .map { it.trim() },
     val clientId: String = getEnvVar("CLIENT_ID"),
-    val kafkaRerunTopic: String = getEnvVar("KAFKA_RERUN_TOPIC", "privat-syfo-register-rerun-tmp")
+    val kafkaRerunTopic: String = getEnvVar("KAFKA_RERUN_TOPIC", "privat-syfo-register-rerun-tmp"),
+    val jwkKeysUrl: String = getEnvVar("JWKKEYS_URL", "https://login.microsoftonline.com/common/discovery/keys")
 ) : KafkaConfig
 
 data class VaultSecrets(

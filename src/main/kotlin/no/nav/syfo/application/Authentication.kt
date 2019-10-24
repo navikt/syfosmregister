@@ -15,7 +15,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.log
 
-fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, issuer: String, env: Environment) {
+fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, issuer: String, env: Environment, jwkProviderForRerun: JwkProvider) {
     install(Authentication) {
         jwt(name = "jwt") {
             verifier(jwkProvider, issuer)
@@ -27,7 +27,7 @@ fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, 
             }
         }
         jwt(name = "rerun") {
-            verifier(jwkProvider, env.jwtIssuer)
+            verifier(jwkProviderForRerun, env.jwtIssuer)
             validate { credentials ->
                 when {
                     hasValidSystemToken(credentials, env) -> JWTPrincipal(credentials.payload)
@@ -44,7 +44,7 @@ fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, 
         }
     }
 }
-
+g
 fun unauthorized(credentials: JWTCredential): Principal? {
     log.warn(
             "Auth: Unexpected audience for jwt {}, {}",
