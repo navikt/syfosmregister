@@ -1,6 +1,5 @@
 package no.nav.syfo.rerunkafka.service
 
-import java.util.UUID
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.LoggingMeta
 import no.nav.syfo.db.DatabaseInterface
@@ -11,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 class RerunKafkaService(private val databaseInterface: DatabaseInterface, private val rerunKafkaProducer: RerunKafkaProducer) {
     private val log = LoggerFactory.getLogger(RerunKafkaService::class.java)
-    fun rerun(sykmeldingIds: List<UUID>) {
+    fun rerun(sykmeldingIds: List<String>) {
         log.info("Got list with {} sykmeldinger", sykmeldingIds.size)
         val receivedSykmelding = databaseInterface.getSykmeldingerByIds(sykmeldingIds)
         log.info("Got {} sykmeldinger from database", receivedSykmelding.size)

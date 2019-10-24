@@ -7,13 +7,12 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.post
 import io.ktor.routing.route
-import java.util.UUID
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
 
 fun Route.registerRerunKafkaApi(rerunKafkaService: RerunKafkaService) {
     route("api/v1/rerun") {
         post {
-            val ids = call.receive<List<UUID>>()
+            val ids = call.receive<List<String>>()
             rerunKafkaService.rerun(ids)
             call.respond(HttpStatusCode.Accepted)
         }

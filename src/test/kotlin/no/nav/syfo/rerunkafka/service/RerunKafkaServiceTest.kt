@@ -4,8 +4,6 @@ import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.verify
-import java.time.LocalDateTime
-import java.util.UUID
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.Arbeidsgiver
@@ -21,12 +19,14 @@ import no.nav.syfo.rerunkafka.database.getSykmeldingerByIds
 import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.LocalDateTime
+import java.util.UUID
 
 class RerunKafkaServiceTest : Spek({
     val sykmeldingServic = mockkClass(DatabaseInterface::class)
     val rerunKafkaProducer = mockkClass(RerunKafkaProducer::class)
     mockkStatic("no.nav.syfo.rerunkafka.database.SykmeldingAksesseringQueriesKt")
-    val sykmeldingIds = 0.until(10).map { UUID.randomUUID() }
+    val sykmeldingIds = 0.until(10).map { UUID.randomUUID().toString() }
     every { rerunKafkaProducer.publishToKafka(any()) } returns Unit
     every { sykmeldingServic.getSykmeldingerByIds(any()) } returns sykmeldingIds.map { toReceivedSykmelding(it) }
 
@@ -39,9 +39,9 @@ class RerunKafkaServiceTest : Spek({
     }
 })
 
-fun toReceivedSykmelding(it: UUID): ReceivedSykmelding {
+fun toReceivedSykmelding(it: String): ReceivedSykmelding {
     return ReceivedSykmelding(
-            sykmelding = Sykmelding(id = it.toString(),
+            sykmelding = Sykmelding(id = it,
                     msgId = UUID.randomUUID().toString(),
                     kontaktMedPasient = KontaktMedPasient(null, null),
                     perioder = emptyList(),
