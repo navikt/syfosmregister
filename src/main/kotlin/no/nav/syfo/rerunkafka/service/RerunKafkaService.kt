@@ -9,15 +9,19 @@ import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import org.slf4j.LoggerFactory
 
 class RerunKafkaService(private val databaseInterface: DatabaseInterface, private val rerunKafkaProducer: RerunKafkaProducer) {
+
     private val log = LoggerFactory.getLogger(RerunKafkaService::class.java)
-    fun rerun(sykmeldingIds: List<String>) {
+
+    fun rerun(sykmeldingIds: List<String>): List<ReceivedSykmelding> {
         log.info("Got list with {} sykmeldinger", sykmeldingIds.size)
         val receivedSykmelding = databaseInterface.getSykmeldingerByIds(sykmeldingIds)
         log.info("Got {} sykmeldinger from database", receivedSykmelding.size)
         receivedSykmelding.forEach {
             publishToKafka(it)
         }
+        return receivedSykmelding
     }
+
     private fun publishToKafka(receivedSykmelding: ReceivedSykmelding) {
         val loggingMeta = LoggingMeta(
                 mottakId = receivedSykmelding.navLogId,
