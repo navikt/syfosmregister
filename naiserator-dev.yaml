@@ -51,7 +51,7 @@ spec:
     - name: MOUNT_PATH_VAULT
       value: /postgresql/preprod-fss
     - name: JWT_ISSUER
-      value: https://sts.windows.net/966ac572-f5b7-4bbe-aa88-c76419c0f851/
+      value: https://sts.windows.net/966ac572-f5b7-4bbe-aa88-c76419c0f851/v2.0
     - name: CLIENT_ID
       value: 543ceb1e-eb69-4089-9458-bdec61160afa
     - name: ALLOWED_APP_IDS
