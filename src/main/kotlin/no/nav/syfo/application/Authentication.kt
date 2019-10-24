@@ -44,7 +44,7 @@ fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, 
         }
     }
 }
-g
+
 fun unauthorized(credentials: JWTCredential): Principal? {
     log.warn(
             "Auth: Unexpected audience for jwt {}, {}",
