@@ -37,8 +37,8 @@ fun generateJWT(
         .withClaim("nonce", "myNonce")
         .withClaim("auth_time", now)
         .withClaim("nbf", now)
+        .withClaim("azp", consumerClientId)
         .withClaim("iat", now)
-        .withClaim("appid", consumerClientId)
         .withClaim("exp", Date.from(expiry?.atZone(ZoneId.systemDefault())?.toInstant()))
         .sign(alg)
 }
