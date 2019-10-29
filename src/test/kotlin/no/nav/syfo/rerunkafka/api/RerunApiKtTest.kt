@@ -17,6 +17,8 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.mockk.every
 import io.mockk.mockkClass
+import java.nio.file.Paths
+import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.setupAuth
@@ -26,8 +28,6 @@ import no.nav.syfo.testutil.generateJWT
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
-import java.util.UUID
 
 class RerunApiKtTest : Spek({
 
