@@ -103,7 +103,7 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
             begrunnelseIkkeKontakt = null
         ),
         medisinskVurdering = MedisinskVurdering(
-            hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01"),
+            hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01", "Brukket fot"),
             biDiagnoser = emptyList(),
             svangerskap = false,
             yrkesskade = false,
