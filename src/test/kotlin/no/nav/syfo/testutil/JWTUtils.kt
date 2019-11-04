@@ -21,7 +21,9 @@ const val keyId = "localhost-signer"
 fun generateJWT(
     consumerClientId: String,
     audience: String,
-    expiry: LocalDateTime? = LocalDateTime.now().plusHours(1)
+    expiry: LocalDateTime? = LocalDateTime.now().plusHours(1),
+    subject: String = "subject",
+    issuer: String = "https://sts.issuer.net/myid"
 ): String? {
     val now = Date()
     val key = getDefaultRSAKey()
@@ -29,8 +31,8 @@ fun generateJWT(
 
     return JWT.create()
         .withKeyId(keyId)
-        .withSubject("subject")
-        .withIssuer("https://sts.issuer.net/myid")
+        .withSubject(subject)
+        .withIssuer(issuer)
         .withAudience(audience)
         .withJWTId(UUID.randomUUID().toString())
         .withClaim("ver", "1.0")

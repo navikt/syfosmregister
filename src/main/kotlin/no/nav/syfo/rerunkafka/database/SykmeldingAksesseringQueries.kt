@@ -1,12 +1,12 @@
 package no.nav.syfo.rerunkafka.database
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.sql.ResultSet
+import java.util.UUID
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.objectMapper
-import java.sql.ResultSet
-import java.util.UUID
 
 fun DatabaseInterface.getSykmeldingerByIds(sykmeldingIds: List<String>): List<ReceivedSykmelding> =
     connection.use { connection ->
@@ -15,7 +15,6 @@ fun DatabaseInterface.getSykmeldingerByIds(sykmeldingIds: List<String>): List<Re
                 SELECT *
                 FROM SYKMELDINGSOPPLYSNINGER as OPPLYSNINGER
                          INNER JOIN SYKMELDINGSDOKUMENT as DOKUMENT on OPPLYSNINGER.id = DOKUMENT.id
-                         INNER JOIN SYKMELDINGSMETADATA as METADATA on OPPLYSNINGER.id = METADATA.id
                 WHERE OPPLYSNINGER.id = ANY (?);
                 """
         ).use {

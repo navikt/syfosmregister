@@ -24,7 +24,7 @@ object KafkaITSpek : Spek({
             topics = listOf(topic)
     )
 
-    val credentials = VaultSecrets("", "", "", "", "", "")
+    val credentials = VaultSecrets("", "", "", "", "", "", "")
     val env = Environment(
             applicationPort = getRandomPort(),
             kafkaSm2013AutomaticPapirmottakTopic = "topic1",
@@ -38,7 +38,9 @@ object KafkaITSpek : Spek({
             sm2013ManualHandlingTopic = "topic2",
             jwtIssuer = "",
             appIds = listOf("123"),
-            clientId = ""
+            clientId = "",
+            stsOidcAudience = "",
+            stsOidcIssuer = ""
             )
 
     fun Properties.overrideForTest(): Properties = apply {

@@ -49,7 +49,10 @@ object AuthenticateSpek : Spek({
             cluster = "cluster",
             mountPathVault = "",
             kafkaBootstrapServers = "",
-            syfosmregisterDBURL = "")
+            syfosmregisterDBURL = "",
+            stsOidcIssuer = "",
+            stsOidcAudience = "")
+
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
 
@@ -77,8 +80,9 @@ object AuthenticateSpek : Spek({
                     oidcWellKnownUri = "https://sts.issuer.net/myid",
                     loginserviceClientId = "clientId",
                     syfomockUsername = "syfomock",
-                    syfomockPassword = "test"
-            ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider)
+                    syfomockPassword = "test",
+                    stsOidcWellKnownUri = ""
+            ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider)
             application.routing {
                 authenticate("jwt") {
                     registerSykmeldingApi(sykmeldingService)

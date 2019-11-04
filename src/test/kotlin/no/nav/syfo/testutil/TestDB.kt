@@ -45,6 +45,8 @@ fun Connection.dropData() {
     use { connection ->
         connection.prepareStatement("DELETE FROM behandlingsutfall").executeUpdate()
         connection.prepareStatement("DELETE FROM sykmeldingsopplysninger").executeUpdate()
+        connection.prepareStatement("DELETE FROM sykmeldingstatus").executeUpdate()
+        connection.prepareStatement("DELETE FROM sykmeldingsmetadata").executeUpdate()
         connection.commit()
     }
 }

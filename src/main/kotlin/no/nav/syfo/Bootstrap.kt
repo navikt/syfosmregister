@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.ktor.application.feature
+import io.ktor.auth.Authentication
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
 import java.net.URL
@@ -20,6 +22,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArguments.fields
+import no.nav.syfo.aksessering.db.registerStatus
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
@@ -34,6 +37,8 @@ import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.persistering.Behandlingsutfall
+import no.nav.syfo.persistering.StatusEvent
+import no.nav.syfo.persistering.SykmeldingStatusEvent
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.persistering.erBehandlingsutfallLagret
@@ -41,7 +46,6 @@ import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
-import no.nav.syfo.persistering.opprettTomSykmeldingsmetadata
 import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -76,6 +80,11 @@ fun main() {
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
+    val jwkProviderStsOidc = JwkProviderBuilder(URL(vaultSecrets.stsOidcWellKnownUri))
+            .cached(10, 24, TimeUnit.HOURS)
+            .rateLimited(10, 1, TimeUnit.MINUTES)
+            .build()
+
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
 
@@ -95,7 +104,6 @@ fun main() {
     val kafkaProducer = KafkaProducer<String, String>(producerConfig)
     val rerunKafkaProducer = RerunKafkaProducer(kafkaProducer, environment)
     val rerunKafkaService = RerunKafkaService(database, rerunKafkaProducer)
-
     val applicationEngine = createApplicationEngine(
             environment,
             applicationState,
@@ -105,13 +113,16 @@ fun main() {
             wellKnown.issuer,
             environment.cluster,
             rerunKafkaService,
-            jwkProviderForRerun
+            jwkProviderForRerun,
+            jwkProviderStsOidc
     )
-    val applicationServer = ApplicationServer(applicationEngine, applicationState)
 
+    applicationEngine.application.feature(Authentication).configure {
+    }
+
+    val applicationServer = ApplicationServer(applicationEngine, applicationState)
     applicationServer.start()
     applicationState.ready = true
-
     launchListeners(
             environment,
             applicationState,
@@ -219,7 +230,8 @@ suspend fun handleMessageSykmelding(
                             sykmelding = receivedSykmelding.sykmelding
                     )
             )
-            database.connection.opprettTomSykmeldingsmetadata(receivedSykmelding.sykmelding.id)
+
+            database.registerStatus(SykmeldingStatusEvent(receivedSykmelding.sykmelding.id, receivedSykmelding.mottattDato, StatusEvent.OPEN))
 
             log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
             MESSAGE_STORED_IN_DB_COUNTER.inc()
