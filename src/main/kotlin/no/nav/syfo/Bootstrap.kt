@@ -117,9 +117,6 @@ fun main() {
             jwkProviderStsOidc
     )
 
-    applicationEngine.application.feature(Authentication).configure {
-    }
-
     val applicationServer = ApplicationServer(applicationEngine, applicationState)
     applicationServer.start()
     applicationState.ready = true
