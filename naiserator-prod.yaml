@@ -51,3 +51,7 @@ spec:
       value: 96a10e4e-4437-47a2-ae9c-2f1c1634340e
     - name: ALLOWED_APP_IDS
       value: 96a10e4e-4437-47a2-ae9c-2f1c1634340e
+    - name: STS_OIDC_ISSUER
+      value: https://security-token-service.nais.adeo.no
+    - name: STS_OIDC_AUDIENCE
+      value: adeo.no

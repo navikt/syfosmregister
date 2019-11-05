@@ -26,12 +26,17 @@ data class Sykmeldingsdokument(
     val sykmelding: Sykmelding
 )
 
-data class Sykmeldingsmetadata(
-    val id: String,
-    val bekreftetDato: LocalDateTime
-)
-
 fun Sykmelding.toPGObject() = PGobject().also {
     it.type = "json"
     it.value = objectMapper.writeValueAsString(this)
+}
+
+data class SykmeldingStatusEvent(
+    val id: String,
+    val timestamp: LocalDateTime,
+    val event: StatusEvent
+)
+
+enum class StatusEvent {
+    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
 }

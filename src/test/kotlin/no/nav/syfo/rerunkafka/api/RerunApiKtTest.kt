@@ -66,13 +66,15 @@ class RerunApiKtTest : Spek({
                 cluster = "cluster",
                 mountPathVault = "",
                 kafkaBootstrapServers = "",
-                syfosmregisterDBURL = "")
+                syfosmregisterDBURL = "",
+                stsOidcAudience = "",
+                stsOidcIssuer = "")
 
-        val vaultSecrets = VaultSecrets("", "", "", "", "", "")
+        val vaultSecrets = VaultSecrets("", "", "", "", "", "", "")
         with(TestApplicationEngine()) {
             start()
 
-            application.setupAuth(vaultSecrets, jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider)
+            application.setupAuth(vaultSecrets, jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider)
             application.install(ContentNegotiation) {
                 jackson {
                     registerModule(JavaTimeModule())

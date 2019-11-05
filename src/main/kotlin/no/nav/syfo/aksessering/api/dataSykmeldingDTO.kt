@@ -25,14 +25,14 @@ class SkjermetSykmeldingDTO(
     arbeidsgiver: ArbeidsgiverDTO?,
     sykmeldingsperioder: List<SykmeldingsperiodeDTO>
 ) : SykmeldingDTO(
-    id,
-    mottattTidspunkt,
-    bekreftetDato,
-    behandlingsutfall,
-    legekontorOrgnummer,
-    legeNavn,
-    arbeidsgiver,
-    sykmeldingsperioder
+        id,
+        mottattTidspunkt,
+        bekreftetDato,
+        behandlingsutfall,
+        legekontorOrgnummer,
+        legeNavn,
+        arbeidsgiver,
+        sykmeldingsperioder
 )
 
 class FullstendigSykmeldingDTO(
@@ -46,14 +46,14 @@ class FullstendigSykmeldingDTO(
     sykmeldingsperioder: List<SykmeldingsperiodeDTO>,
     val medisinskVurdering: MedisinskVurderingDTO
 ) : SykmeldingDTO(
-    id,
-    mottattTidspunkt,
-    bekreftetDato,
-    behandlingsutfall,
-    legekontorOrgnummer,
-    legeNavn,
-    arbeidsgiver,
-    sykmeldingsperioder
+        id,
+        mottattTidspunkt,
+        bekreftetDato,
+        behandlingsutfall,
+        legekontorOrgnummer,
+        legeNavn,
+        arbeidsgiver,
+        sykmeldingsperioder
 )
 
 data class MedisinskVurderingDTO(
@@ -109,3 +109,12 @@ data class DiagnoseDTO(
     val diagnosesystem: String,
     val diagnosetekst: String
 )
+
+data class SykmeldingStatusEventDTO(
+    val statusEvent: StatusEventDTO,
+    val timestamp: LocalDateTime
+)
+
+enum class StatusEventDTO {
+    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
+}

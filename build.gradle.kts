@@ -130,7 +130,7 @@ dependencies {
     }
     testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedVersion")
     testImplementation("com.opentable.components:otj-pg-embedded:$postgresEmbeddedVersion")
-    testImplementation ("com.nimbusds:nimbus-jose-jwt:$nimbusdsVersion")
+    testImplementation("com.nimbusds:nimbus-jose-jwt:$nimbusdsVersion")
 
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")

@@ -15,7 +15,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.log
 
-fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, issuer: String, env: Environment, jwkProviderForRerun: JwkProvider) {
+fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, issuer: String, env: Environment, jwkProviderForRerun: JwkProvider, stsOidcJwkProvider: JwkProvider) {
     install(Authentication) {
         jwt(name = "jwt") {
             verifier(jwkProvider, issuer)
@@ -42,7 +42,22 @@ fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, 
                 } else null
             }
         }
+
+        jwt(name = "oidc") {
+            verifier(stsOidcJwkProvider, env.stsOidcIssuer)
+            validate { credentials ->
+                when {
+                    isValidStsOidcToken(credentials, env) -> JWTPrincipal(credentials.payload)
+                    else -> unauthorized(credentials)
+                }
+            }
+        }
     }
+}
+
+fun isValidStsOidcToken(credentials: JWTCredential, env: Environment): Boolean {
+    return credentials.payload.audience.contains(env.stsOidcAudience) &&
+            "srvsyfoservice".equals(credentials.payload.getClaim("sub").asString())
 }
 
 fun unauthorized(credentials: JWTCredential): Principal? {

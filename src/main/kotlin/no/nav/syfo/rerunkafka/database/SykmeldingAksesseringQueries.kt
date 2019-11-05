@@ -15,7 +15,6 @@ fun DatabaseInterface.getSykmeldingerByIds(sykmeldingIds: List<String>): List<Re
                 SELECT *
                 FROM SYKMELDINGSOPPLYSNINGER as OPPLYSNINGER
                          INNER JOIN SYKMELDINGSDOKUMENT as DOKUMENT on OPPLYSNINGER.id = DOKUMENT.id
-                         INNER JOIN SYKMELDINGSMETADATA as METADATA on OPPLYSNINGER.id = METADATA.id
                 WHERE OPPLYSNINGER.id = ANY (?);
                 """
         ).use {

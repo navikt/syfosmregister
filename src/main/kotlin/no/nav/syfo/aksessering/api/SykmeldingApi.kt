@@ -10,7 +10,10 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
+import java.time.LocalDateTime
 import no.nav.syfo.aksessering.SykmeldingService
+import no.nav.syfo.persistering.StatusEvent
+import no.nav.syfo.persistering.SykmeldingStatusEvent
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -36,13 +39,11 @@ fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService) {
             val sykmeldingsid = call.parameters["sykmeldingsid"]!!
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
-
             if (sykmeldingService.erEier(sykmeldingsid, subject)) {
-                if (sykmeldingService.registrerLestAvBruker(sykmeldingsid) > 0) {
-                    call.respond(HttpStatusCode.OK)
-                }
+                sykmeldingService.registrerStatus(SykmeldingStatusEvent(sykmeldingsid, LocalDateTime.now(), StatusEvent.BEKREFTET))
+                call.respond(HttpStatusCode.OK)
             } else {
-                call.respond(HttpStatusCode.Forbidden)
+                call.respond(HttpStatusCode.NotFound)
             }
         }
     }
