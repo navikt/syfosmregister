@@ -1,6 +1,5 @@
 package no.nav.syfo.aksessering
 
-import java.time.LocalDateTime
 import no.nav.syfo.aksessering.db.registerStatus
 import no.nav.syfo.aksessering.db.registrerLestAvBruker
 import no.nav.syfo.persistering.StatusEvent
@@ -17,8 +16,11 @@ import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotBe
+import org.postgresql.util.PSQLException
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.LocalDateTime
+import kotlin.test.assertFailsWith
 
 class SykmeldingServiceTest : Spek({
 
@@ -75,6 +77,14 @@ class SykmeldingServiceTest : Spek({
             sykmeldingService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime.plusDays(1), StatusEvent.SENT))
             val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
             savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
+        }
+
+        it("Should throw error when inserting same status") {
+            val confirmedDateTime = LocalDateTime.now()
+            val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.CONFIRMED)
+            sykmeldingService.registrerStatus(status)
+            assertFailsWith(PSQLException::class) { sykmeldingService.registrerStatus(status) }
+
         }
     }
 })

@@ -9,6 +9,7 @@ import io.ktor.routing.post
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.persistering.StatusEvent
 import no.nav.syfo.persistering.SykmeldingStatusEvent
+import org.postgresql.util.PSQLException
 
 fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
 
@@ -19,8 +20,16 @@ fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
                 sykmeldingId,
                 sykmeldingStatusEventDTO.timestamp,
                 sykmeldingStatusEventDTO.statusEvent.toStatusEvent())
-        sykmeldingService.registrerStatus(sykmeldingStatusEvent)
-        call.respond(HttpStatusCode.OK)
+        try{
+            sykmeldingService.registrerStatus(sykmeldingStatusEvent)
+            call.respond(HttpStatusCode.Created)
+        } catch (ex: PSQLException) {
+            if(ex.serverErrorMessage.message.contains("duplicate key")) {
+                call.respond(HttpStatusCode.Conflict)
+            } else {
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
     }
 }
 
