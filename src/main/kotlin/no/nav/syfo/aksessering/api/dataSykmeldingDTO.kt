@@ -116,5 +116,5 @@ data class SykmeldingStatusEventDTO(
 )
 
 enum class StatusEventDTO {
-    OPEN, CANCELED, EXPIRED, SENT, CONFIRMED
+    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
 }

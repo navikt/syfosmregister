@@ -38,5 +38,5 @@ data class SykmeldingStatusEvent(
 )
 
 enum class StatusEvent {
-    OPEN, CANCELED, EXPIRED, SENT, CONFIRMED
+    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
 }

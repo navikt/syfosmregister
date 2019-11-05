@@ -20,11 +20,11 @@ fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
                 sykmeldingId,
                 sykmeldingStatusEventDTO.timestamp,
                 sykmeldingStatusEventDTO.statusEvent.toStatusEvent())
-        try{
+        try {
             sykmeldingService.registrerStatus(sykmeldingStatusEvent)
             call.respond(HttpStatusCode.Created)
         } catch (ex: PSQLException) {
-            if(ex.serverErrorMessage.message.contains("duplicate key")) {
+            if (ex.serverErrorMessage.message.contains("duplicate key")) {
                 log.info("Conflict", ex)
                 call.respond(HttpStatusCode.Conflict)
             } else {
@@ -37,10 +37,10 @@ fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
 
 private fun StatusEventDTO.toStatusEvent(): StatusEvent {
     return when (this) {
-        StatusEventDTO.CONFIRMED -> StatusEvent.CONFIRMED
-        StatusEventDTO.OPEN -> StatusEvent.OPEN
-        StatusEventDTO.SENT -> StatusEvent.SENT
-        StatusEventDTO.CANCELED -> StatusEvent.CANCELED
-        StatusEventDTO.EXPIRED -> StatusEvent.EXPIRED
+        StatusEventDTO.BEKREFTET -> StatusEvent.BEKREFTET
+        StatusEventDTO.APEN -> StatusEvent.APEN
+        StatusEventDTO.SENDT -> StatusEvent.SENDT
+        StatusEventDTO.AVBRUTT -> StatusEvent.AVBRUTT
+        StatusEventDTO.UTGATT -> StatusEvent.UTGATT
     }
 }

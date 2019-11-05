@@ -19,6 +19,8 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.mockk.every
 import io.mockk.mockkClass
+import java.nio.file.Paths
+import java.time.LocalDateTime
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.SykmeldingService
@@ -30,8 +32,6 @@ import org.postgresql.util.PSQLException
 import org.postgresql.util.ServerErrorMessage
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
-import java.time.LocalDateTime
 
 internal class SykmeldingStatusApiKtTest : Spek({
 
@@ -54,7 +54,7 @@ internal class SykmeldingStatusApiKtTest : Spek({
                 val sykmeldingId = "123"
                 every { sykmeldingService.registrerStatus(any()) } returns Unit
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.CONFIRMED, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.BEKREFTET, LocalDateTime.now())))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                 }) {
                     response.status() shouldEqual HttpStatusCode.Created
@@ -64,7 +64,7 @@ internal class SykmeldingStatusApiKtTest : Spek({
                 val sykmeldingId = "1235"
                 every { sykmeldingService.registrerStatus(any()) } throws PSQLException(ServerErrorMessage("M: duplicate key"))
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.CONFIRMED, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.BEKREFTET, LocalDateTime.now())))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                 }) {
                     response.status() shouldEqual HttpStatusCode.Conflict
@@ -107,7 +107,7 @@ internal class SykmeldingStatusApiKtTest : Spek({
                 val sykmeldingId = "123"
                 every { sykmeldingService.registrerStatus(any()) } returns Unit
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.CONFIRMED, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.BEKREFTET, LocalDateTime.now())))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                     addHeader("AUTHORIZATION", "Bearer ${generateJWT("client",
                             "preprod.local",
@@ -119,7 +119,7 @@ internal class SykmeldingStatusApiKtTest : Spek({
             }
             it("Should not authenticate") {
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/123/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.CONFIRMED, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.BEKREFTET, LocalDateTime.now())))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                     addHeader("Authorization", "Bearer ${generateJWT(
                             "client",

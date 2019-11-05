@@ -1,9 +1,6 @@
 package no.nav.syfo.aksessering.db
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.sql.ResultSet
-import java.sql.Timestamp
-import java.time.LocalDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.domain.Arbeidsgiver
@@ -11,13 +8,16 @@ import no.nav.syfo.domain.Gradert
 import no.nav.syfo.domain.Periodetype
 import no.nav.syfo.domain.Sykmelding
 import no.nav.syfo.domain.Sykmeldingsperiode
+import no.nav.syfo.objectMapper
+import no.nav.syfo.persistering.StatusEvent
+import no.nav.syfo.persistering.SykmeldingStatusEvent
+import java.sql.ResultSet
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import no.nav.syfo.model.Arbeidsgiver as ModelArbeidsgiver
 import no.nav.syfo.model.Gradert as ModelGradert
 import no.nav.syfo.model.HarArbeidsgiver as ModelHarArbeidsgiver
 import no.nav.syfo.model.Periode as ModelPeriode
-import no.nav.syfo.objectMapper
-import no.nav.syfo.persistering.StatusEvent
-import no.nav.syfo.persistering.SykmeldingStatusEvent
 
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
         connection.use { connection ->
@@ -41,7 +41,7 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
                      INNER JOIN SYKMELDINGSDOKUMENT as DOKUMENT on OPPLYSNINGER.id = DOKUMENT.id
                      LEFT OUTER JOIN SYKMELDINGSMETADATA as METADATA on OPPLYSNINGER.id = METADATA.id
                      INNER JOIN BEHANDLINGSUTFALL as UTFALL on OPPLYSNINGER.id = UTFALL.id
-                     LEFT OUTER JOIN sykmeldingstatus as STATUS on OPPLYSNINGER.id = STATUS.sykmelding_id and STATUS.event_timestamp = (select STATUS.event_timestamp from sykmeldingstatus where STATUS.sykmelding_id = OPPLYSNINGER.id and STATUS.event = 'CONFIRMED' ORDER BY STATUS.event_timestamp desc limit 1)
+                     LEFT OUTER JOIN sykmeldingstatus as STATUS on OPPLYSNINGER.id = STATUS.sykmelding_id and STATUS.event_timestamp = (select STATUS.event_timestamp from sykmeldingstatus where STATUS.sykmelding_id = OPPLYSNINGER.id and STATUS.event = 'BEKREFTET' ORDER BY STATUS.event_timestamp desc limit 1)
             where pasient_fnr = ?;
             """
             ).use {
@@ -118,7 +118,7 @@ fun ResultSet.toSykmelding(): Sykmelding =
         )
 
 private fun ResultSet.getBekreftedDato(): LocalDateTime? {
-    if (StatusEvent.CONFIRMED.name == getString("event")) {
+    if (StatusEvent.BEKREFTET.name == getString("event")) {
         return getTimestamp("event_timestamp").toLocalDateTime()
     } else {
         return getTimestamp("bekreftet_dato")?.toLocalDateTime()
