@@ -28,6 +28,8 @@ import no.nav.syfo.application.setupAuth
 import no.nav.syfo.objectMapper
 import no.nav.syfo.testutil.generateJWT
 import org.amshove.kluent.shouldEqual
+import org.postgresql.util.PSQLException
+import org.postgresql.util.ServerErrorMessage
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -52,10 +54,20 @@ internal class SykmeldingStatusApiKtTest : Spek({
                 val sykmeldingId = "123"
                 every { sykmeldingService.registrerStatus(any()) } returns Unit
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.CONFIRMED, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.BEKREFTET, LocalDateTime.now())))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                 }) {
-                    response.status() shouldEqual HttpStatusCode.OK
+                    response.status() shouldEqual HttpStatusCode.Created
+                }
+            }
+            it("Should get conflict") {
+                val sykmeldingId = "1235"
+                every { sykmeldingService.registrerStatus(any()) } throws PSQLException(ServerErrorMessage("M: duplicate key"))
+                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/status") {
+                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.BEKREFTET, LocalDateTime.now())))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Conflict
                 }
             }
         }
@@ -95,20 +107,19 @@ internal class SykmeldingStatusApiKtTest : Spek({
                 val sykmeldingId = "123"
                 every { sykmeldingService.registrerStatus(any()) } returns Unit
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.CONFIRMED, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.BEKREFTET, LocalDateTime.now())))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                     addHeader("AUTHORIZATION", "Bearer ${generateJWT("client",
                             "preprod.local",
                             subject = "srvsyfoservice",
                             issuer = env.stsOidcIssuer)}")
                 }) {
-                    response.status() shouldEqual HttpStatusCode.OK
+                    response.status() shouldEqual HttpStatusCode.Created
                 }
             }
             it("Should not authenticate") {
-                val sykmeldingId = "123"
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/123/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.CONFIRMED, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.BEKREFTET, LocalDateTime.now())))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                     addHeader("Authorization", "Bearer ${generateJWT(
                             "client",

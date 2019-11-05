@@ -226,7 +226,7 @@ suspend fun handleMessageSykmelding(
                     )
             )
 
-            database.registerStatus(SykmeldingStatusEvent(receivedSykmelding.sykmelding.id, receivedSykmelding.mottattDato, StatusEvent.OPEN))
+            database.registerStatus(SykmeldingStatusEvent(receivedSykmelding.sykmelding.id, receivedSykmelding.mottattDato, StatusEvent.APEN))
 
             log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
             MESSAGE_STORED_IN_DB_COUNTER.inc()

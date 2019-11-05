@@ -40,7 +40,7 @@ fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService) {
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
             if (sykmeldingService.erEier(sykmeldingsid, subject)) {
-                sykmeldingService.registrerStatus(SykmeldingStatusEvent(sykmeldingsid, LocalDateTime.now(), StatusEvent.CONFIRMED))
+                sykmeldingService.registrerStatus(SykmeldingStatusEvent(sykmeldingsid, LocalDateTime.now(), StatusEvent.BEKREFTET))
                 call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.NotFound)

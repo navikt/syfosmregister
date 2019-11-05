@@ -9,6 +9,7 @@ import io.ktor.routing.post
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.persistering.StatusEvent
 import no.nav.syfo.persistering.SykmeldingStatusEvent
+import org.postgresql.util.PSQLException
 
 fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
 
@@ -19,17 +20,27 @@ fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
                 sykmeldingId,
                 sykmeldingStatusEventDTO.timestamp,
                 sykmeldingStatusEventDTO.statusEvent.toStatusEvent())
-        sykmeldingService.registrerStatus(sykmeldingStatusEvent)
-        call.respond(HttpStatusCode.OK)
+        try {
+            sykmeldingService.registrerStatus(sykmeldingStatusEvent)
+            call.respond(HttpStatusCode.Created)
+        } catch (ex: PSQLException) {
+            if (ex.serverErrorMessage.message.contains("duplicate key")) {
+                log.info("Conflict", ex)
+                call.respond(HttpStatusCode.Conflict)
+            } else {
+                log.error("Internal server error", ex)
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
     }
 }
 
 private fun StatusEventDTO.toStatusEvent(): StatusEvent {
     return when (this) {
-        StatusEventDTO.CONFIRMED -> StatusEvent.CONFIRMED
-        StatusEventDTO.OPEN -> StatusEvent.OPEN
-        StatusEventDTO.SENT -> StatusEvent.SENT
-        StatusEventDTO.CANCELED -> StatusEvent.CANCELED
-        StatusEventDTO.EXPIRED -> StatusEvent.EXPIRED
+        StatusEventDTO.BEKREFTET -> StatusEvent.BEKREFTET
+        StatusEventDTO.APEN -> StatusEvent.APEN
+        StatusEventDTO.SENDT -> StatusEvent.SENDT
+        StatusEventDTO.AVBRUTT -> StatusEvent.AVBRUTT
+        StatusEventDTO.UTGATT -> StatusEvent.UTGATT
     }
 }
