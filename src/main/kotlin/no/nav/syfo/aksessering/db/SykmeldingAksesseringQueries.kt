@@ -68,7 +68,7 @@ fun DatabaseInterface.registrerLestAvBruker(sykmeldingsid: String): Int =
 
 fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     connection.use { connection ->
-        val status = connection.prepareStatement(
+        connection.prepareStatement(
                 """
                     INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?)
                     """
