@@ -25,8 +25,10 @@ fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
             call.respond(HttpStatusCode.Created)
         } catch (ex: PSQLException) {
             if(ex.serverErrorMessage.message.contains("duplicate key")) {
+                log.info("Conflict", ex)
                 call.respond(HttpStatusCode.Conflict)
             } else {
+                log.error("Internal server error", ex)
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
