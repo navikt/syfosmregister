@@ -27,7 +27,6 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
-import no.nav.syfo.persistering.opprettTomSykmeldingsmetadata
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -66,7 +65,6 @@ object SykmeldingApiSpek : Spek({
                 database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
                 database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-                database.connection.opprettTomSykmeldingsmetadata("uuid")
             }
 
             afterEachTest {
@@ -120,7 +118,6 @@ object SykmeldingApiSpek : Spek({
                     )
                 )
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
-                database.connection.opprettTomSykmeldingsmetadata("uuid2")
 
                 every { mockPayload.subject } returns "PasientFnr1"
 

@@ -60,20 +60,6 @@ fun Connection.opprettSykmeldingsdokument(sykmeldingsdokument: Sykmeldingsdokume
     }
 }
 
-fun Connection.opprettTomSykmeldingsmetadata(sykmeldingsid: String) =
-    use { connection ->
-        connection.prepareStatement(
-            """
-            INSERT INTO SYKMELDINGSMETADATA(id, bekreftet_dato) VALUES (?, NULL)
-            """
-        ).use {
-            it.setString(1, sykmeldingsid)
-            it.executeUpdate()
-        }
-
-        connection.commit()
-    }
-
 fun Connection.opprettBehandlingsutfall(behandlingsutfall: Behandlingsutfall) =
     use { connection ->
         connection.prepareStatement(

@@ -25,7 +25,6 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
                     """
                 SELECT OPPLYSNINGER.id,
                    mottatt_tidspunkt,
-                   bekreftet_dato,
                    behandlingsutfall,
                    legekontor_org_nr,
                    STATUS.event,
@@ -39,7 +38,6 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
                    jsonb_extract_path(DOKUMENT.sykmelding, 'medisinskVurdering')::jsonb         as medisinsk_vurdering
             FROM SYKMELDINGSOPPLYSNINGER as OPPLYSNINGER
                      INNER JOIN SYKMELDINGSDOKUMENT as DOKUMENT on OPPLYSNINGER.id = DOKUMENT.id
-                     LEFT OUTER JOIN SYKMELDINGSMETADATA as METADATA on OPPLYSNINGER.id = METADATA.id
                      INNER JOIN BEHANDLINGSUTFALL as UTFALL on OPPLYSNINGER.id = UTFALL.id
                      LEFT OUTER JOIN sykmeldingstatus as STATUS on OPPLYSNINGER.id = STATUS.sykmelding_id and STATUS.event_timestamp = (select STATUS.event_timestamp from sykmeldingstatus where STATUS.sykmelding_id = OPPLYSNINGER.id and STATUS.event = 'BEKREFTET' ORDER BY STATUS.event_timestamp desc limit 1)
             where pasient_fnr = ?;
@@ -48,22 +46,6 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
                 it.setString(1, fnr)
                 it.executeQuery().toList { toSykmelding() }
             }
-        }
-
-fun DatabaseInterface.registrerLestAvBruker(sykmeldingsid: String): Int =
-        connection.use { connection ->
-            val status = connection.prepareStatement(
-                    """
-            UPDATE SYKMELDINGSMETADATA
-            SET bekreftet_dato = current_timestamp
-            WHERE id = ? AND bekreftet_dato IS NULL;
-            """
-            ).use {
-                it.setString(1, sykmeldingsid)
-                it.executeUpdate()
-            }
-            connection.commit()
-            return status
         }
 
 fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
@@ -121,7 +103,7 @@ private fun ResultSet.getBekreftedDato(): LocalDateTime? {
     if (StatusEvent.BEKREFTET.name == getString("event")) {
         return getTimestamp("event_timestamp").toLocalDateTime()
     } else {
-        return getTimestamp("bekreftet_dato")?.toLocalDateTime()
+        return null
     }
 }
 
