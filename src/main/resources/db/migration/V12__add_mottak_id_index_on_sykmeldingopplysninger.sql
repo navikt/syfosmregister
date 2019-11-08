@@ -1,0 +1,1 @@
+create index sykmeldingsopplysninger_mottak_id_idx on sykmeldingsopplysninger (mottak_id);
