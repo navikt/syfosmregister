@@ -15,6 +15,8 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
+import java.nio.file.Paths
+import java.util.Base64
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.SykmeldingService
@@ -33,8 +35,6 @@ import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
-import java.util.Base64
 
 @KtorExperimentalAPI
 object AuthenticateSpek : Spek({
