@@ -1,0 +1,1 @@
+create index sykmeldingsopplysninger_pasient_fnr_idx on sykmeldingsopplysninger (pasient_fnr);
