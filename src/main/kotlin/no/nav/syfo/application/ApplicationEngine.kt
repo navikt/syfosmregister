@@ -33,6 +33,8 @@ import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
 
 fun createApplicationEngine(
     env: Environment,
@@ -71,6 +73,7 @@ fun createApplicationEngine(
         }
 
         val sykmeldingService = SykmeldingService(database)
+        val sykmeldingStatusService = SykmeldingStatusService(database)
         routing {
             registerNaisApi(applicationState)
             authenticate("jwt") {
@@ -84,6 +87,7 @@ fun createApplicationEngine(
             }
             authenticate("oidc") {
                 registerSykmeldingStatusApi(sykmeldingService)
+                registerSykmeldingSendApi(sykmeldingStatusService)
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())
