@@ -2,7 +2,24 @@ package no.nav.syfo.sykmeldingstatus
 
 import java.lang.RuntimeException
 import java.sql.Statement
+import java.sql.Timestamp
 import no.nav.syfo.db.DatabaseInterface
+
+fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
+    connection.use { connection ->
+        connection.prepareStatement(
+            """
+                    INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?)
+                    """
+        ).use {
+            it.setString(1, sykmeldingStatusEvent.id)
+            it.setTimestamp(2, Timestamp.valueOf(sykmeldingStatusEvent.timestamp))
+            it.setString(3, sykmeldingStatusEvent.event.name)
+            it.execute()
+        }
+        connection.commit()
+    }
+}
 
 fun DatabaseInterface.lagreArbeidsgiver(sykmeldingSendEvent: SykmeldingSendEvent) {
     connection.use { connection ->

@@ -27,6 +27,7 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -58,7 +59,7 @@ object SykmeldingApiSpek : Spek({
             }
 
             application.routing {
-                registerSykmeldingApi(SykmeldingService(database))
+                registerSykmeldingApi(SykmeldingService(database), SykmeldingStatusService(database))
             }
 
             beforeEachTest {

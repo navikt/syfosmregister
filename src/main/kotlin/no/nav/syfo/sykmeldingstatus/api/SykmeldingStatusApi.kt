@@ -1,4 +1,4 @@
-package no.nav.syfo.aksessering.api
+package no.nav.syfo.sykmeldingstatus.api
 
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -6,12 +6,13 @@ import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.post
-import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.persistering.StatusEvent
-import no.nav.syfo.persistering.SykmeldingStatusEvent
+import no.nav.syfo.aksessering.api.log
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import org.postgresql.util.PSQLException
 
-fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
+fun Route.registerSykmeldingStatusApi(sykmeldingStatusService: SykmeldingStatusService) {
 
     post("/sykmeldinger/{sykmeldingsid}/status") {
         val sykmeldingId = call.parameters["sykmeldingsid"]!!
@@ -21,7 +22,7 @@ fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
                 sykmeldingStatusEventDTO.timestamp,
                 sykmeldingStatusEventDTO.statusEvent.toStatusEvent())
         try {
-            sykmeldingService.registrerStatus(sykmeldingStatusEvent)
+            sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
             call.respond(HttpStatusCode.Created)
         } catch (ex: PSQLException) {
             if (ex.serverErrorMessage.message.contains("duplicate key")) {
@@ -32,15 +33,5 @@ fun Route.registerSykmeldingStatusApi(sykmeldingService: SykmeldingService) {
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
-    }
-}
-
-private fun StatusEventDTO.toStatusEvent(): StatusEvent {
-    return when (this) {
-        StatusEventDTO.BEKREFTET -> StatusEvent.BEKREFTET
-        StatusEventDTO.APEN -> StatusEvent.APEN
-        StatusEventDTO.SENDT -> StatusEvent.SENDT
-        StatusEventDTO.AVBRUTT -> StatusEvent.AVBRUTT
-        StatusEventDTO.UTGATT -> StatusEvent.UTGATT
     }
 }

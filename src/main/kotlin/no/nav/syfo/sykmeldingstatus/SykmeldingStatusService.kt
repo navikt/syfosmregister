@@ -1,9 +1,6 @@
 package no.nav.syfo.sykmeldingstatus
 
-import no.nav.syfo.aksessering.db.registerStatus
 import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.persistering.StatusEvent
-import no.nav.syfo.persistering.SykmeldingStatusEvent
 
 class SykmeldingStatusService(private val database: DatabaseInterface) {
 

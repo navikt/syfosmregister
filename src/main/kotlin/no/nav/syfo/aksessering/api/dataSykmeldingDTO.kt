@@ -109,12 +109,3 @@ data class DiagnoseDTO(
     val diagnosesystem: String,
     val diagnosetekst: String
 )
-
-data class SykmeldingStatusEventDTO(
-    val statusEvent: StatusEventDTO,
-    val timestamp: LocalDateTime
-)
-
-enum class StatusEventDTO {
-    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
-}

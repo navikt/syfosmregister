@@ -2,7 +2,6 @@ package no.nav.syfo.aksessering.db
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.ResultSet
-import java.sql.Timestamp
 import java.time.LocalDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
@@ -16,8 +15,7 @@ import no.nav.syfo.model.Gradert as ModelGradert
 import no.nav.syfo.model.HarArbeidsgiver as ModelHarArbeidsgiver
 import no.nav.syfo.model.Periode as ModelPeriode
 import no.nav.syfo.objectMapper
-import no.nav.syfo.persistering.StatusEvent
-import no.nav.syfo.persistering.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.StatusEvent
 
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
         connection.use { connection ->
@@ -47,22 +45,6 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
                 it.executeQuery().toList { toSykmelding() }
             }
         }
-
-fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
-    connection.use { connection ->
-        connection.prepareStatement(
-                """
-                    INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?)
-                    """
-        ).use {
-            it.setString(1, sykmeldingStatusEvent.id)
-            it.setTimestamp(2, Timestamp.valueOf(sykmeldingStatusEvent.timestamp))
-            it.setString(3, sykmeldingStatusEvent.event.name)
-            it.execute()
-        }
-        connection.commit()
-    }
-}
 
 fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
         connection.use { connection ->

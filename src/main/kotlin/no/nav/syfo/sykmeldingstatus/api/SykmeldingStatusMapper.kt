@@ -3,6 +3,8 @@ package no.nav.syfo.sykmeldingstatus.api
 import no.nav.syfo.sykmeldingstatus.Arbeidsgiver
 import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
+import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.Svar
 import no.nav.syfo.sykmeldingstatus.Svartype
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
@@ -16,6 +18,16 @@ fun tilSykmeldingSendEvent(sykmeldingId: String, sykmeldingSendEventDTO: Sykmeld
         tilArbeidsgiver(sykmeldingId, sykmeldingSendEventDTO.arbeidsgiver),
         tilSporsmal(sykmeldingId, arbeidssituasjon)
     )
+}
+
+fun StatusEventDTO.toStatusEvent(): StatusEvent {
+    return when (this) {
+        StatusEventDTO.BEKREFTET -> StatusEvent.BEKREFTET
+        StatusEventDTO.APEN -> StatusEvent.APEN
+        StatusEventDTO.SENDT -> StatusEvent.SENDT
+        StatusEventDTO.AVBRUTT -> StatusEvent.AVBRUTT
+        StatusEventDTO.UTGATT -> StatusEvent.UTGATT
+    }
 }
 
 fun tilArbeidsgiver(sykmeldingsId: String, arbeidsgiverDTO: ArbeidsgiverRTDTO): Arbeidsgiver =

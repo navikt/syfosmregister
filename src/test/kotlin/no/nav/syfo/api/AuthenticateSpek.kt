@@ -26,6 +26,7 @@ import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
@@ -54,6 +55,7 @@ object AuthenticateSpek : Spek({
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
+    val sykmeldingStatusService = SykmeldingStatusService(database)
 
     beforeEachTest {
         database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
@@ -83,7 +85,7 @@ object AuthenticateSpek : Spek({
             ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider)
             application.routing {
                 authenticate("jwt") {
-                    registerSykmeldingApi(sykmeldingService)
+                    registerSykmeldingApi(sykmeldingService, sykmeldingStatusService)
                 }
                 authenticate("basic") {
                     registerNullstillApi(database, "dev-fss")

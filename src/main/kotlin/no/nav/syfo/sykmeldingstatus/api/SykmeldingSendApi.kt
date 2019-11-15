@@ -25,4 +25,3 @@ fun Route.registerSykmeldingSendApi(sykmeldingStatusService: SykmeldingStatusSer
         }
     }
 }
-

@@ -2,6 +2,25 @@ package no.nav.syfo.sykmeldingstatus
 
 import java.time.LocalDateTime
 
+data class SykmeldingStatusEvent(
+    val id: String,
+    val timestamp: LocalDateTime,
+    val event: StatusEvent
+)
+
+enum class StatusEvent {
+    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
+}
+
+data class SykmeldingStatusEventDTO(
+    val statusEvent: StatusEventDTO,
+    val timestamp: LocalDateTime
+)
+
+enum class StatusEventDTO {
+    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
+}
+
 data class SykmeldingSendEvent(
     val id: String,
     val timestamp: LocalDateTime,
