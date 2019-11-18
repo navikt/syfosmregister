@@ -78,7 +78,8 @@ fun DatabaseInterface.finnSporsmal(sporsmal: Sporsmal): Int? {
         ).use {
             it.setString(1, sporsmal.shortName.name)
             it.setString(2, sporsmal.tekst)
-            return it.executeQuery().getInt(1)
+            val rs = it.executeQuery()
+            return if (rs.next()) rs.getInt(1) else null
         }
     }
 }

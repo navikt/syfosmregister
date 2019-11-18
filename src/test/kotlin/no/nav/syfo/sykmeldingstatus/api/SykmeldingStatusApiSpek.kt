@@ -1,4 +1,4 @@
-package no.nav.syfo.aksessering.api
+package no.nav.syfo.sykmeldingstatus.api
 
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
@@ -28,7 +28,6 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusApi
 import no.nav.syfo.testutil.generateJWT
 import org.amshove.kluent.shouldEqual
 import org.postgresql.util.PSQLException
@@ -36,7 +35,7 @@ import org.postgresql.util.ServerErrorMessage
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-internal class SykmeldingStatusApiKtTest : Spek({
+internal class SykmeldingStatusApiSpek : Spek({
 
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
 

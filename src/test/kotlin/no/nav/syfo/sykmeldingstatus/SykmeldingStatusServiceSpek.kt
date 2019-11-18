@@ -1,13 +1,11 @@
-package no.nav.syfo.aksessering
+package no.nav.syfo.sykmeldingstatus
 
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
+import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -19,7 +17,7 @@ import org.postgresql.util.PSQLException
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-class SykmeldingServiceTest : Spek({
+class SykmeldingStatusServiceSpek : Spek({
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
@@ -29,9 +27,7 @@ class SykmeldingServiceTest : Spek({
         database.stop()
     }
 
-    describe("Test SykmeldingStatus") {
-
-        val createdDateTime = LocalDateTime.now()
+    describe("Test registrerStatus") {
         beforeEachTest {
             database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
             database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)

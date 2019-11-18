@@ -30,7 +30,7 @@ fun StatusEventDTO.toStatusEvent(): StatusEvent {
     }
 }
 
-fun tilArbeidsgiver(sykmeldingsId: String, arbeidsgiverDTO: ArbeidsgiverRTDTO): Arbeidsgiver =
+fun tilArbeidsgiver(sykmeldingsId: String, arbeidsgiverDTO: ArbeidsgiverDTO): Arbeidsgiver =
     Arbeidsgiver(
         sykmeldingId = sykmeldingsId,
         orgnavn = arbeidsgiverDTO.orgNavn,

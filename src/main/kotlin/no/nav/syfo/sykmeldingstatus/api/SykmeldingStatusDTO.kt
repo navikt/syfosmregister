@@ -4,13 +4,13 @@ import java.time.LocalDateTime
 
 data class SykmeldingSendEventDTO(
     val timestamp: LocalDateTime,
-    val arbeidsgiver: ArbeidsgiverRTDTO,
+    val arbeidsgiver: ArbeidsgiverDTO,
     val sporsmalOgSvarListe: List<SporsmalOgSvarDTO>
 )
 
-data class ArbeidsgiverRTDTO(
+data class ArbeidsgiverDTO(
     val orgnummer: String,
-    val juridiskOrgnummer: String,
+    val juridiskOrgnummer: String?,
     val orgNavn: String
 )
 
