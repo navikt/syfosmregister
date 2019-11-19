@@ -58,3 +58,9 @@ enum class Svartype {
     PERIODER,
     JA_NEI
 }
+
+data class SykmeldingBekreftEvent(
+    val id: String,
+    val timestamp: LocalDateTime,
+    val sporsmal: List<Sporsmal>?
+)

@@ -16,7 +16,7 @@ data class ArbeidsgiverDTO(
 
 data class SykmeldingBekreftEventDTO(
     val timestamp: LocalDateTime,
-    val sporsmalOgSvarListe: List<SporsmalOgSvarDTO>
+    val sporsmalOgSvarListe: List<SporsmalOgSvarDTO>?
 )
 
 data class SporsmalOgSvarDTO(
