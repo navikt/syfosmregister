@@ -20,7 +20,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArguments.fields
-import no.nav.syfo.aksessering.db.registerStatus
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
@@ -35,8 +34,6 @@ import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.persistering.Behandlingsutfall
-import no.nav.syfo.persistering.StatusEvent
-import no.nav.syfo.persistering.SykmeldingStatusEvent
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.persistering.erBehandlingsutfallLagret
@@ -46,6 +43,9 @@ import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
 import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
+import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.registerStatus
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.StringDeserializer
