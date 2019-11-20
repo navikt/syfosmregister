@@ -83,6 +83,22 @@ class BekreftSykmeldingEndeTilEndeSpek : Spek({
                     sporsmal[3] shouldEqual Sporsmal("Når hadde du fravær?", ShortName.PERIODE, Svar(sykmeldingId, 4, Svartype.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}"))
                 }
             }
+
+            it("Bekreft uten spørsmål lagrer riktig info i databasen") {
+                val sykmeldingId = "annenUuid"
+                val timestamp = LocalDateTime.now()
+                val sykmeldingBekreftEventDTO = SykmeldingBekreftEventDTO(timestamp, null)
+                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(sykmeldingBekreftEventDTO))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }) {
+                    val status = database.finnStatusForSykmelding(sykmeldingId)
+                    val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
+
+                    status shouldEqual StatusEvent.BEKREFTET
+                    sporsmal.size shouldEqual 0
+                }
+            }
         }
     }
 })
