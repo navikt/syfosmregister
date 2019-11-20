@@ -18,12 +18,11 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
-import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverDTO
 import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
-import no.nav.syfo.sykmeldingstatus.api.SykmeldingSendEventDTO
-import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
+import no.nav.syfo.sykmeldingstatus.api.SykmeldingBekreftEventDTO
+import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -33,7 +32,7 @@ import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
-class SendSykmeldingEndeTilEndeSpek : Spek({
+class BekreftSykmeldingEndeTilEndeSpek : Spek({
 
     val database = TestDB()
     val sykmeldingStatusService = SykmeldingStatusService(database)
@@ -52,7 +51,7 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
         database.stop()
     }
 
-    describe("Ende-til-ende-test for sending av sykmeldinger") {
+    describe("Ende-til-ende-test for bekrefting av sykmeldinger") {
         with(TestApplicationEngine()) {
             start(true)
             application.install(ContentNegotiation) {
@@ -63,39 +62,34 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
                     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 }
             }
-            application.routing { registerSykmeldingSendApi(sykmeldingStatusService) }
+            application.routing { registerSykmeldingBekreftApi(sykmeldingStatusService) }
 
-            it("Send lagrer riktig info i databasen") {
+            it("Bekreft med spørsmål lagrer riktig info i databasen") {
                 val sykmeldingId = "uuid"
-                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/send") {
-                    setBody(objectMapper.writeValueAsString(opprettSykmeldingSendEventDTOForArbeidstaker()))
+                val timestamp = LocalDateTime.now()
+                val sykmeldingBekreftEventDTO = SykmeldingBekreftEventDTO(timestamp, lagSporsmalOgSvarDTOListe())
+                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(sykmeldingBekreftEventDTO))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                 }) {
                     val status = database.finnStatusForSykmelding(sykmeldingId)
-                    val arbeidsgiver = database.finnArbeidsgiverForSykmelding(sykmeldingId)
                     val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
-                    val svar = sporsmal[0].svar
 
-                    status shouldEqual StatusEvent.SENDT
-                    sporsmal.size shouldEqual 1
-                    sporsmal[0].tekst shouldEqual "Jeg er sykmeldt fra "
-                    sporsmal[0].shortName shouldEqual ShortName.ARBEIDSSITUASJON
-                    svar.svartype shouldEqual Svartype.ARBEIDSSITUASJON
-                    svar.svar shouldEqual "ARBEIDSTAKER"
-
-                    arbeidsgiver.juridiskOrgnummer shouldEqual null
-                    arbeidsgiver.orgnummer shouldEqual "123456"
-                    arbeidsgiver.orgnavn shouldEqual "Bedrift A/S"
+                    status shouldEqual StatusEvent.BEKREFTET
+                    sporsmal.size shouldEqual 4
+                    sporsmal[0] shouldEqual Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, 1, Svartype.ARBEIDSSITUASJON, "Selvstendig"))
+                    sporsmal[1] shouldEqual Sporsmal("Har forsikring?", ShortName.FORSIKRING, Svar(sykmeldingId, 2, Svartype.JA_NEI, "Ja"))
+                    sporsmal[2] shouldEqual Sporsmal("Hatt fravær?", ShortName.FRAVAER, Svar(sykmeldingId, 3, Svartype.JA_NEI, "Ja"))
+                    sporsmal[3] shouldEqual Sporsmal("Når hadde du fravær?", ShortName.PERIODE, Svar(sykmeldingId, 4, Svartype.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}"))
                 }
             }
         }
     }
 })
 
-private fun opprettSykmeldingSendEventDTOForArbeidstaker(): SykmeldingSendEventDTO =
-    SykmeldingSendEventDTO(
-        LocalDateTime.now(),
-        ArbeidsgiverDTO(orgnummer = "123456", juridiskOrgnummer = null, orgNavn = "Bedrift A/S"),
-        listOf(SporsmalOgSvarDTO("Jeg er sykmeldt fra ", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
-            SporsmalOgSvarDTO("Er Ole Olsen din nærmeste leder?", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "NEI"))
-    )
+private fun lagSporsmalOgSvarDTOListe(): List<SporsmalOgSvarDTO> {
+    return listOf(SporsmalOgSvarDTO("Sykmeldt fra ", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "Selvstendig"),
+        SporsmalOgSvarDTO("Har forsikring?", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "Ja"),
+        SporsmalOgSvarDTO("Hatt fravær?", ShortNameDTO.FRAVAER, SvartypeDTO.JA_NEI, "Ja"),
+        SporsmalOgSvarDTO("Når hadde du fravær?", ShortNameDTO.PERIODE, SvartypeDTO.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}"))
+}
