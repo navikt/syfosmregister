@@ -33,6 +33,7 @@ import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusApi
 
@@ -88,6 +89,7 @@ fun createApplicationEngine(
             authenticate("oidc") {
                 registerSykmeldingStatusApi(sykmeldingStatusService)
                 registerSykmeldingSendApi(sykmeldingStatusService)
+                registerSykmeldingBekreftApi(sykmeldingStatusService)
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())

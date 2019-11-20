@@ -7,6 +7,7 @@ import no.nav.syfo.sykmeldingstatus.StatusEvent
 import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.Svar
 import no.nav.syfo.sykmeldingstatus.Svartype
+import no.nav.syfo.sykmeldingstatus.SykmeldingBekreftEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 
 fun tilSykmeldingSendEvent(sykmeldingId: String, sykmeldingSendEventDTO: SykmeldingSendEventDTO): SykmeldingSendEvent {
@@ -17,6 +18,15 @@ fun tilSykmeldingSendEvent(sykmeldingId: String, sykmeldingSendEventDTO: Sykmeld
         sykmeldingSendEventDTO.timestamp,
         tilArbeidsgiver(sykmeldingId, sykmeldingSendEventDTO.arbeidsgiver),
         tilSporsmal(sykmeldingId, arbeidssituasjon)
+    )
+}
+
+fun tilSykmeldingBekreftEvent(sykmeldingId: String, sykmeldingBekreftEventDTO: SykmeldingBekreftEventDTO): SykmeldingBekreftEvent {
+
+    return SykmeldingBekreftEvent(
+        sykmeldingId,
+        sykmeldingBekreftEventDTO.timestamp,
+        tilSporsmalListe(sykmeldingId, sykmeldingBekreftEventDTO.sporsmalOgSvarListe)
     )
 }
 
@@ -38,11 +48,19 @@ fun tilArbeidsgiver(sykmeldingsId: String, arbeidsgiverDTO: ArbeidsgiverDTO): Ar
         juridiskOrgnummer = arbeidsgiverDTO.juridiskOrgnummer
     )
 
-fun tilSporsmal(sykmeldingId: String, arbeidssituasjon: SporsmalOgSvarDTO): Sporsmal =
-    Sporsmal(tekst = arbeidssituasjon.tekst, shortName = arbeidssituasjon.shortName.tilShortName(), svar = tilSvar(sykmeldingId, arbeidssituasjon))
+fun tilSporsmalListe(sykmeldingId: String, sporsmalOgSvarDTO: List<SporsmalOgSvarDTO>?): List<Sporsmal>? {
+    return if (sporsmalOgSvarDTO.isNullOrEmpty()) {
+        null
+    } else {
+        sporsmalOgSvarDTO.map { tilSporsmal(sykmeldingId, it) }
+    }
+}
 
-fun tilSvar(sykmeldingsId: String, arbeidssituasjon: SporsmalOgSvarDTO): Svar =
-    Svar(sykmeldingId = sykmeldingsId, sporsmalId = null, svartype = arbeidssituasjon.svartype.tilSvartype(), svar = arbeidssituasjon.svar)
+fun tilSporsmal(sykmeldingId: String, sporsmalOgSvarDTO: SporsmalOgSvarDTO): Sporsmal =
+    Sporsmal(tekst = sporsmalOgSvarDTO.tekst, shortName = sporsmalOgSvarDTO.shortName.tilShortName(), svar = tilSvar(sykmeldingId, sporsmalOgSvarDTO))
+
+fun tilSvar(sykmeldingsId: String, sporsmalOgSvarDTO: SporsmalOgSvarDTO): Svar =
+    Svar(sykmeldingId = sykmeldingsId, sporsmalId = null, svartype = sporsmalOgSvarDTO.svartype.tilSvartype(), svar = sporsmalOgSvarDTO.svar)
 
 private fun finnArbeidssituasjonSpm(sykmeldingSendEvent: SykmeldingSendEventDTO) =
     sykmeldingSendEvent.sporsmalOgSvarListe.find { it.shortName == ShortNameDTO.ARBEIDSSITUASJON } ?: throw IllegalStateException("Mangler informasjon om arbeidssituasjon")

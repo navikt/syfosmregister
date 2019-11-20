@@ -13,10 +13,7 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
-import java.sql.ResultSet
 import java.time.LocalDateTime
-import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.db.toList
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
@@ -74,10 +71,12 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
                     setBody(objectMapper.writeValueAsString(opprettSykmeldingSendEventDTOForArbeidstaker()))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                 }) {
+                    val status = database.finnStatusForSykmelding(sykmeldingId)
                     val arbeidsgiver = database.finnArbeidsgiverForSykmelding(sykmeldingId)
                     val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
                     val svar = sporsmal[0].svar
 
+                    status shouldEqual StatusEvent.SENDT
                     sporsmal.size shouldEqual 1
                     sporsmal[0].tekst shouldEqual "Jeg er sykmeldt fra "
                     sporsmal[0].shortName shouldEqual ShortName.ARBEIDSSITUASJON
@@ -93,58 +92,7 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
     }
 })
 
-fun DatabaseInterface.finnSvarForSykmelding(sykmeldingId: String): List<Sporsmal> {
-    connection.use { connection ->
-        connection.prepareStatement(
-            """
-                SELECT *
-                FROM svar as SVAR
-                     INNER JOIN sporsmal as SPM on SVAR.sporsmal_id = SPM.id
-                WHERE sykmelding_id=?;
-                """
-        ).use {
-            it.setString(1, sykmeldingId)
-            return it.executeQuery().toList { tilSporsmal() }
-        }
-    }
-}
-
-fun ResultSet.tilSporsmal(): Sporsmal =
-    Sporsmal(
-        tekst = getString("tekst"),
-        shortName = ShortName.valueOf(getString("shortname")),
-        svar = Svar(
-            sykmeldingId = getString("sykmelding_id"),
-            sporsmalId = getInt("sporsmal_id"),
-            svartype = Svartype.valueOf(getString("svartype")),
-            svar = getString("svar")
-        )
-    )
-
-fun DatabaseInterface.finnArbeidsgiverForSykmelding(sykmeldingId: String): Arbeidsgiver {
-    connection.use { connection ->
-        connection.prepareStatement(
-            """
-                SELECT *
-                FROM arbeidsgiver
-                WHERE sykmelding_id=?;
-                """
-        ).use {
-            it.setString(1, sykmeldingId)
-            return it.executeQuery().toList { tilArbeidsgiver() }.first()
-        }
-    }
-}
-
-fun ResultSet.tilArbeidsgiver(): Arbeidsgiver =
-    Arbeidsgiver(
-        sykmeldingId = getString("sykmelding_id"),
-        orgnummer = getString("orgnummer"),
-        orgnavn = getString("navn"),
-        juridiskOrgnummer = getString("juridisk_orgnummer")
-    )
-
-fun opprettSykmeldingSendEventDTOForArbeidstaker(): SykmeldingSendEventDTO =
+private fun opprettSykmeldingSendEventDTOForArbeidstaker(): SykmeldingSendEventDTO =
     SykmeldingSendEventDTO(
         LocalDateTime.now(),
         ArbeidsgiverDTO(orgnummer = "123456", juridiskOrgnummer = null, orgNavn = "Bedrift A/S"),
