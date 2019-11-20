@@ -9,14 +9,14 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
     }
 
     fun registrerSendt(sykmeldingSendEvent: SykmeldingSendEvent) {
-        val sykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingSendEvent.id, sykmeldingSendEvent.timestamp, StatusEvent.SENDT)
+        val sykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingSendEvent.sykmeldingId, sykmeldingSendEvent.timestamp, StatusEvent.SENDT)
         registrerStatus(sykmeldingStatusEvent)
         database.lagreArbeidsgiver(sykmeldingSendEvent)
         database.lagreSporsmalOgSvar(sykmeldingSendEvent.sporsmal)
     }
 
     fun registrerBekreftet(sykmeldingBekreftEvent: SykmeldingBekreftEvent) {
-        val sykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingBekreftEvent.id, sykmeldingBekreftEvent.timestamp, StatusEvent.BEKREFTET)
+        val sykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingBekreftEvent.sykmeldingId, sykmeldingBekreftEvent.timestamp, StatusEvent.BEKREFTET)
         registrerStatus(sykmeldingStatusEvent)
         sykmeldingBekreftEvent.sporsmal?.forEach {
             database.lagreSporsmalOgSvar(it)

@@ -3,7 +3,7 @@ package no.nav.syfo.sykmeldingstatus
 import java.time.LocalDateTime
 
 data class SykmeldingStatusEvent(
-    val id: String,
+    val sykmeldingId: String,
     val timestamp: LocalDateTime,
     val event: StatusEvent
 )
@@ -22,7 +22,7 @@ enum class StatusEventDTO {
 }
 
 data class SykmeldingSendEvent(
-    val id: String,
+    val sykmeldingId: String,
     val timestamp: LocalDateTime,
     val arbeidsgiver: Arbeidsgiver,
     val sporsmal: Sporsmal
@@ -60,7 +60,7 @@ enum class Svartype {
 }
 
 data class SykmeldingBekreftEvent(
-    val id: String,
+    val sykmeldingId: String,
     val timestamp: LocalDateTime,
     val sporsmal: List<Sporsmal>?
 )

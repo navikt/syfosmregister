@@ -25,7 +25,7 @@ class SykmeldingStatusMapperSpek : Spek({
 
                 val sykmeldingSendEvent = tilSykmeldingSendEvent(sykmeldingId, sykmeldingSendEventDTO)
 
-                sykmeldingSendEvent.id shouldEqual sykmeldingId
+                sykmeldingSendEvent.sykmeldingId shouldEqual sykmeldingId
                 sykmeldingSendEvent.timestamp shouldEqual timestamp
                 sykmeldingSendEvent.sporsmal shouldEqual Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))
                 sykmeldingSendEvent.arbeidsgiver shouldEqual Arbeidsgiver(sykmeldingId, "orgnummer", null, "navn")
@@ -39,7 +39,7 @@ class SykmeldingStatusMapperSpek : Spek({
 
             val sykmeldingBekreftEvent = tilSykmeldingBekreftEvent(sykmeldingId, sykmeldingBekreftEventDTO)
 
-            sykmeldingBekreftEvent.id shouldEqual sykmeldingId
+            sykmeldingBekreftEvent.sykmeldingId shouldEqual sykmeldingId
             sykmeldingBekreftEvent.timestamp shouldEqual timestamp
             sykmeldingBekreftEvent.sporsmal?.size shouldEqual 4
             sykmeldingBekreftEvent.sporsmal!![0] shouldEqual Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "Frilanser"))
@@ -54,7 +54,7 @@ class SykmeldingStatusMapperSpek : Spek({
 
             val sykmeldingBekreftEventUtenSpm = tilSykmeldingBekreftEvent(sykmeldingId, sykmeldingBekreftEventDTOUtenSpm)
 
-            sykmeldingBekreftEventUtenSpm.id shouldEqual sykmeldingId
+            sykmeldingBekreftEventUtenSpm.sykmeldingId shouldEqual sykmeldingId
             sykmeldingBekreftEventUtenSpm.timestamp shouldEqual timestamp
             sykmeldingBekreftEventUtenSpm.sporsmal shouldEqual null
         }
@@ -65,7 +65,7 @@ class SykmeldingStatusMapperSpek : Spek({
 
             val sykmeldingBekreftEventUtenSpm = tilSykmeldingBekreftEvent(sykmeldingId, sykmeldingBekreftEventDTOUtenSpm)
 
-            sykmeldingBekreftEventUtenSpm.id shouldEqual sykmeldingId
+            sykmeldingBekreftEventUtenSpm.sykmeldingId shouldEqual sykmeldingId
             sykmeldingBekreftEventUtenSpm.timestamp shouldEqual timestamp
             sykmeldingBekreftEventUtenSpm.sporsmal shouldEqual null
         }

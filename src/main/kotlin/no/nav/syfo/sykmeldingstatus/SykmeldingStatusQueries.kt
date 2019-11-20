@@ -12,7 +12,7 @@ fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEven
                     INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?)
                     """
         ).use {
-            it.setString(1, sykmeldingStatusEvent.id)
+            it.setString(1, sykmeldingStatusEvent.sykmeldingId)
             it.setTimestamp(2, Timestamp.valueOf(sykmeldingStatusEvent.timestamp))
             it.setString(3, sykmeldingStatusEvent.event.name)
             it.execute()
@@ -28,7 +28,7 @@ fun DatabaseInterface.lagreArbeidsgiver(sykmeldingSendEvent: SykmeldingSendEvent
                     INSERT INTO arbeidsgiver(sykmelding_id, orgnummer, juridisk_orgnummer, navn) VALUES (?, ?, ?, ?)
                     """
         ).use {
-            it.setString(1, sykmeldingSendEvent.id)
+            it.setString(1, sykmeldingSendEvent.sykmeldingId)
             it.setString(2, sykmeldingSendEvent.arbeidsgiver.orgnummer)
             it.setString(3, sykmeldingSendEvent.arbeidsgiver.juridiskOrgnummer)
             it.setString(4, sykmeldingSendEvent.arbeidsgiver.orgnavn)
