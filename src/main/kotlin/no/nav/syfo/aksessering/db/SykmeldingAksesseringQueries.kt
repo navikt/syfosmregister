@@ -1,8 +1,6 @@
 package no.nav.syfo.aksessering.db
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.sql.ResultSet
-import java.time.LocalDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.domain.Arbeidsgiver
@@ -10,12 +8,14 @@ import no.nav.syfo.domain.Gradert
 import no.nav.syfo.domain.Periodetype
 import no.nav.syfo.domain.Sykmelding
 import no.nav.syfo.domain.Sykmeldingsperiode
+import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmeldingstatus.StatusEvent
+import java.sql.ResultSet
+import java.time.LocalDateTime
 import no.nav.syfo.model.Arbeidsgiver as ModelArbeidsgiver
 import no.nav.syfo.model.Gradert as ModelGradert
 import no.nav.syfo.model.HarArbeidsgiver as ModelHarArbeidsgiver
 import no.nav.syfo.model.Periode as ModelPeriode
-import no.nav.syfo.objectMapper
-import no.nav.syfo.sykmeldingstatus.StatusEvent
 
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
         connection.use { connection ->
@@ -38,7 +38,8 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
                      INNER JOIN SYKMELDINGSDOKUMENT as DOKUMENT on OPPLYSNINGER.id = DOKUMENT.id
                      INNER JOIN BEHANDLINGSUTFALL as UTFALL on OPPLYSNINGER.id = UTFALL.id
                      LEFT OUTER JOIN sykmeldingstatus as STATUS on OPPLYSNINGER.id = STATUS.sykmelding_id and STATUS.event_timestamp = (select STATUS.event_timestamp from sykmeldingstatus where STATUS.sykmelding_id = OPPLYSNINGER.id and STATUS.event = 'BEKREFTET' ORDER BY STATUS.event_timestamp desc limit 1)
-            where pasient_fnr = ?;
+            where pasient_fnr = ?
+            AND NOT exists(select 1 from sykmeldingstatus where event = 'SLETTET' and sykmelding_id = OPPLYSNINGER.id)
             """
             ).use {
                 it.setString(1, fnr)
