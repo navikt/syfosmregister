@@ -1,5 +1,7 @@
 package no.nav.syfo.sykmeldingstatus
 
+import java.time.LocalDateTime
+import kotlin.test.assertFailsWith
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
@@ -14,8 +16,6 @@ import org.amshove.kluent.shouldEqual
 import org.postgresql.util.PSQLException
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDateTime
-import kotlin.test.assertFailsWith
 
 class SykmeldingStatusServiceSpek : Spek({
 
