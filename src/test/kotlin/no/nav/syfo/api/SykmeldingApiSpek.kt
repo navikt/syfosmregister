@@ -137,7 +137,7 @@ object SykmeldingApiSpek : Spek({
                 }
             }
 
-            it("Skal ikke returnere statustekster som er sendt til manuell behandling", timeout = 10000000L) {
+            it("Skal ikke returnere statustekster som er sendt til manuell behandling") {
                 database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"))
                 database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2"))
                 database.connection.opprettBehandlingsutfall(
@@ -158,6 +158,30 @@ object SykmeldingApiSpek : Spek({
                     val sykmeldinger = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
                     sykmeldinger.behandlingsutfall.ruleHits shouldEqual emptyList()
                     sykmeldinger.behandlingsutfall.status shouldEqual BehandlingsutfallStatusDTO.MANUAL_PROCESSING
+                }
+            }
+
+            it("Skal vise tekster når behandlingsutfall er avvist") {
+                database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"))
+                database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2"))
+                database.connection.opprettBehandlingsutfall(
+                        Behandlingsutfall("uuid2",
+                                ValidationResult(
+                                        Status.INVALID,
+                                        listOf(RuleInfo("TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING", "Fyll ut punkt 11.2", "Sykmeldingen er tilbakedatert uten begrunnelse fra den som sykmeldte deg", Status.INVALID))
+                                )
+                        )
+                )
+
+                every { mockPayload.subject } returns "123"
+
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val sykmelding = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+                    sykmelding.behandlingsutfall.status shouldEqual BehandlingsutfallStatusDTO.INVALID
+                    sykmelding.behandlingsutfall.ruleHits[0].messageForUser shouldEqual "Sykmeldingen er tilbakedatert uten begrunnelse fra den som sykmeldte deg"
                 }
             }
         }
