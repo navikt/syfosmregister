@@ -19,11 +19,16 @@ import io.ktor.util.KtorExperimentalAPI
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.syfo.aksessering.SykmeldingService
+import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
 import no.nav.syfo.aksessering.api.FullstendigSykmeldingDTO
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.aksessering.api.SkjermetSykmeldingDTO
 import no.nav.syfo.aksessering.api.registerSykmeldingApi
+import no.nav.syfo.model.RuleInfo
+import no.nav.syfo.model.Status
+import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
+import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
@@ -93,30 +98,30 @@ object SykmeldingApiSpek : Spek({
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                     val actual =
-                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+                            objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
 
                     actual.sykmeldingsperioder[0]
-                        .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+                            .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
                     actual.medisinskVurdering.hovedDiagnose
-                        ?.diagnosekode shouldEqual testSykmeldingsdokument.sykmelding.medisinskVurdering.hovedDiagnose?.kode
+                            ?.diagnosekode shouldEqual testSykmeldingsdokument.sykmelding.medisinskVurdering.hovedDiagnose?.kode
                 }
             }
 
             it("skal ikke sende med medisinsk vurdering hvis sykmeldingen er skjermet") {
                 database.connection.opprettSykmeldingsopplysninger(
-                    testSykmeldingsopplysninger.copy(
-                        id = "uuid2",
-                        pasientFnr = "PasientFnr1"
-                    )
+                        testSykmeldingsopplysninger.copy(
+                                id = "uuid2",
+                                pasientFnr = "PasientFnr1"
+                        )
                 )
                 database.connection.opprettSykmeldingsdokument(
-                    testSykmeldingsdokument.copy(
-                        id = "uuid2",
-                        sykmelding = testSykmeldingsdokument.sykmelding.copy(
-                            id = "id2",
-                            skjermesForPasient = true
+                        testSykmeldingsdokument.copy(
+                                id = "uuid2",
+                                sykmelding = testSykmeldingsdokument.sykmelding.copy(
+                                        id = "id2",
+                                        skjermesForPasient = true
+                                )
                         )
-                    )
                 )
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
@@ -127,8 +132,32 @@ object SykmeldingApiSpek : Spek({
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                     objectMapper.readValue<List<SkjermetSykmeldingDTO>>(response.content!!)[0]
-                        .sykmeldingsperioder[0]
-                        .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+                            .sykmeldingsperioder[0]
+                            .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+                }
+            }
+
+            it("Skal ikke returnere statustekster som er sendt til manuell behandling", timeout = 10000000L) {
+                database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"))
+                database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2"))
+                database.connection.opprettBehandlingsutfall(
+                        Behandlingsutfall("uuid2",
+                                ValidationResult(
+                                        Status.MANUAL_PROCESSING,
+                                        listOf(RuleInfo("INFOTRYGD", "INFORTRYGD", "INFOTRYGD", Status.MANUAL_PROCESSING))
+                                )
+                        )
+                )
+
+                every { mockPayload.subject } returns "123"
+
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val sykmeldinger = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+                    sykmeldinger.behandlingsutfall.ruleHits shouldEqual emptyList()
+                    sykmeldinger.behandlingsutfall.status shouldEqual BehandlingsutfallStatusDTO.MANUAL_PROCESSING
                 }
             }
         }
