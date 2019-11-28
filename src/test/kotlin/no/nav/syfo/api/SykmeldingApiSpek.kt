@@ -189,7 +189,7 @@ object SykmeldingApiSpek : Spek({
 
                 every { mockPayload.subject } returns "pasientFnr"
 
-                with(handleRequest(HttpMethod.Post, "/api/v1//sykmeldinger/uuid/bekreft") {
+                with(handleRequest(HttpMethod.Post, "/api/v1/sykmeldinger/uuid/bekreft") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
@@ -199,7 +199,7 @@ object SykmeldingApiSpek : Spek({
 
                 every { mockPayload.subject } returns "123"
 
-                with(handleRequest(HttpMethod.Post, "/api/v1//sykmeldinger/uuid/bekreft") {
+                with(handleRequest(HttpMethod.Post, "/api/v1/sykmeldinger/uuid/bekreft") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
                     response.status() shouldEqual HttpStatusCode.NotFound
