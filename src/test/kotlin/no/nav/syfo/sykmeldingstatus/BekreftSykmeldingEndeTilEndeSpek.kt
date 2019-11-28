@@ -99,6 +99,53 @@ class BekreftSykmeldingEndeTilEndeSpek : Spek({
                     sporsmal.size shouldEqual 0
                 }
             }
+
+            it(description = "Bekreft med spørsmål overskriver tidligere svar i databasen", timeout = 170000) {
+                val sykmeldingId = "uuid"
+                val spmOgSvarListe = listOf(SporsmalOgSvarDTO("Sykmeldt fra ", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "Selvstendig"),
+                    SporsmalOgSvarDTO("Har forsikring?", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "Ja"))
+
+                handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(SykmeldingBekreftEventDTO(LocalDateTime.now(), spmOgSvarListe)))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }
+
+                val timestamp = LocalDateTime.now()
+                val sykmeldingBekreftEventDTO = SykmeldingBekreftEventDTO(timestamp, lagSporsmalOgSvarDTOListe())
+                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(sykmeldingBekreftEventDTO))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }) {
+                    val status = database.finnStatusForSykmelding(sykmeldingId)
+                    val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
+
+                    status shouldEqual StatusEvent.BEKREFTET
+                    sporsmal.size shouldEqual 4
+                    sporsmal[0] shouldEqual Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, 5, Svartype.ARBEIDSSITUASJON, "Selvstendig"))
+                    sporsmal[1] shouldEqual Sporsmal("Har forsikring?", ShortName.FORSIKRING, Svar(sykmeldingId, 6, Svartype.JA_NEI, "Ja"))
+                    sporsmal[2] shouldEqual Sporsmal("Hatt fravær?", ShortName.FRAVAER, Svar(sykmeldingId, 7, Svartype.JA_NEI, "Ja"))
+                    sporsmal[3] shouldEqual Sporsmal("Når hadde du fravær?", ShortName.PERIODE, Svar(sykmeldingId, 8, Svartype.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}"))
+                }
+            }
+
+            it("Bekreft uten spørsmål overskriver tidligere svar i databasen") {
+                val sykmeldingId = "uuid"
+                database.registerStatus(SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now().minusMinutes(5), StatusEvent.BEKREFTET))
+                database.lagreSporsmalOgSvar(Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, 1, Svartype.ARBEIDSSITUASJON, "Selvstendig")))
+                database.lagreSporsmalOgSvar(Sporsmal("Har forsikring?", ShortName.FORSIKRING, Svar(sykmeldingId, 2, Svartype.JA_NEI, "Nei")))
+                val timestamp = LocalDateTime.now()
+                val sykmeldingBekreftEventDTO = SykmeldingBekreftEventDTO(timestamp, null)
+                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(sykmeldingBekreftEventDTO))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }) {
+                    val status = database.finnStatusForSykmelding(sykmeldingId)
+                    val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
+
+                    status shouldEqual StatusEvent.BEKREFTET
+                    sporsmal.size shouldEqual 0
+                }
+            }
         }
     }
 })

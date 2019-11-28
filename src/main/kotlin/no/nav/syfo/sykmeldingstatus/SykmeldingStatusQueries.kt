@@ -100,3 +100,43 @@ private fun DatabaseInterface.lagreSvar(sporsmalId: Int, svar: Svar) {
         connection.commit()
     }
 }
+
+fun DatabaseInterface.svarFinnesFraFor(sykmeldingId: String): Boolean =
+    connection.use { connection ->
+        connection.prepareStatement(
+            """
+                    SELECT 1 FROM svar WHERE sykmelding_id=?;
+                    """
+        ).use {
+            it.setString(1, sykmeldingId)
+            it.executeQuery().next()
+        }
+    }
+
+fun DatabaseInterface.slettArbeidsgiver(sykmeldingId: String) {
+    connection.use { connection ->
+        connection.prepareStatement(
+            """
+                    DELETE FROM arbeidsgiver WHERE sykmelding_id=?;
+                    """
+        ).use {
+            it.setString(1, sykmeldingId)
+            it.execute()
+        }
+        connection.commit()
+    }
+}
+
+fun DatabaseInterface.slettSvar(sykmeldingId: String) {
+    connection.use { connection ->
+        connection.prepareStatement(
+            """
+                    DELETE FROM svar WHERE sykmelding_id=?;
+                    """
+        ).use {
+            it.setString(1, sykmeldingId)
+            it.execute()
+        }
+        connection.commit()
+    }
+}

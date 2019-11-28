@@ -61,7 +61,8 @@ fun DatabaseInterface.finnStatusForSykmelding(sykmeldingId: String): StatusEvent
             """
                 SELECT event
                 FROM sykmeldingstatus
-                WHERE sykmelding_id=?;
+                WHERE sykmelding_id=?
+                ORDER BY event_timestamp desc;
                 """
         ).use {
             it.setString(1, sykmeldingId)
