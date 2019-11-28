@@ -184,6 +184,27 @@ object SykmeldingApiSpek : Spek({
                     sykmelding.behandlingsutfall.ruleHits[0].messageForUser shouldEqual "Sykmeldingen er tilbakedatert uten begrunnelse fra den som sykmeldte deg"
                 }
             }
+
+            it("Skal Kunne bekrefte sine sykmeldinger") {
+
+                every { mockPayload.subject } returns "pasientFnr"
+
+                with(handleRequest(HttpMethod.Post, "/api/v1/sykmeldinger/uuid/bekreft") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                }
+            }
+            it("Skal ikke kunne bekrefte andre sine sykmeldinger") {
+
+                every { mockPayload.subject } returns "123"
+
+                with(handleRequest(HttpMethod.Post, "/api/v1/sykmeldinger/uuid/bekreft") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.NotFound
+                }
+            }
         }
     }
 })
