@@ -91,9 +91,11 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
 
             it("Send overskriver eller sletter tidligere svar i databasen") {
                 val sykmeldingId = "uuid"
-                database.registerStatus(SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now().minusMinutes(5), StatusEvent.BEKREFTET))
-                database.lagreSporsmalOgSvar(Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, 1, Svartype.ARBEIDSSITUASJON, "Selvstendig")))
-                database.lagreSporsmalOgSvar(Sporsmal("Har forsikring?", ShortName.FORSIKRING, Svar(sykmeldingId, 2, Svartype.JA_NEI, "Nei")))
+                database.registrerBekreftet(SykmeldingBekreftEvent(sykmeldingId, LocalDateTime.now().minusMinutes(5), listOf(
+                    Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, 1, Svartype.ARBEIDSSITUASJON, "Selvstendig")),
+                    Sporsmal("Har forsikring?", ShortName.FORSIKRING, Svar(sykmeldingId, 2, Svartype.JA_NEI, "Nei"))
+                )), SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now().minusMinutes(5), StatusEvent.BEKREFTET))
+
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/send") {
                     setBody(objectMapper.writeValueAsString(opprettSykmeldingSendEventDTOForArbeidstaker()))
                     addHeader("Content-Type", ContentType.Application.Json.toString())

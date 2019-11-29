@@ -130,9 +130,11 @@ class BekreftSykmeldingEndeTilEndeSpek : Spek({
 
             it("Bekreft uten spørsmål overskriver tidligere svar i databasen") {
                 val sykmeldingId = "uuid"
-                database.registerStatus(SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now().minusMinutes(5), StatusEvent.BEKREFTET))
-                database.lagreSporsmalOgSvar(Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, 1, Svartype.ARBEIDSSITUASJON, "Selvstendig")))
-                database.lagreSporsmalOgSvar(Sporsmal("Har forsikring?", ShortName.FORSIKRING, Svar(sykmeldingId, 2, Svartype.JA_NEI, "Nei")))
+                handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(SykmeldingBekreftEventDTO(LocalDateTime.now(), lagSporsmalOgSvarDTOListe())))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }
+
                 val timestamp = LocalDateTime.now()
                 val sykmeldingBekreftEventDTO = SykmeldingBekreftEventDTO(timestamp, null)
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
