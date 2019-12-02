@@ -88,6 +88,35 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
                     arbeidsgiver.orgnavn shouldEqual "Bedrift A/S"
                 }
             }
+
+            it("Send overskriver eller sletter tidligere svar i databasen") {
+                val sykmeldingId = "uuid"
+                database.registrerBekreftet(SykmeldingBekreftEvent(sykmeldingId, LocalDateTime.now().minusMinutes(5), listOf(
+                    Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, 1, Svartype.ARBEIDSSITUASJON, "Selvstendig")),
+                    Sporsmal("Har forsikring?", ShortName.FORSIKRING, Svar(sykmeldingId, 2, Svartype.JA_NEI, "Nei"))
+                )), SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now().minusMinutes(5), StatusEvent.BEKREFTET))
+
+                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/send") {
+                    setBody(objectMapper.writeValueAsString(opprettSykmeldingSendEventDTOForArbeidstaker()))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }) {
+                    val status = database.finnStatusForSykmelding(sykmeldingId)
+                    val arbeidsgiver = database.finnArbeidsgiverForSykmelding(sykmeldingId)
+                    val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
+                    val svar = sporsmal[0].svar
+
+                    status shouldEqual StatusEvent.SENDT
+                    sporsmal.size shouldEqual 1
+                    sporsmal[0].tekst shouldEqual "Jeg er sykmeldt fra "
+                    sporsmal[0].shortName shouldEqual ShortName.ARBEIDSSITUASJON
+                    svar.svartype shouldEqual Svartype.ARBEIDSSITUASJON
+                    svar.svar shouldEqual "ARBEIDSTAKER"
+
+                    arbeidsgiver.juridiskOrgnummer shouldEqual null
+                    arbeidsgiver.orgnummer shouldEqual "123456"
+                    arbeidsgiver.orgnavn shouldEqual "Bedrift A/S"
+                }
+            }
         }
     }
 })

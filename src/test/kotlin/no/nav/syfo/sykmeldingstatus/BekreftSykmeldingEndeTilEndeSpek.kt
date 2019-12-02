@@ -99,6 +99,55 @@ class BekreftSykmeldingEndeTilEndeSpek : Spek({
                     sporsmal.size shouldEqual 0
                 }
             }
+
+            it("Bekreft med spørsmål overskriver tidligere svar i databasen") {
+                val sykmeldingId = "uuid"
+                val spmOgSvarListe = listOf(SporsmalOgSvarDTO("Sykmeldt fra ", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "Selvstendig"),
+                    SporsmalOgSvarDTO("Har forsikring?", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "Nei"))
+
+                handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(SykmeldingBekreftEventDTO(LocalDateTime.now(), spmOgSvarListe)))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }
+
+                val timestamp = LocalDateTime.now()
+                val sykmeldingBekreftEventDTO = SykmeldingBekreftEventDTO(timestamp, lagSporsmalOgSvarDTOListe())
+                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(sykmeldingBekreftEventDTO))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }) {
+                    val status = database.finnStatusForSykmelding(sykmeldingId)
+                    val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
+
+                    status shouldEqual StatusEvent.BEKREFTET
+                    sporsmal.size shouldEqual 4
+                    sporsmal[0] shouldEqualSporsmal Sporsmal("Sykmeldt fra ", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, 1, Svartype.ARBEIDSSITUASJON, "Selvstendig"))
+                    sporsmal[1] shouldEqualSporsmal Sporsmal("Har forsikring?", ShortName.FORSIKRING, Svar(sykmeldingId, 2, Svartype.JA_NEI, "Ja"))
+                    sporsmal[2] shouldEqualSporsmal Sporsmal("Hatt fravær?", ShortName.FRAVAER, Svar(sykmeldingId, 3, Svartype.JA_NEI, "Ja"))
+                    sporsmal[3] shouldEqualSporsmal Sporsmal("Når hadde du fravær?", ShortName.PERIODE, Svar(sykmeldingId, 4, Svartype.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}"))
+                }
+            }
+
+            it("Bekreft uten spørsmål overskriver tidligere svar i databasen") {
+                val sykmeldingId = "uuid"
+                handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(SykmeldingBekreftEventDTO(LocalDateTime.now(), lagSporsmalOgSvarDTOListe())))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }
+
+                val timestamp = LocalDateTime.now()
+                val sykmeldingBekreftEventDTO = SykmeldingBekreftEventDTO(timestamp, null)
+                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/bekreft") {
+                    setBody(objectMapper.writeValueAsString(sykmeldingBekreftEventDTO))
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                }) {
+                    val status = database.finnStatusForSykmelding(sykmeldingId)
+                    val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
+
+                    status shouldEqual StatusEvent.BEKREFTET
+                    sporsmal.size shouldEqual 0
+                }
+            }
         }
     }
 })
@@ -108,4 +157,20 @@ private fun lagSporsmalOgSvarDTOListe(): List<SporsmalOgSvarDTO> {
         SporsmalOgSvarDTO("Har forsikring?", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "Ja"),
         SporsmalOgSvarDTO("Hatt fravær?", ShortNameDTO.FRAVAER, SvartypeDTO.JA_NEI, "Ja"),
         SporsmalOgSvarDTO("Når hadde du fravær?", ShortNameDTO.PERIODE, SvartypeDTO.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}"))
+}
+
+infix fun Sporsmal.shouldEqualSporsmal(expected: Sporsmal): Sporsmal = this.apply { sporsmalErLike(expected, this) }
+
+fun sporsmalErLike(forventetSporsmal: Sporsmal, faktiskSporsmal: Sporsmal): Boolean {
+    if (forventetSporsmal.shortName == faktiskSporsmal.shortName && forventetSporsmal.tekst == faktiskSporsmal.tekst && svarErLike(forventetSporsmal.svar, faktiskSporsmal.svar)) {
+        return true
+    }
+    return false
+}
+
+fun svarErLike(forventetSvar: Svar, faktiskSvar: Svar): Boolean {
+    if (forventetSvar.sykmeldingId == faktiskSvar.sykmeldingId && forventetSvar.svar == faktiskSvar.svar && forventetSvar.svartype == faktiskSvar.svartype) {
+        return true
+    }
+    return false
 }

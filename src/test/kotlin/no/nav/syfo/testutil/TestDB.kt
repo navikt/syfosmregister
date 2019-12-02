@@ -46,6 +46,9 @@ fun Connection.dropData() {
         connection.prepareStatement("DELETE FROM behandlingsutfall").executeUpdate()
         connection.prepareStatement("DELETE FROM sykmeldingsopplysninger").executeUpdate()
         connection.prepareStatement("DELETE FROM sykmeldingstatus").executeUpdate()
+        connection.prepareStatement("DELETE FROM arbeidsgiver").executeUpdate()
+        connection.prepareStatement("DELETE FROM svar").executeUpdate()
+        connection.prepareStatement("DELETE FROM sporsmal").executeUpdate()
         connection.commit()
     }
 }
