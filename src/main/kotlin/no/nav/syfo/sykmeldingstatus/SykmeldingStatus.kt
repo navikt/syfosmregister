@@ -24,11 +24,11 @@ enum class StatusEventDTO {
 data class SykmeldingSendEvent(
     val sykmeldingId: String,
     val timestamp: LocalDateTime,
-    val arbeidsgiver: Arbeidsgiver,
+    val arbeidsgiver: ArbeidsgiverStatus,
     val sporsmal: Sporsmal
 )
 
-data class Arbeidsgiver(
+data class ArbeidsgiverStatus(
     val sykmeldingId: String,
     val orgnummer: String,
     val juridiskOrgnummer: String?,

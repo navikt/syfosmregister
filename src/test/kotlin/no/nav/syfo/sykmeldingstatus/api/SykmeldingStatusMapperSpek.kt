@@ -1,7 +1,7 @@
 package no.nav.syfo.sykmeldingstatus.api
 
 import java.time.LocalDateTime
-import no.nav.syfo.sykmeldingstatus.Arbeidsgiver
+import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
 import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
 import no.nav.syfo.sykmeldingstatus.Svar
@@ -18,7 +18,7 @@ class SykmeldingStatusMapperSpek : Spek({
                 val timestamp = LocalDateTime.now()
                 val sykmeldingSendEventDTO = SykmeldingSendEventDTO(
                     timestamp,
-                    ArbeidsgiverDTO(orgnummer = "orgnummer", juridiskOrgnummer = null, orgNavn = "navn"),
+                    ArbeidsgiverStatusDTO(orgnummer = "orgnummer", juridiskOrgnummer = null, orgNavn = "navn"),
                     listOf(SporsmalOgSvarDTO("Arbeidssituasjon", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
                         SporsmalOgSvarDTO("Nærmeste leder", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "NEI"))
                 )
@@ -28,7 +28,7 @@ class SykmeldingStatusMapperSpek : Spek({
                 sykmeldingSendEvent.sykmeldingId shouldEqual sykmeldingId
                 sykmeldingSendEvent.timestamp shouldEqual timestamp
                 sykmeldingSendEvent.sporsmal shouldEqual Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))
-                sykmeldingSendEvent.arbeidsgiver shouldEqual Arbeidsgiver(sykmeldingId, "orgnummer", null, "navn")
+                sykmeldingSendEvent.arbeidsgiver shouldEqual ArbeidsgiverStatus(sykmeldingId, "orgnummer", null, "navn")
             }
     }
 

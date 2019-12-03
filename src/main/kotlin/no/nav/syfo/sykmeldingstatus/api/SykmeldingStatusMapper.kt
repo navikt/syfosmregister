@@ -1,6 +1,6 @@
 package no.nav.syfo.sykmeldingstatus.api
 
-import no.nav.syfo.sykmeldingstatus.Arbeidsgiver
+import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
 import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
 import no.nav.syfo.sykmeldingstatus.StatusEvent
@@ -16,7 +16,7 @@ fun tilSykmeldingSendEvent(sykmeldingId: String, sykmeldingSendEventDTO: Sykmeld
     return SykmeldingSendEvent(
         sykmeldingId,
         sykmeldingSendEventDTO.timestamp,
-        tilArbeidsgiver(sykmeldingId, sykmeldingSendEventDTO.arbeidsgiver),
+        tilArbeidsgiverStatus(sykmeldingId, sykmeldingSendEventDTO.arbeidsgiver),
         tilSporsmal(sykmeldingId, arbeidssituasjon)
     )
 }
@@ -40,12 +40,12 @@ fun StatusEventDTO.toStatusEvent(): StatusEvent {
     }
 }
 
-fun tilArbeidsgiver(sykmeldingsId: String, arbeidsgiverDTO: ArbeidsgiverDTO): Arbeidsgiver =
-    Arbeidsgiver(
+fun tilArbeidsgiverStatus(sykmeldingsId: String, arbeidsgiverStatusDTO: ArbeidsgiverStatusDTO): ArbeidsgiverStatus =
+    ArbeidsgiverStatus(
         sykmeldingId = sykmeldingsId,
-        orgnavn = arbeidsgiverDTO.orgNavn,
-        orgnummer = arbeidsgiverDTO.orgnummer,
-        juridiskOrgnummer = arbeidsgiverDTO.juridiskOrgnummer
+        orgnavn = arbeidsgiverStatusDTO.orgNavn,
+        orgnummer = arbeidsgiverStatusDTO.orgnummer,
+        juridiskOrgnummer = arbeidsgiverStatusDTO.juridiskOrgnummer
     )
 
 fun tilSporsmalListe(sykmeldingId: String, sporsmalOgSvarDTO: List<SporsmalOgSvarDTO>?): List<Sporsmal>? {
