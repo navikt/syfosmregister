@@ -19,8 +19,6 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.mockk.every
 import io.mockk.mockkClass
-import java.nio.file.Paths
-import java.time.LocalDateTime
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.setupAuth
@@ -30,6 +28,8 @@ import no.nav.syfo.testutil.generateJWT
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
+import java.time.LocalDateTime
 
 class SykmeldingSendApiSpek : Spek({
 
@@ -83,13 +83,13 @@ class SykmeldingSendApiSpek : Spek({
                 }
             }
 
-            val env = Environment(clientId = "1",
-                    appIds = listOf("10", "11"),
-                    jwtIssuer = "issuer",
-                    cluster = "cluster",
-                    mountPathVault = "",
-                    kafkaBootstrapServers = "",
+            val env = Environment(kafkaBootstrapServers = "",
                     syfosmregisterDBURL = "",
+                    mountPathVault = "",
+                    cluster = "cluster",
+                    jwtIssuer = "issuer",
+                    appIds = listOf("10", "11"),
+                    clientId = "1",
                     stsOidcIssuer = "https://security-token-service.nais.preprod.local",
                     stsOidcAudience = "preprod.local")
 
@@ -133,9 +133,9 @@ class SykmeldingSendApiSpek : Spek({
 })
 
 fun opprettSykmeldingSendEventDTO(): SykmeldingSendEventDTO =
-    SykmeldingSendEventDTO(
-        LocalDateTime.now(),
-        ArbeidsgiverDTO(orgnummer = "orgnummer", juridiskOrgnummer = null, orgNavn = "navn"),
-        listOf(SporsmalOgSvarDTO("", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
-            SporsmalOgSvarDTO("", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "NEI"))
-    )
+        SykmeldingSendEventDTO(
+                LocalDateTime.now(),
+                ArbeidsgiverDTO(orgnummer = "orgnummer", juridiskOrgnummer = null, orgNavn = "navn"),
+                listOf(SporsmalOgSvarDTO("", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                        SporsmalOgSvarDTO("", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "NEI"))
+        )

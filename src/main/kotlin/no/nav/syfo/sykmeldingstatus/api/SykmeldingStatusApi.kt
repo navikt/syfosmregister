@@ -32,6 +32,9 @@ fun Route.registerSykmeldingStatusApi(sykmeldingStatusService: SykmeldingStatusS
                 log.error("Internal server error", ex)
                 call.respond(HttpStatusCode.InternalServerError)
             }
+        } catch (ex: Exception) {
+            log.error("Internal server error", ex)
+            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 }

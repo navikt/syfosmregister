@@ -17,10 +17,9 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockkClass
-import java.nio.file.Paths
-import java.time.LocalDateTime
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.setupAuth
@@ -34,10 +33,16 @@ import org.postgresql.util.PSQLException
 import org.postgresql.util.ServerErrorMessage
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
+import java.time.LocalDateTime
 
-internal class SykmeldingStatusApiSpek : Spek({
+class SykmeldingStatusApiSpek : Spek({
 
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
+
+    beforeEachTest {
+        clearAllMocks()
+    }
 
     describe("Test SykmeldingStatusAPI") {
         with(TestApplicationEngine()) {
@@ -87,13 +92,13 @@ internal class SykmeldingStatusApiSpek : Spek({
                 }
             }
 
-            val env = Environment(clientId = "1",
-                    appIds = listOf("10", "11"),
-                    jwtIssuer = "issuer",
-                    cluster = "cluster",
-                    mountPathVault = "",
-                    kafkaBootstrapServers = "",
+            val env = Environment(kafkaBootstrapServers = "",
                     syfosmregisterDBURL = "",
+                    mountPathVault = "",
+                    cluster = "cluster",
+                    jwtIssuer = "issuer",
+                    appIds = listOf("10", "11"),
+                    clientId = "1",
                     stsOidcIssuer = "https://security-token-service.nais.preprod.local",
                     stsOidcAudience = "preprod.local")
 
@@ -107,9 +112,10 @@ internal class SykmeldingStatusApiSpek : Spek({
 
             it("Should authenticate") {
                 val sykmeldingId = "123"
+                val sykmeldingStatusEventDTO = SykmeldingStatusEventDTO(StatusEventDTO.AVBRUTT, LocalDateTime.now())
                 every { sykmeldingStatusService.registrerStatus(any()) } returns Unit
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.AVBRUTT, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(sykmeldingStatusEventDTO))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                     addHeader("AUTHORIZATION", "Bearer ${generateJWT("client",
                             "preprod.local",
@@ -120,8 +126,9 @@ internal class SykmeldingStatusApiSpek : Spek({
                 }
             }
             it("Should not authenticate") {
+                val sykmeldingStatusEventDTO = SykmeldingStatusEventDTO(StatusEventDTO.AVBRUTT, LocalDateTime.now())
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/123/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.AVBRUTT, LocalDateTime.now())))
+                    setBody(objectMapper.writeValueAsString(sykmeldingStatusEventDTO))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                     addHeader("Authorization", "Bearer ${generateJWT(
                             "client",

@@ -14,22 +14,22 @@ class SykmeldingStatusMapperSpek : Spek({
     val sykmeldingId = "id"
 
     describe("Test av tilSykmeldingSendEvent") {
-            it("Mapper sykmeldingSendEventDTO riktig") {
-                val timestamp = LocalDateTime.now()
-                val sykmeldingSendEventDTO = SykmeldingSendEventDTO(
+        it("Mapper sykmeldingSendEventDTO riktig") {
+            val timestamp = LocalDateTime.now()
+            val sykmeldingSendEventDTO = SykmeldingSendEventDTO(
                     timestamp,
                     ArbeidsgiverDTO(orgnummer = "orgnummer", juridiskOrgnummer = null, orgNavn = "navn"),
                     listOf(SporsmalOgSvarDTO("Arbeidssituasjon", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
-                        SporsmalOgSvarDTO("Nærmeste leder", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "NEI"))
-                )
+                            SporsmalOgSvarDTO("Nærmeste leder", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "NEI"))
+            )
 
-                val sykmeldingSendEvent = tilSykmeldingSendEvent(sykmeldingId, sykmeldingSendEventDTO)
+            val sykmeldingSendEvent = tilSykmeldingSendEvent(sykmeldingId, sykmeldingSendEventDTO)
 
-                sykmeldingSendEvent.sykmeldingId shouldEqual sykmeldingId
-                sykmeldingSendEvent.timestamp shouldEqual timestamp
-                sykmeldingSendEvent.sporsmal shouldEqual Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))
-                sykmeldingSendEvent.arbeidsgiver shouldEqual Arbeidsgiver(sykmeldingId, "orgnummer", null, "navn")
-            }
+            sykmeldingSendEvent.sykmeldingId shouldEqual sykmeldingId
+            sykmeldingSendEvent.timestamp shouldEqual timestamp
+            sykmeldingSendEvent.sporsmal shouldEqual Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))
+            sykmeldingSendEvent.arbeidsgiver shouldEqual Arbeidsgiver(sykmeldingId, "orgnummer", null, "navn")
+        }
     }
 
     describe("Test av tilSykmeldingBekreftEvent") {
@@ -74,7 +74,7 @@ class SykmeldingStatusMapperSpek : Spek({
 
 fun lagSporsmalOgSvarDTOListe(): List<SporsmalOgSvarDTO> {
     return listOf(SporsmalOgSvarDTO("Sykmeldt fra ", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "Frilanser"),
-        SporsmalOgSvarDTO("Har forsikring?", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "Ja"),
-        SporsmalOgSvarDTO("Hatt fravær?", ShortNameDTO.FRAVAER, SvartypeDTO.JA_NEI, "Ja"),
-        SporsmalOgSvarDTO("Når hadde du fravær?", ShortNameDTO.PERIODE, SvartypeDTO.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}"))
+            SporsmalOgSvarDTO("Har forsikring?", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "Ja"),
+            SporsmalOgSvarDTO("Hatt fravær?", ShortNameDTO.FRAVAER, SvartypeDTO.JA_NEI, "Ja"),
+            SporsmalOgSvarDTO("Når hadde du fravær?", ShortNameDTO.PERIODE, SvartypeDTO.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}"))
 }

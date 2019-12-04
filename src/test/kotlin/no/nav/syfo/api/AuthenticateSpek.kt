@@ -43,13 +43,13 @@ object AuthenticateSpek : Spek({
     val path = "src/test/resources/jwkset.json"
     val uri = Paths.get(path).toUri().toURL()
     val jwkProvider = JwkProviderBuilder(uri).build()
-    val env = Environment(clientId = "1",
-            appIds = listOf("10", "11"),
-            jwtIssuer = "issuer",
-            cluster = "cluster",
-            mountPathVault = "",
-            kafkaBootstrapServers = "",
+    val env = Environment(kafkaBootstrapServers = "",
             syfosmregisterDBURL = "",
+            mountPathVault = "",
+            cluster = "cluster",
+            jwtIssuer = "issuer",
+            appIds = listOf("10", "11"),
+            clientId = "1",
             stsOidcIssuer = "",
             stsOidcAudience = "")
 

@@ -60,15 +60,15 @@ class RerunApiKtTest : Spek({
         val path = "src/test/resources/jwkset.json"
         val uri = Paths.get(path).toUri().toURL()
         val jwkProvider = JwkProviderBuilder(uri).build()
-        val env = Environment(clientId = "1",
-                appIds = listOf("10", "11"),
-                jwtIssuer = "https://sts.issuer.net/myid",
-                cluster = "cluster",
-                mountPathVault = "",
-                kafkaBootstrapServers = "",
+        val env = Environment(kafkaBootstrapServers = "",
                 syfosmregisterDBURL = "",
-                stsOidcAudience = "",
-                stsOidcIssuer = "")
+                mountPathVault = "",
+                cluster = "cluster",
+                jwtIssuer = "https://sts.issuer.net/myid",
+                appIds = listOf("10", "11"),
+                clientId = "1",
+                stsOidcIssuer = "",
+                stsOidcAudience = "")
 
         val vaultSecrets = VaultSecrets("", "", "", "", "", "", "")
         with(TestApplicationEngine()) {
