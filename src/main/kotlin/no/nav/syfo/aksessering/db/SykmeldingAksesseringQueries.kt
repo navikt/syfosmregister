@@ -53,7 +53,7 @@ fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
         connection.use { connection ->
             connection.prepareStatement(
                     """
-            SELECT exists(SELECT 1 FROM SYKMELDINGSOPPLYSNINGER WHERE id=? AND pasient_fnr=?)
+           SELECT 1 FROM SYKMELDINGSOPPLYSNINGER WHERE id=? AND pasient_fnr=?
             """
             ).use {
                 it.setString(1, sykmeldingsid)

@@ -20,6 +20,8 @@ import io.ktor.server.testing.setBody
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockkClass
+import java.nio.file.Paths
+import java.time.LocalDateTime
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.setupAuth
@@ -33,8 +35,6 @@ import org.postgresql.util.PSQLException
 import org.postgresql.util.ServerErrorMessage
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
-import java.time.LocalDateTime
 
 class SykmeldingStatusApiSpek : Spek({
 
