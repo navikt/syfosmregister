@@ -41,6 +41,7 @@ class BekreftSykmeldingEndeTilEndeSpek : Spek({
         database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
         database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+        database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
     }
 
     afterEachTest {

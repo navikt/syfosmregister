@@ -32,6 +32,7 @@ class SykmeldingStatusServiceSpek : Spek({
             database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
             database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
             database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+            database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
         }
 
         afterEachTest {
@@ -52,14 +53,6 @@ class SykmeldingStatusServiceSpek : Spek({
         it("Should get bekreftetDato") {
             val confirmedDateTime = LocalDateTime.now()
             sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET))
-            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
-            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
-        }
-
-        it("Should get bekreftetDato when newest status is SENDT") {
-            val confirmedDateTime = LocalDateTime.now().minusDays(1)
-            sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET))
-            sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime.plusDays(1), StatusEvent.SENDT))
             val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
             savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
         }

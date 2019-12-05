@@ -40,7 +40,6 @@ enum class ShortNameDTO {
 
 enum class SvartypeDTO {
     ARBEIDSSITUASJON,
-    PERIODE,
     PERIODER,
     JA_NEI
 }

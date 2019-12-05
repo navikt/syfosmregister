@@ -6,11 +6,15 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
+import java.time.LocalDateTime
 import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
+import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -43,6 +47,7 @@ object NullstillApiSpek : Spek({
                 database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
                 database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+                database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
             }
 
             afterEachTest {

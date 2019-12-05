@@ -18,6 +18,7 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
 import io.mockk.every
 import io.mockk.mockk
+import java.time.LocalDateTime
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
 import no.nav.syfo.aksessering.api.FullstendigSykmeldingDTO
@@ -32,7 +33,10 @@ import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
+import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -71,6 +75,7 @@ object SykmeldingApiSpek : Spek({
                 database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
                 database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+                database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
             }
 
             afterEachTest {
@@ -124,6 +129,7 @@ object SykmeldingApiSpek : Spek({
                         )
                 )
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
+                database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
 
                 every { mockPayload.subject } returns "PasientFnr1"
 
@@ -148,6 +154,7 @@ object SykmeldingApiSpek : Spek({
                                 )
                         )
                 )
+                database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
 
                 every { mockPayload.subject } returns "123"
 
@@ -172,6 +179,7 @@ object SykmeldingApiSpek : Spek({
                                 )
                         )
                 )
+                database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
 
                 every { mockPayload.subject } returns "123"
 

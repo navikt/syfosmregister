@@ -2,6 +2,13 @@ package no.nav.syfo.sykmeldingstatus
 
 import java.time.LocalDateTime
 
+data class SykmeldingStatus(
+    val timestamp: LocalDateTime,
+    val statusEvent: StatusEvent,
+    val arbeidsgiver: ArbeidsgiverStatus?,
+    val sporsmalListe: List<Sporsmal>?
+)
+
 data class SykmeldingStatusEvent(
     val sykmeldingId: String,
     val timestamp: LocalDateTime,
@@ -54,7 +61,6 @@ enum class ShortName {
 
 enum class Svartype {
     ARBEIDSSITUASJON,
-    PERIODE,
     PERIODER,
     JA_NEI
 }
