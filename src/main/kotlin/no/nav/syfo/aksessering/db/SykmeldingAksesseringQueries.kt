@@ -3,7 +3,6 @@ package no.nav.syfo.aksessering.db
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.ResultSet
-import java.time.LocalDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.domain.Arbeidsgiver
@@ -148,7 +147,6 @@ fun ResultSet.toSykmelding(): Sykmelding =
                 id = getString("id").trim(),
                 skjermesForPasient = getBoolean("skjermes_for_pasient"),
                 mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
-                bekreftetDato = getBekreftedDato(),
                 behandlingsutfall = filterBehandlingsUtfall(objectMapper.readValue(getString("behandlingsutfall"))),
                 legekontorOrgnummer = getString("legekontor_org_nr")?.trim(),
                 legeNavn = getLegenavn(this),
@@ -174,14 +172,6 @@ fun filterBehandlingsUtfall(behandlingsutfall: Behandlingsutfall): Behandlingsut
         return Behandlingsutfall(emptyList(), BehandlingsutfallStatus.MANUAL_PROCESSING)
     }
     return behandlingsutfall
-}
-
-private fun ResultSet.getBekreftedDato(): LocalDateTime? {
-    return if (StatusEvent.BEKREFTET.name == getString("event")) {
-        getTimestamp("event_timestamp").toLocalDateTime()
-    } else {
-        null
-    }
 }
 
 fun arbeidsgiverModelTilSykmeldingarbeidsgiver(arbeidsgiver: ModelArbeidsgiver): Arbeidsgiver? {
