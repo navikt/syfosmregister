@@ -23,48 +23,44 @@ class SykmeldingStatusServiceSpek : Spek({
     val sykmeldingService = SykmeldingService(database)
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
+    beforeEachTest {
+        database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
+        database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
+        database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+        database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+    }
+
+    afterEachTest {
+        database.connection.dropData()
+    }
+
     afterGroup {
         database.stop()
     }
 
     describe("Test registrerStatus") {
-        beforeEachTest {
-            database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
-            database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
-            database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-            database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
-        }
-
-        afterEachTest {
-            database.connection.dropData()
-        }
-
-        it("Should get bekreftetDato = null when not read by user") {
+        it("BekreftetDato skal være null når sykmelding ikke er bekreftet") {
             val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
             savedSykmelding.bekreftetDato shouldBe null
+            savedSykmelding.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.APEN
         }
 
-        it("Should get bekreftdato = null when status is OPEN") {
-            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
-            sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", LocalDateTime.now(), StatusEvent.APEN))
-            savedSykmelding.bekreftetDato shouldBe null
-        }
-
-        it("Should get bekreftetDato") {
+        it("Skal få bekreftetDato hvis sykmelding er bekreftet") {
             val confirmedDateTime = LocalDateTime.now()
             sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET))
             val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
             savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
+            savedSykmelding.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.BEKREFTET
         }
 
-        it("Should throw error when inserting same status") {
+        it("Skal kaste feil hvis man oppdaterer med eksisterende status på nytt") {
             val confirmedDateTime = LocalDateTime.now()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET)
             sykmeldingStatusService.registrerStatus(status)
             assertFailsWith(PSQLException::class) { sykmeldingStatusService.registrerStatus(status) }
         }
 
-        it("Should not get sykmeling with status SLETTET") {
+        it("Skal ikke hente sykmeldinger med status SLETTET") {
             val confirmedDateTime = LocalDateTime.now()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
@@ -76,7 +72,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldinger shouldEqual emptyList()
         }
 
-        it("should only get sykmelidnger where status is not SLETTET") {
+        it("Skal kun hente sykmeldinger der status ikke er SLETTET") {
             val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
             val copySkymeldingopplysning = testSykmeldingsopplysninger.copy(
                     id = "uuid2",

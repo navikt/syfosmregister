@@ -28,7 +28,7 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingStatus
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
     connection.use { connection ->
         val sykmeldingerMedSisteStatus = connection.hentSykmeldingerMedSisteStatus(fnr)
-        sykmeldingerMedSisteStatus.map {
+        return sykmeldingerMedSisteStatus.map {
             when {
                 it.sykmeldingStatus.statusEvent == StatusEvent.BEKREFTET ->
                     it.copy(sykmeldingStatus = connection.hentStatusMedSporsmalOgSvar(it.id, it.sykmeldingStatus, false))
@@ -37,7 +37,6 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
                 else -> it
             }
         }
-        return sykmeldingerMedSisteStatus
     }
 
 private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmelding> =

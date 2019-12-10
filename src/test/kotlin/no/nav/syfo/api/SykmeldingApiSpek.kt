@@ -33,10 +33,25 @@ import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
 import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
+import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
+import no.nav.syfo.sykmeldingstatus.ShortName
+import no.nav.syfo.sykmeldingstatus.Sporsmal
 import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmeldingstatus.StatusEventDTO
+import no.nav.syfo.sykmeldingstatus.Svar
+import no.nav.syfo.sykmeldingstatus.Svartype
+import no.nav.syfo.sykmeldingstatus.SykmeldingBekreftEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
+import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
+import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
+import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
+import no.nav.syfo.sykmeldingstatus.api.lagSporsmalListe
 import no.nav.syfo.sykmeldingstatus.registerStatus
+import no.nav.syfo.sykmeldingstatus.registrerBekreftet
+import no.nav.syfo.sykmeldingstatus.registrerSendt
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -51,14 +66,26 @@ object SykmeldingApiSpek : Spek({
 
     val database = TestDB()
 
+    beforeEachTest {
+        database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
+        database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
+        database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+        database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+    }
+
+    afterEachTest {
+        database.connection.dropData()
+    }
+
     afterGroup {
         database.stop()
     }
 
+    val mockPayload = mockk<Payload>()
+
     describe("SykmeldingApi") {
         with(TestApplicationEngine()) {
             start()
-
             application.install(ContentNegotiation) {
                 jackson {
                     registerKotlinModule()
@@ -66,23 +93,9 @@ object SykmeldingApiSpek : Spek({
                     configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
                 }
             }
-
             application.routing {
                 registerSykmeldingApi(SykmeldingService(database), SykmeldingStatusService(database))
             }
-
-            beforeEachTest {
-                database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
-                database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
-                database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-                database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
-            }
-
-            afterEachTest {
-                database.connection.dropData()
-            }
-
-            val mockPayload = mockk<Payload>()
 
             it("skal returnere tom liste hvis bruker ikke har sykmeldinger") {
                 every { mockPayload.subject } returns "AnnetPasientFnr"
@@ -102,31 +115,34 @@ object SykmeldingApiSpek : Spek({
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
-                    val actual =
-                            objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+                    val fullstendigSykmeldingDTO =
+                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
 
-                    actual.sykmeldingsperioder[0]
-                            .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
-                    actual.medisinskVurdering.hovedDiagnose
-                            ?.diagnosekode shouldEqual testSykmeldingsdokument.sykmelding.medisinskVurdering.hovedDiagnose?.kode
+                    fullstendigSykmeldingDTO.sykmeldingsperioder[0]
+                        .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+                    fullstendigSykmeldingDTO.medisinskVurdering.hovedDiagnose
+                        ?.diagnosekode shouldEqual testSykmeldingsdokument.sykmelding.medisinskVurdering.hovedDiagnose?.kode
+                    fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.APEN
+                    fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual null
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe shouldEqual null
                 }
             }
 
             it("skal ikke sende med medisinsk vurdering hvis sykmeldingen er skjermet") {
                 database.connection.opprettSykmeldingsopplysninger(
-                        testSykmeldingsopplysninger.copy(
-                                id = "uuid2",
-                                pasientFnr = "PasientFnr1"
-                        )
+                    testSykmeldingsopplysninger.copy(
+                        id = "uuid2",
+                        pasientFnr = "PasientFnr1"
+                    )
                 )
                 database.connection.opprettSykmeldingsdokument(
-                        testSykmeldingsdokument.copy(
-                                id = "uuid2",
-                                sykmelding = testSykmeldingsdokument.sykmelding.copy(
-                                        id = "id2",
-                                        skjermesForPasient = true
-                                )
+                    testSykmeldingsdokument.copy(
+                        id = "uuid2",
+                        sykmelding = testSykmeldingsdokument.sykmelding.copy(
+                            id = "id2",
+                            skjermesForPasient = true
                         )
+                    )
                 )
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
                 database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
@@ -138,8 +154,8 @@ object SykmeldingApiSpek : Spek({
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                     objectMapper.readValue<List<SkjermetSykmeldingDTO>>(response.content!!)[0]
-                            .sykmeldingsperioder[0]
-                            .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+                        .sykmeldingsperioder[0]
+                        .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
                 }
             }
 
@@ -147,12 +163,12 @@ object SykmeldingApiSpek : Spek({
                 database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"))
                 database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2"))
                 database.connection.opprettBehandlingsutfall(
-                        Behandlingsutfall("uuid2",
-                                ValidationResult(
-                                        Status.MANUAL_PROCESSING,
-                                        listOf(RuleInfo("INFOTRYGD", "INFORTRYGD", "INFOTRYGD", Status.MANUAL_PROCESSING))
-                                )
+                    Behandlingsutfall("uuid2",
+                        ValidationResult(
+                            Status.MANUAL_PROCESSING,
+                            listOf(RuleInfo("INFOTRYGD", "INFORTRYGD", "INFOTRYGD", Status.MANUAL_PROCESSING))
                         )
+                    )
                 )
                 database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
 
@@ -172,12 +188,12 @@ object SykmeldingApiSpek : Spek({
                 database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"))
                 database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2"))
                 database.connection.opprettBehandlingsutfall(
-                        Behandlingsutfall("uuid2",
-                                ValidationResult(
-                                        Status.INVALID,
-                                        listOf(RuleInfo("TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING", "Fyll ut punkt 11.2", "Sykmeldingen er tilbakedatert uten begrunnelse fra den som sykmeldte deg", Status.INVALID))
-                                )
+                    Behandlingsutfall("uuid2",
+                        ValidationResult(
+                            Status.INVALID,
+                            listOf(RuleInfo("TILBAKEDATERT_MER_ENN_8_DAGER_FORSTE_SYKMELDING", "Fyll ut punkt 11.2", "Sykmeldingen er tilbakedatert uten begrunnelse fra den som sykmeldte deg", Status.INVALID))
                         )
+                    )
                 )
                 database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
 
@@ -194,7 +210,6 @@ object SykmeldingApiSpek : Spek({
             }
 
             it("Skal Kunne bekrefte sine sykmeldinger") {
-
                 every { mockPayload.subject } returns "pasientFnr"
 
                 with(handleRequest(HttpMethod.Post, "/api/v1/sykmeldinger/uuid/bekreft") {
@@ -211,6 +226,136 @@ object SykmeldingApiSpek : Spek({
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
                     response.status() shouldEqual HttpStatusCode.NotFound
+                }
+            }
+
+            it("Skal få med arbeidsgiver hvis sykmelding er sendt") {
+                every { mockPayload.subject } returns "pasientFnr"
+                val timestamp = LocalDateTime.now()
+                database.registrerSendt(SykmeldingSendEvent("uuid", timestamp,
+                    ArbeidsgiverStatus(
+                        "uuid", "orgnummer", null, "Bedrift A/S"
+                    ),
+                    Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
+                        Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))),
+                    SykmeldingStatusEvent("uuid", timestamp, StatusEvent.SENDT))
+
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val fullstendigSykmeldingDTO =
+                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+
+                    fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.SENDT
+                    fullstendigSykmeldingDTO.sykmeldingStatus.timestamp shouldEqual timestamp
+                    fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual ArbeidsgiverStatusDTO("orgnummer", null, "Bedrift A/S")
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe?.size shouldEqual 1
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe!![0] shouldEqual SporsmalOgSvarDTO("Arbeidssituasjon", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER")
+                }
+            }
+
+            it("Skal få med spørsmål og svar hvis sykmelding er bekreftet") {
+                every { mockPayload.subject } returns "pasientFnr"
+                val timestamp = LocalDateTime.now()
+                database.registrerBekreftet(SykmeldingBekreftEvent("uuid", timestamp,
+                    lagSporsmalListe("uuid")),
+                    SykmeldingStatusEvent("uuid", timestamp, StatusEvent.BEKREFTET))
+
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val fullstendigSykmeldingDTO =
+                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+
+                    fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.BEKREFTET
+                    fullstendigSykmeldingDTO.sykmeldingStatus.timestamp shouldEqual timestamp
+                    fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual null
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe?.size shouldEqual 4
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe!![0] shouldEqual SporsmalOgSvarDTO("Sykmeldt fra ", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "Frilanser")
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe!![1] shouldEqual SporsmalOgSvarDTO("Har forsikring?", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "Ja")
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe!![2] shouldEqual SporsmalOgSvarDTO("Hatt fravær?", ShortNameDTO.FRAVAER, SvartypeDTO.JA_NEI, "Ja")
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe!![3] shouldEqual SporsmalOgSvarDTO("Når hadde du fravær?", ShortNameDTO.PERIODE, SvartypeDTO.PERIODER, "{[{\"fom\": \"2019-8-1\", \"tom\": \"2019-8-15\"}, {\"fom\": \"2019-9-1\", \"tom\": \"2019-9-3\"}]}")
+                }
+            }
+
+            it("Skal ikke få spørsmål/svar eller arbeidsgiver for sykmelding som er bekreftet uten spm/svar") {
+                every { mockPayload.subject } returns "pasientFnr"
+                val timestamp = LocalDateTime.now()
+                database.registrerBekreftet(SykmeldingBekreftEvent("uuid", timestamp, null),
+                    SykmeldingStatusEvent("uuid", timestamp, StatusEvent.BEKREFTET))
+
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val fullstendigSykmeldingDTO =
+                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+
+                    fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.BEKREFTET
+                    fullstendigSykmeldingDTO.sykmeldingStatus.timestamp shouldEqual timestamp
+                    fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual null
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe shouldEqual null
+                }
+            }
+
+            it("Skal ikke få spørsmål/svar eller arbeidsgiver for sykmelding som er endret og bekreftet på nytt uten spm/svar") {
+                every { mockPayload.subject } returns "pasientFnr"
+                val timestamp = LocalDateTime.now()
+                database.registrerBekreftet(SykmeldingBekreftEvent("uuid", timestamp.minusMinutes(2),
+                    lagSporsmalListe("uuid")),
+                    SykmeldingStatusEvent("uuid", timestamp.minusMinutes(2), StatusEvent.BEKREFTET))
+                database.registrerBekreftet(SykmeldingBekreftEvent("uuid", timestamp, null),
+                    SykmeldingStatusEvent("uuid", timestamp, StatusEvent.BEKREFTET))
+
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val fullstendigSykmeldingDTO =
+                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+
+                    fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.BEKREFTET
+                    fullstendigSykmeldingDTO.sykmeldingStatus.timestamp shouldEqual timestamp
+                    fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual null
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe shouldEqual null
+                }
+            }
+
+            it("Henter riktige statuser for flere sykmeldinger") {
+                every { mockPayload.subject } returns "pasientFnr"
+                val timestamp = LocalDateTime.now()
+                database.registrerSendt(SykmeldingSendEvent("uuid", timestamp,
+                    ArbeidsgiverStatus(
+                        "uuid", "orgnummer", null, "Bedrift A/S"
+                    ),
+                    Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
+                        Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))),
+                    SykmeldingStatusEvent("uuid", timestamp, StatusEvent.SENDT))
+                database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2"))
+                database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2", sykmelding = testSykmeldingsdokument.sykmelding.copy(id = "id2")))
+                database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
+                database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
+
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val fullstendigSykmeldingDTOListe =
+                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)
+
+                    fullstendigSykmeldingDTOListe.size shouldEqual 2
+                    fullstendigSykmeldingDTOListe[0].id shouldEqual "uuid2"
+                    fullstendigSykmeldingDTOListe[0].sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.APEN
+                    fullstendigSykmeldingDTOListe[0].sykmeldingStatus.arbeidsgiver shouldEqual null
+                    fullstendigSykmeldingDTOListe[0].sykmeldingStatus.sporsmalOgSvarListe shouldEqual null
+                    fullstendigSykmeldingDTOListe[1].id shouldEqual "uuid"
+                    fullstendigSykmeldingDTOListe[1].sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.SENDT
+                    fullstendigSykmeldingDTOListe[1].sykmeldingStatus.timestamp shouldEqual timestamp
+                    fullstendigSykmeldingDTOListe[1].sykmeldingStatus.arbeidsgiver shouldEqual ArbeidsgiverStatusDTO("orgnummer", null, "Bedrift A/S")
+                    fullstendigSykmeldingDTOListe[1].sykmeldingStatus.sporsmalOgSvarListe?.size shouldEqual 1
+                    fullstendigSykmeldingDTOListe[1].sykmeldingStatus.sporsmalOgSvarListe!![0] shouldEqual SporsmalOgSvarDTO("Arbeidssituasjon", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER")
                 }
             }
         }
