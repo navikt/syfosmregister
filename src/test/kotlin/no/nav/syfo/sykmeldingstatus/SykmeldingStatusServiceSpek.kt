@@ -3,9 +3,8 @@ package no.nav.syfo.sykmeldingstatus
 import java.time.LocalDateTime
 import kotlin.test.assertFailsWith
 import no.nav.syfo.aksessering.SykmeldingService
+import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.persistering.opprettSykmeldingsdokument
-import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -24,10 +23,8 @@ class SykmeldingStatusServiceSpek : Spek({
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
     beforeEachTest {
-        database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
-        database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
+        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-        database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
     }
 
     afterEachTest {
@@ -74,20 +71,15 @@ class SykmeldingStatusServiceSpek : Spek({
 
         it("Skal kun hente sykmeldinger der status ikke er SLETTET") {
             val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
-            val copySkymeldingopplysning = testSykmeldingsopplysninger.copy(
+            val copySykmeldingopplysning = testSykmeldingsopplysninger.copy(
                     id = "uuid2",
                     pasientFnr = "pasientFnr"
             )
-            database.connection.opprettSykmeldingsopplysninger(copySkymeldingopplysning)
-            database.connection.opprettSykmeldingsdokument(copySykmeldingDokument)
+            database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument, SykmeldingStatusEvent(copySykmeldingopplysning.id, LocalDateTime.now(), StatusEvent.APEN))
             database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
             val confirmedDateTime = LocalDateTime.now()
-            val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
-            val status2 = SykmeldingStatusEvent("uuid2", confirmedDateTime, StatusEvent.APEN)
-            sykmeldingStatusService.registrerStatus(status)
-            sykmeldingStatusService.registrerStatus(status2)
             sykmeldingStatusService.registrerStatus(deletedStatus)
 
             val sykmeldinger = sykmeldingService.hentSykmeldinger("pasientFnr")

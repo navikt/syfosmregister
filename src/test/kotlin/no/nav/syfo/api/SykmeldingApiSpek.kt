@@ -30,9 +30,8 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Behandlingsutfall
+import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.persistering.opprettSykmeldingsdokument
-import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
 import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
 import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
@@ -49,7 +48,6 @@ import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
 import no.nav.syfo.sykmeldingstatus.api.lagSporsmalListe
-import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.sykmeldingstatus.registrerBekreftet
 import no.nav.syfo.sykmeldingstatus.registrerSendt
 import no.nav.syfo.testutil.TestDB
@@ -67,10 +65,8 @@ object SykmeldingApiSpek : Spek({
     val database = TestDB()
 
     beforeEachTest {
-        database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
-        database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
+        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-        database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
     }
 
     afterEachTest {
@@ -129,23 +125,20 @@ object SykmeldingApiSpek : Spek({
             }
 
             it("skal ikke sende med medisinsk vurdering hvis sykmeldingen er skjermet") {
-                database.connection.opprettSykmeldingsopplysninger(
+                database.lagreMottattSykmelding(
                     testSykmeldingsopplysninger.copy(
                         id = "uuid2",
                         pasientFnr = "PasientFnr1"
-                    )
-                )
-                database.connection.opprettSykmeldingsdokument(
+                    ),
                     testSykmeldingsdokument.copy(
                         id = "uuid2",
                         sykmelding = testSykmeldingsdokument.sykmelding.copy(
                             id = "id2",
                             skjermesForPasient = true
                         )
-                    )
-                )
+                    ),
+                    SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
-                database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
 
                 every { mockPayload.subject } returns "PasientFnr1"
 
@@ -160,8 +153,8 @@ object SykmeldingApiSpek : Spek({
             }
 
             it("Skal ikke returnere statustekster som er sendt til manuell behandling") {
-                database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"))
-                database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2"))
+                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"), testSykmeldingsdokument.copy(id = "uuid2"),
+                    SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
                 database.connection.opprettBehandlingsutfall(
                     Behandlingsutfall("uuid2",
                         ValidationResult(
@@ -170,8 +163,6 @@ object SykmeldingApiSpek : Spek({
                         )
                     )
                 )
-                database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
-
                 every { mockPayload.subject } returns "123"
 
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
@@ -185,8 +176,7 @@ object SykmeldingApiSpek : Spek({
             }
 
             it("Skal vise tekster når behandlingsutfall er avvist") {
-                database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"))
-                database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2"))
+                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"), testSykmeldingsdokument.copy(id = "uuid2"), SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
                 database.connection.opprettBehandlingsutfall(
                     Behandlingsutfall("uuid2",
                         ValidationResult(
@@ -195,8 +185,6 @@ object SykmeldingApiSpek : Spek({
                         )
                     )
                 )
-                database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
-
                 every { mockPayload.subject } returns "123"
 
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
@@ -218,6 +206,7 @@ object SykmeldingApiSpek : Spek({
                     response.status() shouldEqual HttpStatusCode.OK
                 }
             }
+
             it("Skal ikke kunne bekrefte andre sine sykmeldinger") {
 
                 every { mockPayload.subject } returns "123"
@@ -333,10 +322,9 @@ object SykmeldingApiSpek : Spek({
                     Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
                         Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))),
                     SykmeldingStatusEvent("uuid", timestamp, StatusEvent.SENDT))
-                database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger.copy(id = "uuid2"))
-                database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument.copy(id = "uuid2", sykmelding = testSykmeldingsdokument.sykmelding.copy(id = "id2")))
+                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2"), testSykmeldingsdokument.copy(id = "uuid2", sykmelding = testSykmeldingsdokument.sykmelding.copy(id = "id2")),
+                    SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
-                database.registerStatus(SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
 
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
                     call.authentication.principal = JWTPrincipal(mockPayload)

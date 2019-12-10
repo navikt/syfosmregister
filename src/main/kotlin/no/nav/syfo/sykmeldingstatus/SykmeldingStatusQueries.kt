@@ -53,7 +53,7 @@ private fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
         it.executeQuery().next()
     }
 
-private fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
+fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     this.prepareStatement(
         """
                 INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?)
