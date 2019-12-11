@@ -42,38 +42,48 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
 private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmelding> =
     this.prepareStatement(
         """
-                with nyeste_status_timestamp as (
-                    select sykmelding_id, 
-                        max(event_timestamp) event_timestamp 
-                    from sykmeldingstatus group by sykmelding_id
+                WITH nyeste_status_timestamp AS (
+                    SELECT sykmelding_id,
+                           max(event_timestamp) event_timestamp
+                    FROM sykmeldingstatus
+                    GROUP BY sykmelding_id
                 ),
-                nyeste_status as (
-                    select s.sykmelding_id, 
-                        s.event, 
-                        s.event_timestamp 
-                    from nyeste_status_timestamp n 
-                    inner join sykmeldingstatus s on s.sykmelding_id=n.sykmelding_id and s.event_timestamp=n.event_timestamp
-                )
-                 SELECT OPPLYSNINGER.id,
+                     nyeste_status AS (
+                         SELECT s.sykmelding_id,
+                                s.event,
+                                s.event_timestamp
+                         FROM nyeste_status_timestamp n
+                                  INNER JOIN sykmeldingstatus s
+                                             ON s.sykmelding_id = n.sykmelding_id
+                                                 AND s.event_timestamp = n.event_timestamp
+                     )
+                SELECT opplysninger.id,
                        mottatt_tidspunkt,
                        behandlingsutfall,
                        legekontor_org_nr,
                        pasient_fnr,
-                       STATUS.event,
-                       STATUS.event_timestamp,
-                       jsonb_extract_path(DOKUMENT.sykmelding, 'skjermesForPasient')::jsonb         as skjermes_for_pasient,
-                       jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'fornavn'    as lege_fornavn,
-                       jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
-                       jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
-                       jsonb_extract_path(DOKUMENT.sykmelding, 'arbeidsgiver')::jsonb               as arbeidsgiver,
-                       jsonb_extract_path(DOKUMENT.sykmelding, 'perioder')::jsonb                   as perioder,
-                       jsonb_extract_path(DOKUMENT.sykmelding, 'medisinskVurdering')::jsonb         as medisinsk_vurdering
-                    FROM SYKMELDINGSOPPLYSNINGER as OPPLYSNINGER
-                        INNER JOIN SYKMELDINGSDOKUMENT as DOKUMENT on OPPLYSNINGER.id = DOKUMENT.id
-                        INNER JOIN BEHANDLINGSUTFALL as UTFALL on OPPLYSNINGER.id = UTFALL.id
-                        LEFT JOIN nyeste_status as STATUS on STATUS.sykmelding_id=OPPLYSNINGER.id
-                    WHERE pasient_fnr = ?
-                         AND NOT exists(select 1 from sykmeldingstatus where event = 'SLETTET' and sykmelding_id = OPPLYSNINGER.id)            
+                       status.event,
+                       status.event_timestamp,
+                       jsonb_extract_path(dokument.sykmelding, 'skjermesForPasient')::JSONB         AS skjermes_for_pasient,
+                       jsonb_extract_path(dokument.sykmelding, 'behandler')::JSONB ->> 'fornavn'    AS lege_fornavn,
+                       jsonb_extract_path(dokument.sykmelding, 'behandler')::JSONB ->> 'mellomnavn' AS lege_mellomnavn,
+                       jsonb_extract_path(dokument.sykmelding, 'behandler')::JSONB ->> 'etternavn'  AS lege_etternavn,
+                       jsonb_extract_path(dokument.sykmelding, 'arbeidsgiver')::JSONB               AS arbeidsgiver,
+                       jsonb_extract_path(dokument.sykmelding, 'perioder')::JSONB                   AS perioder,
+                       jsonb_extract_path(dokument.sykmelding, 'medisinskVurdering')::JSONB         AS medisinsk_vurdering
+                FROM sykmeldingsopplysninger AS opplysninger
+                         INNER JOIN sykmeldingsdokument AS dokument
+                                    ON opplysninger.id = dokument.id
+                         INNER JOIN behandlingsutfall AS utfall
+                                    ON opplysninger.id = utfall.id
+                         LEFT JOIN nyeste_status AS status
+                                   ON status.sykmelding_id = opplysninger.id
+                WHERE pasient_fnr = ?
+                  AND NOT exists(
+                        SELECT 1
+                        FROM sykmeldingstatus
+                        WHERE event = 'SLETTET'
+                          AND sykmelding_id = opplysninger.id)
             """
     ).use {
         it.setString(1, fnr)
@@ -90,23 +100,16 @@ private fun Connection.hentStatusMedSporsmalOgSvar(sykmeldingId: String, sykmeld
 private fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
     this.prepareStatement(
         """
-                with spmogsvar as (
-                    select sporsmal.shortname,
-                        sporsmal.tekst,
-                        svar.sporsmal_id,
-                        svar.svar,
-                        svar.svartype,
-                        svar.sykmelding_id
-                    from svar inner join sporsmal on sporsmal.id=svar.sporsmal_id
-                )
-                 SELECT spmogsvar.shortname,
-                        spmogsvar.tekst,
-                        spmogsvar.sporsmal_id,
-                        spmogsvar.svar,
-                        spmogsvar.svartype,
-                        spmogsvar.sykmelding_id
-                    FROM spmogsvar
-                    WHERE spmogsvar.sykmelding_id = ?
+                SELECT sporsmal.shortname,
+                       sporsmal.tekst,
+                       svar.sporsmal_id,
+                       svar.svar,
+                       svar.svartype,
+                       svar.sykmelding_id
+                FROM svar
+                         INNER JOIN sporsmal
+                                    ON sporsmal.id = svar.sporsmal_id
+                WHERE svar.sykmelding_id = ?
             """
     ).use {
         it.setString(1, sykmeldingId)
@@ -120,8 +123,8 @@ private fun Connection.hentArbeidsgiverStatus(sykmeldingId: String): List<Arbeid
                         juridisk_orgnummer,
                         navn,
                         sykmelding_id
-                    FROM arbeidsgiver
-                    WHERE sykmelding_id = ?
+                   FROM arbeidsgiver
+                  WHERE sykmelding_id = ?
             """
     ).use {
         it.setString(1, sykmeldingId)
