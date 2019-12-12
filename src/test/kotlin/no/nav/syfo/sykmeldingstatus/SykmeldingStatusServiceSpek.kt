@@ -1,7 +1,6 @@
 package no.nav.syfo.sykmeldingstatus
 
 import java.time.LocalDateTime
-import kotlin.test.assertFailsWith
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.opprettSykmeldingsdokument
@@ -13,7 +12,6 @@ import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
-import org.postgresql.util.PSQLException
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -64,11 +62,14 @@ class SykmeldingStatusServiceSpek : Spek({
             savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
         }
 
-        it("Should throw error when inserting same status") {
+        it("Should not throw error when inserting same status") {
             val confirmedDateTime = LocalDateTime.now()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET)
             sykmeldingStatusService.registrerStatus(status)
-            assertFailsWith(PSQLException::class) { sykmeldingStatusService.registrerStatus(status) }
+            sykmeldingStatusService.registrerStatus(status)
+
+            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
+            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
         }
 
         it("Should not get sykmeling with status SLETTET") {
