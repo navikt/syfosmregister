@@ -56,7 +56,7 @@ private fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
 fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     this.prepareStatement(
         """
-                INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?)
+                INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?) ON CONFLICT DO NOTHING
                 """
     ).use {
         it.setString(1, sykmeldingStatusEvent.sykmeldingId)
@@ -69,7 +69,7 @@ fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
 private fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: SykmeldingSendEvent) {
     this.prepareStatement(
         """
-                INSERT INTO arbeidsgiver(sykmelding_id, orgnummer, juridisk_orgnummer, navn) VALUES (?, ?, ?, ?)
+                INSERT INTO arbeidsgiver(sykmelding_id, orgnummer, juridisk_orgnummer, navn) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING
                 """
     ).use {
         it.setString(1, sykmeldingSendEvent.sykmeldingId)

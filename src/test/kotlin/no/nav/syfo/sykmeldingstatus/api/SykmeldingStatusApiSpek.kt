@@ -30,8 +30,6 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.testutil.generateJWT
 import org.amshove.kluent.shouldEqual
-import org.postgresql.util.PSQLException
-import org.postgresql.util.ServerErrorMessage
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -60,16 +58,6 @@ internal class SykmeldingStatusApiSpek : Spek({
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                 }) {
                     response.status() shouldEqual HttpStatusCode.Created
-                }
-            }
-            it("Should get conflict") {
-                val sykmeldingId = "1235"
-                every { sykmeldingStatusService.registrerStatus(any()) } throws PSQLException(ServerErrorMessage("M: duplicate key"))
-                with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/status") {
-                    setBody(objectMapper.writeValueAsString(SykmeldingStatusEventDTO(StatusEventDTO.AVBRUTT, LocalDateTime.now())))
-                    addHeader("Content-Type", ContentType.Application.Json.toString())
-                }) {
-                    response.status() shouldEqual HttpStatusCode.Conflict
                 }
             }
         }

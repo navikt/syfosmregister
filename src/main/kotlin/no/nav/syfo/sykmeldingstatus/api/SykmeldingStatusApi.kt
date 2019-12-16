@@ -10,7 +10,6 @@ import no.nav.syfo.aksessering.api.log
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import org.postgresql.util.PSQLException
 
 fun Route.registerSykmeldingStatusApi(sykmeldingStatusService: SykmeldingStatusService) {
 
@@ -24,14 +23,9 @@ fun Route.registerSykmeldingStatusApi(sykmeldingStatusService: SykmeldingStatusS
         try {
             sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
             call.respond(HttpStatusCode.Created)
-        } catch (ex: PSQLException) {
-            if (ex.serverErrorMessage.message.contains("duplicate key")) {
-                log.info("Conflict", ex)
-                call.respond(HttpStatusCode.Conflict)
-            } else {
-                log.error("Internal server error", ex)
-                call.respond(HttpStatusCode.InternalServerError)
-            }
+        } catch (ex: Exception) {
+            log.error("Internal server error", ex)
+            call.respond(HttpStatusCode.InternalServerError)
         }
     }
 }
