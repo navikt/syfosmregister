@@ -32,7 +32,7 @@ fun ResultSet.tilSporsmal(): Sporsmal =
         )
     )
 
-fun DatabaseInterface.finnArbeidsgiverForSykmelding(sykmeldingId: String): Arbeidsgiver {
+fun DatabaseInterface.finnArbeidsgiverStatusForSykmelding(sykmeldingId: String): ArbeidsgiverStatus {
     connection.use { connection ->
         connection.prepareStatement(
             """
@@ -42,13 +42,13 @@ fun DatabaseInterface.finnArbeidsgiverForSykmelding(sykmeldingId: String): Arbei
                 """
         ).use {
             it.setString(1, sykmeldingId)
-            return it.executeQuery().toList { tilArbeidsgiver() }.first()
+            return it.executeQuery().toList { tilSendtTilArbeidsgiver() }.first()
         }
     }
 }
 
-fun ResultSet.tilArbeidsgiver(): Arbeidsgiver =
-    Arbeidsgiver(
+fun ResultSet.tilSendtTilArbeidsgiver(): ArbeidsgiverStatus =
+    ArbeidsgiverStatus(
         sykmeldingId = getString("sykmelding_id"),
         orgnummer = getString("orgnummer"),
         orgnavn = getString("navn"),
