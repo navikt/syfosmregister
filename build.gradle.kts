@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransf
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
-version = "1.2.3"
+version = "1.0.0"
 
 val coroutinesVersion = "1.2.2"
 val javaxActivationVersion = "1.1.1"
@@ -28,7 +28,7 @@ val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.bba46d9"
+val smCommonVersion = "1.7bf5e6f"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9.3"
 val nimbusdsVersion = "7.5.1"
@@ -39,7 +39,7 @@ tasks.withType<Jar> {
 
 plugins {
     id("org.jmailen.kotlinter") version "2.1.1"
-    kotlin("jvm") version "1.3.50"
+    kotlin("jvm") version "1.3.61"
     id("com.diffplug.gradle.spotless") version "3.23.1"
     id("com.github.johnrengelman.shadow") version "4.0.4"
 }
