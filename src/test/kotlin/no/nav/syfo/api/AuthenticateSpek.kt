@@ -16,7 +16,6 @@ import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
 import java.nio.file.Paths
-import java.time.LocalDateTime
 import java.util.Base64
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
@@ -24,10 +23,9 @@ import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.registerSykmeldingApi
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.nullstilling.registerNullstillApi
-import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.persistering.opprettSykmeldingsdokument
+import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
@@ -60,7 +58,8 @@ object AuthenticateSpek : Spek({
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
     beforeEachTest {
-        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+        database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
+        database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
 
