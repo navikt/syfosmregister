@@ -42,21 +42,6 @@ fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
 private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmelding> =
     this.prepareStatement(
         """
-                WITH nyeste_status_timestamp AS (
-                    SELECT sykmelding_id,
-                           max(event_timestamp) event_timestamp
-                    FROM sykmeldingstatus
-                    GROUP BY sykmelding_id
-                ),
-                     nyeste_status AS (
-                         SELECT s.sykmelding_id,
-                                s.event,
-                                s.event_timestamp
-                         FROM nyeste_status_timestamp n
-                                  INNER JOIN sykmeldingstatus s
-                                             ON s.sykmelding_id = n.sykmelding_id
-                                                 AND s.event_timestamp = n.event_timestamp
-                     )
                 SELECT opplysninger.id,
                        mottatt_tidspunkt,
                        behandlingsutfall,
@@ -76,7 +61,16 @@ private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmeld
                                     ON opplysninger.id = dokument.id
                          INNER JOIN behandlingsutfall AS utfall
                                     ON opplysninger.id = utfall.id
-                         LEFT JOIN nyeste_status AS status
+                         LEFT JOIN (SELECT s.sykmelding_id,
+                                           s.event,
+                                           s.event_timestamp
+                                    FROM (SELECT sykmelding_id,
+                                                 max(event_timestamp) event_timestamp
+                                          FROM sykmeldingstatus
+                                          GROUP BY sykmelding_id) n
+                                             INNER JOIN sykmeldingstatus s
+                                                        ON s.sykmelding_id = n.sykmelding_id
+                                                            AND s.event_timestamp = n.event_timestamp) AS status
                                    ON status.sykmelding_id = opplysninger.id
                 WHERE pasient_fnr = ?
                   AND NOT exists(
