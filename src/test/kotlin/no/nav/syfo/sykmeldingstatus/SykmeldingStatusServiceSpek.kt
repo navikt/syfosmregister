@@ -2,8 +2,9 @@ package no.nav.syfo.sykmeldingstatus
 
 import java.time.LocalDateTime
 import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.persistering.opprettSykmeldingsdokument
+import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -20,35 +21,48 @@ class SykmeldingStatusServiceSpek : Spek({
     val sykmeldingService = SykmeldingService(database)
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
-    beforeEachTest {
-        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
-        database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-    }
-
-    afterEachTest {
-        database.connection.dropData()
-    }
-
     afterGroup {
         database.stop()
     }
 
     describe("Test registrerStatus") {
-        it("BekreftetDato skal være null når sykmelding ikke er bekreftet") {
-            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
-            savedSykmelding.bekreftetDato shouldBe null
-            savedSykmelding.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.APEN
+        beforeEachTest {
+            database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
+            database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
+            database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
         }
 
-        it("Skal få bekreftetDato hvis sykmelding er bekreftet") {
+        afterEachTest {
+            database.connection.dropData()
+        }
+
+        it("Should get bekreftetDato = null when not read by user") {
+            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
+            savedSykmelding.bekreftetDato shouldBe null
+        }
+
+        it("Should get bekreftdato = null when status is OPEN") {
+            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
+            sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", LocalDateTime.now(), StatusEvent.APEN))
+            savedSykmelding.bekreftetDato shouldBe null
+        }
+
+        it("Should get bekreftetDato") {
             val confirmedDateTime = LocalDateTime.now()
             sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET))
             val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
             savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
-            savedSykmelding.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.BEKREFTET
         }
 
-        it("Skal ikke kaste feil hvis man oppdaterer med eksisterende status på nytt") {
+        it("Should get bekreftetDato when newest status is SENDT") {
+            val confirmedDateTime = LocalDateTime.now().minusDays(1)
+            sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET))
+            sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime.plusDays(1), StatusEvent.SENDT))
+            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
+            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
+        }
+
+        it("Should not throw error when inserting same status") {
             val confirmedDateTime = LocalDateTime.now()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET)
             sykmeldingStatusService.registrerStatus(status)
@@ -58,7 +72,7 @@ class SykmeldingStatusServiceSpek : Spek({
             savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
         }
 
-        it("Skal ikke hente sykmeldinger med status SLETTET") {
+        it("Should not get sykmeling with status SLETTET") {
             val confirmedDateTime = LocalDateTime.now()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
@@ -70,17 +84,22 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldinger shouldEqual emptyList()
         }
 
-        it("Skal kun hente sykmeldinger der status ikke er SLETTET") {
+        it("should only get sykmelidnger where status is not SLETTET") {
             val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
-            val copySykmeldingopplysning = testSykmeldingsopplysninger.copy(
+            val copySkymeldingopplysning = testSykmeldingsopplysninger.copy(
                     id = "uuid2",
                     pasientFnr = "pasientFnr"
             )
-            database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument, SykmeldingStatusEvent(copySykmeldingopplysning.id, LocalDateTime.now(), StatusEvent.APEN))
+            database.connection.opprettSykmeldingsopplysninger(copySkymeldingopplysning)
+            database.connection.opprettSykmeldingsdokument(copySykmeldingDokument)
             database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
             val confirmedDateTime = LocalDateTime.now()
+            val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
+            val status2 = SykmeldingStatusEvent("uuid2", confirmedDateTime, StatusEvent.APEN)
+            sykmeldingStatusService.registrerStatus(status)
+            sykmeldingStatusService.registrerStatus(status2)
             sykmeldingStatusService.registrerStatus(deletedStatus)
 
             val sykmeldinger = sykmeldingService.hentSykmeldinger("pasientFnr")
