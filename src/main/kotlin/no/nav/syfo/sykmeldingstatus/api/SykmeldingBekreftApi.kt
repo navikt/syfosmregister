@@ -20,7 +20,7 @@ fun Route.registerSykmeldingBekreftApi(sykmeldingStatusService: SykmeldingStatus
             log.info("Bekreftet sykmelding {}", sykmeldingId)
             call.respond(HttpStatusCode.Created)
         } catch (ex: Exception) {
-            log.warn("Noe gikk galt ved bekrefting av sykmelding {}", sykmeldingId, ex)
+            log.error("Noe gikk galt ved bekrefting av sykmelding {}", sykmeldingId, ex)
             call.respond(HttpStatusCode.InternalServerError)
         }
     }
