@@ -20,7 +20,7 @@ fun Route.registerSykmeldingSendApi(sykmeldingStatusService: SykmeldingStatusSer
             log.info("Sendt sykmelding {}", sykmeldingId)
             call.respond(HttpStatusCode.Created)
         } catch (ex: Exception) {
-            log.warn("Noe gikk galt ved innsending av sykmelding {}", sykmeldingId, ex)
+            log.error("Noe gikk galt ved innsending av sykmelding {}", sykmeldingId, ex)
             call.respond(HttpStatusCode.InternalServerError)
         }
     }

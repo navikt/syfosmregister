@@ -18,7 +18,7 @@ fun DatabaseInterface.registrerSendt(sykmeldingSendEvent: SykmeldingSendEvent, s
     connection.use { connection ->
         connection.slettGamleSvarHvisFinnesFraFor(sykmeldingSendEvent.sykmeldingId)
         connection.registerStatus(sykmeldingStatusEvent)
-        connection.lagreArbeidsgiver(sykmeldingSendEvent)
+        connection.lagreArbeidsgiverStatus(sykmeldingSendEvent)
         connection.lagreSporsmalOgSvar(sykmeldingSendEvent.sporsmal)
         connection.commit()
     }
@@ -53,7 +53,7 @@ private fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
         it.executeQuery().next()
     }
 
-private fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
+fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     this.prepareStatement(
         """
                 INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?) ON CONFLICT DO NOTHING
@@ -66,7 +66,7 @@ private fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEve
     }
 }
 
-private fun Connection.lagreArbeidsgiver(sykmeldingSendEvent: SykmeldingSendEvent) {
+private fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: SykmeldingSendEvent) {
     this.prepareStatement(
         """
                 INSERT INTO arbeidsgiver(sykmelding_id, orgnummer, juridisk_orgnummer, navn) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING
