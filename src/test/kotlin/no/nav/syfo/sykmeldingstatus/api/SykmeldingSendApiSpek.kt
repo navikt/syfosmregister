@@ -135,7 +135,7 @@ class SykmeldingSendApiSpek : Spek({
 fun opprettSykmeldingSendEventDTO(): SykmeldingSendEventDTO =
     SykmeldingSendEventDTO(
         LocalDateTime.now(),
-        ArbeidsgiverDTO(orgnummer = "orgnummer", juridiskOrgnummer = null, orgNavn = "navn"),
+        ArbeidsgiverStatusDTO(orgnummer = "orgnummer", juridiskOrgnummer = null, orgNavn = "navn"),
         listOf(SporsmalOgSvarDTO("", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
             SporsmalOgSvarDTO("", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "NEI"))
     )

@@ -1,8 +1,8 @@
 package no.nav.syfo.aksessering.db
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.sql.Connection
 import java.sql.ResultSet
-import java.time.LocalDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.domain.Arbeidsgiver
@@ -17,37 +17,102 @@ import no.nav.syfo.model.Gradert as ModelGradert
 import no.nav.syfo.model.HarArbeidsgiver as ModelHarArbeidsgiver
 import no.nav.syfo.model.Periode as ModelPeriode
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
+import no.nav.syfo.sykmeldingstatus.ShortName
+import no.nav.syfo.sykmeldingstatus.Sporsmal
 import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmeldingstatus.Svar
+import no.nav.syfo.sykmeldingstatus.Svartype
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatus
 
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
-        connection.use { connection ->
-            connection.prepareStatement(
-                    """
-                SELECT OPPLYSNINGER.id,
-                   mottatt_tidspunkt,
-                   behandlingsutfall,
-                   legekontor_org_nr,
-                   STATUS.event,
-                   STATUS.event_timestamp,
-                   jsonb_extract_path(DOKUMENT.sykmelding, 'skjermesForPasient')::jsonb         as skjermes_for_pasient,
-                   jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'fornavn'    as lege_fornavn,
-                   jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'mellomnavn' as lege_mellomnavn,
-                   jsonb_extract_path(DOKUMENT.sykmelding, 'behandler')::jsonb ->> 'etternavn'  as lege_etternavn,
-                   jsonb_extract_path(DOKUMENT.sykmelding, 'arbeidsgiver')::jsonb               as arbeidsgiver,
-                   jsonb_extract_path(DOKUMENT.sykmelding, 'perioder')::jsonb                   as perioder,
-                   jsonb_extract_path(DOKUMENT.sykmelding, 'medisinskVurdering')::jsonb         as medisinsk_vurdering
-            FROM SYKMELDINGSOPPLYSNINGER as OPPLYSNINGER
-                     INNER JOIN SYKMELDINGSDOKUMENT as DOKUMENT on OPPLYSNINGER.id = DOKUMENT.id
-                     INNER JOIN BEHANDLINGSUTFALL as UTFALL on OPPLYSNINGER.id = UTFALL.id
-                     LEFT OUTER JOIN sykmeldingstatus as STATUS on OPPLYSNINGER.id = STATUS.sykmelding_id and STATUS.event_timestamp = (select STATUS.event_timestamp from sykmeldingstatus where STATUS.sykmelding_id = OPPLYSNINGER.id and STATUS.event = 'BEKREFTET' ORDER BY STATUS.event_timestamp desc limit 1)
-            where pasient_fnr = ?
-            AND NOT exists(select 1 from sykmeldingstatus where event = 'SLETTET' and sykmelding_id = OPPLYSNINGER.id)
-            """
-            ).use {
-                it.setString(1, fnr)
-                it.executeQuery().toList { toSykmelding() }
+    connection.use { connection ->
+        val sykmeldingerMedSisteStatus = connection.hentSykmeldingerMedSisteStatus(fnr)
+        return sykmeldingerMedSisteStatus.map {
+            when {
+                it.sykmeldingStatus.statusEvent == StatusEvent.BEKREFTET ->
+                    it.copy(sykmeldingStatus = connection.hentStatusMedSporsmalOgSvar(it.id, it.sykmeldingStatus, false))
+                it.sykmeldingStatus.statusEvent == StatusEvent.SENDT ->
+                    it.copy(sykmeldingStatus = connection.hentStatusMedSporsmalOgSvar(it.id, it.sykmeldingStatus, true))
+                else -> it
             }
         }
+    }
+
+private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmelding> =
+    this.prepareStatement(
+        """
+                SELECT opplysninger.id,
+                       mottatt_tidspunkt,
+                       behandlingsutfall,
+                       legekontor_org_nr,
+                       pasient_fnr,
+                       status.event,
+                       status.event_timestamp,
+                       jsonb_extract_path(dokument.sykmelding, 'skjermesForPasient')::JSONB AS skjermes_for_pasient,
+                       dokument.sykmelding -> 'behandler' ->> 'fornavn'                     AS lege_fornavn,
+                       dokument.sykmelding -> 'behandler' ->> 'mellomnavn'                  AS lege_mellomnavn,
+                       dokument.sykmelding -> 'behandler' ->> 'etternavn'                   AS lege_etternavn,
+                       jsonb_extract_path(dokument.sykmelding, 'arbeidsgiver')::JSONB       AS arbeidsgiver,
+                       jsonb_extract_path(dokument.sykmelding, 'perioder')::JSONB           AS perioder,
+                       jsonb_extract_path(dokument.sykmelding, 'medisinskVurdering')::JSONB AS medisinsk_vurdering
+                FROM sykmeldingsopplysninger AS opplysninger
+                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
+                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
+                         LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
+                                                                       status.event_timestamp = (SELECT event_timestamp
+                                                                                                 FROM sykmeldingstatus
+                                                                                                 WHERE sykmelding_id = opplysninger.id
+                                                                                                 ORDER BY event_timestamp DESC
+                                                                                                 LIMIT 1)
+                WHERE pasient_fnr = ?
+                  AND NOT exists(SELECT 1 FROM sykmeldingstatus WHERE event = 'SLETTET' AND sykmelding_id = opplysninger.id);
+            """
+    ).use {
+        it.setString(1, fnr)
+        it.executeQuery().toList { toSykmelding() }
+    }
+
+private fun Connection.hentStatusMedSporsmalOgSvar(sykmeldingId: String, sykmeldingStatus: SykmeldingStatus, skalHenteArbeidsgiver: Boolean): SykmeldingStatus {
+    if (skalHenteArbeidsgiver) {
+        return sykmeldingStatus.copy(arbeidsgiver = this.hentArbeidsgiverStatus(sykmeldingId).first(), sporsmalListe = this.hentSporsmalOgSvar(sykmeldingId))
+    }
+    return sykmeldingStatus.copy(sporsmalListe = this.hentSporsmalOgSvar(sykmeldingId))
+}
+
+private fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
+    this.prepareStatement(
+        """
+                SELECT sporsmal.shortname,
+                       sporsmal.tekst,
+                       svar.sporsmal_id,
+                       svar.svar,
+                       svar.svartype,
+                       svar.sykmelding_id
+                FROM svar
+                         INNER JOIN sporsmal
+                                    ON sporsmal.id = svar.sporsmal_id
+                WHERE svar.sykmelding_id = ?
+            """
+    ).use {
+        it.setString(1, sykmeldingId)
+        it.executeQuery().toList { tilSporsmal() }
+    }
+
+private fun Connection.hentArbeidsgiverStatus(sykmeldingId: String): List<ArbeidsgiverStatus> =
+    this.prepareStatement(
+        """
+                 SELECT orgnummer,
+                        juridisk_orgnummer,
+                        navn,
+                        sykmelding_id
+                   FROM arbeidsgiver
+                  WHERE sykmelding_id = ?
+            """
+    ).use {
+        it.setString(1, sykmeldingId)
+        it.executeQuery().toList { tilArbeidsgiverStatus() }
+    }
 
 fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
         connection.use { connection ->
@@ -67,7 +132,6 @@ fun ResultSet.toSykmelding(): Sykmelding =
                 id = getString("id").trim(),
                 skjermesForPasient = getBoolean("skjermes_for_pasient"),
                 mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
-                bekreftetDato = getBekreftedDato(),
                 behandlingsutfall = filterBehandlingsUtfall(objectMapper.readValue(getString("behandlingsutfall"))),
                 legekontorOrgnummer = getString("legekontor_org_nr")?.trim(),
                 legeNavn = getLegenavn(this),
@@ -81,7 +145,11 @@ fun ResultSet.toSykmelding(): Sykmelding =
                 sykmeldingsperioder = getSykmeldingsperioder(this).map {
                     periodeTilBrukersykmeldingsperiode(it)
                 },
-                medisinskVurdering = objectMapper.readValue(getString("medisinsk_vurdering"))
+                medisinskVurdering = objectMapper.readValue(getString("medisinsk_vurdering")),
+                sykmeldingStatus = SykmeldingStatus(timestamp = getTimestamp("event_timestamp").toLocalDateTime(),
+                    statusEvent = tilStatusEvent(getString("event")),
+                    arbeidsgiver = null,
+                    sporsmalListe = null)
         )
 
 fun filterBehandlingsUtfall(behandlingsutfall: Behandlingsutfall): Behandlingsutfall {
@@ -89,14 +157,6 @@ fun filterBehandlingsUtfall(behandlingsutfall: Behandlingsutfall): Behandlingsut
         return Behandlingsutfall(emptyList(), BehandlingsutfallStatus.MANUAL_PROCESSING)
     }
     return behandlingsutfall
-}
-
-private fun ResultSet.getBekreftedDato(): LocalDateTime? {
-    if (StatusEvent.BEKREFTET.name == getString("event")) {
-        return getTimestamp("event_timestamp").toLocalDateTime()
-    } else {
-        return null
-    }
 }
 
 fun arbeidsgiverModelTilSykmeldingarbeidsgiver(arbeidsgiver: ModelArbeidsgiver): Arbeidsgiver? {
@@ -150,4 +210,58 @@ fun getLegenavn(resultSet: ResultSet): String? {
     val navn = "$fornavn$mellomnavn$etternavn"
 
     return if (navn.isBlank()) null else navn
+}
+
+fun ResultSet.tilSporsmal(): Sporsmal =
+    Sporsmal(
+        tekst = getString("tekst"),
+        shortName = tilShortName(getString("shortname")),
+        svar = tilSvar()
+    )
+
+fun ResultSet.tilSvar(): Svar =
+    Svar(
+        sykmeldingId = getString("sykmelding_id"),
+        sporsmalId = getInt("sporsmal_id"),
+        svartype = tilSvartype(getString("svartype")),
+        svar = getString("svar")
+    )
+
+fun ResultSet.tilArbeidsgiverStatus(): ArbeidsgiverStatus =
+    ArbeidsgiverStatus(
+        sykmeldingId = getString("sykmelding_id"),
+        orgnummer = getString("orgnummer"),
+        juridiskOrgnummer = getString("juridisk_orgnummer"),
+        orgnavn = getString("navn")
+    )
+
+private fun tilStatusEvent(status: String): StatusEvent {
+    return when (status) {
+        "BEKREFTET" -> StatusEvent.BEKREFTET
+        "APEN" -> StatusEvent.APEN
+        "SENDT" -> StatusEvent.SENDT
+        "AVBRUTT" -> StatusEvent.AVBRUTT
+        "UTGATT" -> StatusEvent.UTGATT
+        else -> throw IllegalStateException("Sykmeldingen har ukjent status eller er slettet, skal ikke kunne skje")
+    }
+}
+
+private fun tilShortName(shortname: String): ShortName {
+    return when (shortname) {
+        "ARBEIDSSITUASJON" -> ShortName.ARBEIDSSITUASJON
+        "FORSIKRING" -> ShortName.FORSIKRING
+        "FRAVAER" -> ShortName.FRAVAER
+        "PERIODE" -> ShortName.PERIODE
+        "NY_NARMESTE_LEDER" -> ShortName.NY_NARMESTE_LEDER
+        else -> throw IllegalStateException("Sykmeldingen har en ukjent spørsmålskode, skal ikke kunne skje")
+    }
+}
+
+private fun tilSvartype(svartype: String): Svartype {
+    return when (svartype) {
+        "ARBEIDSSITUASJON" -> Svartype.ARBEIDSSITUASJON
+        "PERIODER" -> Svartype.PERIODER
+        "JA_NEI" -> Svartype.JA_NEI
+        else -> throw IllegalStateException("Sykmeldingen har en ukjent svartype, skal ikke kunne skje")
+    }
 }
