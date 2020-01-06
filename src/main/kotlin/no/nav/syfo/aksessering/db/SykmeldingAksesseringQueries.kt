@@ -49,35 +49,24 @@ private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmeld
                        pasient_fnr,
                        status.event,
                        status.event_timestamp,
-                       jsonb_extract_path(dokument.sykmelding, 'skjermesForPasient')::JSONB         AS skjermes_for_pasient,
-                       jsonb_extract_path(dokument.sykmelding, 'behandler')::JSONB ->> 'fornavn'    AS lege_fornavn,
-                       jsonb_extract_path(dokument.sykmelding, 'behandler')::JSONB ->> 'mellomnavn' AS lege_mellomnavn,
-                       jsonb_extract_path(dokument.sykmelding, 'behandler')::JSONB ->> 'etternavn'  AS lege_etternavn,
-                       jsonb_extract_path(dokument.sykmelding, 'arbeidsgiver')::JSONB               AS arbeidsgiver,
-                       jsonb_extract_path(dokument.sykmelding, 'perioder')::JSONB                   AS perioder,
-                       jsonb_extract_path(dokument.sykmelding, 'medisinskVurdering')::JSONB         AS medisinsk_vurdering
+                       jsonb_extract_path(dokument.sykmelding, 'skjermesForPasient')::JSONB AS skjermes_for_pasient,
+                       dokument.sykmelding -> 'behandler' ->> 'fornavn'                     AS lege_fornavn,
+                       dokument.sykmelding -> 'behandler' ->> 'mellomnavn'                  AS lege_mellomnavn,
+                       dokument.sykmelding -> 'behandler' ->> 'etternavn'                   AS lege_etternavn,
+                       jsonb_extract_path(dokument.sykmelding, 'arbeidsgiver')::JSONB       AS arbeidsgiver,
+                       jsonb_extract_path(dokument.sykmelding, 'perioder')::JSONB           AS perioder,
+                       jsonb_extract_path(dokument.sykmelding, 'medisinskVurdering')::JSONB AS medisinsk_vurdering
                 FROM sykmeldingsopplysninger AS opplysninger
-                         INNER JOIN sykmeldingsdokument AS dokument
-                                    ON opplysninger.id = dokument.id
-                         INNER JOIN behandlingsutfall AS utfall
-                                    ON opplysninger.id = utfall.id
-                         LEFT JOIN (SELECT s.sykmelding_id,
-                                           s.event,
-                                           s.event_timestamp
-                                    FROM (SELECT sykmelding_id,
-                                                 max(event_timestamp) event_timestamp
-                                          FROM sykmeldingstatus
-                                          GROUP BY sykmelding_id) n
-                                             INNER JOIN sykmeldingstatus s
-                                                        ON s.sykmelding_id = n.sykmelding_id
-                                                            AND s.event_timestamp = n.event_timestamp) AS status
-                                   ON status.sykmelding_id = opplysninger.id
+                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
+                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
+                         LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
+                                                                       status.event_timestamp = (SELECT event_timestamp
+                                                                                                 FROM sykmeldingstatus
+                                                                                                 WHERE sykmelding_id = opplysninger.id
+                                                                                                 ORDER BY event_timestamp DESC
+                                                                                                 LIMIT 1)
                 WHERE pasient_fnr = ?
-                  AND NOT exists(
-                        SELECT 1
-                        FROM sykmeldingstatus
-                        WHERE event = 'SLETTET'
-                          AND sykmelding_id = opplysninger.id)
+                  AND NOT exists(SELECT 1 FROM sykmeldingstatus WHERE event = 'SLETTET' AND sykmelding_id = opplysninger.id);
             """
     ).use {
         it.setString(1, fnr)
