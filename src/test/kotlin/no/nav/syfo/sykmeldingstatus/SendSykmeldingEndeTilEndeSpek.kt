@@ -15,10 +15,9 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import java.time.LocalDateTime
 import no.nav.syfo.objectMapper
+import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.persistering.opprettSykmeldingsdokument
-import no.nav.syfo.persistering.opprettSykmeldingsopplysninger
-import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverDTO
+import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
 import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
@@ -39,8 +38,7 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
     beforeEachTest {
-        database.connection.opprettSykmeldingsopplysninger(testSykmeldingsopplysninger)
-        database.connection.opprettSykmeldingsdokument(testSykmeldingsdokument)
+        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
 
@@ -72,7 +70,7 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                 }) {
                     val status = database.finnStatusForSykmelding(sykmeldingId)
-                    val arbeidsgiver = database.finnArbeidsgiverForSykmelding(sykmeldingId)
+                    val arbeidsgiver = database.finnArbeidsgiverStatusForSykmelding(sykmeldingId)
                     val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
                     val svar = sporsmal[0].svar
 
@@ -101,7 +99,7 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
                     addHeader("Content-Type", ContentType.Application.Json.toString())
                 }) {
                     val status = database.finnStatusForSykmelding(sykmeldingId)
-                    val arbeidsgiver = database.finnArbeidsgiverForSykmelding(sykmeldingId)
+                    val arbeidsgiver = database.finnArbeidsgiverStatusForSykmelding(sykmeldingId)
                     val sporsmal = database.finnSvarForSykmelding(sykmeldingId)
                     val svar = sporsmal[0].svar
 
@@ -124,7 +122,7 @@ class SendSykmeldingEndeTilEndeSpek : Spek({
 private fun opprettSykmeldingSendEventDTOForArbeidstaker(): SykmeldingSendEventDTO =
     SykmeldingSendEventDTO(
         LocalDateTime.now(),
-        ArbeidsgiverDTO(orgnummer = "123456", juridiskOrgnummer = null, orgNavn = "Bedrift A/S"),
+        ArbeidsgiverStatusDTO(orgnummer = "123456", juridiskOrgnummer = null, orgNavn = "Bedrift A/S"),
         listOf(SporsmalOgSvarDTO("Jeg er sykmeldt fra ", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
             SporsmalOgSvarDTO("Er Ole Olsen din nærmeste leder?", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "NEI"))
     )

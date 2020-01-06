@@ -16,6 +16,10 @@ import no.nav.syfo.aksessering.api.SykmeldingsperiodeDTO
 import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sm.Diagnosekoder.ICD10_CODE
 import no.nav.syfo.sm.Diagnosekoder.ICPC2_CODE
+import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatus
+import no.nav.syfo.sykmeldingstatus.api.SykmeldingStatusDTO
+import no.nav.syfo.sykmeldingstatus.api.tilSykmeldingStatusDTO
 
 data class Sykmelding(
     val id: String,
@@ -26,8 +30,8 @@ data class Sykmelding(
     val legeNavn: String?,
     val arbeidsgiver: Arbeidsgiver?,
     val sykmeldingsperioder: List<Sykmeldingsperiode>,
-    val bekreftetDato: LocalDateTime?,
-    val medisinskVurdering: MedisinskVurdering
+    val medisinskVurdering: MedisinskVurdering,
+    val sykmeldingStatus: SykmeldingStatus
 )
 
 data class MedisinskVurdering(
@@ -109,12 +113,13 @@ fun Sykmelding.toFullstendigDTO(): FullstendigSykmeldingDTO =
     FullstendigSykmeldingDTO(
         id = id,
         mottattTidspunkt = mottattTidspunkt,
-        bekreftetDato = bekreftetDato,
+        bekreftetDato = finnBekreftetDato(),
         behandlingsutfall = behandlingsutfall.toDTO(),
         legekontorOrgnummer = legekontorOrgnummer,
         legeNavn = legeNavn,
         arbeidsgiver = arbeidsgiver?.toDTO(),
         sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() },
+        sykmeldingStatus = sykmeldingStatus.toDTO(),
         medisinskVurdering = medisinskVurdering.toDTO()
     )
 
@@ -122,13 +127,21 @@ fun Sykmelding.toSkjermetDTO(): SkjermetSykmeldingDTO =
     SkjermetSykmeldingDTO(
         id = id,
         mottattTidspunkt = mottattTidspunkt,
-        bekreftetDato = bekreftetDato,
+        bekreftetDato = finnBekreftetDato(),
         behandlingsutfall = behandlingsutfall.toDTO(),
         legekontorOrgnummer = legekontorOrgnummer,
         legeNavn = legeNavn,
         arbeidsgiver = arbeidsgiver?.toDTO(),
-        sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() }
+        sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() },
+        sykmeldingStatus = sykmeldingStatus.toDTO()
     )
+
+fun Sykmelding.finnBekreftetDato(): LocalDateTime? {
+    if (sykmeldingStatus.statusEvent == StatusEvent.BEKREFTET) {
+        return sykmeldingStatus.timestamp
+    }
+    return null
+}
 
 fun MedisinskVurdering.toDTO(): MedisinskVurderingDTO =
         MedisinskVurderingDTO(
@@ -187,15 +200,18 @@ fun Diagnose.toDTO(): DiagnoseDTO =
 fun getDiagnosetekst(diagnose: Diagnose): String =
     when (diagnose.system) {
         ICD10_CODE ->
-            (Diagnosekoder.icd10[diagnose.kode])?.text ?: "Ukjennt"
+            (Diagnosekoder.icd10[diagnose.kode])?.text ?: "Ukjent"
         ICPC2_CODE ->
-            (Diagnosekoder.icpc2[diagnose.kode])?.text ?: "Ukjennt"
-        else -> "Ukjennt"
+            (Diagnosekoder.icpc2[diagnose.kode])?.text ?: "Ukjent"
+        else -> "Ukjent"
     }
 
 fun getDiagnosesystem(system: String): String =
         when (system) {
             ICD10_CODE -> "ICD-10"
             ICPC2_CODE -> "ICPC-2"
-            else -> "Ukjennt"
+            else -> "Ukjent"
         }
+
+fun SykmeldingStatus.toDTO(): SykmeldingStatusDTO =
+    tilSykmeldingStatusDTO(this)
