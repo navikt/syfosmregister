@@ -48,6 +48,7 @@ import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
 import no.nav.syfo.sykmeldingstatus.api.lagSporsmalListe
+import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.sykmeldingstatus.registrerBekreftet
 import no.nav.syfo.sykmeldingstatus.registrerSendt
 import no.nav.syfo.testutil.TestDB
@@ -283,6 +284,25 @@ object SykmeldingApiSpek : Spek({
                         objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
 
                     fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.BEKREFTET
+                    fullstendigSykmeldingDTO.sykmeldingStatus.timestamp shouldEqual timestamp
+                    fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual null
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe shouldEqual null
+                }
+            }
+
+            it("Skal takle at spørsmål/svar for sykmelding som er sendt mangler") {
+                every { mockPayload.subject } returns "pasientFnr"
+                val timestamp = LocalDateTime.now()
+                database.registerStatus(SykmeldingStatusEvent("uuid", timestamp, StatusEvent.SENDT))
+
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val fullstendigSykmeldingDTO =
+                        objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+
+                    fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.SENDT
                     fullstendigSykmeldingDTO.sykmeldingStatus.timestamp shouldEqual timestamp
                     fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual null
                     fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe shouldEqual null

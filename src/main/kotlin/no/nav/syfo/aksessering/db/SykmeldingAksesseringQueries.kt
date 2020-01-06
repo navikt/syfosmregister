@@ -75,7 +75,7 @@ private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmeld
 
 private fun Connection.hentStatusMedSporsmalOgSvar(sykmeldingId: String, sykmeldingStatus: SykmeldingStatus, skalHenteArbeidsgiver: Boolean): SykmeldingStatus {
     if (skalHenteArbeidsgiver) {
-        return sykmeldingStatus.copy(arbeidsgiver = this.hentArbeidsgiverStatus(sykmeldingId).first(), sporsmalListe = this.hentSporsmalOgSvar(sykmeldingId))
+        return sykmeldingStatus.copy(arbeidsgiver = this.hentArbeidsgiverStatus(sykmeldingId).firstOrNull(), sporsmalListe = this.hentSporsmalOgSvar(sykmeldingId))
     }
     return sykmeldingStatus.copy(sporsmalListe = this.hentSporsmalOgSvar(sykmeldingId))
 }
