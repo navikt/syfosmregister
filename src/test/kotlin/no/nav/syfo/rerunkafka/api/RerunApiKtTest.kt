@@ -22,6 +22,8 @@ import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.setupAuth
+import no.nav.syfo.model.Status
+import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import no.nav.syfo.testutil.generateJWT
@@ -48,7 +50,7 @@ class RerunApiKtTest : Spek({
             it("Should call rerunkafkaApi") {
                 with(handleRequest(HttpMethod.Post, "/api/v1/rerun") {
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(objectMapper.writeValueAsString(0.until(3).map { UUID.randomUUID() }))
+                    setBody(objectMapper.writeValueAsString(RerunRequest(0.until(3).map { UUID.randomUUID().toString() }, ValidationResult(Status.OK, emptyList()))))
                 }) {
                     response.status() shouldEqual HttpStatusCode.Accepted
                 }
@@ -91,7 +93,7 @@ class RerunApiKtTest : Spek({
                             HttpHeaders.Authorization,
                             "Bearer ${generateJWT("10", "1")}"
                     )
-                    setBody(objectMapper.writeValueAsString(0.until(3).map { UUID.randomUUID() }))
+                    setBody(objectMapper.writeValueAsString(RerunRequest(0.until(3).map { UUID.randomUUID().toString() }, ValidationResult(Status.OK, emptyList()))))
                 }) {
                     response.status() shouldEqual HttpStatusCode.Accepted
                 }
@@ -104,7 +106,7 @@ class RerunApiKtTest : Spek({
                             HttpHeaders.Authorization,
                             "Bearer ${generateJWT("2", "1")}"
                     )
-                    setBody(objectMapper.writeValueAsString(0.until(3).map { UUID.randomUUID() }))
+                    setBody(objectMapper.writeValueAsString(RerunRequest(0.until(3).map { UUID.randomUUID().toString() }, ValidationResult(Status.OK, emptyList()))))
                 }) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
