@@ -7,6 +7,8 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.objectMapper
+import no.nav.syfo.persistering.Behandlingsutfall
+import no.nav.syfo.persistering.toPGObject
 
 fun DatabaseInterface.getSykmeldingerByIds(sykmeldingIds: List<String>): List<ReceivedSykmelding> =
     connection.use { connection ->
@@ -22,6 +24,35 @@ fun DatabaseInterface.getSykmeldingerByIds(sykmeldingIds: List<String>): List<Re
             it.executeQuery().toList { toReceivedSykmelding() }
         }
     }
+
+fun DatabaseInterface.erBehandlingsutfallLagret(sykmeldingsid: String) =
+        connection.use { connection ->
+            connection.prepareStatement(
+                    """
+                SELECT *
+                FROM BEHANDLINGSUTFALL
+                WHERE id=?;
+                """
+            ).use {
+                it.setString(1, sykmeldingsid)
+                it.executeQuery().next()
+            }
+        }
+
+fun DatabaseInterface.opprettBehandlingsutfall(behandlingsutfall: Behandlingsutfall) =
+        connection.use { connection ->
+            connection.prepareStatement(
+                    """
+                    INSERT INTO BEHANDLINGSUTFALL(id, behandlingsutfall) VALUES (?, ?)
+                """
+            ).use {
+                it.setString(1, behandlingsutfall.id)
+                it.setObject(2, behandlingsutfall.behandlingsutfall.toPGObject())
+                it.executeUpdate()
+            }
+
+            connection.commit()
+        }
 
 fun ResultSet.toReceivedSykmelding(): ReceivedSykmelding {
     val sykmelding: no.nav.syfo.model.Sykmelding = objectMapper.readValue(getString("sykmelding"))

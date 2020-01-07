@@ -16,24 +16,31 @@ import no.nav.syfo.model.KontaktMedPasient
 import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.Prognose
 import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.model.Status
 import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.rerunkafka.api.RerunRequest
+import no.nav.syfo.rerunkafka.database.erBehandlingsutfallLagret
 import no.nav.syfo.rerunkafka.database.getSykmeldingerByIds
+import no.nav.syfo.rerunkafka.database.opprettBehandlingsutfall
 import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 class RerunKafkaServiceTest : Spek({
-    val sykmeldingServic = mockkClass(DatabaseInterface::class)
+    val database = mockkClass(DatabaseInterface::class)
     val rerunKafkaProducer = mockkClass(RerunKafkaProducer::class)
     mockkStatic("no.nav.syfo.rerunkafka.database.SykmeldingAksesseringQueriesKt")
     val sykmeldingIds = 0.until(10).map { UUID.randomUUID().toString() }
     every { rerunKafkaProducer.publishToKafka(any()) } returns Unit
-    every { sykmeldingServic.getSykmeldingerByIds(any()) } returns sykmeldingIds.map { toReceivedSykmelding(it) }
+    every { database.getSykmeldingerByIds(any()) } returns sykmeldingIds.map { toReceivedSykmelding(it) }
+    every { database.erBehandlingsutfallLagret(any()) } returns false
+    every { database.opprettBehandlingsutfall(any()) } returns Unit
 
     describe("Publish sykmeldinger to kafka topic automatiskBehandling") {
         it("Should get from database and publish to kafka") {
-            val kafkaService = RerunKafkaService(sykmeldingServic, rerunKafkaProducer)
-            kafkaService.rerun(sykmeldingIds)
+            val kafkaService = RerunKafkaService(database, rerunKafkaProducer)
+            kafkaService.rerun(RerunRequest(sykmeldingIds, ValidationResult(Status.OK, emptyList())))
             verify(exactly = 10) { rerunKafkaProducer.publishToKafka(any()) }
         }
     }
