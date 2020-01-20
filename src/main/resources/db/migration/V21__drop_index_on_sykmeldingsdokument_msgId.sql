@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY sykmeldingsdokument_msgid_idx;
