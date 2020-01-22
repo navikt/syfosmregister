@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val coroutinesVersion = "1.2.2"
+val coroutinesVersion = "1.3.3"
 val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.9.7"
 val jaxbApiVersion = "2.4.0-b180830.0359"
@@ -14,11 +14,11 @@ val kafkaVersion = "2.0.0"
 val confluentVersion = "5.0.0"
 val kafkaEmbeddedVersion = "2.0.2"
 val kluentVersion = "1.49"
-val ktorVersion = "1.2.5"
+val ktorVersion = "1.3.0"
 val logbackVersion = "1.2.3"
 val logstashEncoderVersion = "5.1"
 val prometheusVersion = "0.6.0"
-val spekVersion = "2.0.8"
+val spekVersion = "2.0.9"
 val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val jaxwsApiVersion = "2.3.1"
 val javaxAnnotationApiVersion = "1.3.2"
@@ -60,7 +60,7 @@ repositories {
     jcenter()
     maven(url = "https://dl.bintray.com/kotlin/ktor")
     maven(url = "https://dl.bintray.com/spekframework/spek-dev")
-    maven(url = "http://packages.confluent.io/maven/")
+    maven(url = "https://packages.confluent.io/maven/")
     maven(url = "https://kotlin.bintray.com/kotlinx")
     maven {
         url = uri("https://maven.pkg.github.com/navikt/syfosm-common")
@@ -69,13 +69,8 @@ repositories {
             password = githubPassword
         }
     }
-
-    maven(url = "https://oss.sonatype.org/content/groups/staging/")
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
-}
 
 dependencies {
     implementation(kotlin("stdlib"))
@@ -144,6 +139,10 @@ dependencies {
 tasks {
     create("printVersion") {
         println(project.version)
+    }
+
+    withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = "12"
     }
 
     withType<ShadowJar> {
