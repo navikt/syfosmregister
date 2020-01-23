@@ -9,6 +9,9 @@ servers:
 paths:
   /api/v1/sykmeldinger:
     get:
+      operationId: getSykmeldingerForBruker
+      security:
+        - bearerAuth: []
       tags:
         - Sykmelding
       parameters:
@@ -23,10 +26,10 @@ paths:
           description: Forbidden
   /api/v1/sykmeldinger/{sykmeldingId}/bekreft:
     post:
+      operationId: bekreftAvvistSykmelding
       tags:
         - Sykmelding
       summary: Bekreft avviste sykmeldinger
-      operationId:
       parameters:
         - $ref: '#/components/parameters/sykmeldingId'
       responses:
@@ -35,6 +38,7 @@ paths:
 
   /sykmeldinger/{sykmeldingId}/status:
     post:
+      operationId: addStatus
       tags:
         - Sykmelding status
       summary: Api for å lagre status for sykmelding
@@ -51,6 +55,7 @@ paths:
         $ref: '#/components/requestBodies/StatusRequest'
   /sykmeldinger/{sykmeldingId}/bekreft:
     post:
+      operationId: bekreftSykmelding
       tags:
         - Sykmelding status
       summary: API for bekrefting av sykmeldinger
@@ -67,6 +72,7 @@ paths:
         $ref: '#/components/requestBodies/SykmeldingBekreftEvent'
   /sykmeldinger/{sykmeldingId}/send:
     post:
+      operationId: sendSykmelding
       tags:
         - Sykmelding status
       summary: API for sending av sykmeldinger
@@ -85,6 +91,7 @@ paths:
 
   /api/v1/internal/sykmeldinger:
     get:
+      operationId: getSykmeldinger
       tags:
         - Sykmelding
         - Internal
@@ -144,8 +151,8 @@ components:
       format: 'date-time'
     Personnr:
       type: string
-      minimum: 11
-      maximum: 11
+      minLength: 11
+      maxLength: 11
     StatusEvent:
       type: string
       enum: [APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET]
@@ -234,7 +241,7 @@ components:
         diagnosetekst:
           type: string
     MedisinskVurdering:
-      description: Medisinsk vurdering er bare tilgjengelig for brukere med tilgang til det. Den er ikke med for arbeidsgivere eller der sykmeldingen skal skjermes for pasienten
+      description: Medisinsk vurdering er bare tilgjengelig for brukere med tilgang til det.
       type: object
       required:
         - biDiagnoser
@@ -330,6 +337,14 @@ components:
       properties:
         arbeidsgiver:
           $ref: '#/components/schemas/ArbeidsgiverStatus'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
 
 
 
