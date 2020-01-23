@@ -12,7 +12,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/fnrQueryParam'
         - $ref: '#/components/parameters/sykmeldingTypeQueryParam'
-      summary: Returns a list of sykmeldinger for logged in user.
+      summary: Returnerer sykmeldinger til innlogget bruker
       description: Optional extended description in Markdown.
       responses:
         '200':
@@ -21,6 +21,15 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+  /api/v1/internal/sykmeldinger:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/fnrQueryParam'
+      summary: API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr
+      responses:
+        200:
+          $ref: '#/components/responses/SykmeldingListResponse'
+
 
 components:
   responses:
@@ -32,12 +41,14 @@ components:
             $ref: '#/components/schemas/sykmeldingList'
   parameters:
     fnrQueryParam:
+      description: Personnr
       name: fnr
       in: query
-      required: false
+      required: true
       schema:
         $ref: '#/components/schemas/Personnr'
     sykmeldingTypeQueryParam:
+      description: hvordan type som prøver å hente ut sykmeldingene
       in: query
       name: type
       required: false
