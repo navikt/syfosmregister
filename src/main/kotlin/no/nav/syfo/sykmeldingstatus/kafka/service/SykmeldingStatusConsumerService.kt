@@ -6,10 +6,10 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingBekreftEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverDTO
+import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
 import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
-import no.nav.syfo.sykmeldingstatus.api.tilArbeidsgiver
+import no.nav.syfo.sykmeldingstatus.api.tilArbeidsgiverStatus
 import no.nav.syfo.sykmeldingstatus.api.tilSporsmal
 import no.nav.syfo.sykmeldingstatus.api.tilSporsmalListe
 import no.nav.syfo.sykmeldingstatus.api.toStatusEvent
@@ -62,14 +62,14 @@ class SykmeldingStatusConsumerService(
     }
 
     private fun registrerSendt(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessage) {
-        val arbeidsgiver: ArbeidsgiverDTO = sykmeldingStatusKafkaMessage.event.arbeidsgiver
+        val arbeidsgiver: ArbeidsgiverStatusDTO = sykmeldingStatusKafkaMessage.event.arbeidsgiver
                 ?: throw IllegalArgumentException("Arbeidsgiver er ikke oppgitt")
         val arbeidsgiverSporsmal: SporsmalOgSvarDTO = sykmeldingStatusKafkaMessage.event.sporsmals?.first { sporsmal -> sporsmal.shortName == ShortNameDTO.ARBEIDSSITUASJON }
                 ?: throw IllegalArgumentException("Ingen sporsmal funnet")
         val sykmeldingId = sykmeldingStatusKafkaMessage.event.sykmeldingId
         val timestamp = sykmeldingStatusKafkaMessage.event.timestamp
         val sykmeldingSendEvent = SykmeldingSendEvent(sykmeldingId, timestamp,
-                tilArbeidsgiver(sykmeldingId, arbeidsgiver),
+                tilArbeidsgiverStatus(sykmeldingId, arbeidsgiver),
                 tilSporsmal(sykmeldingId, arbeidsgiverSporsmal))
         sykmeldingStatusService.registrerSendt(sykmeldingSendEvent)
     }

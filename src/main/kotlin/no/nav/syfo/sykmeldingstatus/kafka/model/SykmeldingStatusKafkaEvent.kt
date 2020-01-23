@@ -3,7 +3,7 @@ package no.nav.syfo.sykmeldingstatus.kafka.model
 import java.time.LocalDateTime
 import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
-import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverDTO
+import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SykmeldingBekreftEventDTO
 import no.nav.syfo.sykmeldingstatus.api.SykmeldingSendEventDTO
@@ -12,7 +12,7 @@ data class SykmeldingStatusKafkaEvent(
     val sykmeldingId: String,
     val timestamp: LocalDateTime,
     val statusEvent: StatusEventDTO,
-    val arbeidsgiver: ArbeidsgiverDTO?,
+    val arbeidsgiver: ArbeidsgiverStatusDTO?,
     val sporsmals: List<SporsmalOgSvarDTO>?
 )
 

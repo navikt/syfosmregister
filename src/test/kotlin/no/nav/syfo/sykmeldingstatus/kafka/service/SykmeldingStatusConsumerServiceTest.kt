@@ -15,7 +15,7 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingBekreftEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverDTO
+import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
 import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
@@ -229,4 +229,4 @@ fun getSykmeldingKafkaMessage(sykmeldingId: String, status: StatusEventDTO): Syk
     }
 }
 
-private fun getArbeidsgiverDTO() = ArbeidsgiverDTO("123456780", "123456789", "testnavn")
+private fun getArbeidsgiverDTO() = ArbeidsgiverStatusDTO("123456780", "123456789", "testnavn")
