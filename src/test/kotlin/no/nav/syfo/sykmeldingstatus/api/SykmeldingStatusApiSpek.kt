@@ -17,8 +17,10 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
+import io.mockk.Runs
 import io.mockk.clearAllMocks
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockkClass
 import java.nio.file.Paths
 import java.time.LocalDateTime
@@ -29,6 +31,7 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.testutil.generateJWT
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
@@ -37,9 +40,11 @@ import org.spekframework.spek2.style.specification.describe
 class SykmeldingStatusApiSpek : Spek({
 
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
 
     beforeEachTest {
         clearAllMocks()
+        every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
     }
 
     describe("Test SykmeldingStatusAPI") {
@@ -53,7 +58,7 @@ class SykmeldingStatusApiSpek : Spek({
                     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 }
             }
-            application.routing { registerSykmeldingStatusApi(sykmeldingStatusService) }
+            application.routing { registerSykmeldingStatusApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) }
 
             it("Should successfully post Status") {
                 val sykmeldingId = "123"
@@ -96,7 +101,7 @@ class SykmeldingStatusApiSpek : Spek({
             val jwkProvider = JwkProviderBuilder(uri).build()
 
             application.setupAuth(VaultSecrets("", "", "", "", "", "", ""), mockJwkProvider, "issuer1", env, mockJwkProvider, jwkProvider)
-            application.routing { authenticate("oidc") { registerSykmeldingStatusApi(sykmeldingStatusService) } }
+            application.routing { authenticate("oidc") { registerSykmeldingStatusApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) } }
 
             it("Should authenticate") {
                 val sykmeldingId = "123"

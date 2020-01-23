@@ -37,6 +37,7 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusApi
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
 @KtorExperimentalAPI
 fun createApplicationEngine(
@@ -48,6 +49,7 @@ fun createApplicationEngine(
     issuer: String,
     cluster: String,
     rerunKafkaService: RerunKafkaService,
+    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     jwkProviderForRerun: JwkProvider,
     jwkProviderStsOidc: JwkProvider
 ): ApplicationEngine =
@@ -80,7 +82,7 @@ fun createApplicationEngine(
         routing {
             registerNaisApi(applicationState)
             authenticate("jwt") {
-                registerSykmeldingApi(sykmeldingService, sykmeldingStatusService)
+                registerSykmeldingApi(sykmeldingService, sykmeldingStatusService, sykmeldingStatusKafkaProducer)
             }
             authenticate("rerun") {
                 registerRerunKafkaApi(rerunKafkaService)
@@ -89,9 +91,9 @@ fun createApplicationEngine(
                 registerNullstillApi(database, cluster)
             }
             authenticate("oidc") {
-                registerSykmeldingStatusApi(sykmeldingStatusService)
-                registerSykmeldingSendApi(sykmeldingStatusService)
-                registerSykmeldingBekreftApi(sykmeldingStatusService)
+                registerSykmeldingStatusApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
+                registerSykmeldingSendApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
+                registerSykmeldingBekreftApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())

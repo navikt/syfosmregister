@@ -44,6 +44,7 @@ import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import no.nav.syfo.sykmeldingstatus.StatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -100,6 +101,7 @@ fun main() {
     val kafkaProducer = KafkaProducer<String, String>(producerConfig)
     val rerunKafkaProducer = RerunKafkaProducer(kafkaProducer, environment)
     val rerunKafkaService = RerunKafkaService(database, rerunKafkaProducer)
+    val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(producerConfig, environment)
     val applicationEngine = createApplicationEngine(
             environment,
             applicationState,
@@ -109,6 +111,7 @@ fun main() {
             wellKnown.issuer,
             environment.cluster,
             rerunKafkaService,
+            sykmeldingStatusKafkaProducer,
             jwkProviderForRerun,
             jwkProviderStsOidc
     )

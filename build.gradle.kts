@@ -32,7 +32,6 @@ val smCommonVersion = "1.7bf5e6f"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9.3"
 val nimbusdsVersion = "7.5.1"
-val testContainerKafkaVersion = "1.12.3"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -118,7 +117,6 @@ dependencies {
     implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
     implementation("javax.activation:activation:$javaxActivationVersion")
 
-    testImplementation("org.testcontainers:kafka:$testContainerKafkaVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
