@@ -243,7 +243,6 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
                     msgId = "",
                     sykmeldingId = sykmeldingsid
             )
-
             handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta)
         }
         delay(100)
