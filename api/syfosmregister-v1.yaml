@@ -94,7 +94,6 @@ paths:
       operationId: getSykmeldinger
       tags:
         - Sykmelding
-        - Internal
       parameters:
         - $ref: '#/components/parameters/fnrQueryParam'
       summary: API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr
@@ -136,12 +135,12 @@ components:
       schema:
         type: string
     fnrQueryParam:
-      description: Personnr
+      description: Fødselsnummer
       name: fnr
       in: query
       required: true
       schema:
-        $ref: '#/components/schemas/Personnr'
+        $ref: '#/components/schemas/Fodselsnummer'
   schemas:
     Date:
       type: string
@@ -149,7 +148,7 @@ components:
     Timestamp:
       type: string
       format: 'date-time'
-    Personnr:
+    Fodselsnummer:
       type: string
       minLength: 11
       maxLength: 11
@@ -266,7 +265,7 @@ components:
         - sykmeldingsperioder
       properties:
         id:
-          $ref: '#/components/schemas/Personnr'
+          $ref: '#/components/schemas/Fodselsnummer'
         mottattTidspunkt:
           $ref: '#/components/schemas/Timestamp'
         sykmeldingStatus:
@@ -302,7 +301,7 @@ components:
           $ref: '#/components/schemas/SvarType'
         shortName:
           $ref: '#/components/schemas/SporsmalShortName'
-    SposmalOgSvarListe:
+    SporsmalOgSvarListe:
       type: array
       items:
         $ref: '#/components/schemas/SporsmalOgSvar'
@@ -327,7 +326,7 @@ components:
         timestamp:
           $ref: '#/components/schemas/Timestamp'
         sporsmalOgSvarListe:
-          $ref: '#/components/schemas/SposmalOgSvarListe'
+          $ref: '#/components/schemas/SporsmalOgSvarListe'
     SykmeldingSendEvent:
       type: object
       allOf:
