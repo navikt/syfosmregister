@@ -1,0 +1,1 @@
+create index concurrently sykmeldingsopplysninger_mottatt_tidspunkt_idx on sykmeldingsopplysninger(mottatt_tidspunkt);
