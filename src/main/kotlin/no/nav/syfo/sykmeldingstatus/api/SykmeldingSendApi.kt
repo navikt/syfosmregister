@@ -8,8 +8,10 @@ import io.ktor.routing.Route
 import io.ktor.routing.post
 import no.nav.syfo.aksessering.api.log
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.kafka.model.toSykmeldingStatusKafkaEvent
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
-fun Route.registerSykmeldingSendApi(sykmeldingStatusService: SykmeldingStatusService) {
+fun Route.registerSykmeldingSendApi(sykmeldingStatusService: SykmeldingStatusService, sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer) {
 
     post("/sykmeldinger/{sykmeldingid}/send") {
         val sykmeldingId = call.parameters["sykmeldingid"]!!
@@ -18,6 +20,7 @@ fun Route.registerSykmeldingSendApi(sykmeldingStatusService: SykmeldingStatusSer
         try {
             sykmeldingStatusService.registrerSendt(tilSykmeldingSendEvent(sykmeldingId, sykmeldingSendEventDTO))
             log.info("Sendt sykmelding {}", sykmeldingId)
+            sykmeldingStatusKafkaProducer.send(sykmeldingSendEventDTO.toSykmeldingStatusKafkaEvent(sykmeldingId))
             call.respond(HttpStatusCode.Created)
         } catch (ex: Exception) {
             log.error("Noe gikk galt ved innsending av sykmelding {}", sykmeldingId, ex)

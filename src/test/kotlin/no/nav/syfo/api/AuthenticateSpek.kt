@@ -15,6 +15,10 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockkClass
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.util.Base64
@@ -29,6 +33,7 @@ import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmeldingstatus.StatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
@@ -45,23 +50,25 @@ object AuthenticateSpek : Spek({
     val path = "src/test/resources/jwkset.json"
     val uri = Paths.get(path).toUri().toURL()
     val jwkProvider = JwkProviderBuilder(uri).build()
-    val env = Environment(clientId = "1",
-            appIds = listOf("10", "11"),
-            jwtIssuer = "issuer",
-            cluster = "cluster",
-            mountPathVault = "",
-            kafkaBootstrapServers = "",
+    val env = Environment(kafkaBootstrapServers = "",
             syfosmregisterDBURL = "",
+            mountPathVault = "",
+            cluster = "cluster",
+            jwtIssuer = "issuer",
+            appIds = listOf("10", "11"),
+            clientId = "1",
             stsOidcIssuer = "",
             stsOidcAudience = "")
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
     val sykmeldingStatusService = SykmeldingStatusService(database)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
 
     beforeEachTest {
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+        every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
     }
 
     afterEachTest {
@@ -86,7 +93,7 @@ object AuthenticateSpek : Spek({
             ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider)
             application.routing {
                 authenticate("jwt") {
-                    registerSykmeldingApi(sykmeldingService, sykmeldingStatusService)
+                    registerSykmeldingApi(sykmeldingService, sykmeldingStatusService, sykmeldingStatusKafkaProducer)
                 }
                 authenticate("basic") {
                     registerNullstillApi(database, "dev-fss")

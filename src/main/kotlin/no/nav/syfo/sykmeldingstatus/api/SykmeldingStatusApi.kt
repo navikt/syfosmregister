@@ -10,8 +10,10 @@ import no.nav.syfo.aksessering.api.log
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.kafka.model.toSykmeldingStatusKafkaEvent
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
-fun Route.registerSykmeldingStatusApi(sykmeldingStatusService: SykmeldingStatusService) {
+fun Route.registerSykmeldingStatusApi(sykmeldingStatusService: SykmeldingStatusService, sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer) {
 
     post("/sykmeldinger/{sykmeldingsid}/status") {
         val sykmeldingId = call.parameters["sykmeldingsid"]!!
@@ -22,6 +24,7 @@ fun Route.registerSykmeldingStatusApi(sykmeldingStatusService: SykmeldingStatusS
                 sykmeldingStatusEventDTO.statusEvent.toStatusEvent())
         try {
             sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
+            sykmeldingStatusKafkaProducer.send(sykmeldingStatusEventDTO.toSykmeldingStatusKafkaEvent(sykmeldingId))
             call.respond(HttpStatusCode.Created)
         } catch (ex: Exception) {
             log.error("Internal server error", ex)

@@ -13,6 +13,10 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockkClass
 import java.time.LocalDateTime
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
@@ -22,6 +26,7 @@ import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
 import no.nav.syfo.sykmeldingstatus.api.SykmeldingBekreftEventDTO
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -35,8 +40,10 @@ class BekreftSykmeldingEndeTilEndeSpek : Spek({
 
     val database = TestDB()
     val sykmeldingStatusService = SykmeldingStatusService(database)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
 
     beforeEachTest {
+        every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
@@ -60,7 +67,7 @@ class BekreftSykmeldingEndeTilEndeSpek : Spek({
                     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 }
             }
-            application.routing { registerSykmeldingBekreftApi(sykmeldingStatusService) }
+            application.routing { registerSykmeldingBekreftApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) }
 
             it("Bekreft med spørsmål lagrer riktig info i databasen") {
                 val sykmeldingId = "uuid"
