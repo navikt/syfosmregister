@@ -22,13 +22,13 @@ import io.mockk.mockkClass
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import no.nav.syfo.Environment
-import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.testutil.generateJWT
+import no.nav.syfo.testutil.getVaultSecrets
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -90,7 +90,7 @@ internal class SykmeldingStatusApiSpek : Spek({
             val uri = Paths.get(path).toUri().toURL()
             val jwkProvider = JwkProviderBuilder(uri).build()
 
-            application.setupAuth(VaultSecrets("", "", "", "", "", "", ""), mockJwkProvider, "issuer1", env, mockJwkProvider, jwkProvider)
+            application.setupAuth(getVaultSecrets(), mockJwkProvider, "issuer1", env, mockJwkProvider, jwkProvider, jwkProvider)
             application.routing { authenticate("oidc") { registerSykmeldingStatusApi(sykmeldingStatusService) } }
 
             it("Should authenticate") {

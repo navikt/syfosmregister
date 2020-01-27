@@ -20,13 +20,13 @@ import io.mockk.mockkClass
 import java.nio.file.Paths
 import java.util.UUID
 import no.nav.syfo.Environment
-import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import no.nav.syfo.testutil.generateJWT
+import no.nav.syfo.testutil.getVaultSecrets
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -72,11 +72,11 @@ class RerunApiKtTest : Spek({
                 stsOidcAudience = "",
                 stsOidcIssuer = "")
 
-        val vaultSecrets = VaultSecrets("", "", "", "", "", "", "")
+        val vaultSecrets = getVaultSecrets()
         with(TestApplicationEngine()) {
             start()
 
-            application.setupAuth(vaultSecrets, jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider)
+            application.setupAuth(vaultSecrets, jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider, jwkProvider)
             application.install(ContentNegotiation) {
                 jackson {
                     registerModule(JavaTimeModule())

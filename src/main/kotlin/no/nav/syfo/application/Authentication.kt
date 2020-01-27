@@ -15,8 +15,28 @@ import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.log
 
-fun Application.setupAuth(vaultSecrets: VaultSecrets, jwkProvider: JwkProvider, issuer: String, env: Environment, jwkProviderForRerun: JwkProvider, stsOidcJwkProvider: JwkProvider) {
+fun Application.setupAuth(
+    vaultSecrets: VaultSecrets,
+    jwkProvider: JwkProvider,
+    issuer: String,
+    env: Environment,
+    jwkProviderForRerun:
+    JwkProvider,
+    stsOidcJwkProvider: JwkProvider,
+    jwkProviderInternal: JwkProvider
+) {
     install(Authentication) {
+
+        jwt(name = "internal") {
+            verifier(jwkProvider, vaultSecrets.internalJwtIssuer)
+            validate { credentials ->
+                when {
+                    hasInternalLoginServiceClientIdAudience(credentials, vaultSecrets) -> JWTPrincipal(credentials.payload)
+                    else -> unauthorized(credentials)
+                }
+            }
+        }
+
         jwt(name = "jwt") {
             verifier(jwkProvider, issuer)
             validate { credentials ->
@@ -71,6 +91,10 @@ fun unauthorized(credentials: JWTCredential): Principal? {
 
 fun hasLoginserviceClientIdAudience(credentials: JWTCredential, vaultSecrets: VaultSecrets): Boolean {
     return credentials.payload.audience.contains(vaultSecrets.loginserviceClientId)
+}
+
+fun hasInternalLoginServiceClientIdAudience(credentials: JWTCredential, vaultSecrets: VaultSecrets): Boolean {
+    return credentials.payload.audience.contains(vaultSecrets.internalLoginServiceClientId)
 }
 
 fun hasValidSystemToken(credentials: JWTCredential, env: Environment): Boolean {

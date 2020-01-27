@@ -26,7 +26,8 @@ data class Environment(
     val kafkaRerunTopic: String = getEnvVar("KAFKA_RERUN_TOPIC", "privat-syfo-register-rerun-tmp"),
     val jwkKeysUrl: String = getEnvVar("JWKKEYS_URL", "https://login.microsoftonline.com/common/discovery/keys"),
     val stsOidcIssuer: String = getEnvVar("STS_OIDC_ISSUER"),
-    val stsOidcAudience: String = getEnvVar("STS_OIDC_AUDIENCE")
+    val stsOidcAudience: String = getEnvVar("STS_OIDC_AUDIENCE"),
+    val syfoTilgangskontrollUrl: String = getEnvVar("SYFO_TILGANGSKONTROLL_URL", "http://syfo-tilgangskontroll/syfo-tilgangskontroll/api/tilgang/navident/bruker/")
 ) : KafkaConfig
 
 data class VaultSecrets(
@@ -36,7 +37,10 @@ data class VaultSecrets(
     val syfomockPassword: String,
     val oidcWellKnownUri: String,
     val stsOidcWellKnownUri: String,
-    val loginserviceClientId: String
+    val loginserviceClientId: String,
+    val internalJwtIssuer: String,
+    val internalJwtWellKnownUri: String,
+    val internalLoginServiceClientId: String
 ) : KafkaCredentials {
     override val kafkaUsername: String = serviceuserUsername
     override val kafkaPassword: String = serviceuserPassword

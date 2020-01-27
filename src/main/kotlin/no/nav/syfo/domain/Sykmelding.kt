@@ -8,6 +8,7 @@ import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
 import no.nav.syfo.aksessering.api.DiagnoseDTO
 import no.nav.syfo.aksessering.api.FullstendigSykmeldingDTO
 import no.nav.syfo.aksessering.api.GradertDTO
+import no.nav.syfo.aksessering.api.InternalSykmeldingDTO
 import no.nav.syfo.aksessering.api.MedisinskVurderingDTO
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.aksessering.api.RegelinfoDTO
@@ -135,6 +136,21 @@ fun Sykmelding.toSkjermetDTO(): SkjermetSykmeldingDTO =
         sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() },
         sykmeldingStatus = sykmeldingStatus.toDTO()
     )
+
+fun Sykmelding.toInternalDTO(): InternalSykmeldingDTO =
+        InternalSykmeldingDTO(
+                id = id,
+                mottattTidspunkt = mottattTidspunkt,
+                bekreftetDato = finnBekreftetDato(),
+                behandlingsutfall = behandlingsutfall.toDTO(),
+                legekontorOrgnummer = legekontorOrgnummer,
+                legeNavn = legeNavn,
+                arbeidsgiver = arbeidsgiver?.toDTO(),
+                sykmeldingsperioder = sykmeldingsperioder.map { it.toDTO() },
+                sykmeldingStatus = sykmeldingStatus.toDTO(),
+                medisinskVurdering = medisinskVurdering.toDTO(),
+                skjermesForPasient = skjermesForPasient
+        )
 
 fun Sykmelding.finnBekreftetDato(): LocalDateTime? {
     if (sykmeldingStatus.statusEvent == StatusEvent.BEKREFTET) {

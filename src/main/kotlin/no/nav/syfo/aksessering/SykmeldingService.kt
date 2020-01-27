@@ -5,6 +5,7 @@ import no.nav.syfo.aksessering.db.erEier
 import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.domain.toFullstendigDTO
+import no.nav.syfo.domain.toInternalDTO
 import no.nav.syfo.domain.toSkjermetDTO
 
 class SykmeldingService(private val database: DatabaseInterface) {
@@ -17,4 +18,7 @@ class SykmeldingService(private val database: DatabaseInterface) {
             }
 
     fun erEier(sykmeldingsid: String, fnr: String): Boolean = database.erEier(sykmeldingsid, fnr)
+
+    fun hentInternalSykmelding(fnr: String) =
+        database.hentSykmeldinger(fnr).map { it.toInternalDTO() }
 }
