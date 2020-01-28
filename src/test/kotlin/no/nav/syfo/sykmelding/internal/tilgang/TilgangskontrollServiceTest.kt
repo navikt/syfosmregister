@@ -1,4 +1,4 @@
-package no.nav.syfo.aksessering.tilgang
+package no.nav.syfo.sykmelding.internal.tilgang
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.util.InternalAPI

@@ -1,9 +1,8 @@
 package no.nav.syfo.aksessering.api
 
+import no.nav.syfo.sykmeldingstatus.api.SykmeldingStatusDTO
 import java.time.LocalDate
 import java.time.LocalDateTime
-import no.nav.syfo.domain.BehandlingsutfallStatus
-import no.nav.syfo.sykmeldingstatus.api.SykmeldingStatusDTO
 
 abstract class SykmeldingDTO(
     val id: String,
@@ -62,29 +61,6 @@ class FullstendigSykmeldingDTO(
         sykmeldingStatus
 )
 
-class InternalSykmeldingDTO(
-    id: String,
-    mottattTidspunkt: LocalDateTime,
-    bekreftetDato: LocalDateTime?,
-    behandlingsutfall: BehandlingsutfallDTO,
-    legekontorOrgnummer: String?,
-    legeNavn: String?,
-    arbeidsgiver: ArbeidsgiverDTO?,
-    sykmeldingsperioder: List<SykmeldingsperiodeDTO>,
-    sykmeldingStatus: SykmeldingStatusDTO,
-    val medisinskVurdering: MedisinskVurderingDTO,
-    val skjermesForPasient: Boolean
-) :
-        SykmeldingDTO(id,
-                mottattTidspunkt,
-                bekreftetDato,
-                behandlingsutfall,
-                legekontorOrgnummer,
-                legeNavn,
-                arbeidsgiver,
-                sykmeldingsperioder,
-                sykmeldingStatus)
-
 data class MedisinskVurderingDTO(
     val hovedDiagnose: DiagnoseDTO?,
     val biDiagnoser: List<DiagnoseDTO>
@@ -99,7 +75,7 @@ data class RegelinfoDTO(
     val messageForSender: String,
     val messageForUser: String,
     val ruleName: String,
-    val ruleStatus: BehandlingsutfallStatus?
+    val ruleStatus: BehandlingsutfallStatusDTO
 )
 
 enum class BehandlingsutfallStatusDTO {

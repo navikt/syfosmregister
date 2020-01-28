@@ -1,4 +1,4 @@
-package no.nav.syfo.aksessering.api
+package no.nav.syfo.sykmelding.internal.api
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -18,9 +18,10 @@ import io.ktor.server.testing.handleRequest
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockkClass
-import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.aksessering.tilgang.TilgangskontrollService
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmelding.internal.model.InternalSykmeldingDTO
+import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
+import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.testutil.getInternalSykmelding
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
@@ -29,7 +30,7 @@ import org.spekframework.spek2.style.specification.describe
 class InternalSykmeldingApiKtTest : Spek({
     val uri = "/api/v1/internal/sykmeldinger"
 
-    val sykmeldingService = mockkClass(SykmeldingService::class)
+    val sykmeldingService = mockkClass(InternalSykmeldingService::class)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
     coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
     describe("Test internal sykmelding api") {
@@ -50,12 +51,12 @@ class InternalSykmeldingApiKtTest : Spek({
                 every { sykmeldingService.hentInternalSykmelding(any()) } returns emptyList()
                 with(handleRequest(HttpMethod.Get, "$uri?fnr=12345678901", setUPHeaders())) {
                     response.status() shouldEqual HttpStatusCode.OK
-                    objectMapper.readValue<List<SkjermetSykmeldingDTO>>(response.content!!) shouldEqual emptyList()
+                    objectMapper.readValue<List<InternalSykmeldingDTO>>(response.content!!) shouldEqual emptyList()
                 }
             }
 
             it("Skal returnere liste med sykmeldinger") {
-                val sykmeldingList = listOf(getInternalSykmelding())
+                val sykmeldingList = listOf(getInternalSykmelding(false))
                 every { sykmeldingService.hentInternalSykmelding(any()) } returns sykmeldingList
                 with(handleRequest(HttpMethod.Get, "$uri?fnr=1234567891", setUPHeaders())) {
                     response.status() shouldEqual HttpStatusCode.OK
@@ -70,12 +71,11 @@ class InternalSykmeldingApiKtTest : Spek({
                 }
             }
 
-            it("Should get empty list when user does not have access to person") {
+            it("Should get Forbidden when user does not have access to person") {
                 coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns false
-                every { sykmeldingService.hentInternalSykmelding(any()) } returns listOf(getInternalSykmelding())
+                every { sykmeldingService.hentInternalSykmelding(any()) } returns emptyList()
                 with(handleRequest(HttpMethod.Get, "$uri?fnr=12345678901", setUPHeaders())) {
-                    response.status() shouldEqual HttpStatusCode.OK
-                    objectMapper.readValue<List<SkjermetSykmeldingDTO>>(response.content!!) shouldEqual emptyList()
+                    response.status() shouldEqual HttpStatusCode.Forbidden
                 }
             }
         }

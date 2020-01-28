@@ -1,4 +1,4 @@
-package no.nav.syfo.aksessering.tilgang
+package no.nav.syfo.sykmelding.internal.tilgang
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.receive
@@ -10,7 +10,7 @@ import io.ktor.http.HttpStatusCode
 import org.apache.http.HttpHeaders
 import org.slf4j.LoggerFactory
 
-class TilgangskontrollService(val httpClient: HttpClient, val url: String) {
+class TilgangskontrollService(private val httpClient: HttpClient, private val url: String) {
     companion object {
         val log = LoggerFactory.getLogger(TilgangskontrollService::class.java)
     }

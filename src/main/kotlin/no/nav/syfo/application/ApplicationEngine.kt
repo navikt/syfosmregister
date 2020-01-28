@@ -32,8 +32,6 @@ import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.registerSykmeldingApi
-import no.nav.syfo.aksessering.api.registrerInternalSykmeldingApi
-import no.nav.syfo.aksessering.tilgang.TilgangskontrollService
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
@@ -41,6 +39,9 @@ import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
+import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
+import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
+import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
@@ -69,7 +70,13 @@ fun createApplicationEngine(
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
-        setupAuth(vaultSecrets, jwkProvider, issuer, env, jwkProviderForRerun, jwkProviderStsOidc, jwkProviderInternal)
+        setupAuth(vaultSecrets = vaultSecrets,
+                jwkProvider = jwkProvider,
+                issuer = issuer,
+                env = env,
+                jwkProviderForRerun = jwkProviderForRerun,
+                stsOidcJwkProvider = jwkProviderStsOidc,
+                jwkProviderInternal = jwkProviderInternal)
         install(CallId) {
             generate { UUID.randomUUID().toString() }
             verify { callId: String -> callId.isNotEmpty() }
@@ -99,6 +106,7 @@ fun createApplicationEngine(
         val httpClient = HttpClient(Apache, config)
 
         val sykmeldingService = SykmeldingService(database)
+        val internalSykmeldingService = InternalSykmeldingService(database)
         val sykmeldingStatusService = SykmeldingStatusService(database)
         val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
         routing {
@@ -118,7 +126,7 @@ fun createApplicationEngine(
                 registerSykmeldingBekreftApi(sykmeldingStatusService)
             }
             authenticate("internal") {
-                registrerInternalSykmeldingApi(sykmeldingService, tilgangskontrollService)
+                registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService)
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())

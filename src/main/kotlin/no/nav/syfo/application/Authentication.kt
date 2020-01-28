@@ -28,7 +28,7 @@ fun Application.setupAuth(
     install(Authentication) {
 
         jwt(name = "internal") {
-            verifier(jwkProvider, vaultSecrets.internalJwtIssuer)
+            verifier(jwkProviderInternal, vaultSecrets.internalJwtIssuer)
             validate { credentials ->
                 when {
                     hasInternalLoginServiceClientIdAudience(credentials, vaultSecrets) -> JWTPrincipal(credentials.payload)
