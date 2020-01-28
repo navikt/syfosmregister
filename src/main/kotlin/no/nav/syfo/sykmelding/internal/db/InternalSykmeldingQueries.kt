@@ -1,11 +1,12 @@
 package no.nav.syfo.sykmelding.internal.db
 
-import java.sql.Connection
-import java.sql.ResultSet
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.objectMapper
+import java.sql.Connection
+import java.sql.ResultSet
 
 fun DatabaseInterface.getInternalSykmelding(fnr: String): List<SykmeldingDbModel> =
         connection.use { connection ->
@@ -19,7 +20,9 @@ private fun Connection.getInternalSykmeldingMedSisteStatus(fnr: String): List<Sy
                     mottatt_tidspunkt,
                     behandlingsutfall,
                     legekontor_org_nr,
-                    sykmelding
+                    sykmelding,
+                    status.event,
+                    status.event_timestamp
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
@@ -38,11 +41,11 @@ private fun Connection.getInternalSykmeldingMedSisteStatus(fnr: String): List<Sy
         }
 
 fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
-    return SykmeldingDbModel(sykmeldingsDokument = getObject("sykmelding", Sykmelding::class.java),
+    return SykmeldingDbModel(sykmeldingsDokument = objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java),
             id = getString("id"),
             mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
             legekontorOrgNr = getString("legekontor_org_nr"),
-            behandlingsutfall = getObject("behandlingsutfall", ValidationResult::class.java),
+            behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java),
             status = getString("event"),
             status_timestamp = getTimestamp("event_timestamp").toLocalDateTime()
     )
