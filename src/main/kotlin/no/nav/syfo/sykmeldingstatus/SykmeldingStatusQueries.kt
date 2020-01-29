@@ -1,6 +1,5 @@
 package no.nav.syfo.sykmeldingstatus
 
-import java.lang.RuntimeException
 import java.sql.Connection
 import java.sql.Statement
 import java.sql.Timestamp
