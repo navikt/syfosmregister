@@ -1,13 +1,13 @@
 package no.nav.syfo.sykmelding.internal.db
 
-import java.sql.Connection
-import java.sql.ResultSet
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmeldingstatus.StatusEvent
+import java.sql.Connection
+import java.sql.ResultSet
 
 fun DatabaseInterface.getInternalSykmelding(fnr: String): List<SykmeldingDbModel> =
         connection.use { connection ->
@@ -23,10 +23,14 @@ private fun Connection.getInternalSykmeldingMedSisteStatus(fnr: String): List<Sy
                     legekontor_org_nr,
                     sykmelding,
                     status.event,
-                    status.event_timestamp
+                    status.event_timestamp,
+                    arbeidsgiver.orgnummer,
+                    arbeidsgiver.juridisk_orgnummer,
+                    arbeidsgiver.navn
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
+                        LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
                         LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
                                                                    status.event_timestamp = (SELECT event_timestamp
                                                                                              FROM sykmeldingstatus

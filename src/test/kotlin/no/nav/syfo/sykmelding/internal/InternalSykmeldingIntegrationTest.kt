@@ -22,8 +22,15 @@ import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.model.InternalSykmeldingDTO
 import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
+import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
+import no.nav.syfo.sykmeldingstatus.ShortName
+import no.nav.syfo.sykmeldingstatus.Sporsmal
 import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmeldingstatus.Svar
+import no.nav.syfo.sykmeldingstatus.Svartype
+import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.registrerSendt
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
@@ -39,6 +46,8 @@ class InternalSykmeldingIntegrationTest : Spek({
     val database = TestDB()
 
     database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+    database.registrerSendt(SykmeldingSendEvent(testSykmeldingsopplysninger.id, LocalDateTime.now().plusSeconds(1), ArbeidsgiverStatus(testSykmeldingsopplysninger.id, "1234567789", "1233456789", "navn"), Sporsmal("ARBEIDSSITUASJON", ShortName.ARBEIDSSITUASJON, Svar(testSykmeldingsopplysninger.id, null, Svartype.ARBEIDSSITUASJON, "EN ARBEIDSSITUASJON"))),
+            SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.SENDT))
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
 
     val internalSykmeldingService = InternalSykmeldingService(database)
