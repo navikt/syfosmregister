@@ -15,7 +15,6 @@ import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.mockk.coEvery
 import io.mockk.mockkClass
-import java.time.LocalDateTime
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -33,6 +32,7 @@ import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.LocalDateTime
 
 class InternalSykmeldingIntegrationTest : Spek({
 
@@ -59,7 +59,7 @@ class InternalSykmeldingIntegrationTest : Spek({
                 application.routing { registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService) }
                 with(handleRequest(HttpMethod.Get, "/api/v1/internal/sykmeldinger?fnr=pasientFnr") {
                     addHeader("accept", "application/json")
-                    addHeader("Authentication", "Bearer 123")
+                    addHeader("Authorization", "Bearer 123")
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                     objectMapper.readValue<List<InternalSykmeldingDTO>>(response.content!!) shouldNotEqual null
