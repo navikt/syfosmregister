@@ -106,7 +106,7 @@ enum class PeriodetypeDTO {
     AVVENTENDE,
     BEHANDLINGSDAGER,
     GRADERT,
-    REISETILSKUDD,
+    REISETILSKUDD
 }
 
 data class DiagnoseDTO(

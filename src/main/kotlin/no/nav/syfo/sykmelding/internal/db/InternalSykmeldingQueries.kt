@@ -1,12 +1,12 @@
 package no.nav.syfo.sykmelding.internal.db
 
+import java.sql.Connection
+import java.sql.ResultSet
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
-import java.sql.Connection
-import java.sql.ResultSet
 
 fun DatabaseInterface.getInternalSykmelding(fnr: String): List<SykmeldingDbModel> =
         connection.use { connection ->

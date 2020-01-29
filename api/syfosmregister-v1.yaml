@@ -100,7 +100,7 @@ paths:
       summary: API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr
       responses:
         200:
-          $ref: '#/components/responses/SykmeldingListResponse'
+          $ref: '#/components/responses/InternalSykmeldingerResponse'
 
 
 components:
@@ -121,6 +121,17 @@ components:
           schema:
             $ref: '#/components/schemas/SykmeldingSendEvent'
   responses:
+    InternalSykmeldingerResponse:
+      description: "Response for internal sykmeldinger for saksbehandlere"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InternalSykmelding'
     SykmeldingListResponse:
       description: "Returnerer liste med sykmeldinger"
       content:
@@ -136,12 +147,12 @@ components:
       schema:
         type: string
     fnrQueryParam:
-      description: Personnr
+      description: Fodselsnummer
       name: fnr
       in: query
       required: true
       schema:
-        $ref: '#/components/schemas/Personnr'
+        $ref: '#/components/schemas/Fodselsnummer'
   schemas:
     Date:
       type: string
@@ -149,7 +160,7 @@ components:
     Timestamp:
       type: string
       format: 'date-time'
-    Personnr:
+    Fodselsnummer:
       type: string
       minLength: 11
       maxLength: 11
@@ -174,6 +185,10 @@ components:
           enum: [OK, MANUAL_PROCESSING, INVALID]
     RegelInfo:
       type: object
+      required:
+        - messageForSender
+        - messageForUser
+        - ruleName
       properties:
         messageForSender:
           type: string
@@ -185,6 +200,9 @@ components:
           $ref: '#/components/schemas/RegelStatus'
     Behandlingsutfall:
       type: object
+      required:
+        - status
+        - ruleHits
       properties:
         status:
           $ref: '#/components/schemas/RegelStatus'
@@ -194,8 +212,6 @@ components:
             $ref: '#/components/schemas/RegelInfo'
     Arbeidsgiver:
       type: object
-      required:
-        - navn
       properties:
         navn:
           type: string
@@ -218,6 +234,10 @@ components:
       enum: [ AKTIVITET_IKKE_MULIG, AVVENTENDE, BEHANDLINGSDAGER, GRADERT, REISETILSKUDD]
     Sykmeldingsperiode:
       type: object
+      required:
+        - fom
+        - tom
+        - type
       properties:
         fom:
           $ref: '#/components/schemas/Date'
@@ -231,14 +251,15 @@ components:
           type: string
         type:
           type: string
+          enum: [AKTIVITET_IKKE_MULIG, AVVENTENDE, BEHANDLINGSDAGER, GRADERT, REISETILSKUDD]
     Diagnose:
       type: object
       properties:
-        diagnosekode:
+        kode:
           type: string
-        diagnosesystem:
+        system:
           type: string
-        diagnosetekst:
+        tekst:
           type: string
     MedisinskVurdering:
       description: Medisinsk vurdering er bare tilgjengelig for brukere med tilgang til det.
@@ -250,6 +271,7 @@ components:
           $ref: '#/components/schemas/Diagnose'
         biDiagnoser:
           type: array
+          description: påkreved men kan være en tom liste
           items:
             $ref: '#/components/schemas/Diagnose'
     sykmeldingList:
@@ -266,7 +288,7 @@ components:
         - sykmeldingsperioder
       properties:
         id:
-          $ref: '#/components/schemas/Personnr'
+          $ref: '#/components/schemas/Fodselsnummer'
         mottattTidspunkt:
           $ref: '#/components/schemas/Timestamp'
         sykmeldingStatus:
@@ -337,6 +359,199 @@ components:
       properties:
         arbeidsgiver:
           $ref: '#/components/schemas/ArbeidsgiverStatus'
+    InternalSykmelding:
+      type: object
+      required:
+        - id
+        - mottattTidspunkt
+        - behandlingsutfall
+        - sykmeldingsperioder
+        - sykmeldingStatus
+        - medisinskVurdering
+        - skjermesForPasient
+        - utdypendeOpplysninger
+        - kontaktMedPasient
+        - behandletTidspunkt
+        - behandler
+      properties:
+        id:
+          type: string
+        mottattTidspunkt:
+          $ref: '#/components/schemas/Timestamp'
+        behandlingsutfall:
+          $ref: '#/components/schemas/Behandlingsutfall'
+        legekontorOrgnummer:
+          type: string
+        arbeidsgiver:
+          $ref: '#/components/schemas/Arbeidsgiver'
+        sykmeldingsperioder:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sykmeldingsperiode'
+        sykmeldingStatus:
+          $ref: '#/components/schemas/SykmeldingStatus'
+        medisinskVurdering:
+          $ref: '#/components/schemas/MedisinskVurdering'
+        skjermesForPasient:
+          type: boolean
+        prognose:
+          $ref: '#/components/schemas/Prognose'
+        utdypendeOpplysninger:
+          $ref: '#/components/schemas/UtdypendeOpplysninger'
+        tiltakArbeidsplassen:
+          type: string
+        tiltakNAV:
+          type: string
+        andreTiltak:
+          type: string
+        meldingTilNAV:
+          $ref: '#/components/schemas/MeldingTilNavDTO'
+        meldingTilArbeidsgiver:
+          type: string
+        kontaktMedPasient:
+          $ref: '#/components/schemas/KontaktMedPasient'
+        behandletTidspunkt:
+          $ref: '#/components/schemas/Timestamp'
+        behandler:
+          $ref: '#/components/schemas/Behandler'
+        syketilfelleStartDato:
+          $ref: '#/components/schemas/Date'
+        navnFastLege:
+          type: string
+    Prognose:
+      type: object
+      required:
+        - arbeidsforEtterPeriode
+      properties:
+        arbeidsforEtterPeriode:
+          type: boolean
+        hensynArbeidsplassen:
+          type: string
+        erIArbeid:
+          type: object
+          properties:
+            egetArbeidPaSikt:
+              type: boolean
+            annetArbeidPaSikt:
+              type: boolean
+            arbeidFOM:
+              $ref: '#/components/schemas/Date'
+            vurderingsdato:
+              $ref: '#/components/schemas/Date'
+    MeldingTilNavDTO:
+      type: object
+      required:
+        - bistandUmiddelbart
+      properties:
+        bistandUmiddelbart:
+          type: boolean
+        beskrivBistand:
+          type: string
+    KontaktMedPasient:
+      type: object
+      properties:
+        kontaktDato:
+          $ref: '#/components/schemas/Date'
+        begrunnelseIkkeKontakt:
+          type: string
+    Behandler:
+      type: object
+      required:
+        - fornavn
+        - etternavn
+        - aktoerId
+        - fnr
+        - adresse
+      properties:
+        fornavn:
+          type: string
+        mellomnavn:
+          type: string
+        etternavn:
+          type: string
+        aktoerId:
+          type: string
+        fnr:
+          $ref: '#/components/schemas/Fodselsnummer'
+        hpr:
+          type: string
+        her:
+          type: string
+        adresse:
+          $ref: '#/components/schemas/Adresse'
+        tlf:
+          type: string
+    Adresse:
+      type: object
+      properties:
+        gate:
+          type: string
+        postnummer:
+          type: integer
+        kommune:
+          type: string
+        postboks:
+          type: string
+        land:
+          type: string
+    UtdypendeOpplysninger:
+      description: påkrevd, og kan være et tomt map
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: object
+          required:
+            - sporsmal
+            - svar
+            - restriksjoner
+          properties:
+            sporsmal:
+              type: string
+            svar:
+              type: string
+            restriksjoner:
+              type: array
+              items:
+                type: string
+                enum: [SKJERMET_FOR_ARBEIDSGIVER, SKJERMET_FOR_PASIENT]
+      example:
+        6.2: {
+          6.2.1: {
+            svar: "Veldig syk med masse feber.",
+            sporsmal: "Beskriv kort sykehistorie, symptomer og funn i dagens situasjon.",
+            restriksjoner: [
+              "SKJERMET_FOR_ARBEIDSGIVER"
+            ]
+          },
+          6.2.2: {
+            svar: "Kan ikke arbeide nå",
+            sporsmal: "Hvordan påvirker sykdommen arbeidsevnen?",
+            restriksjoner: [
+              "SKJERMET_FOR_ARBEIDSGIVER"
+            ]
+          },
+          6.2.3: {
+            svar: "Avslapping",
+            sporsmal: "Har behandlingen frem til nå bedret arbeidsevnen?",
+            restriksjoner: [
+              "SKJERMET_FOR_ARBEIDSGIVER"
+            ]
+          },
+          6.2.4: {
+            svar: "Ikke aktuelt",
+            sporsmal: "Beskriv pågående og planlagt henvisning,utredning og/eller behandling.",
+            restriksjoner: [
+              "SKJERMET_FOR_ARBEIDSGIVER"
+            ]
+          }
+        }
+
+
+
+
+
+
   securitySchemes:
     bearerAuth:
       type: http
