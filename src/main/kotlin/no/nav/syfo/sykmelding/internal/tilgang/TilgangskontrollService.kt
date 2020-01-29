@@ -15,7 +15,7 @@ class TilgangskontrollService(private val httpClient: HttpClient, private val ur
         val log = LoggerFactory.getLogger(TilgangskontrollService::class.java)
     }
     suspend fun hasAccessToUser(fnr: String, accessToken: String): Boolean {
-        val response: HttpResponse = httpClient.get("$url/$fnr") {
+        val response: HttpResponse = httpClient.get("$url?fnr=$fnr") {
             accept(ContentType.Application.Json)
             headers.append(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
         }
