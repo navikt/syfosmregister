@@ -166,7 +166,7 @@ components:
       maxLength: 11
     StatusEvent:
       type: string
-      enum: [APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET]
+      enum: [SENDT, APEN, AVBRUTT, UTGATT, BEKREFTET]
     SykmeldingStatus:
       type: object
       required:
@@ -389,7 +389,20 @@ components:
           items:
             $ref: '#/components/schemas/Sykmeldingsperiode'
         sykmeldingStatus:
-          $ref: '#/components/schemas/SykmeldingStatus'
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/SykmeldingStatus'
+          properties:
+            arbeidsgiver:
+              description: Arbeidsgiver er bare tilgjengelig om sykmeldingStatus.statusevent = SENDT
+              type: object
+              properties:
+                orgNr:
+                  type: string
+                juridiskOrgNr:
+                  type: string
+                navn:
+                  type: string
         medisinskVurdering:
           $ref: '#/components/schemas/MedisinskVurdering'
         skjermesForPasient:

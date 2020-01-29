@@ -1,5 +1,9 @@
 package no.nav.syfo.sykmelding.internal.model
 
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import no.nav.syfo.aksessering.db.finnPeriodetype
 import no.nav.syfo.domain.toDTO
 import no.nav.syfo.model.Adresse
@@ -19,6 +23,8 @@ import no.nav.syfo.model.SporsmalSvar
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.SvarRestriksjon
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.sykmelding.internal.db.ArbeidsgiverDbModel
+import no.nav.syfo.sykmelding.internal.db.StatusDbModel
 import no.nav.syfo.sykmelding.internal.db.SykmeldingDbModel
 
 internal fun SykmeldingDbModel.toInternalSykmelding(): InternalSykmeldingDTO {
@@ -26,9 +32,9 @@ internal fun SykmeldingDbModel.toInternalSykmelding(): InternalSykmeldingDTO {
             id = id,
             andreTiltak = sykmeldingsDokument.andreTiltak,
             skjermesForPasient = sykmeldingsDokument.skjermesForPasient,
-            mottattTidspunkt = mottattTidspunkt,
+            mottattTidspunkt = getUtcTime(mottattTidspunkt),
             legekontorOrgnummer = legekontorOrgNr,
-            behandletTidspunkt = sykmeldingsDokument.behandletTidspunkt,
+            behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
             meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
             navnFastlege = sykmeldingsDokument.navnFastlege,
             tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
@@ -37,14 +43,27 @@ internal fun SykmeldingDbModel.toInternalSykmelding(): InternalSykmeldingDTO {
             behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
             medisinskVurdering = sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO(),
             behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(),
-            sykmeldingStatus = SykmeldingStatusDTO(status, status_timestamp),
+            sykmeldingStatus = status.toSykmeldingStatusDTO(),
             sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO() },
             arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
             kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
             meldingTilNAV = sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO(),
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
             utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger)
+            // TODO: legg til sendt, hør med veden
     )
+}
+
+fun getUtcTime(mottattTidspunkt: LocalDateTime): ZonedDateTime {
+    return mottattTidspunkt.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC)
+}
+
+private fun StatusDbModel.toSykmeldingStatusDTO(): SykmeldingStatusDTO {
+    return SykmeldingStatusDTO(status, getUtcTime(status_timestamp), arbeidsgiver?.toArbeidsgiverStatusDTO())
+}
+
+private fun ArbeidsgiverDbModel.toArbeidsgiverStatusDTO(): ArbeidsgiverStatusDTO {
+    return ArbeidsgiverStatusDTO(orgNr, juridiskOrgNr, navn)
 }
 
 fun toUtdypendeOpplysninger(utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>): Map<String, Map<String, SporsmalSvarDTO>> {

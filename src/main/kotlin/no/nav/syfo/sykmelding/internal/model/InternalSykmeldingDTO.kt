@@ -1,11 +1,11 @@
 package no.nav.syfo.sykmelding.internal.model
 
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 data class InternalSykmeldingDTO(
     val id: String,
-    val mottattTidspunkt: LocalDateTime,
+    val mottattTidspunkt: ZonedDateTime,
     val behandlingsutfall: BehandlingsutfallDTO,
     val legekontorOrgnummer: String?,
     val arbeidsgiver: ArbeidsgiverDTO?,
@@ -21,7 +21,7 @@ data class InternalSykmeldingDTO(
     val meldingTilNAV: MeldingTilNavDTO?,
     val meldingTilArbeidsgiver: String?,
     val kontaktMedPasient: KontaktMedPasientDTO,
-    val behandletTidspunkt: LocalDateTime,
+    val behandletTidspunkt: ZonedDateTime,
     val behandler: BehandlerDTO,
     val syketilfelleStartDato: LocalDate?,
     val navnFastlege: String?

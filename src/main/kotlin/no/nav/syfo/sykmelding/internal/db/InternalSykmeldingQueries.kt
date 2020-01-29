@@ -7,6 +7,7 @@ import no.nav.syfo.db.toList
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmeldingstatus.StatusEvent
 
 fun DatabaseInterface.getInternalSykmelding(fnr: String): List<SykmeldingDbModel> =
         connection.use { connection ->
@@ -46,7 +47,20 @@ fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
             mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
             legekontorOrgNr = getString("legekontor_org_nr"),
             behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java),
-            status = getString("event"),
-            status_timestamp = getTimestamp("event_timestamp").toLocalDateTime()
+            status = getStatus()
     )
+}
+
+private fun ResultSet.getStatus(): StatusDbModel {
+    val status = getString("event")
+    val status_timestamp = getTimestamp("event_timestamp").toLocalDateTime()
+    val arbeidsgiverDbModel = when (status) {
+        StatusEvent.SENDT.name -> ArbeidsgiverDbModel(
+                orgNr = getString("orgnummer"),
+                juridiskOrgNr = getString("juridisk_orgnummer"),
+                navn = getString("navn")
+        )
+        else -> null
+    }
+    return StatusDbModel(status, status_timestamp, arbeidsgiverDbModel)
 }

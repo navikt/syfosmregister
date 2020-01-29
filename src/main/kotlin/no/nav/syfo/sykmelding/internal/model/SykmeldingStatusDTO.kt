@@ -1,8 +1,9 @@
 package no.nav.syfo.sykmelding.internal.model
 
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 
 data class SykmeldingStatusDTO(
     val statusEvent: String,
-    val timestamp: LocalDateTime
+    val timestamp: ZonedDateTime,
+    val arbeidsgiver: ArbeidsgiverStatusDTO?
 )
