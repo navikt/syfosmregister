@@ -85,6 +85,6 @@ class InternalSykmeldingApiKtTest : Spek({
 private fun setUPHeaders(): TestApplicationRequest.() -> Unit {
     return {
         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-        addHeader("Authentication", "Bearer 123")
+        addHeader("Authorization", "Bearer 123")
     }
 }
