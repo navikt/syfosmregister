@@ -12,7 +12,7 @@ import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 fun Route.registrerInternalSykmeldingApi(sykmeldingService: InternalSykmeldingService, tilgangskontrollService: TilgangskontrollService) {
     route("/api/v1/internal") {
         get("/sykmeldinger") {
-            val token = call.request.headers["Authentication"]?.removePrefix("Bearer ")
+            val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
             if (token == null) {
                 call.respond(HttpStatusCode.Unauthorized)
             } else {
