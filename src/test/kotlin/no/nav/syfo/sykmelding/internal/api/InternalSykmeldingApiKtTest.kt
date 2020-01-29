@@ -64,7 +64,7 @@ class InternalSykmeldingApiKtTest : Spek({
                 }
             }
 
-            it("Skal returnere bad request when fnr is missing") {
+            it("Skal returnere bad request nar fodselsnummer ikke er tilgjengelig") {
                 with(handleRequest(HttpMethod.Get, uri, setUPHeaders())) {
                     response.status() shouldEqual HttpStatusCode.BadRequest
                     response.content shouldEqual "Missing query param: fnr"
