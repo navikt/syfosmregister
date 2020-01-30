@@ -126,12 +126,9 @@ components:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              data:
-                type: array
-                items:
-                  $ref: '#/components/schemas/InternalSykmelding'
+            type: array
+            items:
+              $ref: '#/components/schemas/InternalSykmelding'
     SykmeldingListResponse:
       description: "Returnerer liste med sykmeldinger"
       content:
