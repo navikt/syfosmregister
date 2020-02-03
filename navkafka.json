@@ -21,6 +21,7 @@
       "topicName": "privat-syfo-register-rerun-tmp",
       "members": [
         {"member":"srvsyfosmsak", "role":"CONSUMER"},
+        {"member":"srvsyfoservice-dat", "role":"PRODUCER"},
         {"member":"srvsyfosmregister", "role":"PRODUCER"},
         {"member":"s151890", "role":"MANAGER"},
         {"member":"k143566", "role":"MANAGER"},
