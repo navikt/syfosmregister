@@ -160,7 +160,7 @@ fun Regelinfo.toDTO(): RegelinfoDTO =
         messageForSender = messageForSender,
         messageForUser = messageForUser,
         ruleName = ruleName,
-        ruleStatus = ruleStatus
+        ruleStatus = ruleStatus!!.toDTO()
     )
 
 fun BehandlingsutfallStatus.toDTO(): BehandlingsutfallStatusDTO =

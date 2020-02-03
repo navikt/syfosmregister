@@ -2,7 +2,6 @@ package no.nav.syfo.aksessering.api
 
 import java.time.LocalDate
 import java.time.LocalDateTime
-import no.nav.syfo.domain.BehandlingsutfallStatus
 import no.nav.syfo.sykmeldingstatus.api.SykmeldingStatusDTO
 
 abstract class SykmeldingDTO(
@@ -76,7 +75,7 @@ data class RegelinfoDTO(
     val messageForSender: String,
     val messageForUser: String,
     val ruleName: String,
-    val ruleStatus: BehandlingsutfallStatus?
+    val ruleStatus: BehandlingsutfallStatusDTO
 )
 
 enum class BehandlingsutfallStatusDTO {
@@ -107,7 +106,7 @@ enum class PeriodetypeDTO {
     AVVENTENDE,
     BEHANDLINGSDAGER,
     GRADERT,
-    REISETILSKUDD,
+    REISETILSKUDD
 }
 
 data class DiagnoseDTO(

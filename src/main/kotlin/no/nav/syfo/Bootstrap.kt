@@ -82,6 +82,11 @@ fun main() {
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
+    val jwkProviderInternal = JwkProviderBuilder(URL(vaultSecrets.internalJwtWellKnownUri))
+            .cached(10, 24, TimeUnit.HOURS)
+            .rateLimited(10, 1, TimeUnit.MINUTES)
+            .build()
+
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
 
@@ -101,7 +106,9 @@ fun main() {
     val kafkaProducer = KafkaProducer<String, String>(producerConfig)
     val rerunKafkaProducer = RerunKafkaProducer(kafkaProducer, environment)
     val rerunKafkaService = RerunKafkaService(database, rerunKafkaProducer)
+
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(producerConfig, environment)
+
     val applicationEngine = createApplicationEngine(
             environment,
             applicationState,
@@ -113,7 +120,8 @@ fun main() {
             rerunKafkaService,
             sykmeldingStatusKafkaProducer,
             jwkProviderForRerun,
-            jwkProviderStsOidc
+            jwkProviderStsOidc,
+            jwkProviderInternal
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)
@@ -204,26 +212,26 @@ suspend fun handleMessageSykmelding(
             log.error("Sykmelding med id {} allerede lagret i databasen, {}", receivedSykmelding.sykmelding.id, fields(loggingMeta))
         } else {
             database.lagreMottattSykmelding(
-                Sykmeldingsopplysninger(
-                    id = receivedSykmelding.sykmelding.id,
-                    pasientFnr = receivedSykmelding.personNrPasient,
-                    pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
-                    legeFnr = receivedSykmelding.personNrLege,
-                    legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
-                    mottakId = receivedSykmelding.navLogId,
-                    legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
-                    legekontorHerId = receivedSykmelding.legekontorHerId,
-                    legekontorReshId = receivedSykmelding.legekontorReshId,
-                    epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
-                    epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
-                    mottattTidspunkt = receivedSykmelding.mottattDato,
-                    tssid = receivedSykmelding.tssid
-                ),
-                Sykmeldingsdokument(
-                    id = receivedSykmelding.sykmelding.id,
-                    sykmelding = receivedSykmelding.sykmelding
-                ),
-                SykmeldingStatusEvent(receivedSykmelding.sykmelding.id, receivedSykmelding.mottattDato, StatusEvent.APEN))
+                    Sykmeldingsopplysninger(
+                            id = receivedSykmelding.sykmelding.id,
+                            pasientFnr = receivedSykmelding.personNrPasient,
+                            pasientAktoerId = receivedSykmelding.sykmelding.pasientAktoerId,
+                            legeFnr = receivedSykmelding.personNrLege,
+                            legeAktoerId = receivedSykmelding.sykmelding.behandler.aktoerId,
+                            mottakId = receivedSykmelding.navLogId,
+                            legekontorOrgNr = receivedSykmelding.legekontorOrgNr,
+                            legekontorHerId = receivedSykmelding.legekontorHerId,
+                            legekontorReshId = receivedSykmelding.legekontorReshId,
+                            epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
+                            epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
+                            mottattTidspunkt = receivedSykmelding.mottattDato,
+                            tssid = receivedSykmelding.tssid
+                    ),
+                    Sykmeldingsdokument(
+                            id = receivedSykmelding.sykmelding.id,
+                            sykmelding = receivedSykmelding.sykmelding
+                    ),
+                    SykmeldingStatusEvent(receivedSykmelding.sykmelding.id, receivedSykmelding.mottattDato, StatusEvent.APEN))
 
             log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
             MESSAGE_STORED_IN_DB_COUNTER.inc()

@@ -89,8 +89,12 @@ object AuthenticateSpek : Spek({
                     loginserviceClientId = "clientId",
                     syfomockUsername = "syfomock",
                     syfomockPassword = "test",
-                    stsOidcWellKnownUri = ""
-            ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider)
+                    stsOidcWellKnownUri = "",
+                    internalJwtIssuer = "",
+                    internalJwtWellKnownUri = "",
+                    internalLoginServiceClientId = ""
+            ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider,
+                    jwkProvider)
             application.routing {
                 authenticate("jwt") {
                     registerSykmeldingApi(sykmeldingService, sykmeldingStatusService, sykmeldingStatusKafkaProducer)

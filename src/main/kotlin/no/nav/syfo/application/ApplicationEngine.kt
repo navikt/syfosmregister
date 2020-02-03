@@ -9,6 +9,12 @@ import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.authenticate
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.features.json.JacksonSerializer
+import io.ktor.client.features.json.JsonFeature
 import io.ktor.features.CallId
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
@@ -33,6 +39,9 @@ import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
+import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
+import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
+import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
@@ -51,7 +60,8 @@ fun createApplicationEngine(
     rerunKafkaService: RerunKafkaService,
     sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     jwkProviderForRerun: JwkProvider,
-    jwkProviderStsOidc: JwkProvider
+    jwkProviderStsOidc: JwkProvider,
+    jwkProviderInternal: JwkProvider
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -62,7 +72,13 @@ fun createApplicationEngine(
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
-        setupAuth(vaultSecrets, jwkProvider, issuer, env, jwkProviderForRerun, jwkProviderStsOidc)
+        setupAuth(vaultSecrets = vaultSecrets,
+                jwkProvider = jwkProvider,
+                issuer = issuer,
+                env = env,
+                jwkProviderForRerun = jwkProviderForRerun,
+                stsOidcJwkProvider = jwkProviderStsOidc,
+                jwkProviderInternal = jwkProviderInternal)
         install(CallId) {
             generate { UUID.randomUUID().toString() }
             verify { callId: String -> callId.isNotEmpty() }
@@ -77,8 +93,24 @@ fun createApplicationEngine(
             }
         }
 
+        val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+            install(JsonFeature) {
+                serializer = JacksonSerializer {
+                    registerKotlinModule()
+                    registerModule(JavaTimeModule())
+                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                }
+            }
+            expectSuccess = false
+        }
+
+        val httpClient = HttpClient(Apache, config)
+
         val sykmeldingService = SykmeldingService(database)
+        val internalSykmeldingService = InternalSykmeldingService(database)
         val sykmeldingStatusService = SykmeldingStatusService(database)
+        val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
         routing {
             registerNaisApi(applicationState)
             authenticate("jwt") {
@@ -94,6 +126,9 @@ fun createApplicationEngine(
                 registerSykmeldingStatusApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
                 registerSykmeldingSendApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
                 registerSykmeldingBekreftApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
+            }
+            authenticate("internal") {
+                registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService)
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())
