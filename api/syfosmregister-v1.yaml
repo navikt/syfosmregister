@@ -5,7 +5,7 @@ info:
   description: API for sykmeldinger.
   version: 1.0.0
 servers:
-  - url: 'https://api.example.com'
+  - url: 'https://syfosmregister.nais.preprod.local'
 paths:
   /api/v1/sykmeldinger:
     get:

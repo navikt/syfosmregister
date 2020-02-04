@@ -40,6 +40,7 @@ import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
+import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
@@ -112,6 +113,11 @@ fun createApplicationEngine(
         val sykmeldingStatusService = SykmeldingStatusService(database)
         val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
         routing {
+
+            if (env.cluster == "dev-fss") {
+                setupSwaggerDocApi()
+            }
+
             registerNaisApi(applicationState)
             authenticate("jwt") {
                 registerSykmeldingApi(sykmeldingService, sykmeldingStatusService, sykmeldingStatusKafkaProducer)
