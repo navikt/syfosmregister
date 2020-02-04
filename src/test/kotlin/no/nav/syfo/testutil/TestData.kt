@@ -66,5 +66,5 @@ fun getMedisinskVurdering(): MedisinskVurderingDTO {
 }
 
 fun getPerioder(): List<SykmeldingsperiodeDTO> {
-    return listOf(SykmeldingsperiodeDTO(LocalDate.now(), LocalDate.now(), null, null, null, PeriodetypeDTO.AKTIVITET_IKKE_MULIG))
+    return listOf(SykmeldingsperiodeDTO(LocalDate.now(), LocalDate.now(), null, null, null, PeriodetypeDTO.AKTIVITET_IKKE_MULIG, null, false))
 }

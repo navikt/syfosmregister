@@ -15,6 +15,7 @@ import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.mockk.coEvery
 import io.mockk.mockkClass
+import java.time.LocalDateTime
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -39,7 +40,6 @@ import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDateTime
 
 class InternalSykmeldingIntegrationTest : Spek({
 

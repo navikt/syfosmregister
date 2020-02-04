@@ -7,13 +7,18 @@ import java.time.ZonedDateTime
 import no.nav.syfo.aksessering.db.finnPeriodetype
 import no.nav.syfo.domain.toDTO
 import no.nav.syfo.model.Adresse
+import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.Arbeidsgiver
+import no.nav.syfo.model.ArbeidsrelatertArsak
+import no.nav.syfo.model.ArbeidsrelatertArsakType
 import no.nav.syfo.model.Behandler
 import no.nav.syfo.model.Diagnose
 import no.nav.syfo.model.ErIArbeid
 import no.nav.syfo.model.ErIkkeIArbeid
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.KontaktMedPasient
+import no.nav.syfo.model.MedisinskArsak
+import no.nav.syfo.model.MedisinskArsakType
 import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.MeldingTilNAV
 import no.nav.syfo.model.Periode
@@ -142,8 +147,45 @@ private fun Periode.toSykmeldingsperiodeDTO(): SykmeldingsperiodeDTO {
             behandlingsdager = behandlingsdager,
             gradert = gradert?.toGradertDTO(),
             innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
-            type = finnPeriodetype(this).toDTO()
+            type = finnPeriodetype(this).toDTO(),
+            aktivitetIkkeMulig = aktivitetIkkeMulig?.toDto(),
+            reisetilskudd = reisetilskudd
     )
+}
+
+private fun AktivitetIkkeMulig.toDto(): AktivitetIkkeMuligDTO {
+    return AktivitetIkkeMuligDTO(medisinskArsak = medisinskArsak?.toMedisinskArsakDto(),
+            arbeidsrelatertArsak = arbeidsrelatertArsak?.toArbeidsrelatertArsakDto())
+}
+
+private fun ArbeidsrelatertArsak.toArbeidsrelatertArsakDto(): ArbeidsrelatertArsakDTO {
+    return ArbeidsrelatertArsakDTO(
+            beskrivelse = beskrivelse,
+            arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
+    )
+}
+
+fun toArbeidsrelatertArsakTypeDto(arbeidsrelatertArsakType: ArbeidsrelatertArsakType): ArbeidsrelatertArsakTypeDTO {
+    return when (arbeidsrelatertArsakType) {
+        ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakTypeDTO.MANGLENDE_TILRETTELEGGING
+        ArbeidsrelatertArsakType.ANNET -> ArbeidsrelatertArsakTypeDTO.ANNET
+    }
+}
+
+private fun MedisinskArsak.toMedisinskArsakDto(): MedisinskArsakDTO {
+    return MedisinskArsakDTO(
+            beskrivelse = beskrivelse,
+            arsak = arsak.map { toMedisinskArsakTypeDto(it) }
+    )
+}
+
+fun toMedisinskArsakTypeDto(medisinskArsakType: MedisinskArsakType): MedisinskArsakTypeDTO {
+    return when (medisinskArsakType) {
+        MedisinskArsakType.AKTIVITET_FORHINDRER_BEDRING -> MedisinskArsakTypeDTO.AKTIVITET_FORHINDRER_BEDRING
+        MedisinskArsakType.AKTIVITET_FORVERRER_TILSTAND -> MedisinskArsakTypeDTO.AKTIVITET_FORVERRER_TILSTAND
+        MedisinskArsakType.TILSTAND_HINDRER_AKTIVITET -> MedisinskArsakTypeDTO.TILSTAND_HINDRER_AKTIVITET
+        MedisinskArsakType.ANNET -> MedisinskArsakTypeDTO.ANNET
+    }
 }
 
 private fun Gradert.toGradertDTO(): GradertDTO {
