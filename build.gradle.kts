@@ -42,6 +42,8 @@ plugins {
     kotlin("jvm") version "1.3.61"
     id("com.diffplug.gradle.spotless") version "3.23.1"
     id("com.github.johnrengelman.shadow") version "4.0.4"
+    id("org.hidetake.swagger.generator") version "2.18.1" apply true
+
 }
 
 buildscript {
@@ -50,6 +52,7 @@ buildscript {
         classpath("org.glassfish.jaxb:jaxb-runtime:2.4.0-b180830.0438")
         classpath("com.sun.activation:javax.activation:1.2.0")
     }
+
 }
 
 val githubUser: String by project
@@ -133,12 +136,24 @@ dependencies {
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")
     }
+    swaggerUI( "org.webjars:swagger-ui:3.10.0")
 
 }
+swaggerSources {
+    create("sykmelding").apply {
+        setInputFile(file("api/syfosmregister-v1.yaml"))
+    }
+}
+
 
 tasks {
+
     create("printVersion") {
         println(project.version)
+    }
+
+    withType<org.hidetake.gradle.swagger.generator.GenerateSwaggerUI> {
+        outputDir = File(buildDir.path + "/resources/main/api")
     }
 
     withType<KotlinCompile> {
@@ -150,6 +165,7 @@ tasks {
             setPath("META-INF/cxf")
             include("bus-extensions.txt")
         }
+        dependsOn("generateSwaggerUI")
     }
 
     withType<Test> {
@@ -160,6 +176,6 @@ tasks {
     }
 
     "check" {
-        dependsOn("formatKotlin")
+        dependsOn("formatKotlin", "generateSwaggerUI")
     }
 }
