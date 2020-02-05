@@ -1,8 +1,8 @@
 package no.nav.syfo.sykmelding.internal.model
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.syfo.model.SporsmalSvar
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmelding.internal.db.SporsmalSvar
 import org.amshove.kluent.`should equal`
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe

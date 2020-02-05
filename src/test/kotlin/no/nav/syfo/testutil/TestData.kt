@@ -6,6 +6,7 @@ import java.time.ZonedDateTime
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.sykmelding.internal.model.AdresseDTO
+import no.nav.syfo.sykmelding.internal.model.AnnenFraversArsakDTO
 import no.nav.syfo.sykmelding.internal.model.BehandlerDTO
 import no.nav.syfo.sykmelding.internal.model.BehandlingsutfallDTO
 import no.nav.syfo.sykmelding.internal.model.DiagnoseDTO
@@ -35,7 +36,7 @@ fun getInternalSykmelding(skjermet: Boolean = false): InternalSykmeldingDTO {
             utdypendeOpplysninger = emptyMap(),
             kontaktMedPasient = KontaktMedPasientDTO(null, null),
             sykmeldingsperioder = getPerioder(),
-            sykmeldingStatus = no.nav.syfo.sykmelding.internal.model.SykmeldingStatusDTO("APEN", ZonedDateTime.now(ZoneOffset.UTC), null),
+            sykmeldingStatus = no.nav.syfo.sykmelding.internal.model.SykmeldingStatusDTO("APEN", ZonedDateTime.now(ZoneOffset.UTC), null, emptyList()),
             behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
             medisinskVurdering = getMedisinskVurdering(),
             behandler = BehandlerDTO(
@@ -61,7 +62,11 @@ fun getInternalSykmelding(skjermet: Boolean = false): InternalSykmeldingDTO {
 fun getMedisinskVurdering(): MedisinskVurderingDTO {
     return MedisinskVurderingDTO(
             hovedDiagnose = DiagnoseDTO("1", "system", "hoveddiagnose"),
-            biDiagnoser = listOf(DiagnoseDTO("2", "system2", "bidagnose"))
+            biDiagnoser = listOf(DiagnoseDTO("2", "system2", "bidagnose")),
+            annenFraversArsak = AnnenFraversArsakDTO("", emptyList()),
+            svangerskap = false,
+            yrkesskade = false,
+            yrkesskadeDato = null
     )
 }
 

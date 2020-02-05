@@ -117,7 +117,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SykmeldingStatus'
+            $ref: '#/components/schemas/SykmeldingStatusEvent'
     SykmeldingBekreftEvent:
       content:
         application/json:
@@ -172,7 +172,7 @@ components:
     StatusEvent:
       type: string
       enum: [SENDT, APEN, AVBRUTT, UTGATT, BEKREFTET]
-    SykmeldingStatus:
+    SykmeldingStatusEvent:
       type: object
       required:
         - timestamp
@@ -256,12 +256,7 @@ components:
         innspillTilArbeidsgiver:
           type: string
         type:
-          type: string
-          enum: [AKTIVITET_IKKE_MULIG, AVVENTENDE, BEHANDLINGSDAGER, GRADERT, REISETILSKUDD]
-        reisetilskudd:
-          type: boolean
-        aktivitetIkkeMulig:
-          $ref: '#/components/schemas/AktivitetIkkeMulig'
+          $ref: '#/components/schemas/Periodetype'
     AktivitetIkkeMulig:
       type: object
       properties:
@@ -367,6 +362,7 @@ components:
           $ref: '#/components/schemas/SporsmalShortName'
     SposmalOgSvarListe:
       type: array
+      description: Liste med spørsmål og svar, er kun tilgjengelig om Status er SENDT eller BEKREFTET
       items:
         $ref: '#/components/schemas/SporsmalOgSvar'
     ArbeidsgiverStatus:
@@ -428,24 +424,11 @@ components:
         sykmeldingsperioder:
           type: array
           items:
-            $ref: '#/components/schemas/Sykmeldingsperiode'
+            $ref: '#/components/schemas/InternalSykmeldingsperiode'
         sykmeldingStatus:
-          type: object
-          allOf:
-            - $ref: '#/components/schemas/SykmeldingStatus'
-          properties:
-            arbeidsgiver:
-              description: Arbeidsgiver er bare tilgjengelig om sykmeldingStatus.statusevent = SENDT
-              type: object
-              properties:
-                orgNr:
-                  type: string
-                juridiskOrgNr:
-                  type: string
-                navn:
-                  type: string
+            $ref: '#/components/schemas/SykmeldingStatus'
         medisinskVurdering:
-          $ref: '#/components/schemas/MedisinskVurdering'
+          $ref: '#/components/schemas/InternalMedisinskVurdering'
         skjermesForPasient:
           type: boolean
         prognose:
@@ -600,10 +583,65 @@ components:
             ]
           }
         }
-
-
-
-
+    InternalSykmeldingsperiode:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Sykmeldingsperiode'
+      properties:
+        aktivitetIkkeMulig:
+          $ref: '#/components/schemas/AktivitetIkkeMulig'
+    InternalMedisinskVurdering:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/MedisinskVurdering'
+      properties:
+        svangerskap:
+          type: boolean
+        yrkesskade:
+          type: boolean
+        yrkesskadeDato:
+          type: string
+          format: date
+        annenFraversArsak:
+          $ref: '#/components/schemas/AnnenFraversArsak'
+    AnnenFraversArsak:
+      type: object
+      properties:
+        beskrivelse:
+          type: string
+        grunn:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnnenFraverGrunn'
+    AnnenFraverGrunn:
+      type: string
+      enum: [GODKJENT_HELSEINSTITUSJON,
+             BEHANDLING_FORHINDRER_ARBEID,
+             ARBEIDSRETTET_TILTAK,
+             MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND,
+             NODVENDIG_KONTROLLUNDENRSOKELSE,
+             SMITTEFARE,
+             ABORT,
+             UFOR_GRUNNET_BARNLOSHET,
+             DONOR,
+             BEHANDLING_STERILISERING]
+    SykmeldingStatus:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/SykmeldingStatusEvent'
+      properties:
+        arbeidsgiver:
+          description: Arbeidsgiver er bare tilgjengelig om sykmeldingStatus.statusevent = SENDT
+          type: object
+          properties:
+            orgNr:
+              type: string
+            juridiskOrgNr:
+              type: string
+            navn:
+              type: string
+        sporsmalOgSvarListe:
+          $ref: '#/components/schemas/SposmalOgSvarListe'
 
 
   securitySchemes:
