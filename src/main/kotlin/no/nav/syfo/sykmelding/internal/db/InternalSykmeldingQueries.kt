@@ -2,16 +2,24 @@ package no.nav.syfo.sykmelding.internal.db
 
 import java.sql.Connection
 import java.sql.ResultSet
+import no.nav.syfo.aksessering.db.hentSporsmalOgSvar
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmeldingstatus.Sporsmal
 import no.nav.syfo.sykmeldingstatus.StatusEvent
 
 fun DatabaseInterface.getInternalSykmelding(fnr: String): List<SykmeldingDbModel> =
         connection.use { connection ->
             return connection.getInternalSykmeldingMedSisteStatus(fnr)
         }
+
+fun DatabaseInterface.hentSporsmalOgSvar(id: String): List<Sporsmal> {
+    connection.use { connection ->
+        return connection.hentSporsmalOgSvar(id)
+    }
+}
 
 private fun Connection.getInternalSykmeldingMedSisteStatus(fnr: String): List<SykmeldingDbModel> =
         this.prepareStatement(
