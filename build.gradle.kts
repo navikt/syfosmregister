@@ -154,7 +154,7 @@ tasks {
 
     }
     register("testApi", Exec::class) {
-        executable = "dredd"
+        executable = "./node_modules/dredd/bin/dredd"
         args("--config", "api/test/dredd.yml")
     }
 
