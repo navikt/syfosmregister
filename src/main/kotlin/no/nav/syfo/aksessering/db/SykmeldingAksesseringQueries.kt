@@ -80,7 +80,7 @@ internal fun Connection.hentStatusMedSporsmalOgSvar(sykmeldingId: String, sykmel
     return sykmeldingStatus.copy(sporsmalListe = this.hentSporsmalOgSvar(sykmeldingId))
 }
 
-private fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
+fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
     this.prepareStatement(
         """
                 SELECT sporsmal.shortname,

@@ -9,5 +9,7 @@ data class SykmeldingsperiodeDTO(
     val gradert: GradertDTO?,
     val behandlingsdager: Int?,
     val innspillTilArbeidsgiver: String?,
-    val type: PeriodetypeDTO
+    val type: PeriodetypeDTO,
+    val aktivitetIkkeMulig: AktivitetIkkeMuligDTO?,
+    val reisetilskudd: Boolean
 )

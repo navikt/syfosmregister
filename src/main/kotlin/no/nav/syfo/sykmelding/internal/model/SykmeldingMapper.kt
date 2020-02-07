@@ -4,30 +4,41 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
-import no.nav.syfo.aksessering.db.finnPeriodetype
+import no.nav.syfo.domain.Periodetype
 import no.nav.syfo.domain.toDTO
-import no.nav.syfo.model.Adresse
-import no.nav.syfo.model.Arbeidsgiver
-import no.nav.syfo.model.Behandler
-import no.nav.syfo.model.Diagnose
-import no.nav.syfo.model.ErIArbeid
-import no.nav.syfo.model.ErIkkeIArbeid
-import no.nav.syfo.model.Gradert
-import no.nav.syfo.model.KontaktMedPasient
-import no.nav.syfo.model.MedisinskVurdering
-import no.nav.syfo.model.MeldingTilNAV
-import no.nav.syfo.model.Periode
-import no.nav.syfo.model.Prognose
 import no.nav.syfo.model.RuleInfo
-import no.nav.syfo.model.SporsmalSvar
 import no.nav.syfo.model.Status
-import no.nav.syfo.model.SvarRestriksjon
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.sykmelding.internal.db.Adresse
+import no.nav.syfo.sykmelding.internal.db.AktivitetIkkeMulig
+import no.nav.syfo.sykmelding.internal.db.AnnenFraverGrunn
+import no.nav.syfo.sykmelding.internal.db.AnnenFraversArsak
+import no.nav.syfo.sykmelding.internal.db.Arbeidsgiver
 import no.nav.syfo.sykmelding.internal.db.ArbeidsgiverDbModel
+import no.nav.syfo.sykmelding.internal.db.ArbeidsrelatertArsak
+import no.nav.syfo.sykmelding.internal.db.ArbeidsrelatertArsakType
+import no.nav.syfo.sykmelding.internal.db.Behandler
+import no.nav.syfo.sykmelding.internal.db.Diagnose
+import no.nav.syfo.sykmelding.internal.db.ErIArbeid
+import no.nav.syfo.sykmelding.internal.db.ErIkkeIArbeid
+import no.nav.syfo.sykmelding.internal.db.Gradert
+import no.nav.syfo.sykmelding.internal.db.KontaktMedPasient
+import no.nav.syfo.sykmelding.internal.db.MedisinskArsak
+import no.nav.syfo.sykmelding.internal.db.MedisinskArsakType
+import no.nav.syfo.sykmelding.internal.db.MedisinskVurdering
+import no.nav.syfo.sykmelding.internal.db.MeldingTilNAV
+import no.nav.syfo.sykmelding.internal.db.Periode
+import no.nav.syfo.sykmelding.internal.db.Prognose
+import no.nav.syfo.sykmelding.internal.db.SporsmalSvar
 import no.nav.syfo.sykmelding.internal.db.StatusDbModel
+import no.nav.syfo.sykmelding.internal.db.SvarRestriksjon
 import no.nav.syfo.sykmelding.internal.db.SykmeldingDbModel
+import no.nav.syfo.sykmeldingstatus.ShortName
+import no.nav.syfo.sykmeldingstatus.Sporsmal
+import no.nav.syfo.sykmeldingstatus.Svar
+import no.nav.syfo.sykmeldingstatus.Svartype
 
-internal fun SykmeldingDbModel.toInternalSykmelding(): InternalSykmeldingDTO {
+internal fun SykmeldingDbModel.toInternalSykmelding(sporsmal: List<Sporsmal>): InternalSykmeldingDTO {
     return InternalSykmeldingDTO(
             id = id,
             andreTiltak = sykmeldingsDokument.andreTiltak,
@@ -43,23 +54,55 @@ internal fun SykmeldingDbModel.toInternalSykmelding(): InternalSykmeldingDTO {
             behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
             medisinskVurdering = sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO(),
             behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(),
-            sykmeldingStatus = status.toSykmeldingStatusDTO(),
+            sykmeldingStatus = status.toSykmeldingStatusDTO(sporsmal.map { it.toSporsmalDTO() }),
             sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO() },
             arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
             kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
             meldingTilNAV = sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO(),
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
             utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger)
-            // TODO: legg til sendt, hør med veden
     )
+}
+
+private fun Sporsmal.toSporsmalDTO(): SporsmalDTO {
+    return SporsmalDTO(
+            tekst = tekst,
+            svar = svar.toDTO(),
+            shortName = shortName.toDTO()
+    )
+}
+
+private fun ShortName.toDTO(): ShortNameDTO {
+    return when (this) {
+        ShortName.ARBEIDSSITUASJON -> ShortNameDTO.ARBEIDSSITUASJON
+        ShortName.FORSIKRING -> ShortNameDTO.FORSIKRING
+        ShortName.FRAVAER -> ShortNameDTO.FRAVAER
+        ShortName.PERIODE -> ShortNameDTO.PERIODE
+        ShortName.NY_NARMESTE_LEDER -> ShortNameDTO.NY_NARMESTE_LEDER
+    }
+}
+
+private fun Svar.toDTO(): SvarDTO {
+    return SvarDTO(
+            svar = svar,
+            svarType = svartype.toDTO()
+    )
+}
+
+private fun Svartype.toDTO(): SvartypeDTO {
+    return when (this) {
+        Svartype.ARBEIDSSITUASJON -> SvartypeDTO.ARBEIDSSITUASJON
+        Svartype.JA_NEI -> SvartypeDTO.JA_NEI
+        Svartype.PERIODER -> SvartypeDTO.PERIODER
+    }
 }
 
 fun getUtcTime(mottattTidspunkt: LocalDateTime): ZonedDateTime {
     return mottattTidspunkt.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC)
 }
 
-private fun StatusDbModel.toSykmeldingStatusDTO(): SykmeldingStatusDTO {
-    return SykmeldingStatusDTO(status, getUtcTime(status_timestamp), arbeidsgiver?.toArbeidsgiverStatusDTO())
+private fun StatusDbModel.toSykmeldingStatusDTO(sporsmal: List<SporsmalDTO>): SykmeldingStatusDTO {
+    return SykmeldingStatusDTO(statusEvent, getUtcTime(statusTimestamp), arbeidsgiver?.toArbeidsgiverStatusDTO(), sporsmal)
 }
 
 private fun ArbeidsgiverDbModel.toArbeidsgiverStatusDTO(): ArbeidsgiverStatusDTO {
@@ -68,8 +111,7 @@ private fun ArbeidsgiverDbModel.toArbeidsgiverStatusDTO(): ArbeidsgiverStatusDTO
 
 fun toUtdypendeOpplysninger(utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>): Map<String, Map<String, SporsmalSvarDTO>> {
     return utdypendeOpplysninger.mapValues {
-        it.value.mapValues {
-            entry -> entry.value.toSporsmalSvarDTO() }
+        it.value.mapValues { entry -> entry.value.toSporsmalSvarDTO() }
                 .filterValues { sporsmalSvar -> !sporsmalSvar.restriksjoner.contains(SvarRestriksjonDTO.SKJERMET_FOR_NAV) }
     }
 }
@@ -142,8 +184,45 @@ private fun Periode.toSykmeldingsperiodeDTO(): SykmeldingsperiodeDTO {
             behandlingsdager = behandlingsdager,
             gradert = gradert?.toGradertDTO(),
             innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
-            type = finnPeriodetype(this).toDTO()
+            type = finnPeriodetype(this).toDTO(),
+            aktivitetIkkeMulig = aktivitetIkkeMulig?.toDto(),
+            reisetilskudd = reisetilskudd
     )
+}
+
+private fun AktivitetIkkeMulig.toDto(): AktivitetIkkeMuligDTO {
+    return AktivitetIkkeMuligDTO(medisinskArsak = medisinskArsak?.toMedisinskArsakDto(),
+            arbeidsrelatertArsak = arbeidsrelatertArsak?.toArbeidsrelatertArsakDto())
+}
+
+private fun ArbeidsrelatertArsak.toArbeidsrelatertArsakDto(): ArbeidsrelatertArsakDTO {
+    return ArbeidsrelatertArsakDTO(
+            beskrivelse = beskrivelse,
+            arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
+    )
+}
+
+fun toArbeidsrelatertArsakTypeDto(arbeidsrelatertArsakType: ArbeidsrelatertArsakType): ArbeidsrelatertArsakTypeDTO {
+    return when (arbeidsrelatertArsakType) {
+        ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakTypeDTO.MANGLENDE_TILRETTELEGGING
+        ArbeidsrelatertArsakType.ANNET -> ArbeidsrelatertArsakTypeDTO.ANNET
+    }
+}
+
+private fun MedisinskArsak.toMedisinskArsakDto(): MedisinskArsakDTO {
+    return MedisinskArsakDTO(
+            beskrivelse = beskrivelse,
+            arsak = arsak.map { toMedisinskArsakTypeDto(it) }
+    )
+}
+
+fun toMedisinskArsakTypeDto(medisinskArsakType: MedisinskArsakType): MedisinskArsakTypeDTO {
+    return when (medisinskArsakType) {
+        MedisinskArsakType.AKTIVITET_FORHINDRER_BEDRING -> MedisinskArsakTypeDTO.AKTIVITET_FORHINDRER_BEDRING
+        MedisinskArsakType.AKTIVITET_FORVERRER_TILSTAND -> MedisinskArsakTypeDTO.AKTIVITET_FORVERRER_TILSTAND
+        MedisinskArsakType.TILSTAND_HINDRER_AKTIVITET -> MedisinskArsakTypeDTO.TILSTAND_HINDRER_AKTIVITET
+        MedisinskArsakType.ANNET -> MedisinskArsakTypeDTO.ANNET
+    }
 }
 
 private fun Gradert.toGradertDTO(): GradertDTO {
@@ -177,8 +256,36 @@ private fun Status.toRuleStatusDTO(): RegelStatusDTO {
 private fun MedisinskVurdering.toMedisinskVurderingDTO(): MedisinskVurderingDTO {
     return MedisinskVurderingDTO(
             hovedDiagnose = hovedDiagnose?.toDiagnoseDTO(),
-            biDiagnoser = biDiagnoser.map { it.toDiagnoseDTO() }
+            biDiagnoser = biDiagnoser.map {
+                it.toDiagnoseDTO()
+            },
+
+            annenFraversArsak = annenFraversArsak?.toDTO(),
+            svangerskap = svangerskap,
+            yrkesskade = yrkesskade,
+            yrkesskadeDato = yrkesskadeDato)
+}
+
+private fun AnnenFraversArsak.toDTO(): AnnenFraversArsakDTO {
+    return AnnenFraversArsakDTO(
+            beskrivelse = beskrivelse,
+            grunn = grunn.map { it.toDTO() }
     )
+}
+
+private fun AnnenFraverGrunn.toDTO(): AnnenFraverGrunnDTO {
+    return when (this) {
+        AnnenFraverGrunn.ABORT -> AnnenFraverGrunnDTO.ABORT
+        AnnenFraverGrunn.ARBEIDSRETTET_TILTAK -> AnnenFraverGrunnDTO.ARBEIDSRETTET_TILTAK
+        AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID -> AnnenFraverGrunnDTO.BEHANDLING_FORHINDRER_ARBEID
+        AnnenFraverGrunn.BEHANDLING_STERILISERING -> AnnenFraverGrunnDTO.BEHANDLING_STERILISERING
+        AnnenFraverGrunn.DONOR -> AnnenFraverGrunnDTO.DONOR
+        AnnenFraverGrunn.GODKJENT_HELSEINSTITUSJON -> AnnenFraverGrunnDTO.GODKJENT_HELSEINSTITUSJON
+        AnnenFraverGrunn.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND -> AnnenFraverGrunnDTO.MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND
+        AnnenFraverGrunn.NODVENDIG_KONTROLLUNDENRSOKELSE -> AnnenFraverGrunnDTO.NODVENDIG_KONTROLLUNDENRSOKELSE
+        AnnenFraverGrunn.SMITTEFARE -> AnnenFraverGrunnDTO.SMITTEFARE
+        AnnenFraverGrunn.UFOR_GRUNNET_BARNLOSHET -> AnnenFraverGrunnDTO.UFOR_GRUNNET_BARNLOSHET
+    }
 }
 
 private fun Diagnose.toDiagnoseDTO(): DiagnoseDTO {
@@ -212,3 +319,13 @@ private fun Adresse.toAdresseDTO(): AdresseDTO {
             postnummer = postnummer
     )
 }
+
+fun finnPeriodetype(periode: Periode): Periodetype =
+        when {
+            periode.aktivitetIkkeMulig != null -> Periodetype.AKTIVITET_IKKE_MULIG
+            periode.avventendeInnspillTilArbeidsgiver != null -> Periodetype.AVVENTENDE
+            periode.behandlingsdager != null -> Periodetype.BEHANDLINGSDAGER
+            periode.gradert != null -> Periodetype.GRADERT
+            periode.reisetilskudd -> Periodetype.REISETILSKUDD
+            else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode")
+        }

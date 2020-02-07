@@ -1,6 +1,12 @@
 package no.nav.syfo.sykmelding.internal.model
 
+import java.time.LocalDate
+
 data class MedisinskVurderingDTO(
     val hovedDiagnose: DiagnoseDTO?,
-    val biDiagnoser: List<DiagnoseDTO>
+    val biDiagnoser: List<DiagnoseDTO>,
+    val annenFraversArsak: AnnenFraversArsakDTO?,
+    val svangerskap: Boolean,
+    val yrkesskade: Boolean,
+    val yrkesskadeDato: LocalDate?
 )
