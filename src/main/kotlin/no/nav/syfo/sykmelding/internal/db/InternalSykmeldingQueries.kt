@@ -67,9 +67,9 @@ private fun ResultSet.getStatus(): StatusDbModel {
     val status_timestamp = getTimestamp("event_timestamp").toLocalDateTime()
     val arbeidsgiverDbModel = when (status) {
         StatusEvent.SENDT.name -> ArbeidsgiverDbModel(
-                orgNr = getString("orgnummer"),
-                juridiskOrgNr = getString("juridisk_orgnummer"),
-                navn = getString("navn")
+                orgnummer = getString("orgnummer"),
+                juridiskOrgnummer = getString("juridisk_orgnummer"),
+                orgNavn = getString("navn")
         )
         else -> null
     }

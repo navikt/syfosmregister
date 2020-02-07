@@ -141,12 +141,22 @@ dependencies {
 }
 swaggerSources {
     create("sykmelding").apply {
-        setInputFile(file("api/syfosmregister-v1.yaml"))
+        setInputFile(file("api/oas3/syfosmregister-v1.yaml"))
     }
 }
 
 
 tasks {
+
+    register("runApi", JavaExec::class) {
+        classpath = sourceSets["test"].runtimeClasspath
+        main = "no.nav.syfo.sykmelding.internal.ApiMainTestKt"
+
+    }
+    register("testApi", Exec::class) {
+        executable = "dredd"
+        args("--config", "api/test/dredd.yml")
+    }
 
     create("printVersion") {
         println(project.version)

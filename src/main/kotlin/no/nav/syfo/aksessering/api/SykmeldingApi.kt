@@ -26,7 +26,6 @@ val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smregister")
 @KtorExperimentalAPI
 fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmeldingStatusService: SykmeldingStatusService, sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer) {
     route("/api/v1") {
-
         get("/sykmeldinger") {
             val principal: JWTPrincipal = call.authentication.principal()!!
             val subject = principal.payload.subject
