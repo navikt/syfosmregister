@@ -11,7 +11,7 @@ names: false
 only: ['/api/v1/internal/sykmeldinger > API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr > 200 > application/json']
 reporter: []
 output: []
-header: ["Authorization: Basic YmVuOnBhc3M="]
+header: ["Authorization: Bearer 123"]
 sorted: false
 user: null
 inline-errors: true
