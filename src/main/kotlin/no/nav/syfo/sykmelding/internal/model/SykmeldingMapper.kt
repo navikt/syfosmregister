@@ -37,6 +37,7 @@ import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
 import no.nav.syfo.sykmeldingstatus.Svar
 import no.nav.syfo.sykmeldingstatus.Svartype
+import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
 
 internal fun SykmeldingDbModel.toInternalSykmelding(sporsmal: List<Sporsmal>): InternalSykmeldingDTO {
     return InternalSykmeldingDTO(
@@ -106,7 +107,7 @@ private fun StatusDbModel.toSykmeldingStatusDTO(sporsmal: List<SporsmalDTO>): Sy
 }
 
 private fun ArbeidsgiverDbModel.toArbeidsgiverStatusDTO(): ArbeidsgiverStatusDTO {
-    return ArbeidsgiverStatusDTO(orgNr, juridiskOrgNr, navn)
+    return ArbeidsgiverStatusDTO(orgnummer, juridiskOrgnummer, orgNavn)
 }
 
 fun toUtdypendeOpplysninger(utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>): Map<String, Map<String, SporsmalSvarDTO>> {

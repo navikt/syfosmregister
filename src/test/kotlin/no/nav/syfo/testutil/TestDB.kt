@@ -8,15 +8,25 @@ import java.time.LocalDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
+import no.nav.syfo.model.AnnenFraversArsak
 import no.nav.syfo.model.Arbeidsgiver
+import no.nav.syfo.model.ArbeidsrelatertArsak
 import no.nav.syfo.model.AvsenderSystem
 import no.nav.syfo.model.Behandler
 import no.nav.syfo.model.Diagnose
+import no.nav.syfo.model.ErIArbeid
+import no.nav.syfo.model.ErIkkeIArbeid
+import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.HarArbeidsgiver
 import no.nav.syfo.model.KontaktMedPasient
+import no.nav.syfo.model.MedisinskArsak
 import no.nav.syfo.model.MedisinskVurdering
+import no.nav.syfo.model.MeldingTilNAV
 import no.nav.syfo.model.Periode
+import no.nav.syfo.model.Prognose
+import no.nav.syfo.model.SporsmalSvar
 import no.nav.syfo.model.Status
+import no.nav.syfo.model.SvarRestriksjon
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.persistering.Behandlingsutfall
@@ -51,6 +61,10 @@ fun Connection.dropData() {
         connection.prepareStatement("DELETE FROM sporsmal").executeUpdate()
         connection.commit()
     }
+}
+
+fun getSykmeldingOpplysninger(fnr: String = "pasientFnr"): Sykmeldingsopplysninger {
+    return testSykmeldingsopplysninger.copy(pasientFnr = fnr)
 }
 
 val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
@@ -112,10 +126,10 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
             svangerskap = false,
             yrkesskade = false,
             yrkesskadeDato = null,
-            annenFraversArsak = null
+            annenFraversArsak = AnnenFraversArsak(null, emptyList())
         ),
         meldingTilArbeidsgiver = "",
-        meldingTilNAV = null,
+        meldingTilNAV = MeldingTilNAV(false, null),
         msgId = "msgId",
         pasientAktoerId = "pasientAktoerId",
         perioder = listOf(
@@ -123,25 +137,39 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
                 fom = LocalDate.now(),
                 tom = LocalDate.now(),
                 aktivitetIkkeMulig = AktivitetIkkeMulig(
-                    medisinskArsak = null,
-                    arbeidsrelatertArsak = null
+                    medisinskArsak = MedisinskArsak(null, emptyList()),
+                    arbeidsrelatertArsak = ArbeidsrelatertArsak(null, emptyList())
                 ),
                 avventendeInnspillTilArbeidsgiver = null,
                 behandlingsdager = null,
-                gradert = null,
+                gradert = Gradert(false, 0),
                 reisetilskudd = false
             )
         ),
-        prognose = null,
+        prognose = Prognose(true,
+                null,
+                ErIArbeid(false, false, null, null),
+                ErIkkeIArbeid(false, null, null)),
         signaturDato = LocalDateTime.now(),
         skjermesForPasient = false,
         syketilfelleStartDato = LocalDate.now(),
         tiltakArbeidsplassen = "tiltakArbeidsplassen",
         tiltakNAV = "tiltakNAV",
-        utdypendeOpplysninger = emptyMap(),
+        utdypendeOpplysninger = getUtdypendeOpplysninger(),
         navnFastlege = "Per Hansen"
     )
 )
+
+fun getUtdypendeOpplysninger(): Map<String, Map<String, SporsmalSvar>> {
+    val map = HashMap<String, HashMap<String, SporsmalSvar>>()
+    val map62 = HashMap<String, SporsmalSvar>()
+    map62.put("6.2.1", SporsmalSvar(sporsmal = "Beskriv kort sykehistorie, symptomer og funn i dagens situasjon.", svar = "Veldig syk med masse feber.", restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)))
+    map62.put("6.2.2", SporsmalSvar(sporsmal = "sporsaml", svar = "svar", restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)))
+    map62.put("6.2.3", SporsmalSvar(sporsmal = "sporsmal", svar = "svar", restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)))
+    map62.put("6.2.4", SporsmalSvar(sporsmal = "sporsmal", svar = "svar", restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)))
+    map.put("6.2", map62)
+    return map
+}
 
 val testBehandlingsutfall = Behandlingsutfall(
     id = "uuid",

@@ -1,4 +1,4 @@
-openapi: 3.0.1
+openapi: 3.0.0
 
 info:
   title: Syfosmregister API
@@ -133,6 +133,7 @@ components:
       description: "Response for internal sykmeldinger for saksbehandlere"
       content:
         application/json:
+
           schema:
             type: array
             items:
@@ -143,6 +144,7 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/sykmeldingList'
+
   parameters:
     sykmeldingId:
       description: Id for sykmelding
@@ -151,6 +153,7 @@ components:
       required: true
       schema:
         type: string
+      example: '123'
     fnrQueryParam:
       description: Fodselsnummer
       name: fnr
@@ -158,6 +161,7 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Fodselsnummer'
+      example: '01234567891'
   schemas:
     Date:
       type: string
@@ -169,6 +173,7 @@ components:
       type: string
       minLength: 11
       maxLength: 11
+      example: '01234567891'
     StatusEvent:
       type: string
       enum: [SENDT, APEN, AVBRUTT, UTGATT, BEKREFTET]
@@ -183,11 +188,8 @@ components:
         statusEvent:
           $ref: '#/components/schemas/StatusEvent'
     RegelStatus:
-      type: object
-      properties:
-        status:
-          type: string
-          enum: [OK, MANUAL_PROCESSING, INVALID]
+      type: string
+      enum: [OK, MANUAL_PROCESSING, INVALID]
     RegelInfo:
       type: object
       required:
@@ -226,6 +228,7 @@ components:
           minimum: 0
           maximum: 100
     Gradert:
+      required: false
       type: object
       properties:
         grad:
@@ -257,6 +260,13 @@ components:
           type: string
         type:
           $ref: '#/components/schemas/Periodetype'
+      example:
+        - {
+          fom: '2019-10-01',
+          tom: '2019-10-04',
+          type: AKTIVITET_IKKE_MULIG,
+          reisetilskudd: false,
+      }
     AktivitetIkkeMulig:
       type: object
       properties:
@@ -341,11 +351,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Sykmeldingsperiode'
+          example:
+            []
         medisinskVurdering:
           $ref: '#/components/schemas/MedisinskVurdering'
     SvarType:
       type: string
       enum: [ARBEIDSSITUASJON, PERIODER, JA_NEI]
+    Svar:
+      type: object
+      properties:
+        svar:
+          type: string
+        svarType:
+          $ref: '#/components/schemas/SvarType'
     SporsmalShortName:
       type: string
       enum: [ARBEIDSSITUASJON, NY_NARMESTE_LEDER, FRAVAER, PERIODE, FORSIKRING]
@@ -355,9 +374,7 @@ components:
         tekst:
           type: string
         svar:
-          type: string
-        svartype:
-          $ref: '#/components/schemas/SvarType'
+          $ref: '#/components/schemas/Svar'
         shortName:
           $ref: '#/components/schemas/SporsmalShortName'
     SposmalOgSvarListe:
@@ -453,7 +470,7 @@ components:
           $ref: '#/components/schemas/Behandler'
         syketilfelleStartDato:
           $ref: '#/components/schemas/Date'
-        navnFastLege:
+        navnFastlege:
           type: string
     Prognose:
       type: object
@@ -466,12 +483,26 @@ components:
           type: string
         erIArbeid:
           type: object
+          required:
+            - annetArbeidPaSikt
+            - egetArbeidPaSikt
           properties:
             egetArbeidPaSikt:
               type: boolean
             annetArbeidPaSikt:
               type: boolean
             arbeidFOM:
+              $ref: '#/components/schemas/Date'
+            vurderingsdato:
+              $ref: '#/components/schemas/Date'
+        erIkkeIArbeid:
+          type: object
+          required:
+            - arbeidsforPaSikt
+          properties:
+            arbeidsforPaSikt:
+              type: boolean
+            arbeidsforFOM:
               $ref: '#/components/schemas/Date'
             vurderingsdato:
               $ref: '#/components/schemas/Date'
@@ -634,11 +665,11 @@ components:
           description: Arbeidsgiver er bare tilgjengelig om sykmeldingStatus.statusevent = SENDT
           type: object
           properties:
-            orgNr:
+            orgnummer:
               type: string
-            juridiskOrgNr:
+            juridiskOrgnummer:
               type: string
-            navn:
+            orgNavn:
               type: string
         sporsmalOgSvarListe:
           $ref: '#/components/schemas/SposmalOgSvarListe'

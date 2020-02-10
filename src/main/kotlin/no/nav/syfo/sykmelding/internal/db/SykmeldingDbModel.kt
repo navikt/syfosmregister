@@ -5,9 +5,10 @@ import java.time.LocalDateTime
 import no.nav.syfo.model.ValidationResult
 
 data class ArbeidsgiverDbModel(
-    val orgNr: String,
-    val juridiskOrgNr: String,
-    val navn: String
+    val orgnummer: String,
+    val juridiskOrgnummer: String?,
+    val orgNavn: String
+
 )
 
 data class StatusDbModel(

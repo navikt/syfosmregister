@@ -35,6 +35,13 @@ jobs:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew test
+      - name: Run API tests
+        env:
+          ORG_GRADLE_PROJECT_githubUser: x-access-token
+          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm install dredd@latest
+          ./gradlew testApi
       - name: Build jar
         env:
           ORG_GRADLE_PROJECT_githubUser: x-access-token
