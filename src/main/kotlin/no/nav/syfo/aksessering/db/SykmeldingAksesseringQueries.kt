@@ -235,7 +235,7 @@ fun ResultSet.tilArbeidsgiverStatus(): ArbeidsgiverStatus =
         orgnavn = getString("navn")
     )
 
-private fun tilStatusEvent(status: String): StatusEvent {
+fun tilStatusEvent(status: String): StatusEvent {
     return when (status) {
         "BEKREFTET" -> StatusEvent.BEKREFTET
         "APEN" -> StatusEvent.APEN

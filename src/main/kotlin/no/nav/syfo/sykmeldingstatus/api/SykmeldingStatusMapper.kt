@@ -10,6 +10,19 @@ import no.nav.syfo.sykmeldingstatus.Svartype
 import no.nav.syfo.sykmeldingstatus.SykmeldingBekreftEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatus
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
+
+fun toSykmeldingStatusList(sykmeldingstatusList: List<SykmeldingStatusEvent>): List<SykmeldingStatusEventDTO> {
+    return sykmeldingstatusList.map { toSykmeldingStatusEventDTO(it) }
+}
+
+fun toSykmeldingStatusEventDTO(sykmeldingStatusEvent: SykmeldingStatusEvent): SykmeldingStatusEventDTO {
+    return SykmeldingStatusEventDTO(
+            statusEvent = sykmeldingStatusEvent.event.toStatusEventDTO(),
+            timestamp = sykmeldingStatusEvent.timestamp
+    )
+}
 
 fun tilSykmeldingSendEvent(sykmeldingId: String, sykmeldingSendEventDTO: SykmeldingSendEventDTO): SykmeldingSendEvent {
     val arbeidssituasjon: SporsmalOgSvarDTO = finnArbeidssituasjonSpm(sykmeldingSendEventDTO)

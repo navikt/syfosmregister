@@ -1,10 +1,19 @@
 package no.nav.syfo.sykmeldingstatus
 
+import no.nav.syfo.aksessering.db.tilStatusEvent
+import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.db.toList
+import no.nav.syfo.log
 import java.sql.Connection
+import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
-import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.log
+
+fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
+    connection.use { connection ->
+        return connection.getSykmeldingstatuser(sykmeldingId)
+    }
+}
 
 fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     connection.use { connection ->
@@ -32,6 +41,23 @@ fun DatabaseInterface.registrerBekreftet(sykmeldingBekreftEvent: SykmeldingBekre
         }
         connection.commit()
     }
+}
+
+private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
+    this.prepareStatement("""
+        SELECT * FROM sykmeldingstatus ss where ss.sykmelding_id = ?
+    """).use {
+        it.setString(1, sykmeldingId)
+        return it.executeQuery().toList { toSykmeldingStatusEvent() }
+    }
+}
+
+private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
+    return SykmeldingStatusEvent(
+            getString("sykmelding_id"),
+            getTimestamp("event_timestamp").toLocalDateTime(),
+            tilStatusEvent(getString("event"))
+    )
 }
 
 private fun Connection.slettGamleSvarHvisFinnesFraFor(sykmeldingId: String) {

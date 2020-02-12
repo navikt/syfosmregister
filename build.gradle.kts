@@ -150,7 +150,7 @@ tasks {
 
     register("runApi", JavaExec::class) {
         classpath = sourceSets["test"].runtimeClasspath
-        main = "no.nav.syfo.sykmelding.internal.ApiMainTestKt"
+        main = "no.nav.syfo.application.ApiMainTestKt"
 
     }
     register("testApi", Exec::class) {

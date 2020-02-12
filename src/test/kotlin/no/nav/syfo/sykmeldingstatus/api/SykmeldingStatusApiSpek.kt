@@ -2,17 +2,12 @@ package no.nav.syfo.sykmeldingstatus.api
 
 import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.application.install
 import io.ktor.auth.authenticate
 import io.ktor.features.ContentNegotiation
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.jackson.jackson
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
@@ -22,8 +17,6 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkClass
-import java.nio.file.Paths
-import java.time.LocalDateTime
 import no.nav.syfo.Environment
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.objectMapper
@@ -33,9 +26,12 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.testutil.generateJWT
 import no.nav.syfo.testutil.getVaultSecrets
+import no.nav.syfo.testutil.setUpContentNegotiation
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Paths
+import java.time.LocalDateTime
 
 class SykmeldingStatusApiSpek : Spek({
 
@@ -50,14 +46,7 @@ class SykmeldingStatusApiSpek : Spek({
     describe("Test SykmeldingStatusAPI") {
         with(TestApplicationEngine()) {
             start(true)
-            application.install(ContentNegotiation) {
-                jackson {
-                    registerKotlinModule()
-                    registerModule(JavaTimeModule())
-                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                }
-            }
+            application.install(ContentNegotiation, setUpContentNegotiation())
             application.routing { registerSykmeldingStatusApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) }
 
             it("Should successfully post Status") {
@@ -76,14 +65,7 @@ class SykmeldingStatusApiSpek : Spek({
     describe("Test SykmeldingStatusAPI with security") {
         with(TestApplicationEngine()) {
             start(true)
-            application.install(ContentNegotiation) {
-                jackson {
-                    registerKotlinModule()
-                    registerModule(JavaTimeModule())
-                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                }
-            }
+            application.install(ContentNegotiation, setUpContentNegotiation())
 
             val env = Environment(kafkaBootstrapServers = "",
                     syfosmregisterDBURL = "",

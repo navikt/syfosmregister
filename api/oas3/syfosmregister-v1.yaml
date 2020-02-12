@@ -18,11 +18,11 @@ paths:
         - $ref: '#/components/parameters/fnrQueryParam'
       summary: Returnerer sykmeldinger for oppgitt fnr
       responses:
-        200:
+        '200':
           $ref: '#/components/responses/SykmeldingListResponse'
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
   /api/v1/sykmeldinger/{sykmeldingId}/bekreft:
     post:
@@ -33,14 +33,35 @@ paths:
       parameters:
         - $ref: '#/components/parameters/sykmeldingId'
       responses:
-        200:
+        '200':
           description: Ok
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
 
   /sykmeldinger/{sykmeldingId}/status:
+    get:
+      operationId: getSykmeldingStatus
+      tags:
+        - Sykmelding status
+      description: Henter statuser for sykmeldinger
+      parameters:
+        - $ref: '#/components/parameters/sykmeldingId'
+        - $ref: '#/components/parameters/sykmeldingStatusFilter'
+      responses:
+        '200':
+          description: liste med sykmeldingstatuser
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SykmeldingStatusEvent'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
     post:
       operationId: addStatus
       tags:
@@ -49,11 +70,11 @@ paths:
       parameters:
         - $ref: '#/components/parameters/sykmeldingId'
       responses:
-        201:
+        '201':
           description: Created
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
       requestBody:
         $ref: '#/components/requestBodies/StatusRequest'
@@ -66,11 +87,11 @@ paths:
       parameters:
         - $ref: '#/components/parameters/sykmeldingId'
       responses:
-        201:
+        '201':
           description: Created
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
       requestBody:
         $ref: '#/components/requestBodies/SykmeldingBekreftEvent'
@@ -83,11 +104,11 @@ paths:
       parameters:
         - $ref: '#/components/parameters/sykmeldingId'
       responses:
-        201:
+        '201':
           description: Created
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
       requestBody:
         $ref: '#/components/requestBodies/SykmeldingSendEvent'
@@ -103,11 +124,11 @@ paths:
         - $ref: '#/components/parameters/fnrQueryParam'
       summary: API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr
       responses:
-        200:
+        '200':
           $ref: '#/components/responses/InternalSykmeldingerResponse'
-        401:
+        '401':
           description: Unauthorized
-        403:
+        '403':
           description: Forbidden
 
 
@@ -133,7 +154,6 @@ components:
       description: "Response for internal sykmeldinger for saksbehandlere"
       content:
         application/json:
-
           schema:
             type: array
             items:
@@ -162,6 +182,15 @@ components:
       schema:
         $ref: '#/components/schemas/Fodselsnummer'
       example: '01234567891'
+    sykmeldingStatusFilter:
+      description: Filter for sykmeldingstatus
+      name: filter
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [ALL, LATEST]
+      example: ALL
   schemas:
     Date:
       type: string
@@ -228,7 +257,6 @@ components:
           minimum: 0
           maximum: 100
     Gradert:
-      required: false
       type: object
       properties:
         grad:
@@ -261,7 +289,7 @@ components:
         type:
           $ref: '#/components/schemas/Periodetype'
       example:
-        - {
+         {
           fom: '2019-10-01',
           tom: '2019-10-04',
           type: AKTIVITET_IKKE_MULIG,
@@ -406,11 +434,15 @@ components:
           $ref: '#/components/schemas/SposmalOgSvarListe'
     SykmeldingSendEvent:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/SykmeldingBekreftEvent'
       required:
         - arbeidsgiver
+        - timestamp
+        - sporsmalOgSvarListe
       properties:
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        sporsmalOgSvarListe:
+          $ref: '#/components/schemas/SposmalOgSvarListe'
         arbeidsgiver:
           $ref: '#/components/schemas/ArbeidsgiverStatus'
     InternalSykmelding:
@@ -616,16 +648,36 @@ components:
         }
     InternalSykmeldingsperiode:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/Sykmeldingsperiode'
+      required:
+        - fom
+        - tom
+        - type
+        - reisetilskudd
       properties:
         aktivitetIkkeMulig:
           $ref: '#/components/schemas/AktivitetIkkeMulig'
+        fom:
+          $ref: '#/components/schemas/Date'
+        tom:
+          $ref: '#/components/schemas/Date'
+        gradert:
+          $ref: '#/components/schemas/Gradert'
+        behandlingsdager:
+          type: integer
+        innspillTilArbeidsgiver:
+          type: string
+        type:
+          $ref: '#/components/schemas/Periodetype'
     InternalMedisinskVurdering:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/MedisinskVurdering'
       properties:
+        hovedDiagnose:
+          $ref: '#/components/schemas/Diagnose'
+        biDiagnoser:
+          type: array
+          description: påkreved men kan være en tom liste
+          items:
+            $ref: '#/components/schemas/Diagnose'
         svangerskap:
           type: boolean
         yrkesskade:
@@ -658,9 +710,14 @@ components:
              BEHANDLING_STERILISERING]
     SykmeldingStatus:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/SykmeldingStatusEvent'
+      required:
+        - timestamp
+        - statusEvent
       properties:
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        statusEvent:
+          $ref: '#/components/schemas/StatusEvent'
         arbeidsgiver:
           description: Arbeidsgiver er bare tilgjengelig om sykmeldingStatus.statusevent = SENDT
           type: object
