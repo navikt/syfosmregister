@@ -47,6 +47,7 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusApi
+import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
 @KtorExperimentalAPI
@@ -120,6 +121,7 @@ fun createApplicationEngine(
 
             registerNaisApi(applicationState)
             authenticate("jwt") {
+                registerSykmeldingStatusGETApi(sykmeldingStatusService)
                 registerSykmeldingApi(sykmeldingService, sykmeldingStatusService, sykmeldingStatusKafkaProducer)
             }
             authenticate("rerun") {
