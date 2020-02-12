@@ -63,8 +63,8 @@ fun Connection.dropData() {
     }
 }
 
-fun getSykmeldingOpplysninger(fnr: String = "pasientFnr"): Sykmeldingsopplysninger {
-    return testSykmeldingsopplysninger.copy(pasientFnr = fnr)
+fun getSykmeldingOpplysninger(fnr: String = "pasientFnr", id: String = "123"): Sykmeldingsopplysninger {
+    return testSykmeldingsopplysninger.copy(pasientFnr = fnr, id = id)
 }
 
 val testSykmeldingsopplysninger = Sykmeldingsopplysninger(

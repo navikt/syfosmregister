@@ -1,4 +1,4 @@
-package no.nav.syfo.sykmelding.internal
+package no.nav.syfo.application
 
 import com.auth0.jwt.interfaces.Payload
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -20,7 +20,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
 import java.time.LocalDateTime
-import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -35,29 +34,31 @@ import no.nav.syfo.sykmeldingstatus.Svar
 import no.nav.syfo.sykmeldingstatus.Svartype
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmeldingstatus.registrerSendt
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.getSykmeldingOpplysninger
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
-import no.nav.syfo.testutil.testSykmeldingsopplysninger
 
 fun main() {
 
     val db = TestDB()
-    db.lagreMottattSykmelding(getSykmeldingOpplysninger("01234567891"), testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
-    db.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+    val sykmeldingsopplysning = getSykmeldingOpplysninger("01234567891")
+    db.lagreMottattSykmelding(sykmeldingsopplysning, testSykmeldingsdokument.copy(id = "123"), SykmeldingStatusEvent(sykmeldingsopplysning.id, LocalDateTime.now(), StatusEvent.APEN))
+    db.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "123"))
     db.registrerSendt(SykmeldingSendEvent(
-            "uuid",
+            sykmeldingsopplysning.id,
             LocalDateTime.now(),
-            ArbeidsgiverStatus("uuid", "123", "123", "navn"),
-            Sporsmal("Arbeidssituajson", ShortName.ARBEIDSSITUASJON, Svar("uuid", null, Svartype.ARBEIDSSITUASJON, "EN_ARBEIDSGIVER"))),
-            SykmeldingStatusEvent("uuid", LocalDateTime.now(), StatusEvent.SENDT))
+            ArbeidsgiverStatus(sykmeldingsopplysning.id, "123", "123", "navn"),
+            Sporsmal("Arbeidssituajson", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingsopplysning.id, null, Svartype.ARBEIDSSITUASJON, "EN_ARBEIDSGIVER"))),
+            SykmeldingStatusEvent(sykmeldingsopplysning.id, LocalDateTime.now(), StatusEvent.SENDT))
 
     val sykmeldingKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
-
+    val sykmeldingStatusService = SykmeldingStatusService(db)
     val internalSykmeldingService = InternalSykmeldingService(database = db)
     val mockPayload = mockk<Payload>()
     coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
@@ -78,6 +79,7 @@ fun main() {
         routing {
             registerNaisApi(ApplicationState(true, true))
             registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService)
+            registerSykmeldingStatusGETApi(sykmeldingStatusService)
         }
     }.start(true)
 }

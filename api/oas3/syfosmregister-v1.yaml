@@ -57,7 +57,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SykmeldingStatus'
+                  $ref: '#/components/schemas/SykmeldingStatusEvent'
         '401':
           description: Unauthorized
         '403':
