@@ -41,6 +41,27 @@ paths:
           description: Forbidden
 
   /sykmeldinger/{sykmeldingId}/status:
+    get:
+      operationId: getSykmeldingStatus
+      tags:
+        - Sykmelding status
+      description: Henter statuser for sykmeldinger
+      parameters:
+        - $ref: '#/components/parameters/sykmeldingId'
+        - $ref: '#/components/parameters/sykmeldingStatusFilter'
+      responses:
+        '200':
+          description: liste med sykmeldingstatuser
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SykmeldingStatus'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
     post:
       operationId: addStatus
       tags:
@@ -161,6 +182,15 @@ components:
       schema:
         $ref: '#/components/schemas/Fodselsnummer'
       example: '01234567891'
+    sykmeldingStatusFilter:
+      description: Filter for sykmeldingstatus
+      name: filter
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [ALL, LATEST]
+      example: ALL
   schemas:
     Date:
       type: string
