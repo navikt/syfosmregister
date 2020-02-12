@@ -1,6 +1,5 @@
 package no.nav.syfo.sykmeldingstatus
 
-import java.time.LocalDateTime
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -13,6 +12,7 @@ import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.LocalDateTime
 
 class SykmeldingStatusServiceSpek : Spek({
 
@@ -87,6 +87,19 @@ class SykmeldingStatusServiceSpek : Spek({
 
             sykmeldinger.size shouldEqual 1
             sykmeldinger.first().id shouldEqual "uuid2"
+        }
+
+        it("Skal hente alle statuser") {
+            database.registerStatus(SykmeldingStatusEvent("uuid", LocalDateTime.now().plusSeconds(10), StatusEvent.SENDT))
+            val sykmeldingStatuser = sykmeldingStatusService.getSykmeldingStatus("uuid", null)
+            sykmeldingStatuser.size shouldEqual 2
+        }
+
+        it("Skal hente siste status") {
+            database.registerStatus(SykmeldingStatusEvent("uuid", LocalDateTime.now().plusSeconds(10), StatusEvent.SENDT))
+            val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid", "LATEST")
+            sykmeldingstatuser.size shouldEqual 1
+            sykmeldingstatuser.get(0).event shouldEqual StatusEvent.SENDT
         }
     }
 })
