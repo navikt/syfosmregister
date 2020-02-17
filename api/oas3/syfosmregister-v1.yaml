@@ -670,6 +670,8 @@ components:
           $ref: '#/components/schemas/Periodetype'
     InternalMedisinskVurdering:
       type: object
+      required:
+        - biDiagnoser
       properties:
         hovedDiagnose:
           $ref: '#/components/schemas/Diagnose'
