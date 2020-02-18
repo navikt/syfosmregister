@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmeldingstatus
 
+import java.time.LocalDateTime
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -12,7 +13,6 @@ import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDateTime
 
 class SykmeldingStatusServiceSpek : Spek({
 
