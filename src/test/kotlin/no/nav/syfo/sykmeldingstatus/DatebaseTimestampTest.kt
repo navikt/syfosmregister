@@ -1,13 +1,12 @@
 package no.nav.syfo.sykmeldingstatus
 
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import java.time.ZonedDateTime
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.util.TimestampUtil
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.sql.Timestamp
+import java.time.LocalDateTime
 
 class DatebaseTimestampTest : Spek({
 
@@ -16,7 +15,7 @@ class DatebaseTimestampTest : Spek({
     describe("Test db") {
         it("Should save timestamp as utc") {
             val timestamp = LocalDateTime.parse("2019-06-02T12:00:01.123")
-            val expectedZoneDateTime = ZonedDateTime.parse("2019-06-02T10:00:01.123Z")
+            val expectedZoneDateTime = TimestampUtil.getAdjustedZonedDateTime(timestamp)
             val sykmeldingStatusEvent = SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN, TimestampUtil.getAdjustedZonedDateTime(timestamp))
             db.registerStatus(sykmeldingStatusEvent)
             val statuser = db.hentSykmeldingStatuser("123")
@@ -27,7 +26,7 @@ class DatebaseTimestampTest : Spek({
 
         it("Should convert and save timestampZ if not provided") {
             val timestamp = LocalDateTime.parse("2019-01-01T12:00:01.1234")
-            val expectedZonedTimestamp = ZonedDateTime.parse("2019-01-01T11:00:01.1234Z")
+            val expectedZonedTimestamp = TimestampUtil.getAdjustedZonedDateTime(timestamp)
             val sykmeldingStatusEvent = SykmeldingStatusEvent("1234", timestamp, StatusEvent.APEN)
             db.registerStatus(sykmeldingStatusEvent)
             val statuser = db.hentSykmeldingStatuser("1234")
