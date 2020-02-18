@@ -1,12 +1,11 @@
 package no.nav.syfo.sykmeldingstatus
 
+import java.time.LocalDateTime
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.util.TimestampUtil
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.sql.Timestamp
-import java.time.LocalDateTime
 
 class DatebaseTimestampTest : Spek({
 
@@ -33,22 +32,6 @@ class DatebaseTimestampTest : Spek({
             statuser.size shouldEqual 1
             statuser.get(0).timestamp shouldEqual timestamp
             statuser.get(0).timestampz shouldEqual expectedZonedTimestamp
-        }
-
-        it("Should get null when timestamp UTC not saved in database") {
-            val timestamp = LocalDateTime.now()
-            db.connection.use {
-                it.prepareStatement("Insert into sykmeldingstatus(sykmelding_id, event_timestamp, event) values (?, ?, ?)").use {
-                    it.setString(1, "12345")
-                    it.setTimestamp(2, Timestamp.valueOf(timestamp))
-                    it.setString(3, "APEN")
-                    it.execute()
-                }
-                it.commit()
-            }
-            val statuser = db.hentSykmeldingStatuser("12345")
-            statuser.get(0).timestampz shouldEqual null
-            statuser.get(0).timestamp shouldEqual timestamp
         }
     }
 })

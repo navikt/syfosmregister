@@ -21,8 +21,8 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmeldingstatus.StatusEvent
 import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.api.model.SykmeldingStatusEventDTO
 import no.nav.syfo.testutil.setUpContentNegotiation
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
