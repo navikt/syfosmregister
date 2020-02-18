@@ -1,13 +1,14 @@
 package no.nav.syfo.sykmeldingstatus
 
-import no.nav.syfo.aksessering.db.tilStatusEvent
-import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.db.toList
-import no.nav.syfo.log
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
+import java.time.ZoneOffset
+import no.nav.syfo.aksessering.db.tilStatusEvent
+import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.db.toList
+import no.nav.syfo.log
 
 fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
     connection.use { connection ->
@@ -56,7 +57,8 @@ private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
     return SykmeldingStatusEvent(
             getString("sykmelding_id"),
             getTimestamp("event_timestamp").toLocalDateTime(),
-            tilStatusEvent(getString("event"))
+            tilStatusEvent(getString("event")),
+            getTimestamp("timestamp")?.toInstant()?.atZone(ZoneOffset.UTC)
     )
 }
 
@@ -81,13 +83,24 @@ private fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
 fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     this.prepareStatement(
         """
-                INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event) VALUES (?, ?, ?) ON CONFLICT DO NOTHING
+                INSERT INTO sykmeldingstatus(sykmelding_id, event_timestamp, event, timestamp) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING
                 """
     ).use {
         it.setString(1, sykmeldingStatusEvent.sykmeldingId)
         it.setTimestamp(2, Timestamp.valueOf(sykmeldingStatusEvent.timestamp))
         it.setString(3, sykmeldingStatusEvent.event.name)
+        it.setTimestamp(4, getNullableTimestamp(sykmeldingStatusEvent))
         it.execute()
+    }
+}
+
+private fun getNullableTimestamp(sykmeldingStatusEvent: SykmeldingStatusEvent): Timestamp? {
+    return when (sykmeldingStatusEvent.timestampz) {
+        null -> {
+            log.error("UTC timestamp should not be null")
+            null
+        }
+        else -> Timestamp.from(sykmeldingStatusEvent.timestampz.toInstant())
     }
 }
 

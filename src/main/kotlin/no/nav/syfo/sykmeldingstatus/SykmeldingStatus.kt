@@ -1,6 +1,8 @@
 package no.nav.syfo.sykmeldingstatus
 
 import java.time.LocalDateTime
+import java.time.ZonedDateTime
+import no.nav.syfo.util.TimestampUtil
 
 data class SykmeldingStatus(
     val timestamp: LocalDateTime,
@@ -12,7 +14,8 @@ data class SykmeldingStatus(
 data class SykmeldingStatusEvent(
     val sykmeldingId: String,
     val timestamp: LocalDateTime,
-    val event: StatusEvent
+    val event: StatusEvent,
+    val timestampz: ZonedDateTime? = TimestampUtil.getAdjustedZonedDateTime(timestamp)
 )
 
 enum class StatusEvent {

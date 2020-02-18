@@ -17,6 +17,8 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkClass
+import java.nio.file.Paths
+import java.time.LocalDateTime
 import no.nav.syfo.Environment
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.objectMapper
@@ -30,8 +32,6 @@ import no.nav.syfo.testutil.setUpContentNegotiation
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
-import java.time.LocalDateTime
 
 class SykmeldingStatusApiSpek : Spek({
 
