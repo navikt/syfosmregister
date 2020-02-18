@@ -4,7 +4,6 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
-import java.time.ZoneOffset
 import no.nav.syfo.aksessering.db.tilStatusEvent
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
@@ -57,8 +56,7 @@ private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
     return SykmeldingStatusEvent(
             getString("sykmelding_id"),
             getTimestamp("event_timestamp").toLocalDateTime(),
-            tilStatusEvent(getString("event")),
-            getTimestamp("timestamp")?.toInstant()?.atZone(ZoneOffset.UTC)
+            tilStatusEvent(getString("event"))
     )
 }
 

@@ -13,6 +13,7 @@ import no.nav.syfo.aksessering.api.log
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.api.model.SykmeldingStatusApiModelMapper
 import no.nav.syfo.sykmeldingstatus.kafka.model.toSykmeldingStatusKafkaEvent
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
@@ -23,7 +24,7 @@ fun Route.registerSykmeldingStatusGETApi(sykmeldingStatusService: SykmeldingStat
         val subject = principal.payload.subject
         val filter = call.request.queryParameters["filter"]
         when (sykmeldingStatusService.erEier(sykmeldingId, subject)) {
-            true -> call.respond(toSykmeldingStatusList(sykmeldingStatusService.getSykmeldingStatus(sykmeldingId, filter)))
+            true -> call.respond(SykmeldingStatusApiModelMapper.toSykmeldingStatusList(sykmeldingStatusService.getSykmeldingStatus(sykmeldingId, filter)))
             else -> call.respond(HttpStatusCode.Forbidden)
         }
     }
