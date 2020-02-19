@@ -1,6 +1,6 @@
 package no.nav.syfo.sykmeldingstatus.api.model
 
-import java.time.ZonedDateTime
+import java.time.OffsetDateTime
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.api.toStatusEventDTO
 import no.nav.syfo.util.TimestampUtil
@@ -18,9 +18,9 @@ class SykmeldingStatusApiModelMapper private constructor() {
             )
         }
 
-        private fun getStatusUTCTime(sykmeldingStatusEvent: SykmeldingStatusEvent): ZonedDateTime {
+        private fun getStatusUTCTime(sykmeldingStatusEvent: SykmeldingStatusEvent): OffsetDateTime {
             return when (sykmeldingStatusEvent.timestampz) {
-                null -> TimestampUtil.getAdjustedZonedDateTime(sykmeldingStatusEvent.timestamp)
+                null -> TimestampUtil.getAdjustedOffsetDateTime(sykmeldingStatusEvent.timestamp)
                 else -> sykmeldingStatusEvent.timestampz
             }
         }

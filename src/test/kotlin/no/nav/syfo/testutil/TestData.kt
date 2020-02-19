@@ -1,8 +1,5 @@
 package no.nav.syfo.testutil
 
-import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.sykmelding.internal.model.AdresseDTO
@@ -15,6 +12,9 @@ import no.nav.syfo.sykmelding.internal.model.KontaktMedPasientDTO
 import no.nav.syfo.sykmelding.internal.model.MedisinskVurderingDTO
 import no.nav.syfo.sykmelding.internal.model.RegelStatusDTO
 import no.nav.syfo.sykmelding.internal.model.SykmeldingsperiodeDTO
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 fun getVaultSecrets(): VaultSecrets {
     return VaultSecrets(
@@ -36,15 +36,15 @@ fun getInternalSykmelding(skjermet: Boolean = false): InternalSykmeldingDTO {
             utdypendeOpplysninger = emptyMap(),
             kontaktMedPasient = KontaktMedPasientDTO(null, null),
             sykmeldingsperioder = getPerioder(),
-            sykmeldingStatus = no.nav.syfo.sykmelding.internal.model.SykmeldingStatusDTO("APEN", ZonedDateTime.now(ZoneOffset.UTC), null, emptyList()),
+            sykmeldingStatus = no.nav.syfo.sykmelding.internal.model.SykmeldingStatusDTO("APEN", OffsetDateTime.now(ZoneOffset.UTC), null, emptyList()),
             behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
             medisinskVurdering = getMedisinskVurdering(),
             behandler = BehandlerDTO(
                     "fornavn", null, "etternavn",
                     "123", "01234567891", null, null,
                     AdresseDTO(null, null, null, null, null), null),
-            behandletTidspunkt = ZonedDateTime.now(ZoneOffset.UTC),
-            mottattTidspunkt = ZonedDateTime.now(ZoneOffset.UTC),
+            behandletTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
+            mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
             skjermesForPasient = false,
             meldingTilNAV = null,
             prognose = null,

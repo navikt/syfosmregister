@@ -9,12 +9,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
-import java.net.URL
-import java.nio.file.Paths
-import java.time.Duration
-import java.time.ZoneOffset
-import java.util.Properties
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -52,6 +46,12 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.URL
+import java.nio.file.Paths
+import java.time.Duration
+import java.time.ZoneOffset
+import java.util.Properties
+import java.util.concurrent.TimeUnit
 
 val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerKotlinModule()
@@ -232,7 +232,7 @@ suspend fun handleMessageSykmelding(
                             id = receivedSykmelding.sykmelding.id,
                             sykmelding = receivedSykmelding.sykmelding
                     ),
-                    SykmeldingStatusEvent(receivedSykmelding.sykmelding.id, receivedSykmelding.mottattDato, StatusEvent.APEN, receivedSykmelding.mottattDato.atZone(ZoneOffset.UTC)))
+                    SykmeldingStatusEvent(receivedSykmelding.sykmelding.id, receivedSykmelding.mottattDato, StatusEvent.APEN, receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC)))
 
             log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
             MESSAGE_STORED_IN_DB_COUNTER.inc()
