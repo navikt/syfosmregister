@@ -1,9 +1,5 @@
 package no.nav.syfo.sykmelding.internal.model
 
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import no.nav.syfo.domain.Periodetype
 import no.nav.syfo.domain.toDTO
 import no.nav.syfo.model.RuleInfo
@@ -38,6 +34,9 @@ import no.nav.syfo.sykmeldingstatus.Sporsmal
 import no.nav.syfo.sykmeldingstatus.Svar
 import no.nav.syfo.sykmeldingstatus.Svartype
 import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 internal fun SykmeldingDbModel.toInternalSykmelding(sporsmal: List<Sporsmal>): InternalSykmeldingDTO {
     return InternalSykmeldingDTO(
@@ -98,8 +97,8 @@ private fun Svartype.toDTO(): SvartypeDTO {
     }
 }
 
-fun getUtcTime(mottattTidspunkt: LocalDateTime): ZonedDateTime {
-    return mottattTidspunkt.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC)
+fun getUtcTime(tidspunkt: LocalDateTime): OffsetDateTime {
+    return tidspunkt.atOffset(ZoneOffset.UTC)
 }
 
 private fun StatusDbModel.toSykmeldingStatusDTO(sporsmal: List<SporsmalDTO>): SykmeldingStatusDTO {

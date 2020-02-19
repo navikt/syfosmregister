@@ -1,11 +1,11 @@
 package no.nav.syfo.sykmelding.internal.model
 
-import java.time.ZonedDateTime
 import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
+import java.time.OffsetDateTime
 
 data class SykmeldingStatusDTO(
     val statusEvent: String,
-    val timestamp: ZonedDateTime,
+    val timestamp: OffsetDateTime,
     val arbeidsgiver: ArbeidsgiverStatusDTO?,
     val sporsmalOgSvarListe: List<SporsmalDTO>
 )
