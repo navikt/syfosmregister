@@ -25,7 +25,7 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.testutil.generateJWT
 import no.nav.syfo.testutil.getVaultSecrets
 import no.nav.syfo.testutil.setUpContentNegotiation
@@ -36,7 +36,7 @@ import org.spekframework.spek2.style.specification.describe
 class SykmeldingStatusApiSpek : Spek({
 
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
 
     beforeEachTest {
         clearAllMocks()
@@ -47,7 +47,7 @@ class SykmeldingStatusApiSpek : Spek({
         with(TestApplicationEngine()) {
             start(true)
             application.install(ContentNegotiation, setUpContentNegotiation())
-            application.routing { registerSykmeldingStatusApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) }
+            application.routing { registerSykmeldingStatusApi(sykmeldingStatusService) }
 
             it("Should successfully post Status") {
                 val sykmeldingId = "123"
@@ -83,7 +83,7 @@ class SykmeldingStatusApiSpek : Spek({
             val jwkProvider = JwkProviderBuilder(uri).build()
 
             application.setupAuth(getVaultSecrets(), mockJwkProvider, "issuer1", env, mockJwkProvider, jwkProvider, jwkProvider)
-            application.routing { authenticate("oidc") { registerSykmeldingStatusApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) } }
+            application.routing { authenticate("oidc") { registerSykmeldingStatusApi(sykmeldingStatusService) } }
 
             it("Should authenticate") {
                 val sykmeldingId = "123"

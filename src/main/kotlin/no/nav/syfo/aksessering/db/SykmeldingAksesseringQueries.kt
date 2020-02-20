@@ -59,7 +59,7 @@ private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmeld
                 FROM sykmeldingsopplysninger AS opplysninger
                          INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                          INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
-                         LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
+                         INNER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
                                                                        status.event_timestamp = (SELECT event_timestamp
                                                                                                  FROM sykmeldingstatus
                                                                                                  WHERE sykmelding_id = opplysninger.id

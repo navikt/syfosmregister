@@ -3,14 +3,11 @@ package no.nav.syfo.persistering
 import java.sql.Connection
 import java.sql.Timestamp
 import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
-import no.nav.syfo.sykmeldingstatus.registerStatus
 
-fun DatabaseInterface.lagreMottattSykmelding(sykmeldingsopplysninger: Sykmeldingsopplysninger, sykmeldingsdokument: Sykmeldingsdokument, sykmeldingStatusEvent: SykmeldingStatusEvent) {
+fun DatabaseInterface.lagreMottattSykmelding(sykmeldingsopplysninger: Sykmeldingsopplysninger, sykmeldingsdokument: Sykmeldingsdokument) {
     connection.use { connection ->
         connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger)
         connection.opprettSykmeldingsdokument(sykmeldingsdokument)
-        connection.registerStatus(sykmeldingStatusEvent)
         connection.commit()
     }
 }

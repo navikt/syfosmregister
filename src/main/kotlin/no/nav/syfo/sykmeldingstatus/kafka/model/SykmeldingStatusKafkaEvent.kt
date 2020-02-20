@@ -2,11 +2,14 @@ package no.nav.syfo.sykmeldingstatus.kafka.model
 
 import java.time.LocalDateTime
 import no.nav.syfo.sykmeldingstatus.StatusEventDTO
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEventDTO
+import no.nav.syfo.sykmeldingstatus.SykmeldingBekreftEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
-import no.nav.syfo.sykmeldingstatus.api.SykmeldingBekreftEventDTO
-import no.nav.syfo.sykmeldingstatus.api.SykmeldingSendEventDTO
+import no.nav.syfo.sykmeldingstatus.api.tilArbeidsgiverStatusDTO
+import no.nav.syfo.sykmeldingstatus.api.tilSporsmalOgSvarDTOListe
+import no.nav.syfo.sykmeldingstatus.api.toStatusEventDTO
 
 data class SykmeldingStatusKafkaEvent(
     val sykmeldingId: String,
@@ -16,14 +19,14 @@ data class SykmeldingStatusKafkaEvent(
     val sporsmals: List<SporsmalOgSvarDTO>?
 )
 
-fun SykmeldingStatusEventDTO.toSykmeldingStatusKafkaEvent(sykmeldingId: String): SykmeldingStatusKafkaEvent {
-    return SykmeldingStatusKafkaEvent(sykmeldingId, this.timestamp, this.statusEvent, null, null)
+fun SykmeldingStatusEvent.toSykmeldingStatusKafkaEvent(sykmeldingId: String): SykmeldingStatusKafkaEvent {
+    return SykmeldingStatusKafkaEvent(sykmeldingId, this.timestamp, this.event.toStatusEventDTO(), null, null)
 }
 
-fun SykmeldingSendEventDTO.toSykmeldingStatusKafkaEvent(sykmeldingId: String): SykmeldingStatusKafkaEvent {
-    return SykmeldingStatusKafkaEvent(sykmeldingId, this.timestamp, StatusEventDTO.SENDT, this.arbeidsgiver, this.sporsmalOgSvarListe)
+fun SykmeldingSendEvent.toSykmeldingStatusKafkaEvent(sykmeldingId: String): SykmeldingStatusKafkaEvent {
+    return SykmeldingStatusKafkaEvent(sykmeldingId, this.timestamp, StatusEventDTO.SENDT, tilArbeidsgiverStatusDTO(this.arbeidsgiver), tilSporsmalOgSvarDTOListe(listOf(this.sporsmal)))
 }
 
-fun SykmeldingBekreftEventDTO.toSykmeldingStatusKafkaEvent(sykmeldingId: String): SykmeldingStatusKafkaEvent {
-    return SykmeldingStatusKafkaEvent(sykmeldingId, this.timestamp, StatusEventDTO.BEKREFTET, null, this.sporsmalOgSvarListe)
+fun SykmeldingBekreftEvent.toSykmeldingStatusKafkaEvent(sykmeldingId: String): SykmeldingStatusKafkaEvent {
+    return SykmeldingStatusKafkaEvent(sykmeldingId, this.timestamp, StatusEventDTO.BEKREFTET, null, tilSporsmalOgSvarDTOListe(this.sporsmal))
 }

@@ -1,9 +1,13 @@
 package no.nav.syfo.sykmeldingstatus
 
+import io.mockk.every
+import io.mockk.mockkClass
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -18,10 +22,13 @@ class SykmeldingStatusServiceSpek : Spek({
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
-    val sykmeldingStatusService = SykmeldingStatusService(database)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
+    val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusKafkaProducer)
+    every { sykmeldingStatusKafkaProducer.send(any()) } returns Unit
 
     beforeEachTest {
-        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
+        database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt, StatusEvent.APEN, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC)))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
 
@@ -63,7 +70,7 @@ class SykmeldingStatusServiceSpek : Spek({
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
             sykmeldingStatusService.registrerStatus(status)
-            sykmeldingStatusService.registrerStatus(deletedStatus)
+            database.registerStatus(deletedStatus)
 
             val sykmeldinger = sykmeldingService.hentSykmeldinger("pasientFnr")
 
@@ -76,12 +83,13 @@ class SykmeldingStatusServiceSpek : Spek({
                     id = "uuid2",
                     pasientFnr = "pasientFnr"
             )
-            database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument, SykmeldingStatusEvent(copySykmeldingopplysning.id, LocalDateTime.now(), StatusEvent.APEN))
+            database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument)
+            database.registerStatus(SykmeldingStatusEvent(copySykmeldingopplysning.id, copySykmeldingopplysning.mottattTidspunkt, StatusEvent.APEN, copySykmeldingopplysning.mottattTidspunkt.atOffset(ZoneOffset.UTC)))
             database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
             val confirmedDateTime = LocalDateTime.now()
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
-            sykmeldingStatusService.registrerStatus(deletedStatus)
+            database.registerStatus(deletedStatus)
 
             val sykmeldinger = sykmeldingService.hentSykmeldinger("pasientFnr")
 

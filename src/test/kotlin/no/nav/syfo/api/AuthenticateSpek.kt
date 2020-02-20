@@ -20,7 +20,6 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkClass
 import java.nio.file.Paths
-import java.time.LocalDateTime
 import java.util.Base64
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
@@ -30,10 +29,8 @@ import no.nav.syfo.application.setupAuth
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
@@ -62,11 +59,11 @@ object AuthenticateSpek : Spek({
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
-    val sykmeldingStatusService = SykmeldingStatusService(database)
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
+    val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusKafkaProducer)
 
     beforeEachTest {
-        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
         every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
     }
@@ -97,7 +94,7 @@ object AuthenticateSpek : Spek({
                     jwkProvider)
             application.routing {
                 authenticate("jwt") {
-                    registerSykmeldingApi(sykmeldingService, sykmeldingStatusService, sykmeldingStatusKafkaProducer)
+                    registerSykmeldingApi(sykmeldingService, sykmeldingStatusService)
                 }
                 authenticate("basic") {
                     registerNullstillApi(database, "dev-fss")
