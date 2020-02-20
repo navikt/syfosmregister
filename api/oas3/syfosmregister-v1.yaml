@@ -14,9 +14,7 @@ paths:
         - bearerAuth: []
       tags:
         - Sykmelding
-      parameters:
-        - $ref: '#/components/parameters/fnrQueryParam'
-      summary: Returnerer sykmeldinger for oppgitt fnr
+      summary: Returnerer sykmeldinger fnr i access_token
       responses:
         '200':
           $ref: '#/components/responses/SykmeldingListResponse'
@@ -121,7 +119,7 @@ paths:
         - Sykmelding
         - Internal
       parameters:
-        - $ref: '#/components/parameters/fnrQueryParam'
+        - $ref: '#/components/parameters/fnrHeaderParam'
       summary: API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr
       responses:
         '200':
@@ -174,10 +172,10 @@ components:
       schema:
         type: string
       example: '123'
-    fnrQueryParam:
+    fnrHeaderParam:
       description: Fodselsnummer
       name: fnr
-      in: query
+      in: header
       required: true
       schema:
         $ref: '#/components/schemas/Fodselsnummer'

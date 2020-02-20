@@ -13,12 +13,13 @@ fun Route.registrerInternalSykmeldingApi(sykmeldingService: InternalSykmeldingSe
     route("/api/v1/internal") {
         get("/sykmeldinger") {
             val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
+
             if (token == null) {
                 call.respond(HttpStatusCode.Unauthorized)
             } else {
-                val fnr = call.request.queryParameters["fnr"]
+                val fnr = call.request.headers["fnr"]
                 when {
-                    fnr.isNullOrEmpty() -> call.respond(HttpStatusCode.BadRequest, "Missing query param: fnr")
+                    fnr.isNullOrEmpty() -> call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
                     tilgangskontrollService.hasAccessToUser(fnr, token) -> call.respond(HttpStatusCode.OK, sykmeldingService.hentInternalSykmelding(fnr))
                     else -> call.respond(HttpStatusCode.Forbidden, "Forbidden")
                 }

@@ -66,9 +66,10 @@ class InternalSykmeldingIntegrationTest : Spek({
                     }
                 }
                 application.routing { registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService) }
-                with(handleRequest(HttpMethod.Get, "/api/v1/internal/sykmeldinger?fnr=pasientFnr") {
+                with(handleRequest(HttpMethod.Get, "/api/v1/internal/sykmeldinger") {
                     addHeader("accept", "application/json")
                     addHeader("Authorization", "Bearer 123")
+                    addHeader("fnr", "pasientFnr")
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                     objectMapper.readValue<List<InternalSykmeldingDTO>>(response.content!!) shouldNotEqual null
