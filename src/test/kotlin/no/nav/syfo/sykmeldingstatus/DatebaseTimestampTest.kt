@@ -1,11 +1,11 @@
 package no.nav.syfo.sykmeldingstatus
 
+import java.time.LocalDateTime
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.util.TimestampUtil
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.LocalDateTime
 
 class DatebaseTimestampTest : Spek({
 

@@ -1,5 +1,8 @@
 package no.nav.syfo.testutil
 
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.sykmelding.internal.model.AdresseDTO
@@ -12,9 +15,6 @@ import no.nav.syfo.sykmelding.internal.model.KontaktMedPasientDTO
 import no.nav.syfo.sykmelding.internal.model.MedisinskVurderingDTO
 import no.nav.syfo.sykmelding.internal.model.RegelStatusDTO
 import no.nav.syfo.sykmelding.internal.model.SykmeldingsperiodeDTO
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 fun getVaultSecrets(): VaultSecrets {
     return VaultSecrets(

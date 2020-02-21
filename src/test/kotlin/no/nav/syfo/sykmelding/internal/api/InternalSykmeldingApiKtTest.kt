@@ -49,7 +49,7 @@ class InternalSykmeldingApiKtTest : Spek({
 
             it("Skal returnere tom liste") {
                 every { sykmeldingService.hentInternalSykmelding(any()) } returns emptyList()
-                with(handleRequest(HttpMethod.Get, "$uri?fnr=12345678901", setUPHeaders())) {
+                with(handleRequest(HttpMethod.Get, "$uri", setUPHeaders())) {
                     response.status() shouldEqual HttpStatusCode.OK
                     objectMapper.readValue<List<InternalSykmeldingDTO>>(response.content!!) shouldEqual emptyList()
                 }
@@ -58,23 +58,26 @@ class InternalSykmeldingApiKtTest : Spek({
             it("Skal returnere liste med sykmeldinger") {
                 val sykmeldingList = listOf(getInternalSykmelding(false))
                 every { sykmeldingService.hentInternalSykmelding(any()) } returns sykmeldingList
-                with(handleRequest(HttpMethod.Get, "$uri?fnr=1234567891", setUPHeaders())) {
+                with(handleRequest(HttpMethod.Get, "$uri", setUPHeaders())) {
                     response.status() shouldEqual HttpStatusCode.OK
                     response.content shouldEqual objectMapper.writeValueAsString(sykmeldingList)
                 }
             }
 
             it("Skal returnere bad request nar fodselsnummer ikke er tilgjengelig") {
-                with(handleRequest(HttpMethod.Get, uri, setUPHeaders())) {
+                with(handleRequest(HttpMethod.Get, uri) {
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    addHeader("Authorization", "Bearer 123")
+                }) {
                     response.status() shouldEqual HttpStatusCode.BadRequest
-                    response.content shouldEqual "Missing query param: fnr"
+                    response.content shouldEqual "Missing header: fnr"
                 }
             }
 
             it("Should get Forbidden when user does not have access to person") {
                 coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns false
                 every { sykmeldingService.hentInternalSykmelding(any()) } returns emptyList()
-                with(handleRequest(HttpMethod.Get, "$uri?fnr=12345678901", setUPHeaders())) {
+                with(handleRequest(HttpMethod.Get, "$uri", setUPHeaders())) {
                     response.status() shouldEqual HttpStatusCode.Forbidden
                 }
             }
@@ -86,5 +89,6 @@ private fun setUPHeaders(): TestApplicationRequest.() -> Unit {
     return {
         addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
         addHeader("Authorization", "Bearer 123")
+        addHeader("fnr", "01234567891")
     }
 }
