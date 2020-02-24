@@ -43,7 +43,7 @@ class SykmeldingStatusConsumerService(
             try {
                 run()
             } catch (ex: Exception) {
-                log.error("Error reading status from topic, trying again in {} milliseconds", delayStart)
+                log.error("Error reading status from topic, trying again in {} milliseconds, error {}", delayStart, ex.message)
                 sykmeldingStatusKafkaConsumer.unsubscribe()
             }
             delay(delayStart)
