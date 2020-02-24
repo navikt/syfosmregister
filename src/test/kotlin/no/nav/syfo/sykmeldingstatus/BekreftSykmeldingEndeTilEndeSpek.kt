@@ -18,6 +18,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockkClass
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -26,7 +27,7 @@ import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
 import no.nav.syfo.sykmeldingstatus.api.SykmeldingBekreftEventDTO
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -39,12 +40,13 @@ import org.spekframework.spek2.style.specification.describe
 class BekreftSykmeldingEndeTilEndeSpek : Spek({
 
     val database = TestDB()
-    val sykmeldingStatusService = SykmeldingStatusService(database)
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
+    val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusKafkaProducer)
 
     beforeEachTest {
         every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
-        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
+        database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt, StatusEvent.APEN, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC)))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
 
@@ -67,7 +69,7 @@ class BekreftSykmeldingEndeTilEndeSpek : Spek({
                     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 }
             }
-            application.routing { registerSykmeldingBekreftApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) }
+            application.routing { registerSykmeldingBekreftApi(sykmeldingStatusService) }
 
             it("Bekreft med spørsmål lagrer riktig info i databasen") {
                 val sykmeldingId = "uuid"

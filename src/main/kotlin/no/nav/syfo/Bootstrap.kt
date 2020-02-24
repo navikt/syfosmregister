@@ -34,6 +34,8 @@ import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
+import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
@@ -43,9 +45,12 @@ import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getKafkaStatusConsumer
+import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.service.SykmeldingStatusConsumerService
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -104,12 +109,16 @@ fun main() {
     val producerConfig = kafkaBaseConfig.toProducerConfig(
             "${environment.applicationName}-producer", valueSerializer = StringSerializer::class
     )
+
+    val sykmeldingStatusBakupProducer = getSykmeldingStatusBackupKafkaProducer(kafkaBaseConfig, environment)
+    val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfig, environment)
     val kafkaProducer = KafkaProducer<String, String>(producerConfig)
     val rerunKafkaProducer = RerunKafkaProducer(kafkaProducer, environment)
     val rerunKafkaService = RerunKafkaService(database, rerunKafkaProducer)
 
-    val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(producerConfig, environment)
-
+    val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusBakupProducer)
+    val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState)
     val applicationEngine = createApplicationEngine(
             environment,
             applicationState,
@@ -119,10 +128,10 @@ fun main() {
             wellKnown.issuer,
             environment.cluster,
             rerunKafkaService,
-            sykmeldingStatusKafkaProducer,
             jwkProviderForRerun,
             jwkProviderStsOidc,
-            jwkProviderInternal
+            jwkProviderInternal,
+            sykmeldingStatusService
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)
@@ -132,7 +141,9 @@ fun main() {
             environment,
             applicationState,
             database,
-            consumerProperties
+            consumerProperties,
+            sykmeldingStatusKafkaProducer,
+            sykmeldingStatusConsumerService
     )
 }
 
@@ -154,7 +165,9 @@ fun launchListeners(
     env: Environment,
     applicationState: ApplicationState,
     database: Database,
-    consumerProperties: Properties
+    consumerProperties: Properties,
+    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
+    sykmeldingStatusConsumerService: SykmeldingStatusConsumerService
 ) {
     val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
     kafkaconsumerRecievedSykmelding.subscribe(
@@ -167,7 +180,7 @@ fun launchListeners(
             )
     )
     createListener(applicationState) {
-        blockingApplicationLogicReceivedSykmelding(applicationState, kafkaconsumerRecievedSykmelding, database)
+        blockingApplicationLogicReceivedSykmelding(applicationState, kafkaconsumerRecievedSykmelding, database, sykmeldingStatusKafkaProducer)
     }
 
     val kafkaconsumerBehandlingsutfall = KafkaConsumer<String, String>(consumerProperties)
@@ -179,12 +192,16 @@ fun launchListeners(
     createListener(applicationState) {
         blockingApplicationLogicBehandlingsutfall(applicationState, kafkaconsumerBehandlingsutfall, database)
     }
+    createListener(applicationState) {
+        sykmeldingStatusConsumerService.start()
+    }
 }
 
 suspend fun blockingApplicationLogicReceivedSykmelding(
     applicationState: ApplicationState,
     kafkaconsumer: KafkaConsumer<String, String>,
-    database: Database
+    database: Database,
+    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
 ) {
     while (applicationState.ready) {
         kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
@@ -195,7 +212,7 @@ suspend fun blockingApplicationLogicReceivedSykmelding(
                     msgId = receivedSykmelding.msgId,
                     sykmeldingId = receivedSykmelding.sykmelding.id
             )
-            handleMessageSykmelding(receivedSykmelding, database, loggingMeta)
+            handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer)
         }
         delay(100)
     }
@@ -204,7 +221,8 @@ suspend fun blockingApplicationLogicReceivedSykmelding(
 suspend fun handleMessageSykmelding(
     receivedSykmelding: ReceivedSykmelding,
     database: Database,
-    loggingMeta: LoggingMeta
+    loggingMeta: LoggingMeta,
+    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
 ) {
     wrapExceptions(loggingMeta) {
         log.info("Mottatt sykmelding SM2013, {}", fields(loggingMeta))
@@ -231,8 +249,12 @@ suspend fun handleMessageSykmelding(
                     Sykmeldingsdokument(
                             id = receivedSykmelding.sykmelding.id,
                             sykmelding = receivedSykmelding.sykmelding
-                    ),
-                    SykmeldingStatusEvent(receivedSykmelding.sykmelding.id, receivedSykmelding.mottattDato, StatusEvent.APEN, receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC)))
+                    ))
+
+            sykmeldingStatusKafkaProducer.send(SykmeldingStatusKafkaEventDTO(
+                    receivedSykmelding.sykmelding.id,
+                    receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                    StatusEventDTO.APEN))
 
             log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
             MESSAGE_STORED_IN_DB_COUNTER.inc()

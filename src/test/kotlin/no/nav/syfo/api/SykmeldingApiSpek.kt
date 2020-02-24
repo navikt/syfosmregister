@@ -22,6 +22,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkClass
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
 import no.nav.syfo.aksessering.api.FullstendigSykmeldingDTO
@@ -51,7 +52,7 @@ import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
 import no.nav.syfo.sykmeldingstatus.api.lagSporsmalListe
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.sykmeldingstatus.registrerBekreftet
 import no.nav.syfo.sykmeldingstatus.registrerSendt
@@ -68,10 +69,14 @@ import org.spekframework.spek2.style.specification.describe
 object SykmeldingApiSpek : Spek({
 
     val database = TestDB()
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
 
+    fun lagreApenStatus(id: String, mottattTidspunkt: LocalDateTime) {
+        database.registerStatus(SykmeldingStatusEvent(id, mottattTidspunkt, StatusEvent.APEN, mottattTidspunkt.atOffset(ZoneOffset.UTC)))
+    }
     beforeEachTest {
-        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+        database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
+        lagreApenStatus(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
         every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
     }
@@ -97,7 +102,7 @@ object SykmeldingApiSpek : Spek({
                 }
             }
             application.routing {
-                registerSykmeldingApi(SykmeldingService(database), SykmeldingStatusService(database), sykmeldingStatusKafkaProducer)
+                registerSykmeldingApi(SykmeldingService(database), SykmeldingStatusService(database, sykmeldingStatusKafkaProducer))
             }
 
             it("skal returnere tom liste hvis bruker ikke har sykmeldinger") {
@@ -143,8 +148,8 @@ object SykmeldingApiSpek : Spek({
                             id = "id2",
                             skjermesForPasient = true
                         )
-                    ),
-                    SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
+                    ))
+                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt)
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
                 every { mockPayload.subject } returns "PasientFnr1"
@@ -160,8 +165,8 @@ object SykmeldingApiSpek : Spek({
             }
 
             it("Skal ikke returnere statustekster som er sendt til manuell behandling") {
-                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"), testSykmeldingsdokument.copy(id = "uuid2"),
-                    SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
+                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"), testSykmeldingsdokument.copy(id = "uuid2"))
+                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt)
                 database.connection.opprettBehandlingsutfall(
                     Behandlingsutfall("uuid2",
                         ValidationResult(
@@ -183,7 +188,8 @@ object SykmeldingApiSpek : Spek({
             }
 
             it("Skal vise tekster når behandlingsutfall er avvist") {
-                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"), testSykmeldingsdokument.copy(id = "uuid2"), SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
+                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"), testSykmeldingsdokument.copy(id = "uuid2"))
+                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt)
                 database.connection.opprettBehandlingsutfall(
                     Behandlingsutfall("uuid2",
                         ValidationResult(
@@ -348,8 +354,8 @@ object SykmeldingApiSpek : Spek({
                     Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
                         Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))),
                     SykmeldingStatusEvent("uuid", timestamp, StatusEvent.SENDT))
-                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2"), testSykmeldingsdokument.copy(id = "uuid2", sykmelding = testSykmeldingsdokument.sykmelding.copy(id = "id2")),
-                    SykmeldingStatusEvent("uuid2", LocalDateTime.now(), StatusEvent.APEN))
+                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt)
+                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2"), testSykmeldingsdokument.copy(id = "uuid2", sykmelding = testSykmeldingsdokument.sykmelding.copy(id = "id2")))
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {

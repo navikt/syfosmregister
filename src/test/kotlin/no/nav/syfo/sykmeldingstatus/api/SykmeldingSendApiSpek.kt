@@ -27,7 +27,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.testutil.generateJWT
 import no.nav.syfo.testutil.getVaultSecrets
 import org.amshove.kluent.shouldEqual
@@ -37,7 +37,7 @@ import org.spekframework.spek2.style.specification.describe
 class SykmeldingSendApiSpek : Spek({
 
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
 
     beforeEachTest {
         every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
@@ -54,11 +54,11 @@ class SykmeldingSendApiSpek : Spek({
                     configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 }
             }
-            application.routing { registerSykmeldingSendApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) }
+            application.routing { registerSykmeldingSendApi(sykmeldingStatusService) }
 
             it("Skal returnere Created hvis alt går bra") {
                 val sykmeldingId = "123"
-                every { sykmeldingStatusService.registrerSendt(any()) } returns Unit
+                every { sykmeldingStatusService.registrerSendt(any(), any()) } returns Unit
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/send") {
                     setBody(objectMapper.writeValueAsString(opprettSykmeldingSendEventDTO()))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
@@ -68,7 +68,7 @@ class SykmeldingSendApiSpek : Spek({
             }
             it("Returnerer 500 hvis noe går galt") {
                 val sykmeldingId = "1235"
-                every { sykmeldingStatusService.registrerSendt(any()) } throws RuntimeException("Noe gikk galt")
+                every { sykmeldingStatusService.registrerSendt(any(), any()) } throws RuntimeException("Noe gikk galt")
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/send") {
                     setBody(objectMapper.writeValueAsString(opprettSykmeldingSendEventDTO()))
                     addHeader("Content-Type", ContentType.Application.Json.toString())
@@ -107,11 +107,11 @@ class SykmeldingSendApiSpek : Spek({
             val jwkProvider = JwkProviderBuilder(uri).build()
 
             application.setupAuth(getVaultSecrets(), mockJwkProvider, "issuer1", env, mockJwkProvider, jwkProvider, jwkProvider)
-            application.routing { authenticate("oidc") { registerSykmeldingSendApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer) } }
+            application.routing { authenticate("oidc") { registerSykmeldingSendApi(sykmeldingStatusService) } }
 
             it("Should authenticate") {
                 val sykmeldingId = "123"
-                every { sykmeldingStatusService.registrerSendt(any()) } returns Unit
+                every { sykmeldingStatusService.registrerSendt(any(), any()) } returns Unit
                 with(handleRequest(HttpMethod.Post, "/sykmeldinger/$sykmeldingId/send") {
                     setBody(objectMapper.writeValueAsString(opprettSykmeldingSendEventDTO()))
                     addHeader("Content-Type", ContentType.Application.Json.toString())

@@ -13,18 +13,15 @@ import io.ktor.util.KtorExperimentalAPI
 import java.time.LocalDateTime
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.kafka.model.SykmeldingStatusKafkaEvent
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smregister")
 
 @KtorExperimentalAPI
-fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmeldingStatusService: SykmeldingStatusService, sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer) {
+fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmeldingStatusService: SykmeldingStatusService) {
     route("/api/v1") {
         get("/sykmeldinger") {
             val principal: JWTPrincipal = call.authentication.principal()!!
@@ -45,7 +42,6 @@ fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmelding
             if (sykmeldingService.erEier(sykmeldingsid, subject)) {
                 val sykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingsid, LocalDateTime.now(), StatusEvent.BEKREFTET)
                 sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
-                sykmeldingStatusKafkaProducer.send(SykmeldingStatusKafkaEvent(sykmeldingsid, sykmeldingStatusEvent.timestamp, StatusEventDTO.BEKREFTET, null, null))
                 call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.NotFound)

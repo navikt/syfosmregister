@@ -16,6 +16,7 @@ import io.ktor.server.testing.handleRequest
 import io.mockk.coEvery
 import io.mockk.mockkClass
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -31,6 +32,7 @@ import no.nav.syfo.sykmeldingstatus.Svar
 import no.nav.syfo.sykmeldingstatus.Svartype
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
+import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.sykmeldingstatus.registrerSendt
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -45,7 +47,8 @@ class InternalSykmeldingIntegrationTest : Spek({
 
     val database = TestDB()
 
-    database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument, SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.APEN))
+    database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
+    database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt, StatusEvent.APEN, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC)))
     database.registrerSendt(SykmeldingSendEvent(testSykmeldingsopplysninger.id, LocalDateTime.now().plusSeconds(1), ArbeidsgiverStatus(testSykmeldingsopplysninger.id, "1234567789", "1233456789", "navn"), Sporsmal("ARBEIDSSITUASJON", ShortName.ARBEIDSSITUASJON, Svar(testSykmeldingsopplysninger.id, null, Svartype.ARBEIDSSITUASJON, "EN ARBEIDSSITUASJON"))),
             SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.SENDT))
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall)

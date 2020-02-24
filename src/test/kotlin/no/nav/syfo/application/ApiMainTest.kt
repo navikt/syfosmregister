@@ -20,6 +20,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -36,7 +37,8 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
+import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.sykmeldingstatus.registrerSendt
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.getSykmeldingOpplysninger
@@ -47,7 +49,8 @@ fun main() {
 
     val db = TestDB()
     val sykmeldingsopplysning = getSykmeldingOpplysninger("01234567891")
-    db.lagreMottattSykmelding(sykmeldingsopplysning, testSykmeldingsdokument.copy(id = "123"), SykmeldingStatusEvent(sykmeldingsopplysning.id, LocalDateTime.now(), StatusEvent.APEN))
+    db.lagreMottattSykmelding(sykmeldingsopplysning, testSykmeldingsdokument.copy(id = "123"))
+    db.registerStatus(SykmeldingStatusEvent(sykmeldingsopplysning.id, sykmeldingsopplysning.mottattTidspunkt, StatusEvent.APEN, sykmeldingsopplysning.mottattTidspunkt.atOffset(ZoneOffset.UTC)))
     db.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "123"))
     db.registrerSendt(SykmeldingSendEvent(
             sykmeldingsopplysning.id,
@@ -56,9 +59,9 @@ fun main() {
             Sporsmal("Arbeidssituajson", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingsopplysning.id, null, Svartype.ARBEIDSSITUASJON, "EN_ARBEIDSGIVER"))),
             SykmeldingStatusEvent(sykmeldingsopplysning.id, LocalDateTime.now(), StatusEvent.SENDT))
 
-    val sykmeldingKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
+    val sykmeldingKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
-    val sykmeldingStatusService = SykmeldingStatusService(db)
+    val sykmeldingStatusService = SykmeldingStatusService(db, sykmeldingKafkaProducer)
     val internalSykmeldingService = InternalSykmeldingService(database = db)
     val mockPayload = mockk<Payload>()
     coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true

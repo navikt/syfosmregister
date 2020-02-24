@@ -28,10 +28,11 @@ val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.7bf5e6f"
+val smCommonVersion = "1.909fc5d"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9.3"
 val nimbusdsVersion = "7.5.1"
+val testContainerKafkaVersion = "1.12.5"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -129,7 +130,7 @@ dependencies {
     testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedVersion")
     testImplementation("com.opentable.components:otj-pg-embedded:$postgresEmbeddedVersion")
     testImplementation("com.nimbusds:nimbus-jose-jwt:$nimbusdsVersion")
-
+    testImplementation("org.testcontainers:kafka:$testContainerKafkaVersion")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")
     }

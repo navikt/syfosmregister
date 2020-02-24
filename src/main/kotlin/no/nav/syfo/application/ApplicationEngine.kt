@@ -48,7 +48,6 @@ import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
 @KtorExperimentalAPI
 fun createApplicationEngine(
@@ -60,10 +59,10 @@ fun createApplicationEngine(
     issuer: String,
     cluster: String,
     rerunKafkaService: RerunKafkaService,
-    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     jwkProviderForRerun: JwkProvider,
     jwkProviderStsOidc: JwkProvider,
-    jwkProviderInternal: JwkProvider
+    jwkProviderInternal: JwkProvider,
+    sykmeldingStatusService: SykmeldingStatusService
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -111,7 +110,7 @@ fun createApplicationEngine(
 
         val sykmeldingService = SykmeldingService(database)
         val internalSykmeldingService = InternalSykmeldingService(database)
-        val sykmeldingStatusService = SykmeldingStatusService(database)
+
         val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
         routing {
 
@@ -122,7 +121,7 @@ fun createApplicationEngine(
             registerNaisApi(applicationState)
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
-                registerSykmeldingApi(sykmeldingService, sykmeldingStatusService, sykmeldingStatusKafkaProducer)
+                registerSykmeldingApi(sykmeldingService, sykmeldingStatusService)
             }
             authenticate("rerun") {
                 registerRerunKafkaApi(rerunKafkaService)
@@ -131,9 +130,9 @@ fun createApplicationEngine(
                 registerNullstillApi(database, cluster)
             }
             authenticate("oidc") {
-                registerSykmeldingStatusApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
-                registerSykmeldingSendApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
-                registerSykmeldingBekreftApi(sykmeldingStatusService, sykmeldingStatusKafkaProducer)
+                registerSykmeldingStatusApi(sykmeldingStatusService)
+                registerSykmeldingSendApi(sykmeldingStatusService)
+                registerSykmeldingBekreftApi(sykmeldingStatusService)
             }
             authenticate("internal") {
                 registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService)
