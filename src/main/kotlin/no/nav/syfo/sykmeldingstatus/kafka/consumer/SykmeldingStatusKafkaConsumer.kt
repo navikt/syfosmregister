@@ -10,7 +10,7 @@ class SykmeldingStatusKafkaConsumer(private val kafkaConsumer: KafkaConsumer<Str
     }
 
     fun poll(): List<SykmeldingStatusKafkaMessageDTO> {
-        return kafkaConsumer.poll(Duration.ZERO).map { it.value() }
+        return kafkaConsumer.poll(Duration.ofMillis(1000)).map { it.value() }
     }
 
     fun commitSync() {

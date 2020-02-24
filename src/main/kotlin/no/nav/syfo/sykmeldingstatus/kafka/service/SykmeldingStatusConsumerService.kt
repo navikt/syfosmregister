@@ -37,7 +37,6 @@ class SykmeldingStatusConsumerService(
             if(kafkaEvents.isNotEmpty()) {
                 sykmeldingStatusKafkaConsumer.commitSync()
             }
-            delay(100)
         }
     }
 
