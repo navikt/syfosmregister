@@ -34,7 +34,9 @@ class SykmeldingStatusConsumerService(
             val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
             kafkaEvents
                     .forEach(handleStatusEvent())
-            sykmeldingStatusKafkaConsumer.commitSync()
+            if(kafkaEvents.isNotEmpty()) {
+                sykmeldingStatusKafkaConsumer.commitSync()
+            }
         }
     }
 
@@ -51,7 +53,7 @@ class SykmeldingStatusConsumerService(
     }
 
     private fun handleStatusEvent(): (SykmeldingStatusKafkaMessageDTO) -> Unit = { sykmeldingStatusKafkaMessage ->
-        log.info("got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent.name)
+        log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent.name)
         when (sykmeldingStatusKafkaMessage.event.statusEvent) {
             StatusEventDTO.SENDT -> registrerSendt(sykmeldingStatusKafkaMessage)
             StatusEventDTO.BEKREFTET -> registrerBekreftet(sykmeldingStatusKafkaMessage)
