@@ -32,7 +32,7 @@ val smCommonVersion = "1.909fc5d"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9.3"
 val nimbusdsVersion = "7.5.1"
-val testContainerKafkaVersion = "1.12.3"
+val testContainerKafkaVersion = "1.12.5"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"

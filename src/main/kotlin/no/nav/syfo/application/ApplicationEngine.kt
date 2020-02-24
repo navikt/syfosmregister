@@ -48,7 +48,6 @@ import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 
 @KtorExperimentalAPI
 fun createApplicationEngine(
@@ -60,10 +59,10 @@ fun createApplicationEngine(
     issuer: String,
     cluster: String,
     rerunKafkaService: RerunKafkaService,
-    sykmeldingStatusKafkaProducer: SykmeldingStatusBackupKafkaProducer,
     jwkProviderForRerun: JwkProvider,
     jwkProviderStsOidc: JwkProvider,
-    jwkProviderInternal: JwkProvider
+    jwkProviderInternal: JwkProvider,
+    sykmeldingStatusService: SykmeldingStatusService
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -111,7 +110,7 @@ fun createApplicationEngine(
 
         val sykmeldingService = SykmeldingService(database)
         val internalSykmeldingService = InternalSykmeldingService(database)
-        val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusKafkaProducer)
+
         val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
         routing {
 

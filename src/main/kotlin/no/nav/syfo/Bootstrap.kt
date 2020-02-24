@@ -45,9 +45,12 @@ import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
+import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getKafkaStatusConsumer
+import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
-import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaSerializer
+import no.nav.syfo.sykmeldingstatus.kafka.service.SykmeldingStatusConsumerService
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -107,16 +110,15 @@ fun main() {
             "${environment.applicationName}-producer", valueSerializer = StringSerializer::class
     )
 
-    val sykmeldingStatusProducerConfig = kafkaBaseConfig.toProducerConfig(
-            "${environment.applicationName}-producer", valueSerializer = JacksonKafkaSerializer::class
-    )
-    val sykmeldingStatusKafkaProducer = SykmeldingStatusKafkaProducer(KafkaProducer(sykmeldingStatusProducerConfig), environment.sykmeldingStatusTopic)
+    val sykmeldingStatusBakupProducer = getSykmeldingStatusBackupKafkaProducer(kafkaBaseConfig, environment)
+    val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfig, environment)
     val kafkaProducer = KafkaProducer<String, String>(producerConfig)
     val rerunKafkaProducer = RerunKafkaProducer(kafkaProducer, environment)
     val rerunKafkaService = RerunKafkaService(database, rerunKafkaProducer)
 
-    val sykmeldingStatusBackupKafkaProducer = getSykmeldingStatusKafkaProducer(producerConfig, environment)
-
+    val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusBakupProducer)
+    val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState)
     val applicationEngine = createApplicationEngine(
             environment,
             applicationState,
@@ -126,10 +128,10 @@ fun main() {
             wellKnown.issuer,
             environment.cluster,
             rerunKafkaService,
-            sykmeldingStatusBackupKafkaProducer,
             jwkProviderForRerun,
             jwkProviderStsOidc,
-            jwkProviderInternal
+            jwkProviderInternal,
+            sykmeldingStatusService
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)
@@ -140,7 +142,8 @@ fun main() {
             applicationState,
             database,
             consumerProperties,
-            sykmeldingStatusKafkaProducer
+            sykmeldingStatusKafkaProducer,
+            sykmeldingStatusConsumerService
     )
 }
 
@@ -163,7 +166,8 @@ fun launchListeners(
     applicationState: ApplicationState,
     database: Database,
     consumerProperties: Properties,
-    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
+    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
+    sykmeldingStatusConsumerService: SykmeldingStatusConsumerService
 ) {
     val kafkaconsumerRecievedSykmelding = KafkaConsumer<String, String>(consumerProperties)
     kafkaconsumerRecievedSykmelding.subscribe(
@@ -187,6 +191,9 @@ fun launchListeners(
     )
     createListener(applicationState) {
         blockingApplicationLogicBehandlingsutfall(applicationState, kafkaconsumerBehandlingsutfall, database)
+    }
+    createListener(applicationState) {
+        sykmeldingStatusConsumerService.start()
     }
 }
 

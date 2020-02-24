@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmeldingstatus.kafka.service
 
+import kotlinx.coroutines.delay
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
@@ -24,15 +25,28 @@ class SykmeldingStatusConsumerService(
 
     companion object {
         private val log = LoggerFactory.getLogger(SykmeldingStatusConsumerService::class.java)
+        private const val delayStart = 10_000L
+    }
+
+    private fun run() {
+        sykmeldingStatusKafkaConsumer.subscribe()
+        while (applicationState.ready) {
+            val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
+            kafkaEvents
+                    .forEach(handleStatusEvent())
+            sykmeldingStatusKafkaConsumer.commitSync()
+        }
     }
 
     suspend fun start() {
-        sykmeldingStatusKafkaConsumer.subscribe()
         while (applicationState.alive) {
-            val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
-            kafkaEvents
-                    .asSequence()
-                    .forEach(handleStatusEvent())
+            try {
+                run()
+            } catch (ex: Exception) {
+                log.error("Error reading status from topic, trying again in {} milliseconds", delayStart)
+                sykmeldingStatusKafkaConsumer.unsubscribe()
+            }
+            delay(delayStart)
         }
     }
 
