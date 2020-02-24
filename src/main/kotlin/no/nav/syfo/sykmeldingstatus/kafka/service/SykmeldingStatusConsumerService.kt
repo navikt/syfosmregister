@@ -34,7 +34,7 @@ class SykmeldingStatusConsumerService(
             val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
             kafkaEvents
                     .forEach(handleStatusEvent())
-            if(kafkaEvents.isNotEmpty()) {
+            if (kafkaEvents.isNotEmpty()) {
                 sykmeldingStatusKafkaConsumer.commitSync()
             }
         }

@@ -4,6 +4,7 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
+import java.time.OffsetDateTime
 import no.nav.syfo.aksessering.db.tilStatusEvent
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
@@ -17,6 +18,9 @@ fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<Sykmeld
 
 fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     connection.use { connection ->
+        if (!connection.hasNewerStatus(sykmeldingStatusEvent.sykmeldingId, sykmeldingStatusEvent.timestampz)) {
+            connection.slettAlleSvar(sykmeldingStatusEvent.sykmeldingId)
+        }
         connection.registerStatus(sykmeldingStatusEvent)
         connection.commit()
     }
@@ -25,21 +29,33 @@ fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEven
 fun DatabaseInterface.registrerSendt(sykmeldingSendEvent: SykmeldingSendEvent, sykmeldingStatusEvent: SykmeldingStatusEvent) {
     connection.use { connection ->
         connection.slettGamleSvarHvisFinnesFraFor(sykmeldingSendEvent.sykmeldingId)
-        connection.registerStatus(sykmeldingStatusEvent)
         connection.lagreArbeidsgiverStatus(sykmeldingSendEvent)
         connection.lagreSporsmalOgSvar(sykmeldingSendEvent.sporsmal)
+        connection.registerStatus(sykmeldingStatusEvent)
         connection.commit()
     }
 }
 
 fun DatabaseInterface.registrerBekreftet(sykmeldingBekreftEvent: SykmeldingBekreftEvent, sykmeldingStatusEvent: SykmeldingStatusEvent) {
     connection.use { connection ->
-        connection.slettGamleSvarHvisFinnesFraFor(sykmeldingBekreftEvent.sykmeldingId)
-        connection.registerStatus(sykmeldingStatusEvent)
-        sykmeldingBekreftEvent.sporsmal?.forEach {
-            connection.lagreSporsmalOgSvar(it)
+        if (!connection.hasNewerStatus(sykmeldingStatusEvent.sykmeldingId, sykmeldingStatusEvent.timestampz)) {
+            connection.slettGamleSvarHvisFinnesFraFor(sykmeldingBekreftEvent.sykmeldingId)
+            sykmeldingBekreftEvent.sporsmal?.forEach {
+                connection.lagreSporsmalOgSvar(it)
+            }
         }
+        connection.registerStatus(sykmeldingStatusEvent)
         connection.commit()
+    }
+}
+
+private fun Connection.hasNewerStatus(sykmeldingId: String, timestampz: OffsetDateTime?): Boolean {
+    this.prepareStatement("""
+        SELECT 1 FROM sykmeldingstatus WHERE sykmelding_id = ? and timestamp > ?
+        """).use {
+        it.setString(1, sykmeldingId)
+        it.setTimestamp(2, Timestamp.from(timestampz!!.toInstant()))
+        return it.executeQuery().next()
     }
 }
 
