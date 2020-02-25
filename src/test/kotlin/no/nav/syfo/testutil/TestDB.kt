@@ -5,6 +5,8 @@ import java.net.ServerSocket
 import java.sql.Connection
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
@@ -79,7 +81,7 @@ val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
     legekontorReshId = "legekontorReshId",
     epjSystemNavn = "epjSystemNavn",
     epjSystemVersjon = "epjSystemVersjon",
-    mottattTidspunkt = LocalDateTime.now(),
+    mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC).toLocalDateTime(),
     tssid = "13455"
 )
 
