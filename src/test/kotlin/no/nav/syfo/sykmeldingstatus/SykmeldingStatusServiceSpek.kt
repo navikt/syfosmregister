@@ -5,6 +5,7 @@ import io.mockk.mockkClass
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
+import no.nav.syfo.aksessering.db.hentSporsmalOgSvar
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
@@ -13,6 +14,7 @@ import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
+import no.nav.syfo.util.TimestampUtil.Companion.getAdjustedToLocalDateTime
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
@@ -108,6 +110,39 @@ class SykmeldingStatusServiceSpek : Spek({
             val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid", "LATEST")
             sykmeldingstatuser.size shouldEqual 1
             sykmeldingstatuser.get(0).event shouldEqual StatusEvent.SENDT
+        }
+
+        it("registrer bekreftet skal ikke lagre spørsmål og svar om den ikke er nyest") {
+            val sporsmal = listOf(Sporsmal("tekst", ShortName.FORSIKRING, Svar("uuid", 1, Svartype.JA_NEI, "NEI")))
+            sykmeldingStatusService.registrerBekreftet(SykmeldingBekreftEvent("uuid",
+                    getAdjustedToLocalDateTime(testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC).minusSeconds(1)),
+                    sporsmal
+            ))
+            val savedSporsmals = database.connection.hentSporsmalOgSvar("uuid")
+            savedSporsmals.size shouldEqual 0
+        }
+
+        it("registrer bekreft skal lagre spørsmål") {
+            val sporsmal = listOf(Sporsmal("tekst", ShortName.FORSIKRING, Svar("uuid", 1, Svartype.JA_NEI, "NEI")))
+            sykmeldingStatusService.registrerBekreftet(SykmeldingBekreftEvent("uuid",
+                    getAdjustedToLocalDateTime(testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC).plusSeconds(1)),
+                    sporsmal
+            ))
+            val savedSporsmals = database.connection.hentSporsmalOgSvar("uuid")
+            savedSporsmals shouldEqual sporsmal
+        }
+
+        it("registrer APEN etter BEKREFTET skal slette sporsmal og svar") {
+            val sporsmal = listOf(Sporsmal("tekst", ShortName.FORSIKRING, Svar("uuid", 1, Svartype.JA_NEI, "NEI")))
+            sykmeldingStatusService.registrerBekreftet(SykmeldingBekreftEvent("uuid",
+                    getAdjustedToLocalDateTime(testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC).plusSeconds(1)),
+                    sporsmal
+            ))
+            sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid",
+                    getAdjustedToLocalDateTime(testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC).plusSeconds(2)),
+                    StatusEvent.APEN))
+            val savedSporsmal2 = database.connection.hentSporsmalOgSvar("uuid")
+            savedSporsmal2.size shouldEqual 0
         }
     }
 })

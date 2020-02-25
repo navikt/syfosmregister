@@ -79,7 +79,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     }
 
     describe("Should retry on error") {
-        it("Restart and continue from last offset", timeout = 9999999999999L) {
+        it("Restart and continue from last offset") {
             runBlocking {
                 val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
                 val errors = 10
