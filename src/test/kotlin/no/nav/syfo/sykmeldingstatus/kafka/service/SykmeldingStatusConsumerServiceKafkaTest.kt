@@ -46,7 +46,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "application"
     every { environment.sykmeldingStatusTopic } returns "topic"
-
+    val fnr = "12345678901"
     val kafka = KafkaContainer()
     kafka.start()
     fun setupKafkaConfig(): Properties {
@@ -90,7 +90,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                     val sykmelidngId = "" + it
                     val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                     var sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmelidngId, timestamp, StatusEventDTO.APEN)
-                    kafkaProducer.send(sykmeldingApenEvent)
+                    kafkaProducer.send(sykmeldingApenEvent, fnr)
                 }
 
                 every { sykmeldingStatusService.registrerStatus(any()) } answers {
@@ -124,7 +124,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 }
 
                 val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
-                kafkaProducer.send(sykmeldingApenEvent)
+                kafkaProducer.send(sykmeldingApenEvent, fnr)
 
                 sykmeldingStatusConsumerService.start()
 
@@ -152,7 +152,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                     applicationState.ready = false
                 }
 
-                KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment).send(sykmeldingSendKafkaEvent)
+                KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment).send(sykmeldingSendKafkaEvent, fnr)
                 sykmeldingStatusConsumerService.start()
 
                 verify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
@@ -186,7 +186,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                     applicationState.ready = false
                 }
 
-                KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment).send(sykmeldingBekreftKafkaEvent)
+                KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment).send(sykmeldingBekreftKafkaEvent, fnr)
                 sykmeldingStatusConsumerService.start()
 
                 verify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any()) }

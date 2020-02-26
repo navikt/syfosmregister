@@ -254,7 +254,8 @@ suspend fun handleMessageSykmelding(
             sykmeldingStatusKafkaProducer.send(SykmeldingStatusKafkaEventDTO(
                     receivedSykmelding.sykmelding.id,
                     receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
-                    StatusEventDTO.APEN))
+                    StatusEventDTO.APEN),
+                    receivedSykmelding.personNrPasient)
 
             log.info("Sykmelding SM2013 lagret i databasen, {}", fields(loggingMeta))
             MESSAGE_STORED_IN_DB_COUNTER.inc()

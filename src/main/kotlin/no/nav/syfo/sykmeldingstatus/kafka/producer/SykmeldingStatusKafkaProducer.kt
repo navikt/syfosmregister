@@ -9,9 +9,9 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
 class SykmeldingStatusKafkaProducer(private val kafkaProducer: KafkaProducer<String, SykmeldingStatusKafkaMessageDTO>, private val topicName: String) {
-    fun send(sykmeldingStatusKafkaEventDTO: SykmeldingStatusKafkaEventDTO) {
+    fun send(sykmeldingStatusKafkaEventDTO: SykmeldingStatusKafkaEventDTO, fnr: String) {
         val sykmeldingStatusKafkaMessageDTO = SykmeldingStatusKafkaMessageDTO(
-                KafkaMetadataDTO(sykmeldingStatusKafkaEventDTO.sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), "syfosmregister"),
+                KafkaMetadataDTO(sykmeldingStatusKafkaEventDTO.sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), fnr, "syfosmregister"),
                 sykmeldingStatusKafkaEventDTO
         )
         kafkaProducer.send(ProducerRecord(topicName, sykmeldingStatusKafkaEventDTO.sykmeldingId, sykmeldingStatusKafkaMessageDTO))
