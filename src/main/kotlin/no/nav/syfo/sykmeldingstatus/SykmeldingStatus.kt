@@ -22,11 +22,6 @@ enum class StatusEvent {
     APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET, SLETTET
 }
 
-data class SykmeldingStatusEventDTO(
-    val statusEvent: StatusEventDTO,
-    val timestamp: LocalDateTime
-)
-
 enum class StatusEventDTO {
     APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
 }

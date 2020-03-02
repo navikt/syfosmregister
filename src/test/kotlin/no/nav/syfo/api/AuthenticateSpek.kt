@@ -90,7 +90,7 @@ object AuthenticateSpek : Spek({
                     internalJwtIssuer = "",
                     internalJwtWellKnownUri = "",
                     internalLoginServiceClientId = ""
-            ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider,
+            ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider,
                     jwkProvider)
             application.routing {
                 authenticate("jwt") {

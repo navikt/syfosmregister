@@ -20,8 +20,6 @@ fun Application.setupAuth(
     jwkProvider: JwkProvider,
     issuer: String,
     env: Environment,
-    jwkProviderForRerun:
-    JwkProvider,
     stsOidcJwkProvider: JwkProvider,
     jwkProviderInternal: JwkProvider
 ) {
@@ -42,15 +40,6 @@ fun Application.setupAuth(
             validate { credentials ->
                 when {
                     hasLoginserviceClientIdAudience(credentials, vaultSecrets) -> JWTPrincipal(credentials.payload)
-                    else -> unauthorized(credentials)
-                }
-            }
-        }
-        jwt(name = "rerun") {
-            verifier(jwkProviderForRerun, env.jwtIssuer)
-            validate { credentials ->
-                when {
-                    hasValidSystemToken(credentials, env) -> JWTPrincipal(credentials.payload)
                     else -> unauthorized(credentials)
                 }
             }

@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.application.ApplicationServer
@@ -30,7 +29,6 @@ import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
-import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.ValidationResult
@@ -43,8 +41,6 @@ import no.nav.syfo.persistering.erBehandlingsutfallLagret
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.rerunkafka.kafka.RerunKafkaProducer
-import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getKafkaStatusConsumer
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSykmeldingStatusBackupKafkaProducer
@@ -52,9 +48,7 @@ import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSykmeldingSt
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.service.SykmeldingStatusConsumerService
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -74,11 +68,6 @@ fun main() {
             objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val wellKnown = getWellKnown(vaultSecrets.oidcWellKnownUri)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
-            .cached(10, 24, TimeUnit.HOURS)
-            .rateLimited(10, 1, TimeUnit.MINUTES)
-            .build()
-
-    val jwkProviderForRerun = JwkProviderBuilder(URL(environment.jwkKeysUrl))
             .cached(10, 24, TimeUnit.HOURS)
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
@@ -106,15 +95,9 @@ fun main() {
     val consumerProperties = kafkaBaseConfig.toConsumerConfig(
             "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
-    val producerConfig = kafkaBaseConfig.toProducerConfig(
-            "${environment.applicationName}-producer", valueSerializer = StringSerializer::class
-    )
 
     val sykmeldingStatusBakupProducer = getSykmeldingStatusBackupKafkaProducer(kafkaBaseConfig, environment)
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfig, environment)
-    val kafkaProducer = KafkaProducer<String, String>(producerConfig)
-    val rerunKafkaProducer = RerunKafkaProducer(kafkaProducer, environment)
-    val rerunKafkaService = RerunKafkaService(database, rerunKafkaProducer)
 
     val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusBakupProducer)
     val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
@@ -127,8 +110,6 @@ fun main() {
             jwkProvider,
             wellKnown.issuer,
             environment.cluster,
-            rerunKafkaService,
-            jwkProviderForRerun,
             jwkProviderStsOidc,
             jwkProviderInternal,
             sykmeldingStatusService
@@ -204,7 +185,7 @@ suspend fun blockingApplicationLogicReceivedSykmelding(
     sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
 ) {
     while (applicationState.ready) {
-        kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
+        kafkaconsumer.poll(Duration.ofMillis(1000)).forEach {
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
             val loggingMeta = LoggingMeta(
                     mottakId = receivedSykmelding.navLogId,
@@ -214,7 +195,6 @@ suspend fun blockingApplicationLogicReceivedSykmelding(
             )
             handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer)
         }
-        delay(100)
     }
 }
 
@@ -269,7 +249,7 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
     database: Database
 ) {
     while (applicationState.ready) {
-        kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
+        kafkaconsumer.poll(Duration.ofMillis(1000)).forEach {
             val sykmeldingsid = it.key()
             val validationResult: ValidationResult = objectMapper.readValue(it.value())
             val loggingMeta = LoggingMeta(
@@ -280,7 +260,6 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
             )
             handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta)
         }
-        delay(100)
     }
 }
 
