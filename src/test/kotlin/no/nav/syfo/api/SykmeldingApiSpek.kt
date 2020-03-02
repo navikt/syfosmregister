@@ -16,11 +16,8 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkClass
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
@@ -52,7 +49,6 @@ import no.nav.syfo.sykmeldingstatus.api.ShortNameDTO
 import no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO
 import no.nav.syfo.sykmeldingstatus.api.SvartypeDTO
 import no.nav.syfo.sykmeldingstatus.api.lagSporsmalListe
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.sykmeldingstatus.registrerBekreftet
 import no.nav.syfo.sykmeldingstatus.registrerSendt
@@ -69,7 +65,6 @@ import org.spekframework.spek2.style.specification.describe
 object SykmeldingApiSpek : Spek({
 
     val database = TestDB()
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
 
     fun lagreApenStatus(id: String, mottattTidspunkt: LocalDateTime) {
         database.registerStatus(SykmeldingStatusEvent(id, mottattTidspunkt, StatusEvent.APEN, mottattTidspunkt.atOffset(ZoneOffset.UTC)))
@@ -78,7 +73,6 @@ object SykmeldingApiSpek : Spek({
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         lagreApenStatus(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-        every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
     }
 
     afterEachTest {
@@ -102,7 +96,7 @@ object SykmeldingApiSpek : Spek({
                 }
             }
             application.routing {
-                registerSykmeldingApi(SykmeldingService(database), SykmeldingStatusService(database, sykmeldingStatusKafkaProducer))
+                registerSykmeldingApi(SykmeldingService(database), SykmeldingStatusService(database))
             }
 
             it("skal returnere tom liste hvis bruker ikke har sykmeldinger") {

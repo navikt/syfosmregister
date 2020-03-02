@@ -1,14 +1,11 @@
 package no.nav.syfo.sykmeldingstatus
 
-import io.mockk.every
-import io.mockk.mockkClass
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.db.hentSporsmalOgSvar
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -24,9 +21,7 @@ class SykmeldingStatusServiceSpek : Spek({
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
-    val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusKafkaProducer)
-    every { sykmeldingStatusKafkaProducer.send(any()) } returns Unit
+    val sykmeldingStatusService = SykmeldingStatusService(database)
 
     beforeEachTest {
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)

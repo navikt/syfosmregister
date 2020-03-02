@@ -15,10 +15,6 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import io.mockk.Runs
-import io.mockk.every
-import io.mockk.just
-import io.mockk.mockkClass
 import java.nio.file.Paths
 import java.util.Base64
 import no.nav.syfo.Environment
@@ -30,7 +26,6 @@ import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
@@ -59,13 +54,11 @@ object AuthenticateSpek : Spek({
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
-    val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusKafkaProducer)
+    val sykmeldingStatusService = SykmeldingStatusService(database)
 
     beforeEachTest {
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-        every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
     }
 
     afterEachTest {
