@@ -8,6 +8,7 @@ import no.nav.syfo.domain.toDTO
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.internal.db.Adresse
 import no.nav.syfo.sykmelding.internal.db.AktivitetIkkeMulig
 import no.nav.syfo.sykmelding.internal.db.AnnenFraverGrunn
@@ -291,8 +292,8 @@ private fun AnnenFraverGrunn.toDTO(): AnnenFraverGrunnDTO {
 private fun Diagnose.toDiagnoseDTO(): DiagnoseDTO {
     return DiagnoseDTO(
             kode = kode,
-            system = system,
-            tekst = tekst
+            system = getDiagnosesystem(system),
+            tekst = getDiagnosetekst(this)
     )
 }
 
@@ -328,4 +329,20 @@ fun finnPeriodetype(periode: Periode): Periodetype =
             periode.gradert != null -> Periodetype.GRADERT
             periode.reisetilskudd -> Periodetype.REISETILSKUDD
             else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode")
+        }
+
+private fun getDiagnosetekst(diagnose: Diagnose): String =
+        when (diagnose.system) {
+            Diagnosekoder.ICD10_CODE ->
+                (Diagnosekoder.icd10[diagnose.kode])?.text ?: "Ukjent"
+            Diagnosekoder.ICPC2_CODE ->
+                (Diagnosekoder.icpc2[diagnose.kode])?.text ?: "Ukjent"
+            else -> "Ukjent"
+        }
+
+private fun getDiagnosesystem(system: String): String =
+        when (system) {
+            Diagnosekoder.ICD10_CODE -> "ICD-10"
+            Diagnosekoder.ICPC2_CODE -> "ICPC-2"
+            else -> "Ukjent"
         }
