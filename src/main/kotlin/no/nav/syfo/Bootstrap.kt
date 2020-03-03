@@ -172,6 +172,7 @@ fun launchListeners(
         blockingApplicationLogicBehandlingsutfall(applicationState, kafkaconsumerBehandlingsutfall, database)
     }
     createListener(applicationState) {
+        log.info("Starting sykmeldingConsumerService")
         sykmeldingStatusConsumerService.start()
     }
 }
