@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.application.ApplicationServer
@@ -185,7 +186,7 @@ suspend fun blockingApplicationLogicReceivedSykmelding(
     sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
 ) {
     while (applicationState.ready) {
-        kafkaconsumer.poll(Duration.ofMillis(1000)).forEach {
+        kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
             val loggingMeta = LoggingMeta(
                     mottakId = receivedSykmelding.navLogId,
@@ -195,6 +196,7 @@ suspend fun blockingApplicationLogicReceivedSykmelding(
             )
             handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer)
         }
+        delay(100)
     }
 }
 
@@ -249,7 +251,7 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
     database: Database
 ) {
     while (applicationState.ready) {
-        kafkaconsumer.poll(Duration.ofMillis(1000)).forEach {
+        kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
             val sykmeldingsid = it.key()
             val validationResult: ValidationResult = objectMapper.readValue(it.value())
             val loggingMeta = LoggingMeta(
@@ -260,6 +262,7 @@ suspend fun blockingApplicationLogicBehandlingsutfall(
             )
             handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta)
         }
+        delay(100)
     }
 }
 
