@@ -168,11 +168,12 @@ fun launchListeners(
                     env.sm2013BehandlingsUtfallTopic
             )
     )
+    log.info("Starting behandlingsutfall")
     createListener(applicationState) {
         blockingApplicationLogicBehandlingsutfall(applicationState, kafkaconsumerBehandlingsutfall, database)
     }
+    log.info("Starting sykmeldingConsumerService")
     createListener(applicationState) {
-        log.info("Starting sykmeldingConsumerService")
         sykmeldingStatusConsumerService.start()
     }
 }
