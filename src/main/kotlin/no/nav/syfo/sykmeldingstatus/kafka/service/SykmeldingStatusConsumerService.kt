@@ -15,7 +15,6 @@ import no.nav.syfo.sykmeldingstatus.kafka.service.KafkaModelMapper.Companion.toA
 import no.nav.syfo.sykmeldingstatus.kafka.service.KafkaModelMapper.Companion.toSporsmal
 import no.nav.syfo.sykmeldingstatus.kafka.service.KafkaModelMapper.Companion.toSykmeldingStatusEvent
 import no.nav.syfo.util.TimestampUtil.Companion.getAdjustedToLocalDateTime
-import org.postgresql.util.PSQLException
 import org.slf4j.LoggerFactory
 
 class SykmeldingStatusConsumerService(
@@ -44,7 +43,6 @@ class SykmeldingStatusConsumerService(
     }
 
     suspend fun start() {
-        log.info("start sykmeldingStatusConsumer")
         while (applicationState.alive) {
             try {
                 run()
@@ -57,15 +55,11 @@ class SykmeldingStatusConsumerService(
     }
 
     private fun handleStatusEvent(): (SykmeldingStatusKafkaMessageDTO) -> Unit = { sykmeldingStatusKafkaMessage ->
-        try {
-            log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent.name)
-            when (sykmeldingStatusKafkaMessage.event.statusEvent) {
-                StatusEventDTO.SENDT -> registrerSendt(sykmeldingStatusKafkaMessage)
-                StatusEventDTO.BEKREFTET -> registrerBekreftet(sykmeldingStatusKafkaMessage)
-                else -> registrerStatus(sykmeldingStatusKafkaMessage)
-            }
-        } catch (ex: PSQLException) {
-            log.error("Error reading status from topic, trying again in {} milliseconds, error {}", delayStart, ex.message)
+        log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent.name)
+        when (sykmeldingStatusKafkaMessage.event.statusEvent) {
+            StatusEventDTO.SENDT -> registrerSendt(sykmeldingStatusKafkaMessage)
+            StatusEventDTO.BEKREFTET -> registrerBekreftet(sykmeldingStatusKafkaMessage)
+            else -> registrerStatus(sykmeldingStatusKafkaMessage)
         }
     }
 
