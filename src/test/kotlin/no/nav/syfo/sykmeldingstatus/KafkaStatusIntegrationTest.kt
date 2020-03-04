@@ -42,6 +42,7 @@ import no.nav.syfo.sykmeldingstatus.api.SykmeldingStatusDTO
 import no.nav.syfo.sykmeldingstatus.api.model.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaSerializer
@@ -212,20 +213,7 @@ class KafkaStatusIntegrationTest : Spek({
             application.routing { registerSykmeldingStatusGETApi(sykmeldingStatusService) }
             application.routing { registerSykmeldingApi(sykmeldingService, kafkaProducer) }
             it("Test get stykmeldingstatus latest should be SENDT") {
-                every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
-                    callOriginal()
-                    applicationState.alive = false
-                    applicationState.ready = false
-                }
-                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-                val sendtEvent = getSendtEvent(sykmelding)
-                kafkaProducer.send(sendtEvent, sykmelding.pasientFnr)
-                val job = createListener(applicationState) {
-                    sykmeldingStatusConsumerService.start()
-                }
-                runBlocking {
-                    job.join()
-                }
+                val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(handleRequest(HttpMethod.Get, "/sykmeldinger/uuid/status?filter=LATEST") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
@@ -241,20 +229,7 @@ class KafkaStatusIntegrationTest : Spek({
             }
 
             it("test get sykmelding with latest status SENDT") {
-                every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
-                    callOriginal()
-                    applicationState.alive = false
-                    applicationState.ready = false
-                }
-                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-                val sendtEvent = getSendtEvent(sykmelding)
-                kafkaProducer.send(sendtEvent, sykmelding.pasientFnr)
-                val job = createListener(applicationState) {
-                    sykmeldingStatusConsumerService.start()
-                }
-                runBlocking {
-                    job.join()
-                }
+                val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
@@ -320,6 +295,24 @@ class KafkaStatusIntegrationTest : Spek({
         }
     }
 })
+
+private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService, applicationState: ApplicationState, kafkaProducer: SykmeldingStatusKafkaProducer, sykmelding: Sykmeldingsopplysninger, sykmeldingStatusConsumerService: SykmeldingStatusConsumerService): SykmeldingStatusKafkaEventDTO {
+    every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
+        callOriginal()
+        applicationState.alive = false
+        applicationState.ready = false
+    }
+    kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+    val sendtEvent = getSendtEvent(sykmelding)
+    kafkaProducer.send(sendtEvent, sykmelding.pasientFnr)
+    val job = createListener(applicationState) {
+        sykmeldingStatusConsumerService.start()
+    }
+    runBlocking {
+        job.join()
+    }
+    return sendtEvent
+}
 
 private fun getSykmeldingBekreftEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
