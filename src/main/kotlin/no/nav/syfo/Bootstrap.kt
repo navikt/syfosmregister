@@ -87,8 +87,6 @@ fun main() {
 
     val applicationState = ApplicationState()
 
-    RenewVaultService(vaultCredentialService, applicationState).startRenewTasks()
-
     DefaultExports.initialize()
 
     val kafkaBaseConfig = loadBaseConfig(environment, vaultSecrets).envOverrides()
@@ -111,12 +109,14 @@ fun main() {
             environment.cluster,
             jwkProviderStsOidc,
             jwkProviderInternal,
-            sykmeldingStatusService
+            sykmeldingStatusService,
+            sykmeldingStatusKafkaProducer
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)
     applicationServer.start()
     applicationState.ready = true
+    RenewVaultService(vaultCredentialService, applicationState).startRenewTasks()
     launchListeners(
             environment,
             applicationState,

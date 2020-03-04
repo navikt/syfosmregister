@@ -43,6 +43,7 @@ import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
 @KtorExperimentalAPI
 fun createApplicationEngine(
@@ -55,7 +56,8 @@ fun createApplicationEngine(
     cluster: String,
     jwkProviderStsOidc: JwkProvider,
     jwkProviderInternal: JwkProvider,
-    sykmeldingStatusService: SykmeldingStatusService
+    sykmeldingStatusService: SykmeldingStatusService,
+    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -113,7 +115,7 @@ fun createApplicationEngine(
             registerNaisApi(applicationState)
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
-                registerSykmeldingApi(sykmeldingService, sykmeldingStatusService)
+                registerSykmeldingApi(sykmeldingService, sykmeldingStatusKafkaProducer)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)
