@@ -209,6 +209,7 @@ class KafkaStatusIntegrationTest : Spek({
         with(TestApplicationEngine()) {
             setUpTestApplication()
             application.routing { registerSykmeldingStatusGETApi(sykmeldingStatusService) }
+            application.routing { registerSykmeldingApi(sykmeldingService, kafkaProducer) }
             it("Test get stykmeldingstatus latest should be SENDT") {
                 every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                     callOriginal()
@@ -234,6 +235,42 @@ class KafkaStatusIntegrationTest : Spek({
                     latestSykmeldingStatus shouldEqual SykmeldingStatusEventDTO(
                             no.nav.syfo.sykmeldingstatus.StatusEventDTO.SENDT,
                             sendtEvent.timestamp
+                    )
+                }
+            }
+
+            it("test get sykmelding with latest status SENDT") {
+                every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
+                    callOriginal()
+                    applicationState.alive = false
+                    applicationState.ready = false
+                }
+                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+                val sendtEvent = getSendtEvent(sykmelding)
+                kafkaProducer.send(sendtEvent, sykmelding.pasientFnr)
+                val job = createListener(applicationState) {
+                    sykmeldingStatusConsumerService.start()
+                }
+                runBlocking {
+                    job.join()
+                }
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val fullstendigSykmeldingDTO: FullstendigSykmeldingDTO = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+                    val latestSykmeldingStatus = fullstendigSykmeldingDTO.sykmeldingStatus
+                    latestSykmeldingStatus shouldEqual SykmeldingStatusDTO(
+                            timestamp =  getAdjustedToLocalDateTime(sendtEvent.timestamp),
+                            sporsmalOgSvarListe = listOf(no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO(
+                                    tekst = "din arbeidssituasjon?",
+                                    svar = "ARBEIDSTAKER",
+                                    svartype = no.nav.syfo.sykmeldingstatus.api.SvartypeDTO.ARBEIDSSITUASJON,
+                                    shortName = no.nav.syfo.sykmeldingstatus.api.ShortNameDTO.ARBEIDSSITUASJON
+                            )),
+                            arbeidsgiver = no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO("org", "jorg", "navn"),
+                            statusEvent = no.nav.syfo.sykmeldingstatus.StatusEventDTO.SENDT
+
                     )
                 }
             }
