@@ -94,6 +94,7 @@ class KafkaStatusIntegrationTest : Spek({
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState)
     val sykmeldingService = SykmeldingService(database)
     val mockPayload = mockk<Payload>()
+
     afterGroup {
         kafka.stop()
         applicationState.ready = false
