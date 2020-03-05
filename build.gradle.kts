@@ -44,7 +44,8 @@ plugins {
     id("com.diffplug.gradle.spotless") version "3.23.1"
     id("com.github.johnrengelman.shadow") version "4.0.4"
     id("org.hidetake.swagger.generator") version "2.18.1" apply true
-
+    id("org.sonarqube") version "2.8"
+    jacoco
 }
 
 buildscript {
@@ -146,6 +147,21 @@ swaggerSources {
     }
 }
 
+sonarqube {
+    properties {
+        property("sonar.projectKey", "navikt_syfosmregister")
+        property("sonar.organization", "navit")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.login", System.getenv("SONAR_TOKEN") )
+    }
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.isEnabled = true
+        html.isEnabled = true
+    }
+}
 
 tasks {
 
@@ -171,6 +187,14 @@ tasks {
         kotlinOptions.jvmTarget = "12"
     }
 
+    withType<JacocoReport> {
+        classDirectories.setFrom(
+                sourceSets.main.get().output.asFileTree.matching {
+                    exclude()
+                }
+        )
+
+    }
     withType<ShadowJar> {
         transform(ServiceFileTransformer::class.java) {
             setPath("META-INF/cxf")
