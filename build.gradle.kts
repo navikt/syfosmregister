@@ -149,7 +149,7 @@ swaggerSources {
 
 sonarqube {
     properties {
-        property("sonar.projectKey", "navikt_syfosmregister")
+        property("sonar.projectKey", "syfosmregister")
         property("sonar.organization", "navit")
         property("sonar.host.url", "https://sonarcloud.io")
         property("sonar.login", System.getenv("SONAR_TOKEN") )
@@ -193,7 +193,6 @@ tasks {
                     exclude()
                 }
         )
-
     }
     withType<ShadowJar> {
         transform(ServiceFileTransformer::class.java) {
