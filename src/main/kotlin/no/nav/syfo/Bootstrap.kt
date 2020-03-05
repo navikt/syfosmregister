@@ -125,6 +125,7 @@ fun main() {
             sykmeldingStatusKafkaProducer,
             sykmeldingStatusConsumerService
     )
+
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
