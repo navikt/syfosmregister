@@ -193,6 +193,7 @@ tasks {
                     exclude()
                 }
         )
+
     }
     withType<ShadowJar> {
         transform(ServiceFileTransformer::class.java) {

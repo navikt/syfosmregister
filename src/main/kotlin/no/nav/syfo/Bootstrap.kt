@@ -72,11 +72,6 @@ fun main() {
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
-    val jwkProviderStsOidc = JwkProviderBuilder(URL(vaultSecrets.stsOidcWellKnownUri))
-            .cached(10, 24, TimeUnit.HOURS)
-            .rateLimited(10, 1, TimeUnit.MINUTES)
-            .build()
-
     val jwkProviderInternal = JwkProviderBuilder(URL(vaultSecrets.internalJwtWellKnownUri))
             .cached(10, 24, TimeUnit.HOURS)
             .rateLimited(10, 1, TimeUnit.MINUTES)
@@ -107,7 +102,6 @@ fun main() {
             jwkProvider,
             wellKnown.issuer,
             environment.cluster,
-            jwkProviderStsOidc,
             jwkProviderInternal,
             sykmeldingStatusService,
             sykmeldingStatusKafkaProducer
@@ -125,7 +119,6 @@ fun main() {
             sykmeldingStatusKafkaProducer,
             sykmeldingStatusConsumerService
     )
-
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =

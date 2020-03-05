@@ -237,7 +237,7 @@ class KafkaStatusIntegrationTest : Spek({
                     val fullstendigSykmeldingDTO: FullstendigSykmeldingDTO = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
                     val latestSykmeldingStatus = fullstendigSykmeldingDTO.sykmeldingStatus
                     latestSykmeldingStatus shouldEqual SykmeldingStatusDTO(
-                            timestamp =  getAdjustedToLocalDateTime(sendtEvent.timestamp),
+                            timestamp = getAdjustedToLocalDateTime(sendtEvent.timestamp),
                             sporsmalOgSvarListe = listOf(no.nav.syfo.sykmeldingstatus.api.SporsmalOgSvarDTO(
                                     tekst = "din arbeidssituasjon?",
                                     svar = "ARBEIDSTAKER",

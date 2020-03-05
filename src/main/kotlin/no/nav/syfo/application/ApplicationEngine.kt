@@ -54,7 +54,6 @@ fun createApplicationEngine(
     jwkProvider: JwkProvider,
     issuer: String,
     cluster: String,
-    jwkProviderStsOidc: JwkProvider,
     jwkProviderInternal: JwkProvider,
     sykmeldingStatusService: SykmeldingStatusService,
     sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
@@ -71,8 +70,6 @@ fun createApplicationEngine(
         setupAuth(vaultSecrets = vaultSecrets,
                 jwkProvider = jwkProvider,
                 issuer = issuer,
-                env = env,
-                stsOidcJwkProvider = jwkProviderStsOidc,
                 jwkProviderInternal = jwkProviderInternal)
         install(CallId) {
             generate { UUID.randomUUID().toString() }
