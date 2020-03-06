@@ -60,57 +60,6 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
-    post:
-      operationId: addStatus
-      tags:
-        - Sykmelding status
-      summary: Api for å lagre status for sykmelding
-      parameters:
-        - $ref: '#/components/parameters/sykmeldingId'
-      responses:
-        '201':
-          description: Created
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-      requestBody:
-        $ref: '#/components/requestBodies/StatusRequest'
-  /sykmeldinger/{sykmeldingId}/bekreft:
-    post:
-      operationId: bekreftSykmelding
-      tags:
-        - Sykmelding status
-      summary: API for bekrefting av sykmeldinger
-      parameters:
-        - $ref: '#/components/parameters/sykmeldingId'
-      responses:
-        '201':
-          description: Created
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-      requestBody:
-        $ref: '#/components/requestBodies/SykmeldingBekreftEvent'
-  /sykmeldinger/{sykmeldingId}/send:
-    post:
-      operationId: sendSykmelding
-      tags:
-        - Sykmelding status
-      summary: API for sending av sykmeldinger
-      parameters:
-        - $ref: '#/components/parameters/sykmeldingId'
-      responses:
-        '201':
-          description: Created
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-      requestBody:
-        $ref: '#/components/requestBodies/SykmeldingSendEvent'
-
 
   /api/v1/internal/sykmeldinger:
     get:
@@ -131,22 +80,6 @@ paths:
 
 
 components:
-  requestBodies:
-    StatusRequest:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SykmeldingStatusEvent'
-    SykmeldingBekreftEvent:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SykmeldingBekreftEvent'
-    SykmeldingSendEvent:
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SykmeldingSendEvent'
   responses:
     InternalSykmeldingerResponse:
       description: "Response for internal sykmeldinger for saksbehandlere"
@@ -408,41 +341,6 @@ components:
       description: Liste med spørsmål og svar, er kun tilgjengelig om Status er SENDT eller BEKREFTET
       items:
         $ref: '#/components/schemas/SporsmalOgSvar'
-    ArbeidsgiverStatus:
-      type: object
-      required:
-        - orgnummer
-        - orgNavn
-      properties:
-        orgnummer:
-          type: string
-        juridiskOrgnummer:
-          type: string
-        orgNavn:
-          type: string
-    SykmeldingBekreftEvent:
-      type: object
-      required:
-        - timestamp
-        - sporsmalOgSvarListe
-      properties:
-        timestamp:
-          $ref: '#/components/schemas/Timestamp'
-        sporsmalOgSvarListe:
-          $ref: '#/components/schemas/SposmalOgSvarListe'
-    SykmeldingSendEvent:
-      type: object
-      required:
-        - arbeidsgiver
-        - timestamp
-        - sporsmalOgSvarListe
-      properties:
-        timestamp:
-          $ref: '#/components/schemas/Timestamp'
-        sporsmalOgSvarListe:
-          $ref: '#/components/schemas/SposmalOgSvarListe'
-        arbeidsgiver:
-          $ref: '#/components/schemas/ArbeidsgiverStatus'
     InternalSykmelding:
       type: object
       required:

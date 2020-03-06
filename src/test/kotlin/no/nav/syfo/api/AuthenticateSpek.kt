@@ -15,9 +15,7 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockkClass
 import java.nio.file.Paths
 import java.util.Base64
@@ -29,8 +27,7 @@ import no.nav.syfo.application.setupAuth
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
@@ -53,19 +50,16 @@ object AuthenticateSpek : Spek({
             cluster = "cluster",
             jwtIssuer = "issuer",
             appIds = listOf("10", "11"),
-            clientId = "1",
-            stsOidcIssuer = "",
-            stsOidcAudience = "")
+            clientId = "1")
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
-    val sykmeldingStatusService = SykmeldingStatusService(database, sykmeldingStatusKafkaProducer)
+    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
 
+    every { sykmeldingStatusKafkaProducer.send(any(), any()) } returns Unit
     beforeEachTest {
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-        every { sykmeldingStatusKafkaProducer.send(any()) } just Runs
     }
 
     afterEachTest {
@@ -86,15 +80,13 @@ object AuthenticateSpek : Spek({
                     loginserviceClientId = "clientId",
                     syfomockUsername = "syfomock",
                     syfomockPassword = "test",
-                    stsOidcWellKnownUri = "",
                     internalJwtIssuer = "",
                     internalJwtWellKnownUri = "",
                     internalLoginServiceClientId = ""
-            ), jwkProvider, "https://sts.issuer.net/myid", env, jwkProvider, jwkProvider,
-                    jwkProvider)
+            ), jwkProvider, "https://sts.issuer.net/myid", jwkProvider)
             application.routing {
                 authenticate("jwt") {
-                    registerSykmeldingApi(sykmeldingService, sykmeldingStatusService)
+                    registerSykmeldingApi(sykmeldingService, sykmeldingStatusKafkaProducer)
                 }
                 authenticate("basic") {
                     registerNullstillApi(database, "dev-fss")

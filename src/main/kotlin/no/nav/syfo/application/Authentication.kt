@@ -11,7 +11,6 @@ import io.ktor.auth.jwt.JWTCredential
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
 import net.logstash.logback.argument.StructuredArguments
-import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.log
 
@@ -19,14 +18,9 @@ fun Application.setupAuth(
     vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
     issuer: String,
-    env: Environment,
-    jwkProviderForRerun:
-    JwkProvider,
-    stsOidcJwkProvider: JwkProvider,
     jwkProviderInternal: JwkProvider
 ) {
     install(Authentication) {
-
         jwt(name = "internal") {
             verifier(jwkProviderInternal, vaultSecrets.internalJwtIssuer)
             validate { credentials ->
@@ -36,21 +30,11 @@ fun Application.setupAuth(
                 }
             }
         }
-
         jwt(name = "jwt") {
             verifier(jwkProvider, issuer)
             validate { credentials ->
                 when {
                     hasLoginserviceClientIdAudience(credentials, vaultSecrets) -> JWTPrincipal(credentials.payload)
-                    else -> unauthorized(credentials)
-                }
-            }
-        }
-        jwt(name = "rerun") {
-            verifier(jwkProviderForRerun, env.jwtIssuer)
-            validate { credentials ->
-                when {
-                    hasValidSystemToken(credentials, env) -> JWTPrincipal(credentials.payload)
                     else -> unauthorized(credentials)
                 }
             }
@@ -62,22 +46,7 @@ fun Application.setupAuth(
                 } else null
             }
         }
-
-        jwt(name = "oidc") {
-            verifier(stsOidcJwkProvider, env.stsOidcIssuer)
-            validate { credentials ->
-                when {
-                    isValidStsOidcToken(credentials, env) -> JWTPrincipal(credentials.payload)
-                    else -> unauthorized(credentials)
-                }
-            }
-        }
     }
-}
-
-fun isValidStsOidcToken(credentials: JWTCredential, env: Environment): Boolean {
-    return credentials.payload.audience.contains(env.stsOidcAudience) &&
-            "srvsyfoservice".equals(credentials.payload.getClaim("sub").asString())
 }
 
 fun unauthorized(credentials: JWTCredential): Principal? {
@@ -95,14 +64,4 @@ fun hasLoginserviceClientIdAudience(credentials: JWTCredential, vaultSecrets: Va
 
 fun hasInternalLoginServiceClientIdAudience(credentials: JWTCredential, vaultSecrets: VaultSecrets): Boolean {
     return credentials.payload.audience.contains(vaultSecrets.internalLoginServiceClientId)
-}
-
-fun hasValidSystemToken(credentials: JWTCredential, env: Environment): Boolean {
-    val appId: String = credentials.payload.getClaim("azp").asString()
-    log.info("authorization attempt for $appId")
-    if (appId in env.appIds && env.clientId in credentials.payload.audience) {
-        log.info("authorization ok")
-        return true
-    }
-    return false
 }

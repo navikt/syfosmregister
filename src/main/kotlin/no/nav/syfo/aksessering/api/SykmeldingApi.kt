@@ -10,18 +10,19 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
+import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
+import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 val log: Logger = LoggerFactory.getLogger("no.nav.syfo.smregister")
 
 @KtorExperimentalAPI
-fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmeldingStatusService: SykmeldingStatusService) {
+fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer) {
     route("/api/v1") {
         get("/sykmeldinger") {
             val principal: JWTPrincipal = call.authentication.principal()!!
@@ -38,10 +39,14 @@ fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmelding
         post("/sykmeldinger/{sykmeldingsid}/bekreft") {
             val sykmeldingsid = call.parameters["sykmeldingsid"]!!
             val principal: JWTPrincipal = call.authentication.principal()!!
-            val subject = principal.payload.subject
-            if (sykmeldingService.erEier(sykmeldingsid, subject)) {
-                val sykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingsid, LocalDateTime.now(), StatusEvent.BEKREFTET)
-                sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
+            val fnr = principal.payload.subject
+            if (sykmeldingService.erEier(sykmeldingsid, fnr)) {
+                val statusEvent = SykmeldingStatusKafkaEventDTO(
+                        sykmeldingId = sykmeldingsid,
+                        statusEvent = StatusEventDTO.BEKREFTET,
+                        timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+                )
+                sykmeldingStatusKafkaProducer.send(statusEvent, fnr)
                 call.respond(HttpStatusCode.OK)
             } else {
                 call.respond(HttpStatusCode.NotFound)
