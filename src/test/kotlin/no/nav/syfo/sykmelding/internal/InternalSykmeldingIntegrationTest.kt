@@ -55,9 +55,10 @@ class InternalSykmeldingIntegrationTest : Spek({
 
     val internalSykmeldingService = SykmeldingerService(database)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
-    coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
+
     describe("Test get InternalSykmelding") {
         it("Should be able to get sykmelidng") {
+            coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
             with(TestApplicationEngine()) {
                 start(true)
                 application.install(ContentNegotiation) {

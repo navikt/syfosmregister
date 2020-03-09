@@ -40,16 +40,6 @@ fun tilSykmeldingStatusDTO(sykmeldingStatus: SykmeldingStatus): SykmeldingStatus
     )
 }
 
-fun StatusEventDTO.toStatusEvent(): StatusEvent {
-    return when (this) {
-        StatusEventDTO.BEKREFTET -> StatusEvent.BEKREFTET
-        StatusEventDTO.APEN -> StatusEvent.APEN
-        StatusEventDTO.SENDT -> StatusEvent.SENDT
-        StatusEventDTO.AVBRUTT -> StatusEvent.AVBRUTT
-        StatusEventDTO.UTGATT -> StatusEvent.UTGATT
-    }
-}
-
 fun StatusEvent.toStatusEventDTO(): StatusEventDTO {
     return when (this) {
         StatusEvent.BEKREFTET -> StatusEventDTO.BEKREFTET

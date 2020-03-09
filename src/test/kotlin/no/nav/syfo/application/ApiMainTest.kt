@@ -37,7 +37,6 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusBackupKafkaProducer
 import no.nav.syfo.sykmeldingstatus.registerStatus
 import no.nav.syfo.sykmeldingstatus.registrerSendt
 import no.nav.syfo.testutil.TestDB
@@ -59,13 +58,11 @@ fun main() {
             Sporsmal("Arbeidssituajson", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingsopplysning.id, null, Svartype.ARBEIDSSITUASJON, "EN_ARBEIDSGIVER"))),
             SykmeldingStatusEvent(sykmeldingsopplysning.id, LocalDateTime.now(), StatusEvent.SENDT))
 
-    val sykmeldingKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
-    val sykmeldingStatusService = SykmeldingStatusService(db, sykmeldingKafkaProducer)
+    val sykmeldingStatusService = SykmeldingStatusService(db)
     val internalSykmeldingService = SykmeldingerService(database = db)
     val mockPayload = mockk<Payload>()
     coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
-    every { sykmeldingKafkaProducer.send(any()) } returns Unit
     every { mockPayload.subject } returns "01234567891"
     embeddedServer(Netty, 8080) {
         install(ContentNegotiation) {

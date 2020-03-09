@@ -32,8 +32,11 @@ class InternalSykmeldingApiKtTest : Spek({
 
     val sykmeldingService = mockkClass(SykmeldingerService::class)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
-    coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
+    beforeEachTest {
+        coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
+    }
     describe("Test internal sykmelding api") {
+
         with(TestApplicationEngine()) {
             start()
             application.install(ContentNegotiation) {

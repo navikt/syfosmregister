@@ -51,8 +51,4 @@ spec:
       value: 543ceb1e-eb69-4089-9458-bdec61160afa
     - name: ALLOWED_APP_IDS
       value: 543ceb1e-eb69-4089-9458-bdec61160afa
-    - name: STS_OIDC_ISSUER
-      value: https://security-token-service.nais.preprod.local
-    - name: STS_OIDC_AUDIENCE
-      value: preprod.local
 

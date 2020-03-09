@@ -37,17 +37,13 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.nullstilling.registerNullstillApi
-import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
-import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
-import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
-import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
 @KtorExperimentalAPI
 fun createApplicationEngine(
@@ -58,11 +54,9 @@ fun createApplicationEngine(
     jwkProvider: JwkProvider,
     issuer: String,
     cluster: String,
-    rerunKafkaService: RerunKafkaService,
-    jwkProviderForRerun: JwkProvider,
-    jwkProviderStsOidc: JwkProvider,
     jwkProviderInternal: JwkProvider,
-    sykmeldingStatusService: SykmeldingStatusService
+    sykmeldingStatusService: SykmeldingStatusService,
+    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -76,9 +70,6 @@ fun createApplicationEngine(
         setupAuth(vaultSecrets = vaultSecrets,
                 jwkProvider = jwkProvider,
                 issuer = issuer,
-                env = env,
-                jwkProviderForRerun = jwkProviderForRerun,
-                stsOidcJwkProvider = jwkProviderStsOidc,
                 jwkProviderInternal = jwkProviderInternal)
         install(CallId) {
             generate { UUID.randomUUID().toString() }
@@ -121,18 +112,10 @@ fun createApplicationEngine(
             registerNaisApi(applicationState)
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
-                registerSykmeldingApi(sykmeldingService, sykmeldingStatusService)
-            }
-            authenticate("rerun") {
-                registerRerunKafkaApi(rerunKafkaService)
+                registerSykmeldingApi(sykmeldingService, sykmeldingStatusKafkaProducer)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)
-            }
-            authenticate("oidc") {
-                registerSykmeldingStatusApi(sykmeldingStatusService)
-                registerSykmeldingSendApi(sykmeldingStatusService)
-                registerSykmeldingBekreftApi(sykmeldingStatusService)
             }
             authenticate("internal") {
                 registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService)
