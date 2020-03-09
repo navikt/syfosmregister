@@ -25,8 +25,8 @@ import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
-import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
+import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
 import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
@@ -62,7 +62,7 @@ fun main() {
     val sykmeldingKafkaProducer = mockkClass(SykmeldingStatusBackupKafkaProducer::class)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
     val sykmeldingStatusService = SykmeldingStatusService(db, sykmeldingKafkaProducer)
-    val internalSykmeldingService = InternalSykmeldingService(database = db)
+    val internalSykmeldingService = SykmeldingerService(database = db)
     val mockPayload = mockk<Payload>()
     coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
     every { sykmeldingKafkaProducer.send(any()) } returns Unit

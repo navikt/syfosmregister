@@ -25,14 +25,8 @@ fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmelding
     route("/api/v1") {
         get("/sykmeldinger") {
             val principal: JWTPrincipal = call.authentication.principal()!!
-            val subject = principal.payload.subject
-
-            val sykmeldinger: List<SykmeldingDTO> = sykmeldingService.hentSykmeldinger(subject)
-
-            when {
-                sykmeldinger.isNotEmpty() -> call.respond(sykmeldinger)
-                else -> call.respond(emptyList<SykmeldingDTO>())
-            }
+            val fnr = principal.payload.subject
+            call.respond(sykmeldingService.hentSykmeldinger(fnr))
         }
 
         post("/sykmeldinger/{sykmeldingsid}/bekreft") {

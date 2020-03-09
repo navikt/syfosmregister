@@ -5,16 +5,16 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
-import no.nav.syfo.sykmelding.internal.model.AdresseDTO
-import no.nav.syfo.sykmelding.internal.model.AnnenFraversArsakDTO
-import no.nav.syfo.sykmelding.internal.model.BehandlerDTO
-import no.nav.syfo.sykmelding.internal.model.BehandlingsutfallDTO
-import no.nav.syfo.sykmelding.internal.model.DiagnoseDTO
-import no.nav.syfo.sykmelding.internal.model.InternalSykmeldingDTO
-import no.nav.syfo.sykmelding.internal.model.KontaktMedPasientDTO
-import no.nav.syfo.sykmelding.internal.model.MedisinskVurderingDTO
-import no.nav.syfo.sykmelding.internal.model.RegelStatusDTO
-import no.nav.syfo.sykmelding.internal.model.SykmeldingsperiodeDTO
+import no.nav.syfo.sykmelding.model.AdresseDTO
+import no.nav.syfo.sykmelding.model.AnnenFraversArsakDTO
+import no.nav.syfo.sykmelding.model.BehandlerDTO
+import no.nav.syfo.sykmelding.model.BehandlingsutfallDTO
+import no.nav.syfo.sykmelding.model.DiagnoseDTO
+import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
+import no.nav.syfo.sykmelding.model.MedisinskVurderingDTO
+import no.nav.syfo.sykmelding.model.RegelStatusDTO
+import no.nav.syfo.sykmelding.model.SykmeldingDTO
+import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 
 fun getVaultSecrets(): VaultSecrets {
     return VaultSecrets(
@@ -30,13 +30,13 @@ fun getVaultSecrets(): VaultSecrets {
             "")
 }
 
-fun getInternalSykmelding(skjermet: Boolean = false): InternalSykmeldingDTO {
-    return InternalSykmeldingDTO(
+fun getInternalSykmelding(skjermet: Boolean = false): SykmeldingDTO {
+    return SykmeldingDTO(
             id = "1",
             utdypendeOpplysninger = emptyMap(),
             kontaktMedPasient = KontaktMedPasientDTO(null, null),
             sykmeldingsperioder = getPerioder(),
-            sykmeldingStatus = no.nav.syfo.sykmelding.internal.model.SykmeldingStatusDTO("APEN", OffsetDateTime.now(ZoneOffset.UTC), null, emptyList()),
+            sykmeldingStatus = no.nav.syfo.sykmelding.model.SykmeldingStatusDTO("APEN", OffsetDateTime.now(ZoneOffset.UTC), null, emptyList()),
             behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
             medisinskVurdering = getMedisinskVurdering(),
             behandler = BehandlerDTO(

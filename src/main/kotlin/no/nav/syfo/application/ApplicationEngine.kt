@@ -41,8 +41,8 @@ import no.nav.syfo.rerunkafka.api.registerRerunKafkaApi
 import no.nav.syfo.rerunkafka.service.RerunKafkaService
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
-import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
+import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingBekreftApi
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingSendApi
@@ -109,7 +109,7 @@ fun createApplicationEngine(
         val httpClient = HttpClient(Apache, config)
 
         val sykmeldingService = SykmeldingService(database)
-        val internalSykmeldingService = InternalSykmeldingService(database)
+        val internalSykmeldingService = no.nav.syfo.sykmelding.service.SykmeldingerService(database)
 
         val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
         routing {

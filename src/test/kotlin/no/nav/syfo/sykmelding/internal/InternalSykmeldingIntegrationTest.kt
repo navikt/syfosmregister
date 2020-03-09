@@ -21,9 +21,9 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
-import no.nav.syfo.sykmelding.internal.model.InternalSykmeldingDTO
-import no.nav.syfo.sykmelding.internal.service.InternalSykmeldingService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
+import no.nav.syfo.sykmelding.model.SykmeldingDTO
+import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
 import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
@@ -53,7 +53,7 @@ class InternalSykmeldingIntegrationTest : Spek({
             SykmeldingStatusEvent(testSykmeldingsopplysninger.id, LocalDateTime.now(), StatusEvent.SENDT))
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
 
-    val internalSykmeldingService = InternalSykmeldingService(database)
+    val internalSykmeldingService = SykmeldingerService(database)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
     coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
     describe("Test get InternalSykmelding") {
@@ -75,7 +75,7 @@ class InternalSykmeldingIntegrationTest : Spek({
                     addHeader("fnr", "pasientFnr")
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
-                    objectMapper.readValue<List<InternalSykmeldingDTO>>(response.content!!) shouldNotEqual null
+                    objectMapper.readValue<List<SykmeldingDTO>>(response.content!!) shouldNotEqual null
                 }
             }
         }
