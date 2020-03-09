@@ -1,4 +1,4 @@
-package no.nav.syfo.sykmelding.user
+package no.nav.syfo.sykmelding.user.api
 
 import io.ktor.application.call
 import io.ktor.auth.authentication
