@@ -6,8 +6,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.application.install
 import io.ktor.features.ContentNegotiation
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
@@ -22,7 +20,7 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.service.SykmeldingerService
-import no.nav.syfo.testutil.getInternalSykmelding
+import no.nav.syfo.testutil.getSykmeldingDto
 import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -59,7 +57,7 @@ class InternalSykmeldingApiKtTest : Spek({
             }
 
             it("Skal returnere liste med sykmeldinger") {
-                val sykmeldingList = listOf(getInternalSykmelding(false))
+                val sykmeldingList = listOf(getSykmeldingDto(false))
                 every { sykmeldingService.getInternalSykmeldinger(any()) } returns sykmeldingList
                 with(handleRequest(HttpMethod.Get, "$uri", setUPHeaders())) {
                     response.status() shouldEqual HttpStatusCode.OK
@@ -69,7 +67,6 @@ class InternalSykmeldingApiKtTest : Spek({
 
             it("Skal returnere bad request nar fodselsnummer ikke er tilgjengelig") {
                 with(handleRequest(HttpMethod.Get, uri) {
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     addHeader("Authorization", "Bearer 123")
                 }) {
                     response.status() shouldEqual HttpStatusCode.BadRequest
@@ -90,7 +87,6 @@ class InternalSykmeldingApiKtTest : Spek({
 
 private fun setUPHeaders(): TestApplicationRequest.() -> Unit {
     return {
-        addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
         addHeader("Authorization", "Bearer 123")
         addHeader("fnr", "01234567891")
     }
