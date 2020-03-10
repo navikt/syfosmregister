@@ -27,6 +27,7 @@ import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
+import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
 import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
@@ -60,7 +61,7 @@ fun main() {
 
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
     val sykmeldingStatusService = SykmeldingStatusService(db)
-    val internalSykmeldingService = SykmeldingerService(database = db)
+    val sykmeldingerService = SykmeldingerService(database = db)
     val mockPayload = mockk<Payload>()
     coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
     every { mockPayload.subject } returns "01234567891"
@@ -78,8 +79,9 @@ fun main() {
         }
         routing {
             registerNaisApi(ApplicationState(true, true))
-            registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService)
+            registrerInternalSykmeldingApi(sykmeldingerService, tilgangskontrollService)
             registerSykmeldingStatusGETApi(sykmeldingStatusService)
+            registrerSykmeldingApiV2(sykmeldingerService)
         }
     }.start(true)
 }

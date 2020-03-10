@@ -41,6 +41,7 @@ import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
+import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
@@ -100,7 +101,7 @@ fun createApplicationEngine(
         val httpClient = HttpClient(Apache, config)
 
         val sykmeldingService = SykmeldingService(database)
-        val internalSykmeldingService = no.nav.syfo.sykmelding.service.SykmeldingerService(database)
+        val sykmeldingerService = SykmeldingerService(database)
 
         val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
         routing {
@@ -113,12 +114,13 @@ fun createApplicationEngine(
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
                 registerSykmeldingApi(sykmeldingService, sykmeldingStatusKafkaProducer)
+                registrerSykmeldingApiV2(sykmeldingerService)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)
             }
             authenticate("internal") {
-                registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService)
+                registrerInternalSykmeldingApi(sykmeldingerService, tilgangskontrollService)
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())

@@ -37,7 +37,6 @@ class SykmeldingApiV2KtTest : Spek({
         clearAllMocks()
     }
 
-
     describe("Test sykmeldingApiV2") {
 
         with(TestApplicationEngine()) {

@@ -22,6 +22,18 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+  /api/v2/sykmeldinger:
+    get:
+      summary: V2 av sykmeldinger api, returnerer liste av sykmeldinger for fnr i access_token
+      operationId: getSykmeldingerV2
+      responses:
+        '200':
+          $ref: '#/components/responses/InternalSykmeldingerResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
   /api/v1/sykmeldinger/{sykmeldingId}/bekreft:
     post:
       operationId: bekreftAvvistSykmelding
@@ -82,7 +94,7 @@ paths:
 components:
   responses:
     InternalSykmeldingerResponse:
-      description: "Response for internal sykmeldinger for saksbehandlere"
+      description: "Sykmelding response"
       content:
         application/json:
           schema:
@@ -349,7 +361,6 @@ components:
         - behandlingsutfall
         - sykmeldingsperioder
         - sykmeldingStatus
-        - medisinskVurdering
         - skjermesForPasient
         - utdypendeOpplysninger
         - kontaktMedPasient

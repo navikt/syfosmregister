@@ -27,7 +27,6 @@ class SykmeldingerServiceTest : Spek({
         clearAllMocks()
     }
 
-
     describe("Test SykmeldingerService") {
         it("Should get 0 sykmeldinger as user") {
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId)
