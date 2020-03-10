@@ -33,6 +33,7 @@ val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9.3"
 val nimbusdsVersion = "7.5.1"
 val testContainerKafkaVersion = "1.12.5"
+val smCommonDiagnosisCodesVersion = "1.f898112"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -40,7 +41,7 @@ tasks.withType<Jar> {
 
 plugins {
     id("org.jmailen.kotlinter") version "2.1.1"
-    kotlin("jvm") version "1.3.61"
+    kotlin("jvm") version "1.3.70"
     id("com.diffplug.gradle.spotless") version "3.23.1"
     id("com.github.johnrengelman.shadow") version "4.0.4"
     id("org.hidetake.swagger.generator") version "2.18.1" apply true
@@ -105,7 +106,7 @@ dependencies {
 
     implementation("no.nav.helse:syfosm-common-models:$smCommonVersion")
     implementation("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
-    implementation("no.nav.helse:syfosm-common-diagnosis-codes:$smCommonVersion")
+    implementation("no.nav.helse:syfosm-common-diagnosis-codes:$smCommonDiagnosisCodesVersion")
 
     //Database
     implementation("org.postgresql:postgresql:$postgresVersion")
