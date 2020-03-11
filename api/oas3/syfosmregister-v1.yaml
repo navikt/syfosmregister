@@ -28,7 +28,7 @@ paths:
       operationId: getSykmeldingerV2
       responses:
         '200':
-          $ref: '#/components/responses/InternalSykmeldingerResponse'
+          $ref: '#/components/responses/UserSykmeldingerResponse'
         '401':
           description: Unauthorized
         '403':
@@ -93,6 +93,14 @@ paths:
 
 components:
   responses:
+    UserSykmeldingerResponse:
+      description: "Sykmelding response"
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/UserSykmelding'
     InternalSykmeldingerResponse:
       description: "Sykmelding response"
       content:
@@ -353,6 +361,64 @@ components:
       description: Liste med spørsmål og svar, er kun tilgjengelig om Status er SENDT eller BEKREFTET
       items:
         $ref: '#/components/schemas/SporsmalOgSvar'
+    UserSykmelding:
+      type: object
+      required:
+        - id
+        - mottattTidspunkt
+        - behandlingsutfall
+        - sykmeldingsperioder
+        - sykmeldingStatus
+        - skjermesForPasient
+        - utdypendeOpplysninger
+        - kontaktMedPasient
+        - behandletTidspunkt
+        - behandler
+      properties:
+        id:
+          type: string
+        mottattTidspunkt:
+          $ref: '#/components/schemas/Timestamp'
+        behandlingsutfall:
+          $ref: '#/components/schemas/Behandlingsutfall'
+        legekontorOrgnummer:
+          type: string
+        arbeidsgiver:
+          $ref: '#/components/schemas/Arbeidsgiver'
+        sykmeldingsperioder:
+          type: array
+          items:
+            $ref: '#/components/schemas/InternalSykmeldingsperiode'
+        sykmeldingStatus:
+          $ref: '#/components/schemas/SykmeldingStatus'
+        medisinskVurdering:
+          $ref: '#/components/schemas/InternalMedisinskVurdering'
+        skjermesForPasient:
+          type: boolean
+        prognose:
+          $ref: '#/components/schemas/Prognose'
+        utdypendeOpplysninger:
+          $ref: '#/components/schemas/UtdypendeOpplysninger'
+        tiltakArbeidsplassen:
+          type: string
+        tiltakNAV:
+          type: string
+        andreTiltak:
+          type: string
+        meldingTilNAV:
+          $ref: '#/components/schemas/MeldingTilNavDTO'
+        meldingTilArbeidsgiver:
+          type: string
+        kontaktMedPasient:
+          $ref: '#/components/schemas/KontaktMedPasient'
+        behandletTidspunkt:
+          $ref: '#/components/schemas/Timestamp'
+        behandler:
+          $ref: '#/components/schemas/Behandler'
+        syketilfelleStartDato:
+          $ref: '#/components/schemas/Date'
+        navnFastlege:
+          type: string
     InternalSykmelding:
       type: object
       required:
@@ -366,6 +432,7 @@ components:
         - kontaktMedPasient
         - behandletTidspunkt
         - behandler
+        - medisinskVurdering
       properties:
         id:
           type: string
