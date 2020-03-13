@@ -50,5 +50,7 @@ spec:
     - name: CLIENT_ID
       value: 543ceb1e-eb69-4089-9458-bdec61160afa
     - name: ALLOWED_APP_IDS
-      value: 543ceb1e-eb69-4089-9458-bdec61160afa
+      value: 281ba984-745f-48b8-a79c-9444b8688361
+    - name: JWT_ISSUER_SERVICEUSER
+      value: https://sts.windows.net/966ac572-f5b7-4bbe-aa88-c76419c0f851/
 

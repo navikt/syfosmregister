@@ -77,6 +77,11 @@ fun main() {
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
+    val jwkProviderServiceuser = JwkProviderBuilder(URL(environment.jwkKeysUrl))
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
+
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
 
@@ -95,16 +100,20 @@ fun main() {
     val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState)
     val applicationEngine = createApplicationEngine(
-            environment,
-            applicationState,
-            database,
-            vaultSecrets,
-            jwkProvider,
-            wellKnown.issuer,
-            environment.cluster,
-            jwkProviderInternal,
-            sykmeldingStatusService,
-            sykmeldingStatusKafkaProducer
+        env = environment,
+        applicationState = applicationState,
+        database = database,
+        vaultSecrets = vaultSecrets,
+        jwkProvider = jwkProvider,
+        issuer = wellKnown.issuer,
+        cluster = environment.cluster,
+        jwkProviderInternal = jwkProviderInternal,
+        sykmeldingStatusService = sykmeldingStatusService,
+        sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
+        jwkProviderServiceuser = jwkProviderServiceuser,
+        issuerServiceuser = environment.jwtIssuerServiceuser,
+        clientId = environment.clientId,
+        appIds = environment.appIds
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)

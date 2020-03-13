@@ -41,6 +41,7 @@ import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
+import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV1
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
@@ -57,7 +58,11 @@ fun createApplicationEngine(
     cluster: String,
     jwkProviderInternal: JwkProvider,
     sykmeldingStatusService: SykmeldingStatusService,
-    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
+    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
+    jwkProviderServiceuser: JwkProvider,
+    issuerServiceuser: String,
+    clientId: String,
+    appIds: List<String>
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -69,9 +74,13 @@ fun createApplicationEngine(
             }
         }
         setupAuth(vaultSecrets = vaultSecrets,
-                jwkProvider = jwkProvider,
-                issuer = issuer,
-                jwkProviderInternal = jwkProviderInternal)
+            jwkProvider = jwkProvider,
+            issuer = issuer,
+            jwkProviderInternal = jwkProviderInternal,
+            jwkProviderServiceuser = jwkProviderServiceuser,
+            issuerServiceuser = issuerServiceuser,
+            clientId = clientId,
+            appIds = appIds)
         install(CallId) {
             generate { UUID.randomUUID().toString() }
             verify { callId: String -> callId.isNotEmpty() }
@@ -115,6 +124,9 @@ fun createApplicationEngine(
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
                 registerSykmeldingApi(sykmeldingService, sykmeldingStatusKafkaProducer)
                 registrerSykmeldingApiV2(sykmeldingerService)
+            }
+            authenticate("jwtserviceuser") {
+                registrerSykmeldingServiceuserApiV1(sykmeldingerService)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)

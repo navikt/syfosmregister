@@ -6,6 +6,7 @@ import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.getSykmeldinger
+import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
@@ -51,6 +52,13 @@ class SykmeldingerServiceTest : Spek({
             val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
             sykmeldinger.size shouldEqual 1
             sykmeldinger[0].medisinskVurdering shouldNotBe null
+        }
+
+        it("skal ikke få med medisinsk vurdering ved henting med id") {
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodel(skjermet = false)
+            val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
+            sykmelding shouldNotBe null
+            sykmelding!!.medisinskVurdering shouldEqual null
         }
     }
 })

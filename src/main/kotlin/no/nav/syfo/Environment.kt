@@ -19,6 +19,7 @@ data class Environment(
     val mountPathVault: String = getEnvVar("MOUNT_PATH_VAULT"),
     val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
     val jwtIssuer: String = getEnvVar("JWT_ISSUER"),
+    val jwtIssuerServiceuser: String = getEnvVar("JWT_ISSUER_SERVICEUSER"),
     val appIds: List<String> = getEnvVar("ALLOWED_APP_IDS")
             .split(",")
             .map { it.trim() },
