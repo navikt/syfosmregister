@@ -17,6 +17,7 @@ import no.nav.syfo.sykmelding.db.Arbeidsgiver
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.ArbeidsrelatertArsak
 import no.nav.syfo.sykmelding.db.ArbeidsrelatertArsakType
+import no.nav.syfo.sykmelding.db.AvsenderSystem
 import no.nav.syfo.sykmelding.db.Behandler
 import no.nav.syfo.sykmelding.db.Diagnose
 import no.nav.syfo.sykmelding.db.ErIArbeid
@@ -32,6 +33,7 @@ import no.nav.syfo.sykmelding.db.Prognose
 import no.nav.syfo.sykmelding.db.SporsmalSvar
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.SvarRestriksjon
+import no.nav.syfo.sykmelding.db.Sykmelding
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
 import no.nav.syfo.sykmeldingstatus.ShortName
 import no.nav.syfo.sykmeldingstatus.Sporsmal
@@ -61,7 +63,8 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
             meldingTilNAV = sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO(),
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
-            utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger)
+            utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger),
+            avsenderSystem = sykmeldingsDokument.avsenderSystem?: AvsenderSystem("Egenmeldt", "0.1")
     )
 }
 

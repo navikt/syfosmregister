@@ -478,6 +478,8 @@ components:
           $ref: '#/components/schemas/Date'
         navnFastlege:
           type: string
+        avsenderSystem:
+          $ref: '#/components/schemas/AvsenderSystem'
     Prognose:
       type: object
       required:
@@ -567,6 +569,13 @@ components:
         postboks:
           type: string
         land:
+          type: string
+    AvsenderSystem:
+      type: object
+      properties:
+        navn:
+          type: string
+        versjon:
           type: string
     UtdypendeOpplysninger:
       description: påkrevd, og kan være et tomt map
