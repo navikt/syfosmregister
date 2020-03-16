@@ -7,7 +7,6 @@ import io.mockk.mockkStatic
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
-import no.nav.syfo.testutil.getSykmeldingerDBmodelWithoutAvsenderSystem
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotBe
@@ -54,12 +53,5 @@ class SykmeldingerServiceTest : Spek({
             sykmeldinger[0].medisinskVurdering shouldNotBe null
         }
 
-        it("should return avsendersystem of type 'Egenmeldt' when avsendersystem is not set") {
-            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodelWithoutAvsenderSystem())
-            val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
-            sykmeldinger.size shouldEqual 1
-            sykmeldinger[0].avsenderSystem?.navn shouldBe "Egenmeldt"
-            sykmeldinger[0].medisinskVurdering shouldNotBe null
-        }
     }
 })

@@ -64,7 +64,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             meldingTilNAV = sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO(),
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
             utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger),
-            avsenderSystem = sykmeldingsDokument.avsenderSystem?: AvsenderSystem("Egenmeldt", "0.1")
+            avsenderSystem = sykmeldingsDokument.avsenderSystem
     )
 }
 
