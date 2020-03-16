@@ -68,8 +68,7 @@ fun getSykmeldingDto(skjermet: Boolean = false): SykmeldingDTO {
             navnFastlege = null,
             meldingTilArbeidsgiver = null,
             legekontorOrgnummer = null,
-            andreTiltak = null,
-            avsenderSystem = AvsenderSystem("Navn", "versjon")
+            andreTiltak = null
     )
 }
 
@@ -147,4 +146,3 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false): SykmeldingDbModel {
             ))
     return sykmeldingDbModel
 }
-

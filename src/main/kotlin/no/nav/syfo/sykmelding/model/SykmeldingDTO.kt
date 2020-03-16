@@ -1,6 +1,5 @@
 package no.nav.syfo.sykmelding.model
 
-import no.nav.syfo.sykmelding.db.AvsenderSystem
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -25,6 +24,5 @@ data class SykmeldingDTO(
     val behandletTidspunkt: OffsetDateTime,
     val behandler: BehandlerDTO,
     val syketilfelleStartDato: LocalDate?,
-    val navnFastlege: String?,
-    val avsenderSystem: AvsenderSystem?
+    val navnFastlege: String?
 )

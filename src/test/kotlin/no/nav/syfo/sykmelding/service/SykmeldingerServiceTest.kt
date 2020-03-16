@@ -52,6 +52,5 @@ class SykmeldingerServiceTest : Spek({
             sykmeldinger.size shouldEqual 1
             sykmeldinger[0].medisinskVurdering shouldNotBe null
         }
-
     }
 })
