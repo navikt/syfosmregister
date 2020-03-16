@@ -419,6 +419,8 @@ components:
           $ref: '#/components/schemas/Date'
         navnFastlege:
           type: string
+        egenmeldt:
+          type: boolean
     InternalSykmelding:
       type: object
       required:
@@ -478,6 +480,8 @@ components:
           $ref: '#/components/schemas/Date'
         navnFastlege:
           type: string
+        egenmeldt:
+          type: boolean
     Prognose:
       type: object
       required:
