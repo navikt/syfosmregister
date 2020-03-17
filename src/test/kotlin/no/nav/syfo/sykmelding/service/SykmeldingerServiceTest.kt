@@ -7,6 +7,7 @@ import io.mockk.mockkStatic
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
+import no.nav.syfo.testutil.getSykmeldingerDBmodelEgenmeldt
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotBe
@@ -50,6 +51,15 @@ class SykmeldingerServiceTest : Spek({
             every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(skjermet = true))
             val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
             sykmeldinger.size shouldEqual 1
+            sykmeldinger[0].egenmeldt shouldBe false
+            sykmeldinger[0].medisinskVurdering shouldNotBe null
+        }
+
+        it("should set egenmeldt = true when avsenderSystem.name = 'Egenmeldt'") {
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodelEgenmeldt())
+            val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
+            sykmeldinger.size shouldEqual 1
+            sykmeldinger[0].egenmeldt shouldBe true
             sykmeldinger[0].medisinskVurdering shouldNotBe null
         }
     }

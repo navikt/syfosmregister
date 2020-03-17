@@ -24,5 +24,6 @@ data class SykmeldingDTO(
     val behandletTidspunkt: OffsetDateTime,
     val behandler: BehandlerDTO,
     val syketilfelleStartDato: LocalDate?,
-    val navnFastlege: String?
+    val navnFastlege: String?,
+    val egenmeldt: Boolean?
 )

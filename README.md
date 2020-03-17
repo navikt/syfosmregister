@@ -100,6 +100,7 @@ read postgresql/prod-fss/creds/syfosmregister-admin
 * Sebastian Knudsen, `sebastian.knudsen@nav.no`
 * Tia Firing, `tia.firing@nav.no`
 * Jonas Henie, `jonas.henie@nav.no`
+* Mathias Hellevang, `mathias.hellevang@nav.no`
 
 ### For NAV employees
 We are available at the Slack channel #team-sykmelding
