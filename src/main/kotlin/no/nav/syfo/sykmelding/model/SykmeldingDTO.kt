@@ -25,5 +25,6 @@ data class SykmeldingDTO(
     val behandler: BehandlerDTO,
     val syketilfelleStartDato: LocalDate?,
     val navnFastlege: String?,
-    val egenmeldt: Boolean?
+    val egenmeldt: Boolean?,
+    val harRedusertArbeidsgiverperiode: Boolean?
 )

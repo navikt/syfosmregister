@@ -62,8 +62,19 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             meldingTilNAV = sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO(),
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
             utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger),
-            egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt"
+            egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
+            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode()
     )
+}
+
+private fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
+    val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071")
+    if (hovedDiagnose != null && diagnoserSomGirRedusertArbgiverPeriode.contains(hovedDiagnose.kode)) {
+        return true
+    } else if (!biDiagnoser.isNullOrEmpty() && biDiagnoser.find { diagnoserSomGirRedusertArbgiverPeriode.contains(it.kode) } != null) {
+        return true
+    }
+    return false
 }
 
 private fun SykmeldingDbModel.getMedisinskVurderingDTO(isPasient: Boolean, ikkeTilgangTilDiagnose: Boolean): MedisinskVurderingDTO? {

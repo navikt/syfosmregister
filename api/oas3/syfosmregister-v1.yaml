@@ -37,6 +37,8 @@ paths:
     get:
       summary: Returnerer sykmelding med gitt sykmeldingId
       operationId: getSykmeldingV1
+      parameters:
+        - $ref: '#/components/parameters/sykmeldingId'
       responses:
         '200':
           $ref: '#/components/responses/UserSykmeldingerResponse'
@@ -432,6 +434,8 @@ components:
           type: string
         egenmeldt:
           type: boolean
+        harRedusertArbeidsgiverperiode:
+          type: boolean
     InternalSykmelding:
       type: object
       required:
@@ -492,6 +496,8 @@ components:
         navnFastlege:
           type: string
         egenmeldt:
+          type: boolean
+        harRedusertArbeidsgiverperiode:
           type: boolean
     Prognose:
       type: object

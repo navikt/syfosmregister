@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.sykmelding.db.Diagnose
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
@@ -40,12 +41,14 @@ class SykmeldingerServiceTest : Spek({
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId)
             sykmeldinger.size shouldEqual 1
             sykmeldinger[0].medisinskVurdering shouldNotBe null
+            sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
         }
 
         it("Should not get medisinsk vurderering når sykmeldingen skal skjermes for pasient") {
             every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(skjermet = true))
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId)
             sykmeldinger[0].medisinskVurdering shouldBe null
+            sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
         }
 
         it("should get internalSykmellding") {
@@ -54,6 +57,7 @@ class SykmeldingerServiceTest : Spek({
             sykmeldinger.size shouldEqual 1
             sykmeldinger[0].egenmeldt shouldBe false
             sykmeldinger[0].medisinskVurdering shouldNotBe null
+            sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
         }
 
         it("should set egenmeldt = true when avsenderSystem.name = 'Egenmeldt'") {
@@ -62,6 +66,7 @@ class SykmeldingerServiceTest : Spek({
             sykmeldinger.size shouldEqual 1
             sykmeldinger[0].egenmeldt shouldBe true
             sykmeldinger[0].medisinskVurdering shouldNotBe null
+            sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
         }
 
         it("skal ikke få med medisinsk vurdering ved henting med id") {
@@ -69,6 +74,23 @@ class SykmeldingerServiceTest : Spek({
             val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
             sykmelding shouldNotBe null
             sykmelding!!.medisinskVurdering shouldEqual null
+            sykmelding.harRedusertArbeidsgiverperiode shouldEqual false
+        }
+
+        it("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har diagnosekode R991 som hoveddiagnose") {
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(hovediagnosekode = "R991")
+            val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
+            sykmelding shouldNotBe null
+            sykmelding!!.medisinskVurdering shouldEqual null
+            sykmelding.harRedusertArbeidsgiverperiode shouldEqual true
+        }
+
+        it("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har bidiganose med diagnosekode U071 som hoveddiagnose") {
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(bidiagnoser = listOf(Diagnose("system", "U071", "tekst")))
+            val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
+            sykmelding shouldNotBe null
+            sykmelding!!.medisinskVurdering shouldEqual null
+            sykmelding.harRedusertArbeidsgiverperiode shouldEqual true
         }
     }
 })
