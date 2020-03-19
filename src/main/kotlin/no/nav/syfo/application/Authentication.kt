@@ -50,6 +50,7 @@ fun Application.setupAuth(
                 if (appId in appIds && clientId in credentials.payload.audience) {
                     JWTPrincipal(credentials.payload)
                 } else {
+                    log.info("Skulle hatt issuer {}", issuer)
                     unauthorized(credentials)
                 }
             }
