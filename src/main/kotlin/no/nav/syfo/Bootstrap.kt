@@ -111,7 +111,7 @@ fun main() {
         sykmeldingStatusService = sykmeldingStatusService,
         sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
         jwkProviderServiceuser = jwkProviderServiceuser,
-        issuerServiceuser = environment.jwtIssuerServiceuser,
+        issuerServiceuser = environment.jwtIssuer,
         clientId = environment.clientId,
         appIds = environment.appIds
     )
