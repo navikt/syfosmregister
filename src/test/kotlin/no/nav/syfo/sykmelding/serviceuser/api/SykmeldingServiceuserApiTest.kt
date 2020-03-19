@@ -97,7 +97,7 @@ class SykmeldingServiceuserApiTest : Spek({
                 }
             }
 
-            it("Get sykmelding Unauthorized with incorrect appid") {
+            it("Get sykmelding Unauthorized with incorrect azp") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
                     addHeader("Authorization", "Bearer ${generateJWT("error", "clientId", subject = "123")}")
                 }) {

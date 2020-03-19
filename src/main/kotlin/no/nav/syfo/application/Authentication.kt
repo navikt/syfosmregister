@@ -46,11 +46,10 @@ fun Application.setupAuth(
         jwt(name = "jwtserviceuser") {
             verifier(jwkProviderInternal, issuerServiceuser)
             validate { credentials ->
-                val appId: String = credentials.payload.getClaim("appid").asString()
+                val appId: String = credentials.payload.getClaim("azp").asString()
                 if (appId in appIds && clientId in credentials.payload.audience) {
                     JWTPrincipal(credentials.payload)
                 } else {
-                    log.info("Skulle hatt issuer {}", issuer)
                     unauthorized(credentials)
                 }
             }
