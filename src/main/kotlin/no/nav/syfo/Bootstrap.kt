@@ -95,16 +95,19 @@ fun main() {
     val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState)
     val applicationEngine = createApplicationEngine(
-            environment,
-            applicationState,
-            database,
-            vaultSecrets,
-            jwkProvider,
-            wellKnown.issuer,
-            environment.cluster,
-            jwkProviderInternal,
-            sykmeldingStatusService,
-            sykmeldingStatusKafkaProducer
+        env = environment,
+        applicationState = applicationState,
+        database = database,
+        vaultSecrets = vaultSecrets,
+        jwkProvider = jwkProvider,
+        issuer = wellKnown.issuer,
+        cluster = environment.cluster,
+        jwkProviderInternal = jwkProviderInternal,
+        sykmeldingStatusService = sykmeldingStatusService,
+        sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
+        issuerServiceuser = environment.jwtIssuer,
+        clientId = environment.clientId,
+        appIds = environment.appIds
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)

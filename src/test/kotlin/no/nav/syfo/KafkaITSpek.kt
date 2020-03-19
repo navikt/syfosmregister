@@ -27,20 +27,20 @@ object KafkaITSpek : Spek({
 
     val credentials = getVaultSecrets()
     val env = Environment(
-            applicationPort = getRandomPort(),
-            kafkaSm2013AutomaticPapirmottakTopic = "topic1",
-            kafkaSm2013AutomaticDigitalHandlingTopic = "topic3",
-            kafkaBootstrapServers = embeddedEnvironment.brokersURL,
-            syfosmregisterDBURL = "12314.adeo.no",
-            mountPathVault = "vault.adeo.no",
-            cluster = "local",
-            databaseName = "syfosmregister",
-            applicationName = "syfosmregister",
-            sm2013ManualHandlingTopic = "topic2",
-            jwtIssuer = "",
-            appIds = listOf("123"),
-            clientId = ""
-            )
+        applicationPort = getRandomPort(),
+        kafkaSm2013AutomaticPapirmottakTopic = "topic1",
+        kafkaSm2013AutomaticDigitalHandlingTopic = "topic3",
+        kafkaBootstrapServers = embeddedEnvironment.brokersURL,
+        syfosmregisterDBURL = "12314.adeo.no",
+        mountPathVault = "vault.adeo.no",
+        cluster = "local",
+        databaseName = "syfosmregister",
+        applicationName = "syfosmregister",
+        sm2013ManualHandlingTopic = "topic2",
+        jwtIssuer = "",
+        appIds = listOf("123"),
+        clientId = ""
+    )
 
     fun Properties.overrideForTest(): Properties = apply {
         remove("security.protocol")

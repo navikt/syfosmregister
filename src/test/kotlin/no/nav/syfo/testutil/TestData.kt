@@ -69,7 +69,8 @@ fun getSykmeldingDto(skjermet: Boolean = false): SykmeldingDTO {
             meldingTilArbeidsgiver = null,
             legekontorOrgnummer = null,
             andreTiltak = null,
-            egenmeldt = false
+            egenmeldt = false,
+            harRedusertArbeidsgiverperiode = false
     )
 }
 
@@ -148,8 +149,7 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false): SykmeldingDbModel {
     return sykmeldingDbModel
 }
 
-
-fun getSykmeldingerDBmodelEgenmeldt(): SykmeldingDbModel {
+fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList()): SykmeldingDbModel {
     val sykmeldingDbModel = SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
@@ -168,8 +168,8 @@ fun getSykmeldingerDBmodelEgenmeldt(): SykmeldingDbModel {
                             stillingsprosent = null,
                             yrkesbetegnelse = null),
                     medisinskVurdering = MedisinskVurdering(
-                            hovedDiagnose = Diagnose("system", "kode", "tekst"),
-                            biDiagnoser = emptyList(),
+                            hovedDiagnose = Diagnose("system", hovediagnosekode, "tekst"),
+                            biDiagnoser = bidiagnoser,
                             yrkesskade = false,
                             svangerskap = false,
                             annenFraversArsak = null,
@@ -208,4 +208,3 @@ fun getSykmeldingerDBmodelEgenmeldt(): SykmeldingDbModel {
             ))
     return sykmeldingDbModel
 }
-

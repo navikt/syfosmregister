@@ -39,7 +39,7 @@ import no.nav.syfo.sykmeldingstatus.Svar
 import no.nav.syfo.sykmeldingstatus.Svartype
 import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
 
-internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasient: Boolean = false): SykmeldingDTO {
+internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasient: Boolean = false, ikkeTilgangTilDiagnose: Boolean): SykmeldingDTO {
     return SykmeldingDTO(
             id = id,
             andreTiltak = sykmeldingsDokument.andreTiltak,
@@ -53,7 +53,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
             tiltakNAV = sykmeldingsDokument.tiltakNAV,
             behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
-            medisinskVurdering = getMedisinskVurderingDTO(isPasient),
+            medisinskVurdering = getMedisinskVurderingDTO(isPasient, ikkeTilgangTilDiagnose),
             behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(),
             sykmeldingStatus = status.toSykmeldingStatusDTO(sporsmal.map { it.toSporsmalDTO() }),
             sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO() },
@@ -62,12 +62,23 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             meldingTilNAV = sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO(),
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
             utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger),
-            egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt"
+            egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
+            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode()
     )
 }
 
-private fun SykmeldingDbModel.getMedisinskVurderingDTO(isPasient: Boolean): MedisinskVurderingDTO? {
-    if (isPasient && sykmeldingsDokument.skjermesForPasient) {
+private fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
+    val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071")
+    if (hovedDiagnose != null && diagnoserSomGirRedusertArbgiverPeriode.contains(hovedDiagnose.kode)) {
+        return true
+    } else if (!biDiagnoser.isNullOrEmpty() && biDiagnoser.find { diagnoserSomGirRedusertArbgiverPeriode.contains(it.kode) } != null) {
+        return true
+    }
+    return false
+}
+
+private fun SykmeldingDbModel.getMedisinskVurderingDTO(isPasient: Boolean, ikkeTilgangTilDiagnose: Boolean): MedisinskVurderingDTO? {
+    if (ikkeTilgangTilDiagnose || (isPasient && sykmeldingsDokument.skjermesForPasient)) {
         return null
     }
     return sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO()

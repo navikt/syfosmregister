@@ -33,6 +33,19 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+  /api/v1/sykmelding/{sykmeldingId}:
+    get:
+      summary: Returnerer sykmelding med gitt sykmeldingId
+      operationId: getSykmeldingV1
+      parameters:
+        - $ref: '#/components/parameters/sykmeldingId'
+      responses:
+        '200':
+          $ref: '#/components/responses/UserSykmeldingerResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
 
   /api/v1/sykmeldinger/{sykmeldingId}/bekreft:
     post:
@@ -421,6 +434,8 @@ components:
           type: string
         egenmeldt:
           type: boolean
+        harRedusertArbeidsgiverperiode:
+          type: boolean
     InternalSykmelding:
       type: object
       required:
@@ -481,6 +496,8 @@ components:
         navnFastlege:
           type: string
         egenmeldt:
+          type: boolean
+        harRedusertArbeidsgiverperiode:
           type: boolean
     Prognose:
       type: object

@@ -40,6 +40,7 @@ fun generateJWT(
         .withClaim("auth_time", now)
         .withClaim("nbf", now)
         .withClaim("azp", consumerClientId)
+        .withClaim("appid", consumerClientId)
         .withClaim("iat", now)
         .withClaim("exp", Date.from(expiry?.atZone(ZoneId.systemDefault())?.toInstant()))
         .sign(alg)
