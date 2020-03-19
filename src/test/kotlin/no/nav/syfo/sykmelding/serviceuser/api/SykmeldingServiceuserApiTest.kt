@@ -72,7 +72,7 @@ class SykmeldingServiceuserApiTest : Spek({
             val uri = Paths.get(path).toUri().toURL()
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
-            application.setupAuth(getVaultSecrets().copy(internalJwtIssuer = "https://sts.issuer.net/myid"), jwkProvider, "", jwkProvider, jwkProvider, "", "clientId", listOf("syfosoknad"))
+            application.setupAuth(getVaultSecrets(), jwkProvider, "https://sts.issuer.net/myid", jwkProvider, jwkProvider, "", "clientId", listOf("syfosoknad"))
             application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
             it("get sykmelding OK") {
                 every { sykmeldingerServiceMedMock.getSykmeldingMedId(any()) } returns getSykmeldingDto(skjermet = true)

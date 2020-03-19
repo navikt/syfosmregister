@@ -44,7 +44,7 @@ fun Application.setupAuth(
             }
         }
         jwt(name = "jwtserviceuser") {
-            verifier(jwkProviderInternal, vaultSecrets.internalJwtIssuer)
+            verifier(jwkProviderInternal, issuer)
             validate { credentials ->
                 val appId: String = credentials.payload.getClaim("appid").asString()
                 if (appId in appIds && clientId in credentials.payload.audience) {
