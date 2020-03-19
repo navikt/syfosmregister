@@ -19,12 +19,10 @@ data class Environment(
     val mountPathVault: String = getEnvVar("MOUNT_PATH_VAULT"),
     val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
     val jwtIssuer: String = getEnvVar("JWT_ISSUER"),
-    val jwtIssuerServiceuser: String = getEnvVar("JWT_ISSUER_SERVICEUSER"),
     val appIds: List<String> = getEnvVar("ALLOWED_APP_IDS")
             .split(",")
             .map { it.trim() },
     val clientId: String = getEnvVar("CLIENT_ID"),
-    val jwkKeysUrl: String = getEnvVar("JWKKEYS_URL", "https://login.microsoftonline.com/common/discovery/keys"),
     val syfoTilgangskontrollUrl: String = getEnvVar("SYFO_TILGANGSKONTROLL_URL", "http://syfo-tilgangskontroll/syfo-tilgangskontroll/api/tilgang/bruker"),
     val sykmeldingStatusBackupTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_BACKUP_TOPIC", "privat-syfo-register-status-backup"),
     val sykmeldingStatusTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_TOPIC", "aapen-syfo-sykmeldingstatus-leesah-v1")

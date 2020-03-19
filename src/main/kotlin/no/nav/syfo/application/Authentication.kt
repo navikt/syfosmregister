@@ -19,7 +19,6 @@ fun Application.setupAuth(
     jwkProvider: JwkProvider,
     issuer: String,
     jwkProviderInternal: JwkProvider,
-    jwkProviderServiceuser: JwkProvider,
     issuerServiceuser: String,
     clientId: String,
     appIds: List<String>
