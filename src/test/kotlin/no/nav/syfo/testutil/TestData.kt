@@ -9,13 +9,16 @@ import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.sykmelding.db.Adresse
+import no.nav.syfo.sykmelding.db.AktivitetIkkeMulig
 import no.nav.syfo.sykmelding.db.Arbeidsgiver
 import no.nav.syfo.sykmelding.db.AvsenderSystem
 import no.nav.syfo.sykmelding.db.Behandler
 import no.nav.syfo.sykmelding.db.Diagnose
 import no.nav.syfo.sykmelding.db.HarArbeidsgiver
 import no.nav.syfo.sykmelding.db.KontaktMedPasient
+import no.nav.syfo.sykmelding.db.MedisinskArsak
 import no.nav.syfo.sykmelding.db.MedisinskVurdering
+import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.Sykmelding
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
@@ -43,12 +46,12 @@ fun getVaultSecrets(): VaultSecrets {
             "")
 }
 
-fun getSykmeldingDto(skjermet: Boolean = false): SykmeldingDTO {
+fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<SykmeldingsperiodeDTO> = getPerioder()): SykmeldingDTO {
     return SykmeldingDTO(
             id = "1",
             utdypendeOpplysninger = emptyMap(),
             kontaktMedPasient = KontaktMedPasientDTO(null, null),
-            sykmeldingsperioder = getPerioder(),
+            sykmeldingsperioder = perioder,
             sykmeldingStatus = no.nav.syfo.sykmelding.model.SykmeldingStatusDTO("APEN", OffsetDateTime.now(ZoneOffset.UTC), null, emptyList()),
             behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
             medisinskVurdering = getMedisinskVurdering(),
@@ -89,7 +92,7 @@ fun getPerioder(): List<SykmeldingsperiodeDTO> {
     return listOf(SykmeldingsperiodeDTO(LocalDate.now(), LocalDate.now(), null, null, null, PeriodetypeDTO.AKTIVITET_IKKE_MULIG, null, false))
 }
 
-fun getSykmeldingerDBmodel(skjermet: Boolean = false): SykmeldingDbModel {
+fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = emptyList()): SykmeldingDbModel {
     val sykmeldingDbModel = SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
@@ -143,13 +146,25 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false): SykmeldingDbModel {
                     msgId = "msgid",
                     pasientAktoerId = "aktorId",
                     avsenderSystem = AvsenderSystem("Navn", "verjosn"),
-                    perioder = emptyList(),
+                    perioder = perioder,
                     signaturDato = LocalDateTime.now()
             ))
     return sykmeldingDbModel
 }
 
-fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList()): SykmeldingDbModel {
+fun getPeriode(fom: LocalDate, tom: LocalDate): Periode {
+    return Periode(
+            fom = fom,
+            tom = tom,
+            aktivitetIkkeMulig = AktivitetIkkeMulig(medisinskArsak = MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
+            gradert = null,
+            behandlingsdager = null,
+            reisetilskudd = false,
+            avventendeInnspillTilArbeidsgiver = null
+    )
+}
+
+fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList(), perioder: List<Periode> = emptyList()): SykmeldingDbModel {
     val sykmeldingDbModel = SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
