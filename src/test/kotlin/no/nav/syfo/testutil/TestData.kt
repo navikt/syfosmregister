@@ -43,7 +43,7 @@ fun getVaultSecrets(): VaultSecrets {
             "")
 }
 
-fun getSykmeldingDto(skjermet: Boolean = false): SykmeldingDTO {
+fun getSykmeldingDto(): SykmeldingDTO {
     return SykmeldingDTO(
             id = "1",
             utdypendeOpplysninger = emptyMap(),
