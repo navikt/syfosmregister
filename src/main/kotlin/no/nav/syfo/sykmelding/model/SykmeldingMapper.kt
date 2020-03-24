@@ -63,6 +63,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
             utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger),
             egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
+            papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
             harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode()
     )
 }

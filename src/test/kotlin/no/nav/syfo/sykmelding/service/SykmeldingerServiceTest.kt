@@ -6,6 +6,7 @@ import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import java.time.LocalDate
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.sykmelding.db.AvsenderSystem
 import no.nav.syfo.sykmelding.db.Diagnose
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
@@ -58,15 +59,27 @@ class SykmeldingerServiceTest : Spek({
             val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
             sykmeldinger.size shouldEqual 1
             sykmeldinger[0].egenmeldt shouldBe false
+            sykmeldinger[0].papirsykmelding shouldBe false
             sykmeldinger[0].medisinskVurdering shouldNotBe null
             sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
         }
 
-        it("should set egenmeldt = true when avsenderSystem.name = 'Egenmeldt'") {
-            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodelEgenmeldt())
+        it("should get egenmeldt = true when avsenderSystem.name = 'Egenmeldt'") {
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodelEgenmeldt(avsenderSystem = AvsenderSystem("Egenmeldt", "versjon")))
             val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
             sykmeldinger.size shouldEqual 1
             sykmeldinger[0].egenmeldt shouldBe true
+            sykmeldinger[0].papirsykmelding shouldBe false
+            sykmeldinger[0].medisinskVurdering shouldNotBe null
+            sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
+        }
+
+        it("should get paprisykmelding = true when avsenderSystem.name = 'Paprisykmelding'") {
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodelEgenmeldt(avsenderSystem = AvsenderSystem("Papirsykmelding", "versjon")))
+            val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
+            sykmeldinger.size shouldEqual 1
+            sykmeldinger[0].egenmeldt shouldBe false
+            sykmeldinger[0].papirsykmelding shouldBe true
             sykmeldinger[0].medisinskVurdering shouldNotBe null
             sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
         }

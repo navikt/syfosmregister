@@ -59,7 +59,6 @@ fun createApplicationEngine(
     jwkProviderInternal: JwkProvider,
     sykmeldingStatusService: SykmeldingStatusService,
     sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
-    jwkProviderServiceuser: JwkProvider,
     issuerServiceuser: String,
     clientId: String,
     appIds: List<String>
@@ -77,7 +76,6 @@ fun createApplicationEngine(
             jwkProvider = jwkProvider,
             issuer = issuer,
             jwkProviderInternal = jwkProviderInternal,
-            jwkProviderServiceuser = jwkProviderServiceuser,
             issuerServiceuser = issuerServiceuser,
             clientId = clientId,
             appIds = appIds)

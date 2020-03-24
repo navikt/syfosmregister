@@ -73,8 +73,8 @@ fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<Sykmeldingsperiod
             legekontorOrgnummer = null,
             andreTiltak = null,
             egenmeldt = false,
-            harRedusertArbeidsgiverperiode = false
-    )
+            harRedusertArbeidsgiverperiode = false,
+            papirsykmelding = false)
 }
 
 fun getMedisinskVurdering(): MedisinskVurderingDTO {
@@ -91,9 +91,8 @@ fun getMedisinskVurdering(): MedisinskVurderingDTO {
 fun getPerioder(): List<SykmeldingsperiodeDTO> {
     return listOf(SykmeldingsperiodeDTO(LocalDate.now(), LocalDate.now(), null, null, null, PeriodetypeDTO.AKTIVITET_IKKE_MULIG, null, false))
 }
-
 fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = emptyList()): SykmeldingDbModel {
-    val sykmeldingDbModel = SykmeldingDbModel(
+    return SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
             mottattTidspunkt = LocalDateTime.now(),
@@ -149,7 +148,6 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
                     perioder = perioder,
                     signaturDato = LocalDateTime.now()
             ))
-    return sykmeldingDbModel
 }
 
 fun getPeriode(fom: LocalDate, tom: LocalDate): Periode {
@@ -164,8 +162,8 @@ fun getPeriode(fom: LocalDate, tom: LocalDate): Periode {
     )
 }
 
-fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList(), perioder: List<Periode> = emptyList()): SykmeldingDbModel {
-    val sykmeldingDbModel = SykmeldingDbModel(
+fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList(), avsenderSystem: AvsenderSystem = AvsenderSystem("Nobody", "versjon"), perioder: List<Periode> = emptyList()): SykmeldingDbModel {
+    return SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
             mottattTidspunkt = LocalDateTime.now(),
@@ -217,9 +215,8 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
                     utdypendeOpplysninger = emptyMap(),
                     msgId = "msgid",
                     pasientAktoerId = "aktorId",
-                    avsenderSystem = AvsenderSystem("Egenmeldt", "verjosn"),
-                    perioder = emptyList(),
+                    avsenderSystem = avsenderSystem,
+                    perioder = perioder,
                     signaturDato = LocalDateTime.now()
             ))
-    return sykmeldingDbModel
 }

@@ -50,8 +50,7 @@ object AuthenticateSpek : Spek({
         cluster = "cluster",
         jwtIssuer = "issuer",
         appIds = listOf("10", "11"),
-        clientId = "1",
-        jwtIssuerServiceuser = "issuer")
+        clientId = "1")
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)
@@ -84,7 +83,7 @@ object AuthenticateSpek : Spek({
                     internalJwtIssuer = "",
                     internalJwtWellKnownUri = "",
                     internalLoginServiceClientId = ""
-            ), jwkProvider, "https://sts.issuer.net/myid", jwkProvider, jwkProvider, "", "", emptyList())
+            ), jwkProvider, "https://sts.issuer.net/myid", jwkProvider, "", "", emptyList())
             application.routing {
                 authenticate("jwt") {
                     registerSykmeldingApi(sykmeldingService, sykmeldingStatusKafkaProducer)

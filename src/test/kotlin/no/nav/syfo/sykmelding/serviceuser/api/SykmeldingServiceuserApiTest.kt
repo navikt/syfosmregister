@@ -72,10 +72,10 @@ class SykmeldingServiceuserApiTest : Spek({
             val uri = Paths.get(path).toUri().toURL()
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
-            application.setupAuth(getVaultSecrets(), jwkProvider, "https://sts.issuer.net/myid", jwkProvider, jwkProvider, "", "clientId", listOf("syfosoknad"))
+            application.setupAuth(getVaultSecrets(), jwkProvider, "", jwkProvider, "https://sts.issuer.net/myid", "clientId", listOf("syfosoknad"))
             application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
             it("get sykmelding OK") {
-                every { sykmeldingerServiceMedMock.getSykmeldingMedId(any()) } returns getSykmeldingDto(skjermet = true)
+                every { sykmeldingerServiceMedMock.getSykmeldingMedId(any()) } returns getSykmeldingDto()
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
                     addHeader(HttpHeaders.Authorization,
                         "Bearer ${generateJWT("syfosoknad", "clientId", subject = "123")}")
@@ -97,7 +97,7 @@ class SykmeldingServiceuserApiTest : Spek({
                 }
             }
 
-            it("Get sykmelding Unauthorized with incorrect appid") {
+            it("Get sykmelding Unauthorized with incorrect azp") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
                     addHeader("Authorization", "Bearer ${generateJWT("error", "clientId", subject = "123")}")
                 }) {
