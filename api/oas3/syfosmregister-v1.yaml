@@ -26,6 +26,9 @@ paths:
     get:
       summary: V2 av sykmeldinger api, returnerer liste av sykmeldinger for fnr i access_token
       operationId: getSykmeldingerV2
+      parameters:
+        - $ref: '#/components/parameters/fomDateQueryParam'
+        - $ref: '#/components/parameters/tomDateQueryParam'
       responses:
         '200':
           $ref: '#/components/responses/UserSykmeldingerResponse'
@@ -146,6 +149,24 @@ components:
       schema:
         $ref: '#/components/schemas/Fodselsnummer'
       example: '01234567891'
+    fomDateQueryParam:
+      description: FOM dato for å filtrere ut sykmelidnger før FOM dato
+      name: fom
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      example: '2020-01-01'
+    tomDateQueryParam:
+      description: TOM dato for å filtrere ut sykmelidnger etter TOM dato
+      name: tom
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      example: '2020-02-01'
     sykmeldingStatusFilter:
       description: Filter for sykmeldingstatus
       name: filter
