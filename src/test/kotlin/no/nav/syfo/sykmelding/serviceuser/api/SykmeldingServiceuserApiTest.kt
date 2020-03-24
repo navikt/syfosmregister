@@ -75,7 +75,7 @@ class SykmeldingServiceuserApiTest : Spek({
             application.setupAuth(getVaultSecrets(), jwkProvider, "", jwkProvider, "https://sts.issuer.net/myid", "clientId", listOf("syfosoknad"))
             application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
             it("get sykmelding OK") {
-                every { sykmeldingerServiceMedMock.getSykmeldingMedId(any()) } returns getSykmeldingDto(skjermet = true)
+                every { sykmeldingerServiceMedMock.getSykmeldingMedId(any()) } returns getSykmeldingDto()
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
                     addHeader(HttpHeaders.Authorization,
                         "Bearer ${generateJWT("syfosoknad", "clientId", subject = "123")}")

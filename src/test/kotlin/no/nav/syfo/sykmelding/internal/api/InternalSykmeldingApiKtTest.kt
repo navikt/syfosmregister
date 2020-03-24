@@ -57,7 +57,7 @@ class InternalSykmeldingApiKtTest : Spek({
             }
 
             it("Skal returnere liste med sykmeldinger") {
-                val sykmeldingList = listOf(getSykmeldingDto(false))
+                val sykmeldingList = listOf(getSykmeldingDto())
                 every { sykmeldingService.getInternalSykmeldinger(any()) } returns sykmeldingList
                 with(handleRequest(HttpMethod.Get, "$uri", setUPHeaders())) {
                     response.status() shouldEqual HttpStatusCode.OK

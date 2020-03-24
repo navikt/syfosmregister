@@ -43,7 +43,7 @@ fun getVaultSecrets(): VaultSecrets {
             "")
 }
 
-fun getSykmeldingDto(skjermet: Boolean = false): SykmeldingDTO {
+fun getSykmeldingDto(): SykmeldingDTO {
     return SykmeldingDTO(
             id = "1",
             utdypendeOpplysninger = emptyMap(),
@@ -70,8 +70,8 @@ fun getSykmeldingDto(skjermet: Boolean = false): SykmeldingDTO {
             legekontorOrgnummer = null,
             andreTiltak = null,
             egenmeldt = false,
-            harRedusertArbeidsgiverperiode = false
-    )
+            harRedusertArbeidsgiverperiode = false,
+            papirsykmelding = false)
 }
 
 fun getMedisinskVurdering(): MedisinskVurderingDTO {
@@ -90,7 +90,7 @@ fun getPerioder(): List<SykmeldingsperiodeDTO> {
 }
 
 fun getSykmeldingerDBmodel(skjermet: Boolean = false): SykmeldingDbModel {
-    val sykmeldingDbModel = SykmeldingDbModel(
+    return SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
             mottattTidspunkt = LocalDateTime.now(),
@@ -146,11 +146,10 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false): SykmeldingDbModel {
                     perioder = emptyList(),
                     signaturDato = LocalDateTime.now()
             ))
-    return sykmeldingDbModel
 }
 
-fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList()): SykmeldingDbModel {
-    val sykmeldingDbModel = SykmeldingDbModel(
+fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList(), avsenderSystem: AvsenderSystem = AvsenderSystem("Nobody", "versjon")): SykmeldingDbModel {
+    return SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
             mottattTidspunkt = LocalDateTime.now(),
@@ -202,9 +201,8 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
                     utdypendeOpplysninger = emptyMap(),
                     msgId = "msgid",
                     pasientAktoerId = "aktorId",
-                    avsenderSystem = AvsenderSystem("Egenmeldt", "verjosn"),
+                    avsenderSystem = avsenderSystem,
                     perioder = emptyList(),
                     signaturDato = LocalDateTime.now()
             ))
-    return sykmeldingDbModel
 }
