@@ -90,7 +90,7 @@ fun getPerioder(): List<SykmeldingsperiodeDTO> {
 }
 
 fun getSykmeldingerDBmodel(skjermet: Boolean = false): SykmeldingDbModel {
-    val sykmeldingDbModel = SykmeldingDbModel(
+    return SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
             mottattTidspunkt = LocalDateTime.now(),
@@ -146,7 +146,6 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false): SykmeldingDbModel {
                     perioder = emptyList(),
                     signaturDato = LocalDateTime.now()
             ))
-    return sykmeldingDbModel
 }
 
 fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList(), avsenderSystem: AvsenderSystem = AvsenderSystem("Nobody", "versjon")): SykmeldingDbModel {
