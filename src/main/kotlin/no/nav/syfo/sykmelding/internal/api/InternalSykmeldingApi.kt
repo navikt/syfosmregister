@@ -24,7 +24,7 @@ fun Route.registrerInternalSykmeldingApi(sykmeldingService: SykmeldingerService,
 
                 when {
                     fnr.isNullOrEmpty() -> call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
-                    tilgangskontrollService.hasAccessToUser(fnr, token) -> call.respond(HttpStatusCode.OK, sykmeldingService.getInternalSykmeldinger(fnr))
+                    tilgangskontrollService.hasAccessToUser(fnr, token) -> call.respond(HttpStatusCode.OK, sykmeldingService.getInternalSykmeldinger(fnr, fom, tom))
                     else -> call.respond(HttpStatusCode.Forbidden, "Forbidden")
                 }
             }
