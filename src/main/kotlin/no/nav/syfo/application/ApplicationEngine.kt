@@ -42,6 +42,7 @@ import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV1
+import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV1_getAllByFnr
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
@@ -125,6 +126,7 @@ fun createApplicationEngine(
             }
             authenticate("jwtserviceuser") {
                 registrerSykmeldingServiceuserApiV1(sykmeldingerService)
+                registrerSykmeldingServiceuserApiV1_getAllByFnr(sykmeldingerService)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)

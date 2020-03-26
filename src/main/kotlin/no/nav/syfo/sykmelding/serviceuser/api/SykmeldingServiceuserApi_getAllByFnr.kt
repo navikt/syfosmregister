@@ -19,15 +19,11 @@ fun Route.registrerSykmeldingServiceuserApiV1_getAllByFnr(sykmeldingerService: S
                 val fnr = call.request.headers["fnr"]
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
                 val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
-            }
-            get {
-                val sykmeldingId = call.parameters["sykmeldingId"]!!
-                val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
-                if (sykmelding == null) {
-                    log.info("Fant ikke sykmelding med id {}", sykmeldingId)
-                    call.respond(HttpStatusCode.NotFound)
+
+                if (fnr.isNullOrEmpty()) {
+                    call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
                 } else {
-                    call.respond(sykmelding)
+                    call.respond(HttpStatusCode.OK, sykmeldingerService.getInternalSykmeldinger(fnr, fom, tom))
                 }
             }
         }
