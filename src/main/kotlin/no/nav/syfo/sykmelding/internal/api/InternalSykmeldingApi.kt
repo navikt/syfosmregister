@@ -8,6 +8,7 @@ import io.ktor.routing.get
 import io.ktor.routing.route
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
+import java.time.LocalDate
 
 fun Route.registrerInternalSykmeldingApi(sykmeldingService: SykmeldingerService, tilgangskontrollService: TilgangskontrollService) {
     route("/api/v1/internal") {
@@ -18,9 +19,12 @@ fun Route.registrerInternalSykmeldingApi(sykmeldingService: SykmeldingerService,
                 call.respond(HttpStatusCode.Unauthorized)
             } else {
                 val fnr = call.request.headers["fnr"]
+                val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
+                val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
+
                 when {
                     fnr.isNullOrEmpty() -> call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
-                    tilgangskontrollService.hasAccessToUser(fnr, token) -> call.respond(HttpStatusCode.OK, sykmeldingService.getInternalSykmeldinger(fnr))
+                    tilgangskontrollService.hasAccessToUser(fnr, token) -> call.respond(HttpStatusCode.OK, sykmeldingService.getInternalSykmeldinger(fnr, fom, tom))
                     else -> call.respond(HttpStatusCode.Forbidden, "Forbidden")
                 }
             }

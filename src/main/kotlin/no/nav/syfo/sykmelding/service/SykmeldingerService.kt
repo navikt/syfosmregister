@@ -11,8 +11,10 @@ import no.nav.syfo.sykmelding.model.toSykmeldingDTO
 import no.nav.syfo.sykmeldingstatus.Sporsmal
 
 class SykmeldingerService(private val database: DatabaseInterface) {
-    fun getInternalSykmeldinger(fnr: String): List<SykmeldingDTO> =
+    fun getInternalSykmeldinger(fnr: String, fom: LocalDate? = null, tom: LocalDate? = null): List<SykmeldingDTO> =
             getSykmeldingerWithSporsmal(fnr)
+                    .filter(filterFomDate(fom))
+                    .filter(filterTomDate(tom))
 
     fun getUserSykmelding(fnr: String, fom: LocalDate?, tom: LocalDate?): List<SykmeldingDTO> {
         return getSykmeldingerWithSporsmal(fnr, true)
