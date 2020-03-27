@@ -106,4 +106,67 @@ class SykmeldingServiceuserApiTest : Spek({
             }
         }
     }
+
+
+    describe("Test sykmeldingServiceuserApi") {
+
+        with(TestApplicationEngine()) {
+            setUpTestApplication()
+            application.routing { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerService) }
+            it("Skal få en liste av sykmeldinger for fnr") {
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                    addHeader("fnr", "pasientFnr")
+
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                }
+            }
+        }
+    }
+
+    describe("Test with autentication") {
+        with(TestApplicationEngine()) {
+            val path = "src/test/resources/jwkset.json"
+            val uri = Paths.get(path).toUri().toURL()
+            val jwkProvider = JwkProviderBuilder(uri).build()
+            setUpTestApplication()
+            application.setupAuth(getVaultSecrets(), jwkProvider, "", jwkProvider, "https://sts.issuer.net/myid", "clientId", listOf("syfosoknad"))
+            application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
+            it("get sykmeldinger OK") {
+                every { sykmeldingerServiceMedMock.getInternalSykmeldinger(any()) } returns listOf(getSykmeldingDto())
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                    addHeader(HttpHeaders.Authorization,
+                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "123")}")
+                    addHeader("fnr", "pasientFnr")
+
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                }
+            }
+            it("Get sykmeldinger Unauthorized without JWT") {
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger")) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
+                }
+            }
+
+            it("Get sykmeldinger Unauthorized with incorrect audience") {
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                    addHeader("Authorization", "Bearer ${generateJWT("syfosoknad", "error", subject = "123")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
+                }
+            }
+
+            it("Get sykmeldinger Unauthorized with incorrect azp") {
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                    addHeader("Authorization", "Bearer ${generateJWT("error", "clientId", subject = "123")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
+                }
+            }
+
+        }
+    }
+
+
 })
