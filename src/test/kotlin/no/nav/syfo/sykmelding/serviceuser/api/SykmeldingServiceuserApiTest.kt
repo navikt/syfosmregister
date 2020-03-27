@@ -121,6 +121,14 @@ class SykmeldingServiceuserApiTest : Spek({
                     response.status() shouldEqual HttpStatusCode.OK
                 }
             }
+
+            it("Skal kaste feil hvis fnr mangler") {
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+
+                }) {
+                    response.status() shouldEqual HttpStatusCode.BadRequest
+                }
+            }
         }
     }
 
