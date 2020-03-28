@@ -75,8 +75,11 @@ private fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
     } else if (!biDiagnoser.isNullOrEmpty() && biDiagnoser.find { diagnoserSomGirRedusertArbgiverPeriode.contains(it.kode) } != null) {
         return true
     }
-    return false
+    return checkSmittefare()
 }
+
+private fun MedisinskVurdering.checkSmittefare() =
+        annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == AnnenFraverGrunn.SMITTEFARE } == true
 
 private fun SykmeldingDbModel.getMedisinskVurderingDTO(isPasient: Boolean, ikkeTilgangTilDiagnose: Boolean): MedisinskVurderingDTO? {
     if (ikkeTilgangTilDiagnose || (isPasient && sykmeldingsDokument.skjermesForPasient)) {

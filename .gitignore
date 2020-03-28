@@ -9,6 +9,7 @@ build/
 
 # Generated sources
 src/generated
-
+package-lock.json
+node_modules/
 # OS specific
 .DS_Store

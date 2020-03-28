@@ -2,8 +2,12 @@ package no.nav.syfo.sykmelding.model
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmelding.db.AnnenFraverGrunn
+import no.nav.syfo.sykmelding.db.AnnenFraversArsak
 import no.nav.syfo.sykmelding.db.SporsmalSvar
+import no.nav.syfo.testutil.getSykmeldingerDBmodel
 import org.amshove.kluent.`should equal`
+import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -16,6 +20,41 @@ class SykmeldingMapperKtTest : Spek({
             val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>> = objectMapper.readValue(utdypendeopplysningerJson)
             val mappedMap = toUtdypendeOpplysninger(utdypendeOpplysninger)
             mappedOpplysningerJson `should equal` objectMapper.writeValueAsString(mappedMap)
+        }
+        it("test map har ikke redusert arbeidsgiverperiode") {
+            val sykmeldingDto = getSykmeldingerDBmodel().toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
+            sykmeldingDto.harRedusertArbeidsgiverperiode shouldEqual false
+        }
+        it("test map har redusert arbeidsgiverperiode ved smittefare") {
+            val sykmeldingDbModel = getSykmeldingerDBmodel()
+            val sykmeldingMedSmittefare = sykmeldingDbModel.copy(
+                    sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
+                            medisinskVurdering = sykmeldingDbModel.sykmeldingsDokument.medisinskVurdering.copy(
+                                    annenFraversArsak = AnnenFraversArsak(null, listOf(
+                                            AnnenFraverGrunn.SMITTEFARE
+                                    ))
+                            )
+                    )
+            )
+
+            val sykmeldingDto = sykmeldingMedSmittefare.toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
+            sykmeldingDto.harRedusertArbeidsgiverperiode shouldEqual true
+        }
+
+        it("test map har ikke redusert arbeidsgiverperiode ved annen fravarsgrunn ikke smittefare") {
+            val sykmeldingDbModel = getSykmeldingerDBmodel()
+            val sykmeldingMedSmittefare = sykmeldingDbModel.copy(
+                    sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
+                            medisinskVurdering = sykmeldingDbModel.sykmeldingsDokument.medisinskVurdering.copy(
+                                    annenFraversArsak = AnnenFraversArsak(null, listOf(
+                                            AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID
+                                    ))
+                            )
+                    )
+            )
+
+            val sykmeldingDto = sykmeldingMedSmittefare.toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
+            sykmeldingDto.harRedusertArbeidsgiverperiode shouldEqual false
         }
     }
 })
