@@ -29,6 +29,8 @@ paths:
       parameters:
         - $ref: '#/components/parameters/fomDateQueryParam'
         - $ref: '#/components/parameters/tomDateQueryParam'
+        - $ref: '#/components/parameters/excludeFilter'
+        - $ref: '#/components/parameters/includeFilter'
       responses:
         '200':
           $ref: '#/components/responses/UserSykmeldingerResponse'
@@ -158,6 +160,28 @@ components:
         type: string
         format: date
       example: '2020-01-01'
+    excludeFilter:
+      description: sykmeldinger med gitt status skal filtreres bort. Kan ikke kombineres med include filter
+      name: exclude
+      required: false
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET]
+      example: APEN
+    includeFilter:
+      description: sykmeldinger med gitt statuser skal inkluderes. Kan ikke kombineres med exclude filter
+      name: include
+      required: false
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+          enum: [APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET]
+      example: APEN
     tomDateQueryParam:
       description: TOM dato for å filtrere ut sykmelidnger etter TOM dato
       name: tom

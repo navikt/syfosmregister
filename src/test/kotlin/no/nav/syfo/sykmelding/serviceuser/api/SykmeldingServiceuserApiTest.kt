@@ -107,7 +107,6 @@ class SykmeldingServiceuserApiTest : Spek({
         }
     }
 
-
     describe("Test sykmeldingServiceuserApi") {
 
         with(TestApplicationEngine()) {
@@ -116,7 +115,6 @@ class SykmeldingServiceuserApiTest : Spek({
             it("Skal få en liste av sykmeldinger for fnr") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
                     addHeader("fnr", "pasientFnr")
-
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
@@ -124,7 +122,6 @@ class SykmeldingServiceuserApiTest : Spek({
 
             it("Skal kaste feil hvis fnr mangler") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
-
                 }) {
                     response.status() shouldEqual HttpStatusCode.BadRequest
                 }
@@ -146,7 +143,6 @@ class SykmeldingServiceuserApiTest : Spek({
                     addHeader(HttpHeaders.Authorization,
                             "Bearer ${generateJWT("syfosoknad", "clientId", subject = "123")}")
                     addHeader("fnr", "pasientFnr")
-
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
@@ -172,9 +168,6 @@ class SykmeldingServiceuserApiTest : Spek({
                     response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
-
         }
     }
-
-
 })

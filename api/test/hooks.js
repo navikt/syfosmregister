@@ -38,6 +38,10 @@ hooks.beforeEach(function(transaction) {
     }
 });
 
+hooks.before('/api/v2/sykmeldinger > V2 av sykmeldinger api, returnerer liste av sykmeldinger for fnr i access_token > 200 > application/json', function (transaction) {
+    transaction.fullPath = transaction.fullPath.replace("&include=APEN", "")
+});
+
 
 
 
