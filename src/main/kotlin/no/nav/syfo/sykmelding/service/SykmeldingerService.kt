@@ -16,10 +16,23 @@ class SykmeldingerService(private val database: DatabaseInterface) {
                     .filter(filterFomDate(fom))
                     .filter(filterTomDate(tom))
 
-    fun getUserSykmelding(fnr: String, fom: LocalDate?, tom: LocalDate?): List<SykmeldingDTO> {
+    fun getUserSykmelding(fnr: String, fom: LocalDate?, tom: LocalDate?, include: List<String>? = null, exclude: List<String>? = null): List<SykmeldingDTO> {
         return getSykmeldingerWithSporsmal(fnr, true)
+                .filter(filterIncludeAndExclude(include, exclude))
                 .filter(filterFomDate(fom))
                 .filter(filterTomDate(tom))
+    }
+
+    private fun filterIncludeAndExclude(include: List<String>?, exclude: List<String>?): (SykmeldingDTO) -> Boolean {
+        return {
+            if (!include.isNullOrEmpty()) {
+                include.contains(it.sykmeldingStatus.statusEvent)
+            } else if (!exclude.isNullOrEmpty()) {
+                !exclude.contains(it.sykmeldingStatus.statusEvent)
+            } else {
+                true
+            }
+        }
     }
 
     fun getSykmeldingMedId(sykmeldingId: String): SykmeldingDTO? =

@@ -6,9 +6,9 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
+import java.time.LocalDate
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
-import java.time.LocalDate
 
 fun Route.registrerInternalSykmeldingApi(sykmeldingService: SykmeldingerService, tilgangskontrollService: TilgangskontrollService) {
     route("/api/v1/internal") {

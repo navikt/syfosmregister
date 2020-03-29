@@ -46,6 +46,64 @@ class SykmeldingApiV2KtTest : Spek({
         with(TestApplicationEngine()) {
             setUpTestApplication()
             application.routing { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) }
+
+            it("Should get sykmeldinger for user with exclude filter") {
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { mockPayload.subject } returns "123"
+                with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                }
+            }
+            it("Should get sykmeldinger for user with include filter") {
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { mockPayload.subject } returns "123"
+                with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=APEN") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                }
+            }
+            it("Should get sykmeldinger for user with multiple exclude filters") {
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { mockPayload.subject } returns "123"
+                with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                }
+            }
+
+            it("Should get bad request when exclude and include filters are in request") {
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { mockPayload.subject } returns "123"
+                with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT&include=AVBRUTT") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.BadRequest
+                }
+            }
+            it("Should get bad request when exclude filter is invalid") {
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { mockPayload.subject } returns "123"
+                with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=ÅPEN") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.BadRequest
+                }
+            }
+
+            it("Should get bad request when include filter is invalid") {
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { mockPayload.subject } returns "123"
+                with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=ALL") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.BadRequest
+                }
+            }
+
             it("Should get sykmeldinger for user") {
                 every { sykmeldingerService.getUserSykmelding(any(), null, null) } returns listOf(getSykmeldingDto())
                 every { mockPayload.subject } returns "123"
@@ -132,7 +190,7 @@ class SykmeldingApiV2KtTest : Spek({
             application.setupAuth(getVaultSecrets().copy(loginserviceClientId = "clientId"), jwkProvider, "https://sts.issuer.net/myid", jwkProvider, "", "", emptyList())
             application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
             it("get sykmeldinger OK") {
-                every { sykmeldingerService.getUserSykmelding(any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                     addHeader(HttpHeaders.Authorization,
                             "Bearer ${generateJWT("", "clientId", subject = "123")}")
