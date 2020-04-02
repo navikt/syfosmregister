@@ -544,6 +544,8 @@ components:
           type: string
         egenmeldt:
           type: boolean
+        papirsykmelding:
+          type: boolean
         harRedusertArbeidsgiverperiode:
           type: boolean
     Prognose:
