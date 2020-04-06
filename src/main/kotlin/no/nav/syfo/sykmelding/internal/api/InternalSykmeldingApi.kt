@@ -6,8 +6,8 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
-import no.nav.syfo.log
 import java.time.LocalDate
+import no.nav.syfo.log
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 
@@ -27,7 +27,11 @@ fun Route.registrerInternalSykmeldingApi(sykmeldingService: SykmeldingerService,
 
                 when {
                     fnr.isNullOrEmpty() -> call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
-                    tilgangskontrollService.hasAccessToUser(fnr, token) -> call.respond(HttpStatusCode.OK, sykmeldingService.getInternalSykmeldinger(fnr, fom, tom))
+                    tilgangskontrollService.hasAccessToUser(fnr, token) -> {
+                        val liste = sykmeldingService.getInternalSykmeldinger(fnr, fom, tom)
+                        log.info("Returnerer {} sykmeldinger for callid {}", liste.size, callid)
+                        call.respond(HttpStatusCode.OK, liste)
+                    }
                     else -> call.respond(HttpStatusCode.Forbidden, "Forbidden")
                 }
             }
