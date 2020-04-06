@@ -6,7 +6,6 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.routing.get
 import io.ktor.routing.route
-import no.nav.syfo.log
 import java.time.LocalDate
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
@@ -15,8 +14,6 @@ fun Route.registrerInternalSykmeldingApi(sykmeldingService: SykmeldingerService,
     route("/api/v1/internal") {
         get("/sykmeldinger") {
             val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
-            val callid = call.request.headers["call-id"]
-            log.info("Mottatt kall med callId {}", callid)
 
             if (token == null) {
                 call.respond(HttpStatusCode.Unauthorized)
