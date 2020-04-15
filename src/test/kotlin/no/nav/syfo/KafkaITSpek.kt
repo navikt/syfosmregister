@@ -28,7 +28,6 @@ object KafkaITSpek : Spek({
     val credentials = getVaultSecrets()
     val env = Environment(
         applicationPort = getRandomPort(),
-        kafkaSm2013AutomaticPapirmottakTopic = "topic1",
         kafkaSm2013AutomaticDigitalHandlingTopic = "topic3",
         kafkaBootstrapServers = embeddedEnvironment.brokersURL,
         syfosmregisterDBURL = "12314.adeo.no",

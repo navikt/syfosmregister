@@ -151,8 +151,6 @@ fun launchListeners(
             listOf(
                     env.sm2013ManualHandlingTopic,
                     env.kafkaSm2013AutomaticDigitalHandlingTopic,
-                    env.smpapirManualHandlingTopic,
-                    env.kafkaSm2013AutomaticPapirmottakTopic,
                     env.sm2013InvalidHandlingTopic
             )
     )
