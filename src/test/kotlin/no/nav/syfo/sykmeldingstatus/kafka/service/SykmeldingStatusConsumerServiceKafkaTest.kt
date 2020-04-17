@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmeldingstatus.kafka.service
 
+import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockkClass
@@ -30,6 +31,8 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory
+import no.nav.syfo.sykmeldingstatus.kafka.model.SendtSykmelding
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.util.TimestampUtil.Companion.getAdjustedToLocalDateTime
@@ -66,14 +69,20 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     val kafkaConfig = setupKafkaConfig()
     var applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
+    val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
     val consumer = KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer)
+
+    afterEachTest {
+        clearAllMocks()
+    }
 
     beforeEachTest {
         applicationState.alive = true
         applicationState.ready = true
         every { environment.applicationName } returns "application"
         every { environment.sykmeldingStatusTopic } returns "topic"
+        every { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any()) } returns Unit
     }
@@ -145,6 +154,8 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         StatusEventDTO.SENDT,
                         ArbeidsgiverStatusDTO("1", "2", "navn"),
                         listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar")))
+
+                every { sykmeldingStatusService.getSendtSykmeldingUtenDiagnose(any()) } returns mockkClass(SendtSykmelding::class)
                 every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                     sykmeldingSendEvent = args[0] as SykmeldingSendEvent
                     sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
@@ -167,7 +178,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
 
         it("Test BEREFTET status") {
             runBlocking {
-                val sykmeldingId = UUID.randomUUID().toString()
+                val sykmeldingId = "BEKREFT"
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 var sykmeldingBekreftEvent: SykmeldingBekreftEvent? = null

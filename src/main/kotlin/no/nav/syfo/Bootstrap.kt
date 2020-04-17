@@ -44,6 +44,7 @@ import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getKafkaStatusConsumer
+import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.service.SykmeldingStatusConsumerService
@@ -92,8 +93,9 @@ fun main() {
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfig, environment)
 
     val sykmeldingStatusService = SykmeldingStatusService(database)
+    val sendtSykmeldingKafkaProducer = getSendtSykmeldingKafkaProducer(kafkaBaseConfig, environment)
     val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState, sendtSykmeldingKafkaProducer)
     val applicationEngine = createApplicationEngine(
         env = environment,
         applicationState = applicationState,

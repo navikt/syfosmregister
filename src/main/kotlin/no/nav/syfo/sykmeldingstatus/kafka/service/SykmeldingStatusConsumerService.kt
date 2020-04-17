@@ -11,6 +11,8 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingBekreftEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.consumer.SykmeldingStatusKafkaConsumer
+import no.nav.syfo.sykmeldingstatus.kafka.model.SendtSykmeldingKafkaMessage
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.service.KafkaModelMapper.Companion.toArbeidsgiverStatus
 import no.nav.syfo.sykmeldingstatus.kafka.service.KafkaModelMapper.Companion.toSporsmal
 import no.nav.syfo.sykmeldingstatus.kafka.service.KafkaModelMapper.Companion.toSykmeldingStatusEvent
@@ -20,7 +22,8 @@ import org.slf4j.LoggerFactory
 class SykmeldingStatusConsumerService(
     private val sykmeldingStatusService: SykmeldingStatusService,
     private val sykmeldingStatusKafkaConsumer: SykmeldingStatusKafkaConsumer,
-    private val applicationState: ApplicationState
+    private val applicationState: ApplicationState,
+    private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer
 ) {
 
     companion object {
@@ -30,7 +33,6 @@ class SykmeldingStatusConsumerService(
 
     private suspend fun run() {
         sykmeldingStatusKafkaConsumer.subscribe()
-        log.info("running consumer")
         while (applicationState.ready) {
             val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
             kafkaEvents
@@ -57,10 +59,22 @@ class SykmeldingStatusConsumerService(
     private fun handleStatusEvent(): (SykmeldingStatusKafkaMessageDTO) -> Unit = { sykmeldingStatusKafkaMessage ->
         log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent.name)
         when (sykmeldingStatusKafkaMessage.event.statusEvent) {
-            StatusEventDTO.SENDT -> registrerSendt(sykmeldingStatusKafkaMessage)
+            StatusEventDTO.SENDT -> {
+                registrerSendt(sykmeldingStatusKafkaMessage)
+                publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage)
+            }
             StatusEventDTO.BEKREFTET -> registrerBekreftet(sykmeldingStatusKafkaMessage)
             else -> registrerStatus(sykmeldingStatusKafkaMessage)
         }
+    }
+
+    private fun publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+        val sendtSykmelding = sykmeldingStatusService.getSendtSykmeldingUtenDiagnose(sykmeldingStatusKafkaMessage.event.sykmeldingId)
+        val sendEvent = sykmeldingStatusKafkaMessage.event
+        val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
+
+        val sendtSykmeldingKafkaMessage = SendtSykmeldingKafkaMessage(sendtSykmelding!!, metadata, sendEvent)
+        sendtSykmeldingKafkaProducer.sendSykmelding(sendtSykmeldingKafkaMessage)
     }
 
     private fun registrerBekreftet(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
