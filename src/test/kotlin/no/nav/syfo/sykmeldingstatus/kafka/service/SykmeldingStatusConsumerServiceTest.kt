@@ -11,6 +11,7 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.consumer.SykmeldingStatusKafkaConsumer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.SendtSykmeldingKafkaProducer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -19,16 +20,19 @@ class SykmeldingStatusConsumerServiceTest : Spek({
     val sykmeldingStatusKafkaConsumer = mockkClass(SykmeldingStatusKafkaConsumer::class)
     val applicationState = ApplicationState(alive = true, ready = true)
 
-    mockkStatic("kotlinx.coroutines.DelayKt")
-    coEvery { delay(any()) } returns Unit
-
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState)
+    beforeEachTest {
+        mockkStatic("kotlinx.coroutines.DelayKt")
+        coEvery { delay(any()) } returns Unit
+    }
+    val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState, sendtSykmeldingKafkaProducer)
 
     describe("Test retry") {
         it("Should retry if error happens") {
             runBlocking {
                 val errors = 3
                 var invocationsCounter = 0
+                every { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
                 every { sykmeldingStatusKafkaConsumer.unsubscribe() } returns Unit
                 every { sykmeldingStatusKafkaConsumer.commitSync() } returns Unit
                 every { sykmeldingStatusKafkaConsumer.subscribe() } returns Unit

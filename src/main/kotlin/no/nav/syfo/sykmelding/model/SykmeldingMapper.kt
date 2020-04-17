@@ -68,7 +68,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
     )
 }
 
-private fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
+fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
     val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071")
     if (hovedDiagnose != null && diagnoserSomGirRedusertArbgiverPeriode.contains(hovedDiagnose.kode)) {
         return true
@@ -88,7 +88,7 @@ private fun SykmeldingDbModel.getMedisinskVurderingDTO(isPasient: Boolean, ikkeT
     return sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO()
 }
 
-private fun Sporsmal.toSporsmalDTO(): SporsmalDTO {
+fun Sporsmal.toSporsmalDTO(): SporsmalDTO {
     return SporsmalDTO(
             tekst = tekst,
             svar = svar.toDTO(),
@@ -125,7 +125,7 @@ fun getUtcTime(tidspunkt: LocalDateTime): OffsetDateTime {
     return tidspunkt.atOffset(ZoneOffset.UTC)
 }
 
-private fun StatusDbModel.toSykmeldingStatusDTO(sporsmal: List<SporsmalDTO>): SykmeldingStatusDTO {
+fun StatusDbModel.toSykmeldingStatusDTO(sporsmal: List<SporsmalDTO>): SykmeldingStatusDTO {
     return SykmeldingStatusDTO(statusEvent, getUtcTime(statusTimestamp), arbeidsgiver?.toArbeidsgiverStatusDTO(), sporsmal)
 }
 
@@ -140,7 +140,7 @@ fun toUtdypendeOpplysninger(utdypendeOpplysninger: Map<String, Map<String, Spors
     }
 }
 
-private fun SporsmalSvar.toSporsmalSvarDTO(): SporsmalSvarDTO {
+fun SporsmalSvar.toSporsmalSvarDTO(): SporsmalSvarDTO {
     return SporsmalSvarDTO(
             sporsmal = sporsmal,
             svar = svar,
@@ -157,7 +157,7 @@ private fun SvarRestriksjon.toSvarRestriksjonDTO(): SvarRestriksjonDTO {
     }
 }
 
-private fun Prognose.toPrognoseDTO(): PrognoseDTO {
+fun Prognose.toPrognoseDTO(): PrognoseDTO {
     return PrognoseDTO(
             arbeidsforEtterPeriode = arbeidsforEtterPeriode,
             erIArbeid = erIArbeid?.toErIArbeidDTO(),
@@ -190,18 +190,18 @@ private fun MeldingTilNAV.toMeldingTilNavDTO(): MeldingTilNavDTO? {
     )
 }
 
-private fun KontaktMedPasient.toKontaktMedPasientDTO(): KontaktMedPasientDTO {
+fun KontaktMedPasient.toKontaktMedPasientDTO(): KontaktMedPasientDTO {
     return KontaktMedPasientDTO(
             kontaktDato = kontaktDato,
             begrunnelseIkkeKontakt = begrunnelseIkkeKontakt
     )
 }
 
-private fun Arbeidsgiver.toArbeidsgiverDTO(): ArbeidsgiverDTO {
+fun Arbeidsgiver.toArbeidsgiverDTO(): ArbeidsgiverDTO {
     return ArbeidsgiverDTO(navn, stillingsprosent)
 }
 
-private fun Periode.toSykmeldingsperiodeDTO(): SykmeldingsperiodeDTO {
+fun Periode.toSykmeldingsperiodeDTO(): SykmeldingsperiodeDTO {
     return SykmeldingsperiodeDTO(
             fom = fom,
             tom = tom,
@@ -320,7 +320,7 @@ private fun Diagnose.toDiagnoseDTO(): DiagnoseDTO {
     )
 }
 
-private fun Behandler.toBehandlerDTO(): BehandlerDTO {
+fun Behandler.toBehandlerDTO(): BehandlerDTO {
     return BehandlerDTO(
             fornavn = fornavn,
             mellomnavn = mellomnavn,
