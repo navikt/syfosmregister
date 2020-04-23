@@ -154,6 +154,14 @@ class SykmeldingerServiceTest : Spek({
             sykmelding.harRedusertArbeidsgiverperiode shouldEqual true
         }
 
+        it("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har bidiganose med diagnosekode U072 som hoveddiagnose") {
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(bidiagnoser = listOf(Diagnose("system", "U072", "tekst")))
+            val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
+            sykmelding shouldNotBe null
+            sykmelding!!.medisinskVurdering shouldEqual null
+            sykmelding.harRedusertArbeidsgiverperiode shouldEqual true
+        }
+
         it("Skal hente sykmeldinger som er er innenfor FOM og TOM") {
             every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(perioder = listOf(getPeriode(
                     fom = LocalDate.of(2020, 2, 10),

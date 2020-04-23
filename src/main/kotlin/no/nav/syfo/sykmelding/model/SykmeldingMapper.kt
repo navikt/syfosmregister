@@ -69,7 +69,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
 }
 
 fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
-    val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071")
+    val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071", "U072")
     if (hovedDiagnose != null && diagnoserSomGirRedusertArbgiverPeriode.contains(hovedDiagnose.kode)) {
         return true
     } else if (!biDiagnoser.isNullOrEmpty() && biDiagnoser.find { diagnoserSomGirRedusertArbgiverPeriode.contains(it.kode) } != null) {
