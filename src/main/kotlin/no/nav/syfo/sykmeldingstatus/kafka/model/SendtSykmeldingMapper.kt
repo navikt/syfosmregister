@@ -17,7 +17,7 @@ fun SykmeldingDbModel.toSendtSykmelding(): SendtSykmelding {
     return SendtSykmelding(
             id = id,
             mottattTidspunkt = getUtcTime(mottattTidspunkt),
-            legekontorOrgnr = legekontorOrgNr,
+            legekontorOrgnummer = legekontorOrgNr,
             behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
             meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
             navnFastlege = sykmeldingsDokument.navnFastlege,
