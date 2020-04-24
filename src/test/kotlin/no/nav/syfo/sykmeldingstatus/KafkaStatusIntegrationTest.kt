@@ -150,7 +150,7 @@ class KafkaStatusIntegrationTest : Spek({
             database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 1
         }
 
-        it("write and read APEN and SENDT", timeout = 99999999999) {
+        it("write and read APEN and SENDT") {
 
             every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                 callOriginal()
