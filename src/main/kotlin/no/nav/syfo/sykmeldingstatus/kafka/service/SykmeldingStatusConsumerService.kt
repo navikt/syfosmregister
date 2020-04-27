@@ -58,13 +58,18 @@ class SykmeldingStatusConsumerService(
 
     private fun handleStatusEvent(): (SykmeldingStatusKafkaMessageDTO) -> Unit = { sykmeldingStatusKafkaMessage ->
         log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent.name)
-        when (sykmeldingStatusKafkaMessage.event.statusEvent) {
-            StatusEventDTO.SENDT -> {
-                registrerSendt(sykmeldingStatusKafkaMessage)
-                publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage)
+        try {
+            when (sykmeldingStatusKafkaMessage.event.statusEvent) {
+                StatusEventDTO.SENDT -> {
+                    registrerSendt(sykmeldingStatusKafkaMessage)
+                    publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage)
+                }
+                StatusEventDTO.BEKREFTET -> registrerBekreftet(sykmeldingStatusKafkaMessage)
+                else -> registrerStatus(sykmeldingStatusKafkaMessage)
             }
-            StatusEventDTO.BEKREFTET -> registrerBekreftet(sykmeldingStatusKafkaMessage)
-            else -> registrerStatus(sykmeldingStatusKafkaMessage)
+        } catch (e: Exception) {
+            log.error("Kunne ikke prosessere statusendring {} for sykmeldingid {} fordi {}", sykmeldingStatusKafkaMessage.event.statusEvent.name, sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, e.cause)
+            throw e
         }
     }
 
