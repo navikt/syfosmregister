@@ -26,6 +26,14 @@ data class SykmeldingDbModel(
     val status: StatusDbModel
 )
 
+data class SykmeldingDbModelUtenBehandlingsutfall(
+    val id: String,
+    val mottattTidspunkt: LocalDateTime,
+    val legekontorOrgNr: String?,
+    val sykmeldingsDokument: Sykmelding,
+    val status: StatusDbModel
+)
+
 data class Sykmelding(
     val id: String,
     val msgId: String,

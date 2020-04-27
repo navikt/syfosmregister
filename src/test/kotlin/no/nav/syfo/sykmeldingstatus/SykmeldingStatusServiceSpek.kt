@@ -14,6 +14,7 @@ import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import no.nav.syfo.util.TimestampUtil.Companion.getAdjustedToLocalDateTime
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldNotEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
@@ -138,6 +139,25 @@ class SykmeldingStatusServiceSpek : Spek({
                     StatusEvent.APEN))
             val savedSporsmal2 = database.connection.hentSporsmalOgSvar("uuid")
             savedSporsmal2.size shouldEqual 0
+        }
+
+        it("Skal kunne hente SendtSykmeldingUtenDiagnose selv om behandlingsutfall mangler") {
+            database.connection.dropData()
+            database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
+            database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt, StatusEvent.APEN, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC)))
+            database.registrerSendt(
+                SykmeldingSendEvent(
+                    testSykmeldingsopplysninger.id,
+                    testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5),
+                    ArbeidsgiverStatus(testSykmeldingsopplysninger.id, "orgnummer", null, "Bedrift"),
+                    Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
+                        Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))),
+                SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5), StatusEvent.SENDT, testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5).atOffset(ZoneOffset.UTC))
+            )
+
+            val sendtSykmelding = sykmeldingStatusService.getSendtSykmeldingUtenDiagnose(testSykmeldingsopplysninger.id)
+
+            sendtSykmelding shouldNotEqual null
         }
     }
 })
