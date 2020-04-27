@@ -68,6 +68,44 @@
       "configEntries": {
         "cleanup.policy": "compact"
       }
+    },
+    {
+      "topicName": "syfo-sendt-sykmelding",
+      "members": [
+        {"member":"srvsyfosmregister", "role":"PRODUCER"},
+        {"member":"srvsyfoservice-dat", "role":"PRODUCER"},
+        {"member":"srvsyfosoknad", "role":"CONSUMER"},
+        {"member":"srvsyfosyketilfelle", "role":"CONSUMER"},
+        {"member":"s151890", "role":"MANAGER"},
+        {"member":"k143566", "role":"MANAGER"},
+        {"member":"f133008", "role":"MANAGER"},
+        {"member":"n157016", "role":"MANAGER"},
+        {"member":"k157140", "role":"MANAGER"},
+        {"member":"g153850", "role":"MANAGER"}
+      ],
+      "numPartitions": 3,
+      "configEntries": {
+        "cleanup.policy": "compact"
+      }
+    },
+    {
+      "topicName": "syfo-bekreftet-sykmelding",
+      "members": [
+        {"member":"srvsyfosmregister", "role":"PRODUCER"},
+        {"member":"srvsyfoservice-dat", "role":"PRODUCER"},
+        {"member":"srvsyfosoknad", "role":"CONSUMER"},
+        {"member":"srvsyfosyketilfelle", "role":"CONSUMER"},
+        {"member":"s151890", "role":"MANAGER"},
+        {"member":"k143566", "role":"MANAGER"},
+        {"member":"f133008", "role":"MANAGER"},
+        {"member":"n157016", "role":"MANAGER"},
+        {"member":"k157140", "role":"MANAGER"},
+        {"member":"g153850", "role":"MANAGER"}
+      ],
+      "numPartitions": 3,
+      "configEntries": {
+        "cleanup.policy": "compact"
+      }
     }
   ]
 }

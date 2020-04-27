@@ -109,7 +109,7 @@ class SykmeldingStatusConsumerService(
                 getAdjustedToLocalDateTime(timestamp),
                 toArbeidsgiverStatus(sykmeldingId, arbeidsgiver),
                 toSporsmal(arbeidsgiverSporsmal, sykmeldingId)
-                )
+        )
         val sykmeldingStatusEvent = toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
 
         sykmeldingStatusService.registrerSendt(sykmeldingSendEvent, sykmeldingStatusEvent)

@@ -12,7 +12,7 @@ import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 data class SendtSykmelding(
     val id: String,
     val mottattTidspunkt: OffsetDateTime,
-    val legekontorOrgnr: String?,
+    val legekontorOrgnummer: String?,
     val behandletTidspunkt: OffsetDateTime,
     val meldingTilArbeidsgiver: String?,
     val navnFastlege: String?,

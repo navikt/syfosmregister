@@ -72,7 +72,7 @@ class KafkaStatusIntegrationTest : Spek({
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "application"
     every { environment.sykmeldingStatusTopic } returns "topic"
-    every { environment.sendSykmeldingKafkaTopic } returns "topic"
+    every { environment.sendSykmeldingKafkaTopic } returns "sendt-sykmelding-topic"
 
     fun setupKafkaConfig(): Properties {
         val kafkaConfig = Properties()
@@ -110,7 +110,7 @@ class KafkaStatusIntegrationTest : Spek({
         clearAllMocks()
         every { environment.applicationName } returns "application"
         every { environment.sykmeldingStatusTopic } returns "topic"
-        every { environment.sendSykmeldingKafkaTopic } returns "topic"
+        every { environment.sendSykmeldingKafkaTopic } returns "sendt-sykmelding-topic"
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any()) } returns Unit
         database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)
