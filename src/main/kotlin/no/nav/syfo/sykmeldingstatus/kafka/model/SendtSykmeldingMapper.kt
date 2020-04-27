@@ -1,7 +1,7 @@
 package no.nav.syfo.sykmeldingstatus.kafka.model
 
 import no.nav.syfo.sykmelding.db.SporsmalSvar
-import no.nav.syfo.sykmelding.db.SykmeldingDbModel
+import no.nav.syfo.sykmelding.db.SykmeldingDbModelUtenBehandlingsutfall
 import no.nav.syfo.sykmelding.model.SporsmalSvarDTO
 import no.nav.syfo.sykmelding.model.SvarRestriksjonDTO
 import no.nav.syfo.sykmelding.model.getHarRedusertArbeidsgiverperiode
@@ -13,7 +13,7 @@ import no.nav.syfo.sykmelding.model.toPrognoseDTO
 import no.nav.syfo.sykmelding.model.toSporsmalSvarDTO
 import no.nav.syfo.sykmelding.model.toSykmeldingsperiodeDTO
 
-fun SykmeldingDbModel.toSendtSykmelding(): SendtSykmelding {
+fun SykmeldingDbModelUtenBehandlingsutfall.toSendtSykmelding(): SendtSykmelding {
     return SendtSykmelding(
             id = id,
             mottattTidspunkt = getUtcTime(mottattTidspunkt),
