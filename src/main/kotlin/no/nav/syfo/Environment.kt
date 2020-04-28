@@ -24,7 +24,8 @@ data class Environment(
     val syfoTilgangskontrollUrl: String = getEnvVar("SYFO_TILGANGSKONTROLL_URL", "http://syfo-tilgangskontroll/syfo-tilgangskontroll/api/tilgang/bruker"),
     val sykmeldingStatusBackupTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_BACKUP_TOPIC", "privat-syfo-register-status-backup"),
     val sykmeldingStatusTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_TOPIC", "aapen-syfo-sykmeldingstatus-leesah-v1"),
-    val sendSykmeldingKafkaTopic: String = getEnvVar("SENDT_SYKMELDING_TOPIC", "syfo-sendt-sykmelding")
+    val sendSykmeldingKafkaTopic: String = "syfo-sendt-sykmelding",
+    val bekreftSykmeldingKafkaTopic: String = "syfo-bekreftet-sykmelding"
 ) : KafkaConfig
 
 data class VaultSecrets(

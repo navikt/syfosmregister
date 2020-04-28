@@ -9,7 +9,7 @@ import no.nav.syfo.sykmelding.model.PrognoseDTO
 import no.nav.syfo.sykmelding.model.SporsmalSvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 
-data class SendtSykmelding(
+data class SkjermetSykmelding(
     val id: String,
     val mottattTidspunkt: OffsetDateTime,
     val legekontorOrgnummer: String?,

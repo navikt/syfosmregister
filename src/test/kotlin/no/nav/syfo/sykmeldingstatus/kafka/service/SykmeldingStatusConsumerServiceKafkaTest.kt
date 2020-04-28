@@ -6,6 +6,7 @@ import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.verify
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.Properties
@@ -31,7 +32,8 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory
-import no.nav.syfo.sykmeldingstatus.kafka.model.SendtSykmelding
+import no.nav.syfo.sykmeldingstatus.kafka.model.SkjermetSykmelding
+import no.nav.syfo.sykmeldingstatus.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaSerializer
@@ -70,8 +72,9 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     var applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
+    val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)
     val consumer = KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer)
 
     afterEachTest {
         clearAllMocks()
@@ -83,6 +86,8 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
         every { environment.applicationName } returns "application"
         every { environment.sykmeldingStatusTopic } returns "topic"
         every { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
+        every { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
+        every { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) } returns Unit
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any()) } returns Unit
     }
@@ -101,7 +106,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                     var sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmelidngId, timestamp, StatusEventDTO.APEN)
                     kafkaProducer.send(sykmeldingApenEvent, fnr)
                 }
-
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList()
                 every { sykmeldingStatusService.registrerStatus(any()) } answers {
                     if (currentMessage == 5 && currentError < errors) {
                         currentError++
@@ -126,6 +131,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, StatusEventDTO.APEN, null, null)
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList()
                 every { sykmeldingStatusService.registrerStatus(any()) } answers {
                     sykmeldingStatusEvent = args[0] as SykmeldingStatusEvent
                     applicationState.alive = false
@@ -142,6 +148,64 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
             }
         }
 
+        it("tombstone with APEN status") {
+            runBlocking {
+                val sykmeldingId = UUID.randomUUID().toString()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+                var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
+                val sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, StatusEventDTO.APEN, null, null)
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now(), StatusEvent.BEKREFTET))
+                every { sykmeldingStatusService.registrerStatus(any()) } answers {
+                    sykmeldingStatusEvent = args[0] as SykmeldingStatusEvent
+                    applicationState.alive = false
+                    applicationState.ready = false
+                }
+
+                val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                kafkaProducer.send(sykmeldingApenEvent, fnr)
+
+                sykmeldingStatusConsumerService.start()
+
+                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp), StatusEvent.APEN, timestamp)
+                verify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingId) }
+                verify(exactly = 1) { sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent!!) }
+            }
+        }
+
+        it("test tombstone with apen -> bekreft -> apen") {
+            runBlocking {
+                val sykmeldingId = UUID.randomUUID().toString()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+                var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
+                val sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, StatusEventDTO.APEN, null, null)
+                val sykmeldingBekreftEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(1), StatusEventDTO.BEKREFTET, null, null)
+                val sykmeldingApenEvent2 = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(2), StatusEventDTO.APEN, null, null)
+                every { sykmeldingStatusService.getSkjermetSykmelding(any()) } returns mockkClass(SkjermetSykmelding::class)
+                every { sykmeldingStatusService.registrerBekreftet(any(), any()) } returns Unit
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now(), StatusEvent.BEKREFTET))
+                every { sykmeldingStatusService.registrerStatus(any()) } answers {
+                    val lastBekreftet = sykmeldingStatusEvent?.event == StatusEvent.APEN
+                    sykmeldingStatusEvent = args[0] as SykmeldingStatusEvent
+                    if (lastBekreftet && sykmeldingStatusEvent?.event == StatusEvent.APEN) {
+                        applicationState.alive = false
+                        applicationState.ready = false
+                    }
+                }
+
+                val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                kafkaProducer.send(sykmeldingApenEvent, fnr)
+                kafkaProducer.send(sykmeldingBekreftEvent, fnr)
+                kafkaProducer.send(sykmeldingApenEvent2, fnr)
+
+                sykmeldingStatusConsumerService.start()
+
+                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp.plusSeconds(2)), StatusEvent.APEN, timestamp.plusSeconds(2))
+                verify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
+                verify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingId) }
+                verify(exactly = 2) { sykmeldingStatusService.registrerStatus(any()) }
+            }
+        }
+
         it("Test SENDT status") {
             runBlocking {
                 val sykmeldingId = UUID.randomUUID().toString()
@@ -155,7 +219,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         ArbeidsgiverStatusDTO("1", "2", "navn"),
                         listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar")))
 
-                every { sykmeldingStatusService.getSendtSykmeldingUtenDiagnose(any()) } returns mockkClass(SendtSykmelding::class)
+                every { sykmeldingStatusService.getSkjermetSykmelding(any()) } returns mockkClass(SkjermetSykmelding::class)
                 every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                     sykmeldingSendEvent = args[0] as SykmeldingSendEvent
                     sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
@@ -165,7 +229,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
 
                 KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment).send(sykmeldingSendKafkaEvent, fnr)
                 sykmeldingStatusConsumerService.start()
-
+                verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
                 verify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
                 sykmeldingSendEvent shouldEqual SykmeldingSendEvent(
                         sykmeldingId,
@@ -173,6 +237,29 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         ArbeidsgiverStatus(sykmeldingId, "1", "2", "navn"),
                         Sporsmal("tekst", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar")))
                 sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp), StatusEvent.SENDT, timestamp)
+            }
+        }
+
+        it("test AVBRUTT status") {
+            runBlocking {
+                val sykmeldingId = UUID.randomUUID().toString()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
+                var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
+                val sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, StatusEventDTO.AVBRUTT, null, null)
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList()
+                every { sykmeldingStatusService.registrerStatus(any()) } answers {
+                    sykmeldingStatusEvent = args[0] as SykmeldingStatusEvent
+                    applicationState.alive = false
+                    applicationState.ready = false
+                }
+
+                val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                kafkaProducer.send(sykmeldingApenEvent, fnr)
+
+                sykmeldingStatusConsumerService.start()
+
+                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp), StatusEvent.AVBRUTT, timestamp)
+                verify(exactly = 1) { sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent!!) }
             }
         }
 
@@ -189,7 +276,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         null,
                         null
                 )
-
+                every { sykmeldingStatusService.getSkjermetSykmelding(any()) } returns mockkClass(SkjermetSykmelding::class)
                 every { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
                     sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
                     sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
@@ -200,6 +287,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment).send(sykmeldingBekreftKafkaEvent, fnr)
                 sykmeldingStatusConsumerService.start()
 
+                verify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
                 verify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
                 sykmeldingBekreftEvent shouldEqual SykmeldingBekreftEvent(
                         sykmeldingId,

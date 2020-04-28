@@ -11,6 +11,7 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.consumer.SykmeldingStatusKafkaConsumer
+import no.nav.syfo.sykmeldingstatus.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SendtSykmeldingKafkaProducer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
@@ -25,7 +26,8 @@ class SykmeldingStatusConsumerServiceTest : Spek({
         coEvery { delay(any()) } returns Unit
     }
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState, sendtSykmeldingKafkaProducer)
+    val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer)
 
     describe("Test retry") {
         it("Should retry if error happens") {

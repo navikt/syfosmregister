@@ -73,6 +73,7 @@ class KafkaStatusIntegrationTest : Spek({
     every { environment.applicationName } returns "application"
     every { environment.sykmeldingStatusTopic } returns "topic"
     every { environment.sendSykmeldingKafkaTopic } returns "sendt-sykmelding-topic"
+    every { environment.bekreftSykmeldingKafkaTopic } returns "syfo-bekreftet-sykmelding"
 
     fun setupKafkaConfig(): Properties {
         val kafkaConfig = Properties()
@@ -94,7 +95,8 @@ class KafkaStatusIntegrationTest : Spek({
     val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
     val consumer = KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment)
     val sendtSykmeldingKafkaProducer = KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer)
+    val bekreftSykmeldingKafkaProducer = KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer)
     val sykmeldingService = SykmeldingService(database)
     val mockPayload = mockk<Payload>()
 
@@ -111,6 +113,7 @@ class KafkaStatusIntegrationTest : Spek({
         every { environment.applicationName } returns "application"
         every { environment.sykmeldingStatusTopic } returns "topic"
         every { environment.sendSykmeldingKafkaTopic } returns "sendt-sykmelding-topic"
+        every { environment.bekreftSykmeldingKafkaTopic } returns "syfo-bekreftet-sykmelding"
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any()) } returns Unit
         database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)

@@ -6,7 +6,8 @@ import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmeldingstatus.kafka.consumer.SykmeldingStatusKafkaConsumer
-import no.nav.syfo.sykmeldingstatus.kafka.model.SendtSykmeldingKafkaMessage
+import no.nav.syfo.sykmeldingstatus.kafka.model.SykmeldingKafkaMessage
+import no.nav.syfo.sykmeldingstatus.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaDeserializer
@@ -38,8 +39,16 @@ class KafkaFactory private constructor() {
                     "${environment.applicationName}-producer",
                     JacksonKafkaSerializer::class
             )
-            val kafkaProducer = KafkaProducer<String, SendtSykmeldingKafkaMessage>(kafkaProducerProperties)
+            val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage>(kafkaProducerProperties)
             return SendtSykmeldingKafkaProducer(kafkaProducer, environment.sendSykmeldingKafkaTopic)
+        }
+        fun getBekreftetSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): BekreftSykmeldingKafkaProducer {
+            val kafkaProducerProperties = kafkaConfig.toProducerConfig(
+                    "${environment.applicationName}-producer",
+                    JacksonKafkaSerializer::class
+            )
+            val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage>(kafkaProducerProperties)
+            return BekreftSykmeldingKafkaProducer(kafkaProducer, environment.bekreftSykmeldingKafkaTopic)
         }
     }
 }

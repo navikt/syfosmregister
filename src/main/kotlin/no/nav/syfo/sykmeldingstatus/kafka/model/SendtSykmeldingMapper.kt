@@ -13,8 +13,8 @@ import no.nav.syfo.sykmelding.model.toPrognoseDTO
 import no.nav.syfo.sykmelding.model.toSporsmalSvarDTO
 import no.nav.syfo.sykmelding.model.toSykmeldingsperiodeDTO
 
-fun SykmeldingDbModelUtenBehandlingsutfall.toSendtSykmelding(): SendtSykmelding {
-    return SendtSykmelding(
+fun SykmeldingDbModelUtenBehandlingsutfall.toSkjermetSykmelding(): SkjermetSykmelding {
+    return SkjermetSykmelding(
             id = id,
             mottattTidspunkt = getUtcTime(mottattTidspunkt),
             legekontorOrgnummer = legekontorOrgNr,
