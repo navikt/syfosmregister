@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmeldingstatus.kafka.producer
 
+import no.nav.syfo.log
 import no.nav.syfo.sykmeldingstatus.kafka.model.SykmeldingKafkaMessage
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
@@ -10,6 +11,7 @@ class BekreftSykmeldingKafkaProducer(private val kafkaProducer: KafkaProducer<St
     }
 
     fun tombstoneSykmelding(sykmeldingId: String) {
+        log.info("Tombstone sykkmelding {}", sykmeldingId)
         kafkaProducer.send(ProducerRecord(topic, sykmeldingId, null))
     }
 }
