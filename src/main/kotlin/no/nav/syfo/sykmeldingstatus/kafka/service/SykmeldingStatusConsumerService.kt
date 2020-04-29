@@ -90,7 +90,7 @@ class SykmeldingStatusConsumerService(
     }
 
     private fun getKafkaMessage(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO): SykmeldingKafkaMessage {
-        val sendtSykmelding = sykmeldingStatusService.getSkjermetSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
+        val sendtSykmelding = sykmeldingStatusService.getEnkelSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
         val sendEvent = sykmeldingStatusKafkaMessage.event
         val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
 

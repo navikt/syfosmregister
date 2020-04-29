@@ -32,7 +32,7 @@ import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
 import no.nav.syfo.sykmeldingstatus.kafka.KafkaFactory
-import no.nav.syfo.sykmeldingstatus.kafka.model.SkjermetSykmelding
+import no.nav.syfo.sykmeldingstatus.kafka.model.EnkelSykmelding
 import no.nav.syfo.sykmeldingstatus.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaDeserializer
@@ -180,7 +180,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 val sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, StatusEventDTO.APEN, null, null)
                 val sykmeldingBekreftEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(1), StatusEventDTO.BEKREFTET, null, null)
                 val sykmeldingApenEvent2 = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(2), StatusEventDTO.APEN, null, null)
-                every { sykmeldingStatusService.getSkjermetSykmelding(any()) } returns mockkClass(SkjermetSykmelding::class)
+                every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
                 every { sykmeldingStatusService.registrerBekreftet(any(), any()) } returns Unit
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now(), StatusEvent.BEKREFTET))
                 every { sykmeldingStatusService.registrerStatus(any()) } answers {
@@ -219,7 +219,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         ArbeidsgiverStatusDTO("1", "2", "navn"),
                         listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar")))
 
-                every { sykmeldingStatusService.getSkjermetSykmelding(any()) } returns mockkClass(SkjermetSykmelding::class)
+                every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
                 every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                     sykmeldingSendEvent = args[0] as SykmeldingSendEvent
                     sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
@@ -276,7 +276,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         null,
                         null
                 )
-                every { sykmeldingStatusService.getSkjermetSykmelding(any()) } returns mockkClass(SkjermetSykmelding::class)
+                every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
                 every { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
                     sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
                     sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent

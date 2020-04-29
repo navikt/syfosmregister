@@ -3,8 +3,8 @@ package no.nav.syfo.sykmeldingstatus
 import no.nav.syfo.aksessering.db.erEier
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfall
-import no.nav.syfo.sykmeldingstatus.kafka.model.SkjermetSykmelding
-import no.nav.syfo.sykmeldingstatus.kafka.model.toSkjermetSykmelding
+import no.nav.syfo.sykmeldingstatus.kafka.model.EnkelSykmelding
+import no.nav.syfo.sykmeldingstatus.kafka.model.toEnkelSykmelding
 
 class SykmeldingStatusService(private val database: DatabaseInterface) {
 
@@ -34,8 +34,8 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
         }
     }
 
-    fun getSkjermetSykmelding(sykmeldingId: String): SkjermetSykmelding? =
-        database.getSykmeldingerMedIdUtenBehandlingsutfall(sykmeldingId)?.toSkjermetSykmelding()
+    fun getEnkelSykmelding(sykmeldingId: String): EnkelSykmelding? =
+        database.getSykmeldingerMedIdUtenBehandlingsutfall(sykmeldingId)?.toEnkelSykmelding()
 
     private fun getLatestSykmeldingStatus(sykmeldingStatus: List<SykmeldingStatusEvent>): List<SykmeldingStatusEvent> {
         val latest = sykmeldingStatus.maxBy { it.timestamp }

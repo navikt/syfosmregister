@@ -6,10 +6,9 @@ import no.nav.syfo.sykmelding.model.ArbeidsgiverDTO
 import no.nav.syfo.sykmelding.model.BehandlerDTO
 import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
 import no.nav.syfo.sykmelding.model.PrognoseDTO
-import no.nav.syfo.sykmelding.model.SporsmalSvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 
-data class SkjermetSykmelding(
+data class EnkelSykmelding(
     val id: String,
     val mottattTidspunkt: OffsetDateTime,
     val legekontorOrgnummer: String?,
@@ -23,7 +22,6 @@ data class SkjermetSykmelding(
     val arbeidsgiver: ArbeidsgiverDTO,
     val kontaktMedPasient: KontaktMedPasientDTO,
     val prognose: PrognoseDTO?,
-    val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvarDTO>>,
     val egenmeldt: Boolean,
     val papirsykmelding: Boolean,
     val harRedusertArbeidsgiverperiode: Boolean
