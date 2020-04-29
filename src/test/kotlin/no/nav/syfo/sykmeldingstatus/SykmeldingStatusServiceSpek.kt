@@ -155,7 +155,7 @@ class SykmeldingStatusServiceSpek : Spek({
                 SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5), StatusEvent.SENDT, testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5).atOffset(ZoneOffset.UTC))
             )
 
-            val sendtSykmelding = sykmeldingStatusService.getSendtSykmeldingUtenDiagnose(testSykmeldingsopplysninger.id)
+            val sendtSykmelding = sykmeldingStatusService.getEnkelSykmelding(testSykmeldingsopplysninger.id)
 
             sendtSykmelding shouldNotEqual null
         }
