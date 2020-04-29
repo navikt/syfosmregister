@@ -12,6 +12,7 @@ import no.nav.syfo.sykmeldingstatus.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonKafkaSerializer
+import no.nav.syfo.sykmeldingstatus.kafka.util.JacksonNullableKafkaSerializer
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -45,9 +46,9 @@ class KafkaFactory private constructor() {
         fun getBekreftetSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): BekreftSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
                     "${environment.applicationName}-producer",
-                    JacksonKafkaSerializer::class
+                    JacksonNullableKafkaSerializer::class
             )
-            val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage>(kafkaProducerProperties)
+            val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage?>(kafkaProducerProperties)
             return BekreftSykmeldingKafkaProducer(kafkaProducer, environment.bekreftSykmeldingKafkaTopic)
         }
     }

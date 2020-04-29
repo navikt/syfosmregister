@@ -95,7 +95,7 @@ class KafkaStatusIntegrationTest : Spek({
     val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
     val consumer = KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment)
     val sendtSykmeldingKafkaProducer = KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment)
-    val bekreftSykmeldingKafkaProducer = KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment)
+    val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer)
     val sykmeldingService = SykmeldingService(database)
     val mockPayload = mockk<Payload>()
@@ -151,6 +151,10 @@ class KafkaStatusIntegrationTest : Spek({
                     sporsmalListe = null
             )
             database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 1
+        }
+
+        it("test tombstone") {
+            bekreftSykmeldingKafkaProducer.tombstoneSykmelding("123")
         }
 
         it("write and read APEN and SENDT") {
