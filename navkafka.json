@@ -93,6 +93,7 @@
       "members": [
         {"member":"srvsyfosmregister", "role":"PRODUCER"},
         {"member":"srvsyfoservice-dat", "role":"PRODUCER"},
+        {"member":"srvsyfoservice-dat", "role":"CONSUMER"},
         {"member":"srvsyfosoknad", "role":"CONSUMER"},
         {"member":"srvsyfosyketilfelle", "role":"CONSUMER"},
         {"member":"s151890", "role":"MANAGER"},
