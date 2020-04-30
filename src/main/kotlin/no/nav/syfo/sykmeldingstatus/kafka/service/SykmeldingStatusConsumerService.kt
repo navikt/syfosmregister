@@ -7,7 +7,6 @@ import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
-import no.nav.syfo.sykmeldingstatus.StatusEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingBekreftEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingSendEvent
 import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
@@ -69,7 +68,7 @@ class SykmeldingStatusConsumerService(
                 }
                 StatusEventDTO.BEKREFTET -> {
                     registrerBekreftet(sykmeldingStatusKafkaMessage)
-                    publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage)
+                    // publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage)
                 }
                 else -> registrerStatus(sykmeldingStatusKafkaMessage)
             }
@@ -110,10 +109,10 @@ class SykmeldingStatusConsumerService(
     }
 
     private fun registrerStatus(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val lastStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingsid = sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, filter = "LATEST")
-        if (lastStatus.any { it.event == StatusEvent.BEKREFTET }) {
-            bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
-        }
+//        val lastStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingsid = sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, filter = "LATEST")
+//        if (lastStatus.any { it.event == StatusEvent.BEKREFTET }) {
+//            bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
+//        }
         val sykmeldingStatusEvent = toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
         sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
     }
