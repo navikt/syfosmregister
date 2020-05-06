@@ -33,11 +33,11 @@ import no.nav.syfo.sykmelding.db.SporsmalSvar
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.SvarRestriksjon
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
-import no.nav.syfo.sykmeldingstatus.ShortName
-import no.nav.syfo.sykmeldingstatus.Sporsmal
-import no.nav.syfo.sykmeldingstatus.Svar
-import no.nav.syfo.sykmeldingstatus.Svartype
-import no.nav.syfo.sykmeldingstatus.api.ArbeidsgiverStatusDTO
+import no.nav.syfo.sykmelding.status.ShortName
+import no.nav.syfo.sykmelding.status.Sporsmal
+import no.nav.syfo.sykmelding.status.Svar
+import no.nav.syfo.sykmelding.status.Svartype
+import no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO
 
 internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasient: Boolean = false, ikkeTilgangTilDiagnose: Boolean): SykmeldingDTO {
     return SykmeldingDTO(

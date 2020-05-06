@@ -2,7 +2,7 @@ package no.nav.syfo.aksessering.api
 
 import java.time.LocalDate
 import java.time.LocalDateTime
-import no.nav.syfo.sykmeldingstatus.api.SykmeldingStatusDTO
+import no.nav.syfo.sykmelding.status.api.SykmeldingStatusDTO
 
 abstract class SykmeldingDTO(
     val id: String,

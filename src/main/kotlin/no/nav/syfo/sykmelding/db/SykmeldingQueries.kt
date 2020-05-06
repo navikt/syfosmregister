@@ -7,8 +7,8 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
-import no.nav.syfo.sykmeldingstatus.Sporsmal
-import no.nav.syfo.sykmeldingstatus.StatusEvent
+import no.nav.syfo.sykmelding.status.Sporsmal
+import no.nav.syfo.sykmelding.status.StatusEvent
 
 fun DatabaseInterface.getSykmeldinger(fnr: String): List<SykmeldingDbModel> =
         connection.use { connection ->

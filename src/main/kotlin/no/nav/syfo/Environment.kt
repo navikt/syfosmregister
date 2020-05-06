@@ -25,7 +25,8 @@ data class Environment(
     val sykmeldingStatusBackupTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_BACKUP_TOPIC", "privat-syfo-register-status-backup"),
     val sykmeldingStatusTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_TOPIC", "aapen-syfo-sykmeldingstatus-leesah-v1"),
     val sendSykmeldingKafkaTopic: String = "syfo-sendt-sykmelding",
-    val bekreftSykmeldingKafkaTopic: String = "syfo-bekreftet-sykmelding"
+    val bekreftSykmeldingKafkaTopic: String = "syfo-bekreftet-sykmelding",
+    val mottattSykmeldingKafkaTopic: String = "syfo-mottatt-sykmelding"
 ) : KafkaConfig
 
 data class VaultSecrets(

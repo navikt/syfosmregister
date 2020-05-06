@@ -11,9 +11,9 @@ import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
-import no.nav.syfo.sykmeldingstatus.registerStatus
+import no.nav.syfo.sykmelding.status.StatusEvent
+import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
+import no.nav.syfo.sykmelding.status.registerStatus
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall

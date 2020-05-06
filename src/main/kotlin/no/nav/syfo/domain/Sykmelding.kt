@@ -16,10 +16,10 @@ import no.nav.syfo.aksessering.api.SykmeldingsperiodeDTO
 import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sm.Diagnosekoder.ICD10_CODE
 import no.nav.syfo.sm.Diagnosekoder.ICPC2_CODE
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatus
-import no.nav.syfo.sykmeldingstatus.api.SykmeldingStatusDTO
-import no.nav.syfo.sykmeldingstatus.api.tilSykmeldingStatusDTO
+import no.nav.syfo.sykmelding.status.StatusEvent
+import no.nav.syfo.sykmelding.status.SykmeldingStatus
+import no.nav.syfo.sykmelding.status.api.SykmeldingStatusDTO
+import no.nav.syfo.sykmelding.status.api.tilSykmeldingStatusDTO
 
 data class Sykmelding(
     val id: String,

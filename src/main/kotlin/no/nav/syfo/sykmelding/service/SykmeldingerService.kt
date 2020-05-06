@@ -8,7 +8,7 @@ import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.model.toSykmeldingDTO
-import no.nav.syfo.sykmeldingstatus.Sporsmal
+import no.nav.syfo.sykmelding.status.Sporsmal
 
 class SykmeldingerService(private val database: DatabaseInterface) {
     fun getInternalSykmeldinger(fnr: String, fom: LocalDate? = null, tom: LocalDate? = null): List<SykmeldingDTO> =
