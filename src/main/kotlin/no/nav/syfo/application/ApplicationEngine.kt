@@ -40,12 +40,12 @@ import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
+import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV1
+import no.nav.syfo.sykmelding.status.SykmeldingStatusService
+import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusService
-import no.nav.syfo.sykmeldingstatus.api.registerSykmeldingStatusGETApi
-import no.nav.syfo.sykmeldingstatus.kafka.producer.SykmeldingStatusKafkaProducer
 
 @KtorExperimentalAPI
 fun createApplicationEngine(

@@ -12,7 +12,7 @@ import io.ktor.routing.get
 import io.ktor.routing.route
 import java.time.LocalDate
 import no.nav.syfo.sykmelding.service.SykmeldingerService
-import no.nav.syfo.sykmeldingstatus.StatusEventDTO
+import no.nav.syfo.sykmelding.status.StatusEventDTO
 
 fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
     route("api/v2/sykmeldinger") {

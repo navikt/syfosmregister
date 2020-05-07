@@ -16,9 +16,9 @@ import no.nav.syfo.application.setupAuth
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.service.SykmeldingerService
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatusEvent
-import no.nav.syfo.sykmeldingstatus.registerStatus
+import no.nav.syfo.sykmelding.status.StatusEvent
+import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
+import no.nav.syfo.sykmelding.status.registerStatus
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT

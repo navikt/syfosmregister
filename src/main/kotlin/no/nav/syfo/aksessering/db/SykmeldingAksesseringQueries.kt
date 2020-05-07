@@ -17,13 +17,13 @@ import no.nav.syfo.model.Gradert as ModelGradert
 import no.nav.syfo.model.HarArbeidsgiver as ModelHarArbeidsgiver
 import no.nav.syfo.model.Periode as ModelPeriode
 import no.nav.syfo.objectMapper
-import no.nav.syfo.sykmeldingstatus.ArbeidsgiverStatus
-import no.nav.syfo.sykmeldingstatus.ShortName
-import no.nav.syfo.sykmeldingstatus.Sporsmal
-import no.nav.syfo.sykmeldingstatus.StatusEvent
-import no.nav.syfo.sykmeldingstatus.Svar
-import no.nav.syfo.sykmeldingstatus.Svartype
-import no.nav.syfo.sykmeldingstatus.SykmeldingStatus
+import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
+import no.nav.syfo.sykmelding.status.ShortName
+import no.nav.syfo.sykmelding.status.Sporsmal
+import no.nav.syfo.sykmelding.status.StatusEvent
+import no.nav.syfo.sykmelding.status.Svar
+import no.nav.syfo.sykmelding.status.Svartype
+import no.nav.syfo.sykmelding.status.SykmeldingStatus
 
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
     connection.use { connection ->
