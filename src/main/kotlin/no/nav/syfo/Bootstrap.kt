@@ -32,7 +32,7 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingK
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
-import no.nav.syfo.sykmelding.service.BehandligsutfallService
+import no.nav.syfo.sykmelding.service.BehandlingsutfallService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -94,7 +94,7 @@ fun main() {
             mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer)
 
     val behandlingsutfallKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
-    val behandligsutfallService = BehandligsutfallService(
+    val behandligsutfallService = BehandlingsutfallService(
             applicationState = applicationState,
             kafkaconsumer = behandlingsutfallKafkaConsumer,
             env = environment,
@@ -148,7 +148,7 @@ fun launchListeners(
     applicationState: ApplicationState,
     sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
     mottattSykmeldingService: MottattSykmeldingService,
-    behandligsutfallService: BehandligsutfallService
+    behandligsutfallService: BehandlingsutfallService
 ) {
     createListener(applicationState) {
         mottattSykmeldingService.start()

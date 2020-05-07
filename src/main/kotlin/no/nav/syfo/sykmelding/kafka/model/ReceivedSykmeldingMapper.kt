@@ -50,7 +50,7 @@ fun ReceivedSykmelding.toEnkelSykmelding(): EnkelSykmelding {
             papirsykmelding = sykmelding.avsenderSystem.navn == "Papirsykmelding",
             legekontorOrgnummer = legekontorOrgNr,
             mottattTidspunkt = getUtcTime(mottattDato),
-            sykmeldingsperioder = sykmelding.perioder.map { it.ToPeriodeDto() },
+            sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeDto() },
             harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode()
     )
 }
@@ -68,7 +68,7 @@ private fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
 private fun MedisinskVurdering.checkSmittefare() =
         annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == AnnenFraverGrunn.SMITTEFARE } == true
 
-private fun Periode.ToPeriodeDto(): SykmeldingsperiodeDTO {
+private fun Periode.toPeriodeDto(): SykmeldingsperiodeDTO {
     return SykmeldingsperiodeDTO(
             fom = fom,
             tom = tom,

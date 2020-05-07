@@ -55,7 +55,7 @@ class BehandligsutfallServiceTest : Spek({
     )
     val behandlingsutfallKafkaProducer = KafkaProducer<String, ValidationResult>(producerProperties)
     val behandlingsutfallKafkaConsumer = spyk(KafkaConsumer<String, String>(consumerProperties))
-    val behandlingsutfallService = BehandligsutfallService(
+    val behandlingsutfallService = BehandlingsutfallService(
             applicationState = applicationState,
             database = testDb,
             env = environment,

@@ -17,7 +17,7 @@ import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.wrapExceptions
 import org.apache.kafka.clients.consumer.KafkaConsumer
 
-class BehandligsutfallService(
+class BehandlingsutfallService(
     private val applicationState: ApplicationState,
     private val kafkaconsumer: KafkaConsumer<String, String>,
     private val database: DatabaseInterface,
@@ -56,7 +56,7 @@ class BehandligsutfallService(
             log.info("Mottatt behandlingsutfall, {}", StructuredArguments.fields(loggingMeta))
 
             if (database.connection.erBehandlingsutfallLagret(sykmeldingsid)) {
-                log.error(
+                log.warn(
                         "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}", StructuredArguments.fields(loggingMeta)
                 )
             } else {
