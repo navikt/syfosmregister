@@ -33,6 +33,7 @@ import no.nav.syfo.sykmelding.db.SporsmalSvar
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.SvarRestriksjon
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
+import no.nav.syfo.sykmelding.kafka.model.getHarRedusertArbeidsgiverperiode
 import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
 import no.nav.syfo.sykmelding.status.Svar
@@ -67,19 +68,6 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode()
     )
 }
-
-fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
-    val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071", "U072")
-    if (hovedDiagnose != null && diagnoserSomGirRedusertArbgiverPeriode.contains(hovedDiagnose.kode)) {
-        return true
-    } else if (!biDiagnoser.isNullOrEmpty() && biDiagnoser.find { diagnoserSomGirRedusertArbgiverPeriode.contains(it.kode) } != null) {
-        return true
-    }
-    return checkSmittefare()
-}
-
-private fun MedisinskVurdering.checkSmittefare() =
-        annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == AnnenFraverGrunn.SMITTEFARE } == true
 
 private fun SykmeldingDbModel.getMedisinskVurderingDTO(isPasient: Boolean, ikkeTilgangTilDiagnose: Boolean): MedisinskVurderingDTO? {
     if (ikkeTilgangTilDiagnose || (isPasient && sykmeldingsDokument.skjermesForPasient)) {

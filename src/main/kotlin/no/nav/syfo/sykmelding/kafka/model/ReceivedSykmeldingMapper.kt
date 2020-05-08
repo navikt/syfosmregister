@@ -3,7 +3,6 @@ package no.nav.syfo.sykmelding.kafka.model
 import no.nav.syfo.aksessering.db.finnPeriodetype
 import no.nav.syfo.domain.toDTO
 import no.nav.syfo.model.AktivitetIkkeMulig
-import no.nav.syfo.model.AnnenFraverGrunn
 import no.nav.syfo.model.Arbeidsgiver
 import no.nav.syfo.model.ArbeidsrelatertArsak
 import no.nav.syfo.model.ArbeidsrelatertArsakType
@@ -14,7 +13,6 @@ import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.KontaktMedPasient
 import no.nav.syfo.model.MedisinskArsak
 import no.nav.syfo.model.MedisinskArsakType
-import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.Periode
 import no.nav.syfo.model.Prognose
 import no.nav.syfo.model.ReceivedSykmelding
@@ -54,19 +52,6 @@ fun ReceivedSykmelding.toEnkelSykmelding(): EnkelSykmelding {
             harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode()
     )
 }
-
-private fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(): Boolean {
-    val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071", "U072")
-    if (hovedDiagnose != null && diagnoserSomGirRedusertArbgiverPeriode.contains(hovedDiagnose!!.kode)) {
-        return true
-    } else if (!biDiagnoser.isNullOrEmpty() && biDiagnoser.find { diagnoserSomGirRedusertArbgiverPeriode.contains(it.kode) } != null) {
-        return true
-    }
-    return checkSmittefare()
-}
-
-private fun MedisinskVurdering.checkSmittefare() =
-        annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == AnnenFraverGrunn.SMITTEFARE } == true
 
 private fun Periode.toPeriodeDto(): SykmeldingsperiodeDTO {
     return SykmeldingsperiodeDTO(
