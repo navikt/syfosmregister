@@ -1,7 +1,6 @@
 package no.nav.syfo.sykmelding.kafka.model
 
 import no.nav.syfo.sykmelding.db.SykmeldingDbModelUtenBehandlingsutfall
-import no.nav.syfo.sykmelding.model.getHarRedusertArbeidsgiverperiode
 import no.nav.syfo.sykmelding.model.getUtcTime
 import no.nav.syfo.sykmelding.model.toArbeidsgiverDTO
 import no.nav.syfo.sykmelding.model.toBehandlerDTO
