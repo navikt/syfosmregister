@@ -40,7 +40,7 @@ private fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<Sykmelding
                     legekontor_org_nr,
                     sykmelding,
                     status.event,
-                    status.event_timestamp,
+                    status.timestamp,
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
                     arbeidsgiver.navn
@@ -49,10 +49,10 @@ private fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<Sykmelding
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
                         LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
                         LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
-                                                                   status.event_timestamp = (SELECT event_timestamp
+                                                                   status.timestamp = (SELECT timestamp
                                                                                              FROM sykmeldingstatus
                                                                                              WHERE sykmelding_id = opplysninger.id
-                                                                                             ORDER BY event_timestamp DESC
+                                                                                             ORDER BY timestamp DESC
                                                                                              LIMIT 1)
                     where pasient_fnr = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
@@ -71,7 +71,7 @@ private fun Connection.getSykmeldingMedSisteStatusForId(id: String): SykmeldingD
                     legekontor_org_nr,
                     sykmelding,
                     status.event,
-                    status.event_timestamp,
+                    status.timestamp,
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
                     arbeidsgiver.navn
@@ -80,10 +80,10 @@ private fun Connection.getSykmeldingMedSisteStatusForId(id: String): SykmeldingD
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
                         LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
                         LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
-                                                                   status.event_timestamp = (SELECT event_timestamp
+                                                                   status.timestamp = (SELECT timestamp
                                                                                              FROM sykmeldingstatus
                                                                                              WHERE sykmelding_id = opplysninger.id
-                                                                                             ORDER BY event_timestamp DESC
+                                                                                             ORDER BY timestamp DESC
                                                                                              LIMIT 1)
                     where opplysninger.id = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
@@ -101,7 +101,7 @@ private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id:
                     legekontor_org_nr,
                     sykmelding,
                     status.event,
-                    status.event_timestamp,
+                    status.timestamp,
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
                     arbeidsgiver.navn
@@ -109,10 +109,10 @@ private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id:
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
                         LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
-                                                                   status.event_timestamp = (SELECT event_timestamp
+                                                                   status.timestamp = (SELECT timestamp
                                                                                              FROM sykmeldingstatus
                                                                                              WHERE sykmelding_id = opplysninger.id
-                                                                                             ORDER BY event_timestamp DESC
+                                                                                             ORDER BY timestamp DESC
                                                                                              LIMIT 1)
                     where opplysninger.id = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
@@ -143,7 +143,7 @@ fun ResultSet.toSykmeldingDbModelUtenBehandlingsutfall(): SykmeldingDbModelUtenB
 
 private fun ResultSet.getStatus(): StatusDbModel {
     val status = getString("event")
-    val status_timestamp = getTimestamp("event_timestamp").toLocalDateTime()
+    val status_timestamp = getTimestamp("timestamp").toLocalDateTime()
     val arbeidsgiverDbModel = when (status) {
         StatusEvent.SENDT.name -> ArbeidsgiverDbModel(
                 orgnummer = getString("orgnummer"),
