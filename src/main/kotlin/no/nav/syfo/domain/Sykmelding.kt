@@ -138,7 +138,7 @@ fun Sykmelding.toSkjermetDTO(): SkjermetSykmeldingDTO =
 
 fun Sykmelding.finnBekreftetDato(): LocalDateTime? {
     if (sykmeldingStatus.statusEvent == StatusEvent.BEKREFTET) {
-        return sykmeldingStatus.timestamp
+        return sykmeldingStatus.timestamp.toLocalDateTime()
     }
     return null
 }

@@ -21,7 +21,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.verify
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
@@ -70,12 +70,12 @@ object SykmeldingApiSpek : Spek({
     val database = TestDB()
     val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
 
-    fun lagreApenStatus(id: String, mottattTidspunkt: LocalDateTime) {
-        database.registerStatus(SykmeldingStatusEvent(id, mottattTidspunkt, StatusEvent.APEN, mottattTidspunkt.atOffset(ZoneOffset.UTC)))
+    fun lagreApenStatus(id: String, mottattTidspunkt: OffsetDateTime) {
+        database.registerStatus(SykmeldingStatusEvent(id, mottattTidspunkt, StatusEvent.APEN))
     }
     beforeEachTest {
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
-        lagreApenStatus(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt)
+        lagreApenStatus(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
         clearAllMocks()
         every { sykmeldingStatusKafkaProducer.send(any(), any()) } returns Unit
@@ -149,7 +149,7 @@ object SykmeldingApiSpek : Spek({
                             skjermesForPasient = true
                         )
                     ))
-                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt)
+                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC))
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
                 every { mockPayload.subject } returns "PasientFnr1"
@@ -166,7 +166,7 @@ object SykmeldingApiSpek : Spek({
 
             it("Skal ikke returnere statustekster som er sendt til manuell behandling") {
                 database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"), testSykmeldingsdokument.copy(id = "uuid2"))
-                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt)
+                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC))
                 database.connection.opprettBehandlingsutfall(
                     Behandlingsutfall("uuid2",
                         ValidationResult(
@@ -189,7 +189,7 @@ object SykmeldingApiSpek : Spek({
 
             it("Skal vise tekster når behandlingsutfall er avvist") {
                 database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2", pasientFnr = "123"), testSykmeldingsdokument.copy(id = "uuid2"))
-                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt)
+                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC))
                 database.connection.opprettBehandlingsutfall(
                     Behandlingsutfall("uuid2",
                         ValidationResult(
@@ -235,7 +235,7 @@ object SykmeldingApiSpek : Spek({
 
             it("Skal få med arbeidsgiver hvis sykmelding er sendt") {
                 every { mockPayload.subject } returns "pasientFnr"
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 database.registrerSendt(SykmeldingSendEvent("uuid", timestamp,
                     ArbeidsgiverStatus(
                         "uuid", "orgnummer", null, "Bedrift A/S"
@@ -261,7 +261,7 @@ object SykmeldingApiSpek : Spek({
 
             it("Skal få med spørsmål og svar hvis sykmelding er bekreftet") {
                 every { mockPayload.subject } returns "pasientFnr"
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 database.registrerBekreftet(SykmeldingBekreftEvent("uuid", timestamp,
                     lagSporsmalListe("uuid")),
                     SykmeldingStatusEvent("uuid", timestamp, StatusEvent.BEKREFTET))
@@ -286,7 +286,7 @@ object SykmeldingApiSpek : Spek({
 
             it("Skal ikke få spørsmål/svar eller arbeidsgiver for sykmelding som er bekreftet uten spm/svar") {
                 every { mockPayload.subject } returns "pasientFnr"
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 database.registrerBekreftet(SykmeldingBekreftEvent("uuid", timestamp, null),
                     SykmeldingStatusEvent("uuid", timestamp, StatusEvent.BEKREFTET))
 
@@ -306,7 +306,7 @@ object SykmeldingApiSpek : Spek({
 
             it("Skal takle at spørsmål/svar for sykmelding som er sendt mangler") {
                 every { mockPayload.subject } returns "pasientFnr"
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 database.registerStatus(SykmeldingStatusEvent("uuid", timestamp, StatusEvent.SENDT))
 
                 with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
@@ -325,7 +325,7 @@ object SykmeldingApiSpek : Spek({
 
             it("Skal ikke få spørsmål/svar eller arbeidsgiver for sykmelding som er endret og bekreftet på nytt uten spm/svar") {
                 every { mockPayload.subject } returns "pasientFnr"
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 database.registrerBekreftet(SykmeldingBekreftEvent("uuid", timestamp.minusMinutes(2),
                     lagSporsmalListe("uuid")),
                     SykmeldingStatusEvent("uuid", timestamp.minusMinutes(2), StatusEvent.BEKREFTET))
@@ -348,7 +348,7 @@ object SykmeldingApiSpek : Spek({
 
             it("Henter riktige statuser for flere sykmeldinger") {
                 every { mockPayload.subject } returns "pasientFnr"
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 database.registrerSendt(SykmeldingSendEvent("uuid", timestamp,
                     ArbeidsgiverStatus(
                         "uuid", "orgnummer", null, "Bedrift A/S"
@@ -356,7 +356,7 @@ object SykmeldingApiSpek : Spek({
                     Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
                         Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))),
                     SykmeldingStatusEvent("uuid", timestamp, StatusEvent.SENDT))
-                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt)
+                lagreApenStatus("uuid2", testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC))
                 database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = "uuid2"), testSykmeldingsdokument.copy(id = "uuid2", sykmelding = testSykmeldingsdokument.sykmelding.copy(id = "id2")))
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 

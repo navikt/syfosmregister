@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.verify
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.Properties
@@ -37,7 +36,6 @@ import no.nav.syfo.sykmelding.status.SykmeldingBekreftEvent
 import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
-import no.nav.syfo.util.TimestampUtil.Companion.getAdjustedToLocalDateTime
 import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -143,7 +141,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
 
                 sykmeldingStatusConsumerService.start()
 
-                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp), StatusEvent.APEN, timestamp)
+                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.APEN)
                 verify(exactly = 1) { sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent!!) }
             }
         }
@@ -154,7 +152,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, StatusEventDTO.APEN, null, null)
-                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now(), StatusEvent.BEKREFTET))
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), StatusEvent.BEKREFTET))
                 every { sykmeldingStatusService.registrerStatus(any()) } answers {
                     sykmeldingStatusEvent = args[0] as SykmeldingStatusEvent
                     applicationState.alive = false
@@ -166,7 +164,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
 
                 sykmeldingStatusConsumerService.start()
 
-                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp), StatusEvent.APEN, timestamp)
+                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.APEN)
                 verify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingId) }
                 verify(exactly = 1) { sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent!!) }
             }
@@ -182,7 +180,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 val sykmeldingApenEvent2 = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(2), StatusEventDTO.APEN, null, null)
                 every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
                 every { sykmeldingStatusService.registrerBekreftet(any(), any()) } returns Unit
-                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(SykmeldingStatusEvent(sykmeldingId, LocalDateTime.now(), StatusEvent.BEKREFTET))
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), StatusEvent.BEKREFTET))
                 every { sykmeldingStatusService.registrerStatus(any()) } answers {
                     val lastBekreftet = sykmeldingStatusEvent?.event == StatusEvent.APEN
                     sykmeldingStatusEvent = args[0] as SykmeldingStatusEvent
@@ -199,7 +197,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
 
                 sykmeldingStatusConsumerService.start()
 
-                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp.plusSeconds(2)), StatusEvent.APEN, timestamp.plusSeconds(2))
+                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, timestamp.plusSeconds(2), StatusEvent.APEN)
                 verify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
                 verify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingId) }
                 verify(exactly = 2) { sykmeldingStatusService.registrerStatus(any()) }
@@ -233,10 +231,10 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 verify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
                 sykmeldingSendEvent shouldEqual SykmeldingSendEvent(
                         sykmeldingId,
-                        getAdjustedToLocalDateTime(timestamp),
+                        timestamp,
                         ArbeidsgiverStatus(sykmeldingId, "1", "2", "navn"),
                         Sporsmal("tekst", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar")))
-                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp), StatusEvent.SENDT, timestamp)
+                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.SENDT)
             }
         }
 
@@ -258,7 +256,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
 
                 sykmeldingStatusConsumerService.start()
 
-                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, getAdjustedToLocalDateTime(timestamp), StatusEvent.AVBRUTT, timestamp)
+                sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.AVBRUTT)
                 verify(exactly = 1) { sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent!!) }
             }
         }
@@ -291,14 +289,13 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 verify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
                 sykmeldingBekreftEvent shouldEqual SykmeldingBekreftEvent(
                         sykmeldingId,
-                        getAdjustedToLocalDateTime(timestamp),
+                        timestamp,
                         null
                 )
                 sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(
                         sykmeldingId,
-                        getAdjustedToLocalDateTime(timestamp),
-                        StatusEvent.BEKREFTET,
-                        timestamp
+                        timestamp,
+                        StatusEvent.BEKREFTET
                 )
             }
         }
