@@ -1,1 +1,1 @@
-create index sykmeldingstatus_event_timestamp_idx on sykmeldingstatus (event_timestamp);
+create index concurrently sykmeldingstatus_event_timestamp_idx on sykmeldingstatus (event_timestamp);
