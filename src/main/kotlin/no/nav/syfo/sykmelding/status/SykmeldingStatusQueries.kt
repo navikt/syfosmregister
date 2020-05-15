@@ -98,13 +98,12 @@ private fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
 fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     this.prepareStatement(
         """
-                INSERT INTO sykmeldingstatus(sykmelding_id, event, timestamp, event_timestamp) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING
+                INSERT INTO sykmeldingstatus(sykmelding_id, event, timestamp) VALUES (?, ?, ?) ON CONFLICT DO NOTHING
                 """
     ).use {
         it.setString(1, sykmeldingStatusEvent.sykmeldingId)
         it.setString(2, sykmeldingStatusEvent.event.name)
         it.setTimestamp(3, Timestamp.from(sykmeldingStatusEvent.timestamp.toInstant()))
-        it.setTimestamp(4, Timestamp.valueOf(sykmeldingStatusEvent.timestamp.toLocalDateTime()))
         it.execute()
     }
 }
