@@ -1,11 +1,9 @@
 package no.nav.syfo.sykmelding.status
 
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import no.nav.syfo.util.TimestampUtil
 
 data class SykmeldingStatus(
-    val timestamp: LocalDateTime,
+    val timestamp: OffsetDateTime,
     val statusEvent: StatusEvent,
     val arbeidsgiver: ArbeidsgiverStatus?,
     val sporsmalListe: List<Sporsmal>?
@@ -13,9 +11,8 @@ data class SykmeldingStatus(
 
 data class SykmeldingStatusEvent(
     val sykmeldingId: String,
-    val timestamp: LocalDateTime,
-    val event: StatusEvent,
-    val timestampz: OffsetDateTime? = TimestampUtil.getAdjustedOffsetDateTime(timestamp)
+    val timestamp: OffsetDateTime,
+    val event: StatusEvent
 )
 
 enum class StatusEvent {
@@ -28,7 +25,7 @@ enum class StatusEventDTO {
 
 data class SykmeldingSendEvent(
     val sykmeldingId: String,
-    val timestamp: LocalDateTime,
+    val timestamp: OffsetDateTime,
     val arbeidsgiver: ArbeidsgiverStatus,
     val sporsmal: Sporsmal
 )
@@ -65,6 +62,6 @@ enum class Svartype {
 
 data class SykmeldingBekreftEvent(
     val sykmeldingId: String,
-    val timestamp: LocalDateTime,
+    val timestamp: OffsetDateTime,
     val sporsmal: List<Sporsmal>?
 )

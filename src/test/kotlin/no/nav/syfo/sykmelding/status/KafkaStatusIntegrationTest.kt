@@ -52,7 +52,6 @@ import no.nav.syfo.testutil.setUpTestApplication
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
-import no.nav.syfo.util.TimestampUtil.Companion.getAdjustedToLocalDateTime
 import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotEqual
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -145,7 +144,7 @@ class KafkaStatusIntegrationTest : Spek({
             val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 1
             sykmeldinger.get(0).sykmeldingStatus shouldEqual SykmeldingStatus(
-                    timestamp = getAdjustedToLocalDateTime(sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC)),
+                    timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
                     statusEvent = StatusEvent.APEN,
                     arbeidsgiver = null,
                     sporsmalListe = null
@@ -177,7 +176,7 @@ class KafkaStatusIntegrationTest : Spek({
             sykmeldinger.size shouldEqual 1
             val sykmeldingstatus = sykmeldinger.get(0).sykmeldingStatus
             sykmeldingstatus shouldEqual SykmeldingStatus(
-                    timestamp = getAdjustedToLocalDateTime(sendEvent.timestamp),
+                    timestamp = sendEvent.timestamp,
                     statusEvent = StatusEvent.SENDT,
                     arbeidsgiver = ArbeidsgiverStatus(sykmelding.id, "org", "jorg", "navn"),
                     sporsmalListe = listOf(Sporsmal("din arbeidssituasjon?", ShortName.ARBEIDSSITUASJON, Svar(
@@ -206,7 +205,7 @@ class KafkaStatusIntegrationTest : Spek({
             sykmeldinger.size shouldEqual 1
             val sykmeldingStatus = sykmeldinger.get(0).sykmeldingStatus
             sykmeldingStatus shouldEqual SykmeldingStatus(
-                    timestamp = getAdjustedToLocalDateTime(bekreftetEvent.timestamp),
+                    timestamp = bekreftetEvent.timestamp,
                     statusEvent = StatusEvent.BEKREFTET,
                     arbeidsgiver = null,
                     sporsmalListe = listOf(Sporsmal("sporsmal", ShortName.FORSIKRING, Svar(
@@ -247,7 +246,7 @@ class KafkaStatusIntegrationTest : Spek({
                     val fullstendigSykmeldingDTO: FullstendigSykmeldingDTO = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
                     val latestSykmeldingStatus = fullstendigSykmeldingDTO.sykmeldingStatus
                     latestSykmeldingStatus shouldEqual SykmeldingStatusDTO(
-                            timestamp = getAdjustedToLocalDateTime(sendtEvent.timestamp),
+                            timestamp = sendtEvent.timestamp,
                             sporsmalOgSvarListe = listOf(no.nav.syfo.sykmelding.status.api.SporsmalOgSvarDTO(
                                     tekst = "din arbeidssituasjon?",
                                     svar = "ARBEIDSTAKER",
@@ -295,7 +294,7 @@ class KafkaStatusIntegrationTest : Spek({
                     val fullstendigSykmeldingDTO: FullstendigSykmeldingDTO = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
                     fullstendigSykmeldingDTO.bekreftetDato shouldNotEqual null
                     fullstendigSykmeldingDTO.sykmeldingStatus shouldEqual SykmeldingStatusDTO(
-                            timestamp = fullstendigSykmeldingDTO.bekreftetDato!!,
+                            timestamp = fullstendigSykmeldingDTO.bekreftetDato!!.atOffset(ZoneOffset.UTC),
                             arbeidsgiver = null,
                             statusEvent = no.nav.syfo.sykmelding.status.StatusEventDTO.BEKREFTET,
                             sporsmalOgSvarListe = null

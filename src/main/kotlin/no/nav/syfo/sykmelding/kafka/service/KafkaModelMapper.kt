@@ -13,7 +13,6 @@ import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.Svar
 import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
-import no.nav.syfo.util.TimestampUtil.Companion.getAdjustedToLocalDateTime
 
 class KafkaModelMapper private constructor() {
     companion object {
@@ -25,7 +24,7 @@ class KafkaModelMapper private constructor() {
         }
 
         fun toSykmeldingStatusEvent(event: SykmeldingStatusKafkaEventDTO): SykmeldingStatusEvent {
-            return SykmeldingStatusEvent(event.sykmeldingId, getAdjustedToLocalDateTime(event.timestamp), toStatusEvent(event.statusEvent), event.timestamp)
+            return SykmeldingStatusEvent(event.sykmeldingId, event.timestamp, toStatusEvent(event.statusEvent))
         }
 
         private fun toSvar(arbeidsgiverSporsmal: SporsmalOgSvarDTO, sykmeldingId: String): Svar {

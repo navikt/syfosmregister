@@ -44,7 +44,7 @@ object NullstillApiSpek : Spek({
 
             beforeEachTest {
                 database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
-                database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt, StatusEvent.APEN, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC)))
+                database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC), StatusEvent.APEN))
                 database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
             }
 

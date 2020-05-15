@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.kafka.producer
 
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
 import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
@@ -15,14 +16,14 @@ fun getEnkelSykmelding(id: String): EnkelSykmelding {
             id = id,
             kontaktMedPasient = KontaktMedPasientDTO(null, null),
             behandler = BehandlerDTO("fornavn", null, "etternavn", "aktorId", "fnr", null, null, AdresseDTO(null, null, null, null, null), null),
-            behandletTidspunkt = OffsetDateTime.now(),
+            behandletTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
             prognose = null,
             syketilfelleStartDato = null,
             tiltakArbeidsplassen = null,
             navnFastlege = null,
             meldingTilArbeidsgiver = null,
             arbeidsgiver = ArbeidsgiverDTO(null, null),
-            mottattTidspunkt = OffsetDateTime.now(),
+            mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
             sykmeldingsperioder = emptyList(),
             legekontorOrgnummer = null,
             egenmeldt = false,
@@ -34,7 +35,7 @@ fun getEnkelSykmelding(id: String): EnkelSykmelding {
 fun getKafkaMetadata(id: String): KafkaMetadataDTO {
     return KafkaMetadataDTO(
             sykmeldingId = id,
-            timestamp = OffsetDateTime.now(),
+            timestamp = OffsetDateTime.now(ZoneOffset.UTC),
             fnr = "fnr",
             source = "source"
     )
@@ -43,7 +44,7 @@ fun getKafkaMetadata(id: String): KafkaMetadataDTO {
 fun getSykmeldingStatusEvent(id: String): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
             sykmeldingId = id,
-            timestamp = OffsetDateTime.now(),
+            timestamp = OffsetDateTime.now(ZoneOffset.UTC),
             arbeidsgiver = null,
             sporsmals = null,
             statusEvent = StatusEventDTO.BEKREFTET

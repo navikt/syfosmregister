@@ -3,6 +3,7 @@ package no.nav.syfo.aksessering.db
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.ResultSet
+import java.time.ZoneOffset
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.domain.Arbeidsgiver
@@ -48,7 +49,7 @@ private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmeld
                        legekontor_org_nr,
                        pasient_fnr,
                        status.event,
-                       status.event_timestamp,
+                       status.timestamp,
                        jsonb_extract_path(dokument.sykmelding, 'skjermesForPasient')::JSONB AS skjermes_for_pasient,
                        dokument.sykmelding -> 'behandler' ->> 'fornavn'                     AS lege_fornavn,
                        dokument.sykmelding -> 'behandler' ->> 'mellomnavn'                  AS lege_mellomnavn,
@@ -60,10 +61,10 @@ private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmeld
                          INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                          INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
                          INNER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
-                                                                       status.event_timestamp = (SELECT event_timestamp
+                                                                       status.timestamp = (SELECT timestamp
                                                                                                  FROM sykmeldingstatus
                                                                                                  WHERE sykmelding_id = opplysninger.id
-                                                                                                 ORDER BY event_timestamp DESC
+                                                                                                 ORDER BY timestamp DESC
                                                                                                  LIMIT 1)
                 WHERE pasient_fnr = ?
                   AND NOT exists(SELECT 1 FROM sykmeldingstatus WHERE event = 'SLETTET' AND sykmelding_id = opplysninger.id);
@@ -146,7 +147,7 @@ fun ResultSet.toSykmelding(): Sykmelding =
                     periodeTilBrukersykmeldingsperiode(it)
                 },
                 medisinskVurdering = objectMapper.readValue(getString("medisinsk_vurdering")),
-                sykmeldingStatus = SykmeldingStatus(timestamp = getTimestamp("event_timestamp").toLocalDateTime(),
+                sykmeldingStatus = SykmeldingStatus(timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
                     statusEvent = tilStatusEvent(getString("event")),
                     arbeidsgiver = null,
                     sporsmalListe = null)

@@ -16,7 +16,8 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.StatusEventDTO
@@ -45,7 +46,7 @@ class SykmeldingStatusGETApiSpek : Spek({
             application.routing { registerSykmeldingStatusGETApi(sykmeldingStatusService) }
 
             it("Should get all statuses sykmeldingstatus") {
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                         SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
                         SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT))
@@ -61,7 +62,7 @@ class SykmeldingStatusGETApiSpek : Spek({
             }
 
             it("Should get all statuses without filter") {
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                         SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
                         SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT))
@@ -77,7 +78,7 @@ class SykmeldingStatusGETApiSpek : Spek({
             }
 
             it("Should get latest status") {
-                val timestamp = LocalDateTime.now()
+                val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT))
 
                 with(handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
@@ -92,7 +93,6 @@ class SykmeldingStatusGETApiSpek : Spek({
             }
 
             it("Should get forbidden when not owner") {
-                val timestamp = LocalDateTime.now()
                 every { sykmeldingStatusService.erEier(any(), any()) } returns false
                 with(handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
                     addHeader("Content-Type", ContentType.Application.Json.toString())

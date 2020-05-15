@@ -18,7 +18,6 @@ import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingBekreftEvent
 import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
-import no.nav.syfo.util.TimestampUtil.Companion.getAdjustedToLocalDateTime
 import org.slf4j.LoggerFactory
 
 class SykmeldingStatusConsumerService(
@@ -102,7 +101,7 @@ class SykmeldingStatusConsumerService(
         val sykmeldingStatusEvent = toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
         val sykmeldingBekreftEvent = SykmeldingBekreftEvent(
                 sykmeldingStatusKafkaMessage.event.sykmeldingId,
-                getAdjustedToLocalDateTime(sykmeldingStatusKafkaMessage.event.timestamp),
+                sykmeldingStatusKafkaMessage.event.timestamp,
                 sykmeldingStatusKafkaMessage.event.sporsmals?.map { toSporsmal(it, sykmeldingStatusKafkaMessage.event.sykmeldingId) }
         )
 
@@ -126,7 +125,7 @@ class SykmeldingStatusConsumerService(
         val sykmeldingId = sykmeldingStatusKafkaMessage.event.sykmeldingId
         val timestamp = sykmeldingStatusKafkaMessage.event.timestamp
         val sykmeldingSendEvent = SykmeldingSendEvent(sykmeldingId,
-                getAdjustedToLocalDateTime(timestamp),
+                timestamp,
                 toArbeidsgiverStatus(sykmeldingId, arbeidsgiver),
                 toSporsmal(arbeidsgiverSporsmal, sykmeldingId)
         )

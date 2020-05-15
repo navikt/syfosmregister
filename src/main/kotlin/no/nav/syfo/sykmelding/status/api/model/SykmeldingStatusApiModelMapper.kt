@@ -1,9 +1,7 @@
 package no.nav.syfo.sykmelding.status.api.model
 
-import java.time.OffsetDateTime
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.api.toStatusEventDTO
-import no.nav.syfo.util.TimestampUtil
 
 class SykmeldingStatusApiModelMapper private constructor() {
     companion object {
@@ -14,15 +12,8 @@ class SykmeldingStatusApiModelMapper private constructor() {
         fun toSykmeldingStatusEventDTO(sykmeldingStatusEvent: SykmeldingStatusEvent): SykmeldingStatusEventDTO {
             return SykmeldingStatusEventDTO(
                     statusEvent = sykmeldingStatusEvent.event.toStatusEventDTO(),
-                    timestamp = getStatusUTCTime(sykmeldingStatusEvent)
+                    timestamp = sykmeldingStatusEvent.timestamp
             )
-        }
-
-        private fun getStatusUTCTime(sykmeldingStatusEvent: SykmeldingStatusEvent): OffsetDateTime {
-            return when (sykmeldingStatusEvent.timestampz) {
-                null -> TimestampUtil.getAdjustedOffsetDateTime(sykmeldingStatusEvent.timestamp)
-                else -> sykmeldingStatusEvent.timestampz
-            }
         }
     }
 }
