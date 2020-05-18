@@ -11,7 +11,7 @@ import no.nav.syfo.sykmelding.model.toSykmeldingsperiodeDTO
 fun SykmeldingDbModelUtenBehandlingsutfall.toEnkelSykmelding(): EnkelSykmelding {
     return EnkelSykmelding(
             id = id,
-            mottattTidspunkt = getUtcTime(mottattTidspunkt),
+            mottattTidspunkt = mottattTidspunkt,
             legekontorOrgnummer = legekontorOrgNr,
             behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
             meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,

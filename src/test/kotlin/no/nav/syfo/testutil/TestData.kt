@@ -95,11 +95,11 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
     return SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-            mottattTidspunkt = LocalDateTime.now(),
+            mottattTidspunkt = OffsetDateTime.now(),
             status = StatusDbModel(
                     statusEvent = "APEN",
                     arbeidsgiver = null,
-                    statusTimestamp = LocalDateTime.now()
+                    statusTimestamp = OffsetDateTime.now()
             ),
             legekontorOrgNr = "123456789",
             sykmeldingsDokument = Sykmelding(
@@ -166,11 +166,11 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
     return SykmeldingDbModel(
             id = "123",
             behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-            mottattTidspunkt = LocalDateTime.now(),
+            mottattTidspunkt = OffsetDateTime.now(),
             status = StatusDbModel(
                     statusEvent = "APEN",
                     arbeidsgiver = null,
-                    statusTimestamp = LocalDateTime.now()
+                    statusTimestamp = OffsetDateTime.now()
             ),
             legekontorOrgNr = "123456789",
             sykmeldingsDokument = Sykmelding(

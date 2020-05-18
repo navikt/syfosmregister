@@ -294,7 +294,7 @@ class KafkaStatusIntegrationTest : Spek({
                     val fullstendigSykmeldingDTO: FullstendigSykmeldingDTO = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
                     fullstendigSykmeldingDTO.bekreftetDato shouldNotEqual null
                     fullstendigSykmeldingDTO.sykmeldingStatus shouldEqual SykmeldingStatusDTO(
-                            timestamp = fullstendigSykmeldingDTO.bekreftetDato!!.atOffset(ZoneOffset.UTC),
+                            timestamp = fullstendigSykmeldingDTO.bekreftetDato!!,
                             arbeidsgiver = null,
                             statusEvent = no.nav.syfo.sykmelding.status.StatusEventDTO.BEKREFTET,
                             sporsmalOgSvarListe = null

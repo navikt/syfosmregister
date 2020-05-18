@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.db
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import no.nav.syfo.model.ValidationResult
 
 data class ArbeidsgiverDbModel(
@@ -13,13 +14,13 @@ data class ArbeidsgiverDbModel(
 
 data class StatusDbModel(
     val statusEvent: String,
-    val statusTimestamp: LocalDateTime,
+    val statusTimestamp: OffsetDateTime,
     val arbeidsgiver: ArbeidsgiverDbModel?
 )
 
 data class SykmeldingDbModel(
     val id: String,
-    val mottattTidspunkt: LocalDateTime,
+    val mottattTidspunkt: OffsetDateTime,
     val legekontorOrgNr: String?,
     val behandlingsutfall: ValidationResult,
     val sykmeldingsDokument: Sykmelding,
@@ -28,7 +29,7 @@ data class SykmeldingDbModel(
 
 data class SykmeldingDbModelUtenBehandlingsutfall(
     val id: String,
-    val mottattTidspunkt: LocalDateTime,
+    val mottattTidspunkt: OffsetDateTime,
     val legekontorOrgNr: String?,
     val sykmeldingsDokument: Sykmelding,
     val status: StatusDbModel

@@ -45,7 +45,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             id = id,
             andreTiltak = sykmeldingsDokument.andreTiltak,
             skjermesForPasient = sykmeldingsDokument.skjermesForPasient,
-            mottattTidspunkt = getUtcTime(mottattTidspunkt),
+            mottattTidspunkt = mottattTidspunkt,
             legekontorOrgnummer = legekontorOrgNr,
             behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
             meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
@@ -114,7 +114,7 @@ fun getUtcTime(tidspunkt: LocalDateTime): OffsetDateTime {
 }
 
 fun StatusDbModel.toSykmeldingStatusDTO(sporsmal: List<SporsmalDTO>): SykmeldingStatusDTO {
-    return SykmeldingStatusDTO(statusEvent, getUtcTime(statusTimestamp), arbeidsgiver?.toArbeidsgiverStatusDTO(), sporsmal)
+    return SykmeldingStatusDTO(statusEvent, statusTimestamp, arbeidsgiver?.toArbeidsgiverStatusDTO(), sporsmal)
 }
 
 private fun ArbeidsgiverDbModel.toArbeidsgiverStatusDTO(): ArbeidsgiverStatusDTO {

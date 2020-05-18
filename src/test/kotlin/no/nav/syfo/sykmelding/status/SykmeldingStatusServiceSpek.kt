@@ -48,7 +48,7 @@ class SykmeldingStatusServiceSpek : Spek({
             val confirmedDateTime = OffsetDateTime.now(ZoneOffset.UTC)
             sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET))
             val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
-            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime.toLocalDateTime()
+            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
             savedSykmelding.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.BEKREFTET
         }
 
@@ -59,7 +59,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldingStatusService.registrerStatus(status)
 
             val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
-            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime.toLocalDateTime()
+            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
         }
 
         it("Skal ikke hente sykmeldinger med status SLETTET") {
