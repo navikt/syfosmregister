@@ -5,6 +5,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.verify
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -71,7 +72,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
     val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)
-    val consumer = KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment)
+    val consumer = spyk(KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment))
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer)
 
     afterEachTest {
@@ -216,8 +217,9 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         StatusEventDTO.SENDT,
                         ArbeidsgiverStatusDTO("1", "2", "navn"),
                         listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar")))
-
                 every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), StatusEvent.APEN))
+
                 every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                     sykmeldingSendEvent = args[0] as SykmeldingSendEvent
                     sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
@@ -235,6 +237,42 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         ArbeidsgiverStatus(sykmeldingId, "1", "2", "navn"),
                         Sporsmal("tekst", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar")))
                 sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.SENDT)
+            }
+        }
+
+        it("Test SENDT -> SENDT") {
+            runBlocking {
+                val sykmeldingId = UUID.randomUUID().toString()
+                val sykmeldingSendtKafkaEvent = SykmeldingStatusKafkaEventDTO(
+                        sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), StatusEventDTO.SENDT,
+                        ArbeidsgiverStatusDTO("1", "2", "navn"),
+                        listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar"))
+                )
+                var counter = 0
+                every { consumer.poll() } answers {
+                    val cr = callOriginal()
+                    if (cr.isNotEmpty()) {
+                        counter++
+                        if (counter > 1) {
+                            applicationState.alive = false
+                            applicationState.ready = false
+                        }
+                    }
+                    cr
+                }
+
+                every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
+                every { sykmeldingStatusService.registrerSendt(any(), any()) } returns Unit
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), StatusEvent.SENDT))
+
+                val producer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                producer.send(sykmeldingSendtKafkaEvent, "fnr")
+                producer.send(sykmeldingSendtKafkaEvent, "fnr")
+
+                sykmeldingStatusConsumerService.start()
+                verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+                verify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
+                verify(exactly = 2) { sykmeldingStatusService.getSykmeldingStatus(any(), any()) }
             }
         }
 

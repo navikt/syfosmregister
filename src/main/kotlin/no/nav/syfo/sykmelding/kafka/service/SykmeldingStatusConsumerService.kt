@@ -63,8 +63,7 @@ class SykmeldingStatusConsumerService(
         try {
             when (sykmeldingStatusKafkaMessage.event.statusEvent) {
                 StatusEventDTO.SENDT -> {
-                    registrerSendt(sykmeldingStatusKafkaMessage)
-                    publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage)
+                    handleSendtSykmelding(sykmeldingStatusKafkaMessage)
                 }
                 StatusEventDTO.BEKREFTET -> {
                     registrerBekreftet(sykmeldingStatusKafkaMessage)
@@ -76,6 +75,18 @@ class SykmeldingStatusConsumerService(
             log.error("Kunne ikke prosessere statusendring {} for sykmeldingid {} fordi {}", sykmeldingStatusKafkaMessage.event.statusEvent.name, sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, e.cause)
             throw e
         }
+    }
+
+    private fun handleSendtSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+        val latestStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId, null)
+        if (latestStatus.any {
+                    it.event == StatusEvent.SENDT
+                }) {
+            log.warn("Sykmelding er allerede sendt sykmeldingId {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
+            return
+        }
+        registrerSendt(sykmeldingStatusKafkaMessage)
+        publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage)
     }
 
     private fun publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
