@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.db
 
 import java.sql.Connection
 import java.sql.ResultSet
+import java.time.ZoneOffset
 import no.nav.syfo.aksessering.db.hentSporsmalOgSvar
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
@@ -125,7 +126,7 @@ private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id:
 fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
     return SykmeldingDbModel(sykmeldingsDokument = objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java),
             id = getString("id"),
-            mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
+            mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
             legekontorOrgNr = getString("legekontor_org_nr"),
             behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java),
             status = getStatus()
@@ -135,7 +136,7 @@ fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
 fun ResultSet.toSykmeldingDbModelUtenBehandlingsutfall(): SykmeldingDbModelUtenBehandlingsutfall {
     return SykmeldingDbModelUtenBehandlingsutfall(sykmeldingsDokument = objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java),
         id = getString("id"),
-        mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
+        mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
         legekontorOrgNr = getString("legekontor_org_nr"),
         status = getStatus()
     )
@@ -143,7 +144,7 @@ fun ResultSet.toSykmeldingDbModelUtenBehandlingsutfall(): SykmeldingDbModelUtenB
 
 private fun ResultSet.getStatus(): StatusDbModel {
     val status = getString("event")
-    val status_timestamp = getTimestamp("timestamp").toLocalDateTime()
+    val status_timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC)
     val arbeidsgiverDbModel = when (status) {
         StatusEvent.SENDT.name -> ArbeidsgiverDbModel(
                 orgnummer = getString("orgnummer"),

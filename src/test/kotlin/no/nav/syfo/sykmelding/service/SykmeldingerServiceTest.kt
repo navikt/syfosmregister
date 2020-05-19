@@ -5,7 +5,7 @@ import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.AvsenderSystem
 import no.nav.syfo.sykmelding.db.Diagnose
@@ -43,8 +43,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("should filter include statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", LocalDateTime.now(), null)),
-                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", LocalDateTime.now(), null))
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
                     )
 
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, listOf("AVBRUTT"), null)
@@ -54,8 +54,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("should filter multiple include statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", LocalDateTime.now(), null)),
-                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", LocalDateTime.now(), null))
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
             )
 
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, listOf("AVBRUTT", "APEN"), null)
@@ -66,8 +66,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("should filter exclude statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", LocalDateTime.now(), null)),
-                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", LocalDateTime.now(), null))
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
             )
 
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, null, listOf("AVBRUTT"))
@@ -77,8 +77,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("should filter multiple exclude statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", LocalDateTime.now(), null)),
-                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", LocalDateTime.now(), null))
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
             )
 
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, null, listOf("AVBRUTT", "APEN"))

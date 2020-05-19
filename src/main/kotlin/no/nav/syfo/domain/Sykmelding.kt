@@ -1,7 +1,7 @@
 package no.nav.syfo.domain
 
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import no.nav.syfo.aksessering.api.ArbeidsgiverDTO
 import no.nav.syfo.aksessering.api.BehandlingsutfallDTO
 import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
@@ -24,7 +24,7 @@ import no.nav.syfo.sykmelding.status.api.tilSykmeldingStatusDTO
 data class Sykmelding(
     val id: String,
     val skjermesForPasient: Boolean,
-    val mottattTidspunkt: LocalDateTime,
+    val mottattTidspunkt: OffsetDateTime,
     val behandlingsutfall: Behandlingsutfall,
     val legekontorOrgnummer: String?,
     val legeNavn: String?,
@@ -136,9 +136,9 @@ fun Sykmelding.toSkjermetDTO(): SkjermetSykmeldingDTO =
         sykmeldingStatus = sykmeldingStatus.toDTO()
     )
 
-fun Sykmelding.finnBekreftetDato(): LocalDateTime? {
+fun Sykmelding.finnBekreftetDato(): OffsetDateTime? {
     if (sykmeldingStatus.statusEvent == StatusEvent.BEKREFTET) {
-        return sykmeldingStatus.timestamp.toLocalDateTime()
+        return sykmeldingStatus.timestamp
     }
     return null
 }

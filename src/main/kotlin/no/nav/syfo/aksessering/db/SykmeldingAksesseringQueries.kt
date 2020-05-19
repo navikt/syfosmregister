@@ -132,7 +132,7 @@ fun ResultSet.toSykmelding(): Sykmelding =
         Sykmelding(
                 id = getString("id").trim(),
                 skjermesForPasient = getBoolean("skjermes_for_pasient"),
-                mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
+                mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
                 behandlingsutfall = filterBehandlingsUtfall(objectMapper.readValue(getString("behandlingsutfall"))),
                 legekontorOrgnummer = getString("legekontor_org_nr")?.trim(),
                 legeNavn = getLegenavn(this),

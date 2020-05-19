@@ -1,13 +1,13 @@
 package no.nav.syfo.aksessering.api
 
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import no.nav.syfo.sykmelding.status.api.SykmeldingStatusDTO
 
 abstract class SykmeldingDTO(
     val id: String,
-    val mottattTidspunkt: LocalDateTime,
-    val bekreftetDato: LocalDateTime?,
+    val mottattTidspunkt: OffsetDateTime,
+    val bekreftetDato: OffsetDateTime?,
     val behandlingsutfall: BehandlingsutfallDTO,
     val legekontorOrgnummer: String?,
     val legeNavn: String?,
@@ -18,8 +18,8 @@ abstract class SykmeldingDTO(
 
 class SkjermetSykmeldingDTO(
     id: String,
-    mottattTidspunkt: LocalDateTime,
-    bekreftetDato: LocalDateTime?,
+    mottattTidspunkt: OffsetDateTime,
+    bekreftetDato: OffsetDateTime?,
     behandlingsutfall: BehandlingsutfallDTO,
     legekontorOrgnummer: String?,
     legeNavn: String?,
@@ -40,8 +40,8 @@ class SkjermetSykmeldingDTO(
 
 class FullstendigSykmeldingDTO(
     id: String,
-    mottattTidspunkt: LocalDateTime,
-    bekreftetDato: LocalDateTime?,
+    mottattTidspunkt: OffsetDateTime,
+    bekreftetDato: OffsetDateTime?,
     behandlingsutfall: BehandlingsutfallDTO,
     legekontorOrgnummer: String?,
     legeNavn: String?,
