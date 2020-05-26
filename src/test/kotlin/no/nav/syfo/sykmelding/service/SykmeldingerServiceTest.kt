@@ -139,7 +139,10 @@ class SykmeldingerServiceTest : Spek({
         }
 
         it("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har diagnosekode R991 som hoveddiagnose") {
-            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(hovediagnosekode = "R991")
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(hovediagnosekode = "R991", perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 3, 10),
+                tom = LocalDate.of(2020, 3, 20)
+            )))
             val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
             sykmelding shouldNotBe null
             sykmelding!!.medisinskVurdering shouldEqual null
@@ -147,7 +150,10 @@ class SykmeldingerServiceTest : Spek({
         }
 
         it("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har bidiganose med diagnosekode U071 som hoveddiagnose") {
-            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(bidiagnoser = listOf(Diagnose("system", "U071", "tekst")))
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(bidiagnoser = listOf(Diagnose("system", "U071", "tekst")), perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 3, 10),
+                tom = LocalDate.of(2020, 3, 20)
+            )))
             val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
             sykmelding shouldNotBe null
             sykmelding!!.medisinskVurdering shouldEqual null
@@ -155,7 +161,10 @@ class SykmeldingerServiceTest : Spek({
         }
 
         it("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har bidiganose med diagnosekode U072 som hoveddiagnose") {
-            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(bidiagnoser = listOf(Diagnose("system", "U072", "tekst")))
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(bidiagnoser = listOf(Diagnose("system", "U072", "tekst")), perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 3, 10),
+                tom = LocalDate.of(2020, 3, 20)
+            )))
             val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
             sykmelding shouldNotBe null
             sykmelding!!.medisinskVurdering shouldEqual null

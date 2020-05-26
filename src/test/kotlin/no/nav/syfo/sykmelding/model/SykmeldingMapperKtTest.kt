@@ -1,10 +1,12 @@
 package no.nav.syfo.sykmelding.model
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.time.LocalDate
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.db.AnnenFraverGrunn
 import no.nav.syfo.sykmelding.db.AnnenFraversArsak
 import no.nav.syfo.sykmelding.db.SporsmalSvar
+import no.nav.syfo.testutil.getPeriode
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
 import org.amshove.kluent.`should equal`
 import org.amshove.kluent.shouldEqual
@@ -22,11 +24,17 @@ class SykmeldingMapperKtTest : Spek({
             mappedOpplysningerJson `should equal` objectMapper.writeValueAsString(mappedMap)
         }
         it("test map har ikke redusert arbeidsgiverperiode") {
-            val sykmeldingDto = getSykmeldingerDBmodel().toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
+            val sykmeldingDto = getSykmeldingerDBmodel(perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 3, 10),
+                tom = LocalDate.of(2020, 3, 20)
+            ))).toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
             sykmeldingDto.harRedusertArbeidsgiverperiode shouldEqual false
         }
         it("test map har redusert arbeidsgiverperiode ved smittefare") {
-            val sykmeldingDbModel = getSykmeldingerDBmodel()
+            val sykmeldingDbModel = getSykmeldingerDBmodel(perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 3, 10),
+                tom = LocalDate.of(2020, 3, 20)
+            )))
             val sykmeldingMedSmittefare = sykmeldingDbModel.copy(
                     sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
                             medisinskVurdering = sykmeldingDbModel.sykmeldingsDokument.medisinskVurdering.copy(
@@ -42,7 +50,10 @@ class SykmeldingMapperKtTest : Spek({
         }
 
         it("test map har ikke redusert arbeidsgiverperiode ved annen fravarsgrunn ikke smittefare") {
-            val sykmeldingDbModel = getSykmeldingerDBmodel()
+            val sykmeldingDbModel = getSykmeldingerDBmodel(perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 3, 10),
+                tom = LocalDate.of(2020, 3, 20)
+            )))
             val sykmeldingMedSmittefare = sykmeldingDbModel.copy(
                     sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
                             medisinskVurdering = sykmeldingDbModel.sykmeldingsDokument.medisinskVurdering.copy(
