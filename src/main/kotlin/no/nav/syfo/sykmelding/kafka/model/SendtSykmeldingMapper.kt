@@ -25,6 +25,6 @@ fun SykmeldingDbModelUtenBehandlingsutfall.toEnkelSykmelding(): EnkelSykmelding 
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
             egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
             papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
-            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode()
+            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder)
     )
 }

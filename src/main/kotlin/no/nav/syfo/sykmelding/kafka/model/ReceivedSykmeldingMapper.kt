@@ -49,7 +49,7 @@ fun ReceivedSykmelding.toEnkelSykmelding(): EnkelSykmelding {
             legekontorOrgnummer = legekontorOrgNr,
             mottattTidspunkt = getUtcTime(mottattDato),
             sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeDto() },
-            harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode()
+            harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder)
     )
 }
 
