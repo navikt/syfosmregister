@@ -8,6 +8,7 @@ import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.db.Adresse
 import no.nav.syfo.sykmelding.db.AktivitetIkkeMulig
 import no.nav.syfo.sykmelding.db.Arbeidsgiver
@@ -18,6 +19,7 @@ import no.nav.syfo.sykmelding.db.HarArbeidsgiver
 import no.nav.syfo.sykmelding.db.KontaktMedPasient
 import no.nav.syfo.sykmelding.db.MedisinskArsak
 import no.nav.syfo.sykmelding.db.MedisinskVurdering
+import no.nav.syfo.sykmelding.db.MeldingTilNAV
 import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.Sykmelding
@@ -110,21 +112,21 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
                             stillingsprosent = null,
                             yrkesbetegnelse = null),
                     medisinskVurdering = MedisinskVurdering(
-                            hovedDiagnose = Diagnose("system", "kode", "tekst"),
+                            hovedDiagnose = Diagnose(Diagnosekoder.ICPC2_CODE, "L87", "tekst"),
                             biDiagnoser = emptyList(),
                             yrkesskade = false,
                             svangerskap = false,
                             annenFraversArsak = null,
                             yrkesskadeDato = null
                     ),
-                    andreTiltak = null,
+                    andreTiltak = "Andre tiltak",
                     meldingTilArbeidsgiver = null,
                     navnFastlege = null,
                     tiltakArbeidsplassen = null,
                     syketilfelleStartDato = null,
-                    tiltakNAV = null,
+                    tiltakNAV = "Tiltak NAV",
                     prognose = null,
-                    meldingTilNAV = null,
+                    meldingTilNAV = MeldingTilNAV(true, "Masse bistand"),
                     skjermesForPasient = skjermet,
                     behandletTidspunkt = LocalDateTime.now(),
                     behandler = Behandler(
