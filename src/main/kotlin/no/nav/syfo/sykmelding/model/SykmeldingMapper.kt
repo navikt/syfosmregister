@@ -41,10 +41,11 @@ import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO
 
 internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasient: Boolean = false, ikkeTilgangTilDiagnose: Boolean): SykmeldingDTO {
+    val skjermetForPasient = sykmeldingsDokument.skjermesForPasient
     return SykmeldingDTO(
             id = id,
-            andreTiltak = sykmeldingsDokument.andreTiltak,
-            skjermesForPasient = sykmeldingsDokument.skjermesForPasient,
+            andreTiltak = if ((isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose) { null } else { sykmeldingsDokument.andreTiltak },
+            skjermesForPasient = skjermetForPasient,
             mottattTidspunkt = mottattTidspunkt,
             legekontorOrgnummer = legekontorOrgNr,
             behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
@@ -52,17 +53,17 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             navnFastlege = sykmeldingsDokument.navnFastlege,
             tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
             syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
-            tiltakNAV = sykmeldingsDokument.tiltakNAV,
+            tiltakNAV = if ((isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose) { null } else { sykmeldingsDokument.tiltakNAV },
             behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
             medisinskVurdering = getMedisinskVurderingDTO(isPasient, ikkeTilgangTilDiagnose),
-            behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(),
+            behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(isPasient),
             sykmeldingStatus = status.toSykmeldingStatusDTO(sporsmal.map { it.toSporsmalDTO() }),
             sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO() },
             arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
             kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
-            meldingTilNAV = sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO(),
+            meldingTilNAV = if ((isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose) { null } else { sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO() },
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
-            utdypendeOpplysninger = toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger),
+            utdypendeOpplysninger = if ((isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose) { emptyMap() } else { toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger, isPasient) },
             egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
             papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
             harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder)
@@ -121,7 +122,13 @@ private fun ArbeidsgiverDbModel.toArbeidsgiverStatusDTO(): ArbeidsgiverStatusDTO
     return ArbeidsgiverStatusDTO(orgnummer, juridiskOrgnummer, orgNavn)
 }
 
-fun toUtdypendeOpplysninger(utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>): Map<String, Map<String, SporsmalSvarDTO>> {
+fun toUtdypendeOpplysninger(utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>, isPasient: Boolean): Map<String, Map<String, SporsmalSvarDTO>> {
+    if (isPasient) {
+        return utdypendeOpplysninger.mapValues {
+            it.value.mapValues { entry -> entry.value.toSporsmalSvarDTO() }
+                .filterValues { sporsmalSvar -> !sporsmalSvar.restriksjoner.contains(SvarRestriksjonDTO.SKJERMET_FOR_PASIENT) }
+        }
+    }
     return utdypendeOpplysninger.mapValues {
         it.value.mapValues { entry -> entry.value.toSporsmalSvarDTO() }
                 .filterValues { sporsmalSvar -> !sporsmalSvar.restriksjoner.contains(SvarRestriksjonDTO.SKJERMET_FOR_NAV) }
@@ -241,10 +248,10 @@ private fun Gradert.toGradertDTO(): GradertDTO {
     return GradertDTO(grad, reisetilskudd)
 }
 
-private fun ValidationResult.toBehandlingsutfallDTO(): BehandlingsutfallDTO {
+fun ValidationResult.toBehandlingsutfallDTO(isPasient: Boolean): BehandlingsutfallDTO {
     return BehandlingsutfallDTO(
             status = status.toRuleStatusDTO(),
-            ruleHits = ruleHits.map { it.toRegeleinfoDTO() }
+            ruleHits = ruleHits.map { it.toRegeleinfoDTO() }.filterNot { it.ruleStatus == RegelStatusDTO.MANUAL_PROCESSING && isPasient }
     )
 }
 
