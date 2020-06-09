@@ -42,9 +42,10 @@ import no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO
 
 internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasient: Boolean = false, ikkeTilgangTilDiagnose: Boolean): SykmeldingDTO {
     val skjermetForPasient = sykmeldingsDokument.skjermesForPasient
+    val skalFjerneSensitivInformasjon = (isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose
     return SykmeldingDTO(
             id = id,
-            andreTiltak = if ((isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose) { null } else { sykmeldingsDokument.andreTiltak },
+            andreTiltak = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.andreTiltak },
             skjermesForPasient = skjermetForPasient,
             mottattTidspunkt = mottattTidspunkt,
             legekontorOrgnummer = legekontorOrgNr,
@@ -53,28 +54,21 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             navnFastlege = sykmeldingsDokument.navnFastlege,
             tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
             syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
-            tiltakNAV = if ((isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose) { null } else { sykmeldingsDokument.tiltakNAV },
+            tiltakNAV = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.tiltakNAV },
             behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
-            medisinskVurdering = getMedisinskVurderingDTO(isPasient, ikkeTilgangTilDiagnose),
+            medisinskVurdering = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO() },
             behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(isPasient),
             sykmeldingStatus = status.toSykmeldingStatusDTO(sporsmal.map { it.toSporsmalDTO() }),
             sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO() },
             arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
             kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
-            meldingTilNAV = if ((isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose) { null } else { sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO() },
+            meldingTilNAV = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO() },
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
-            utdypendeOpplysninger = if ((isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose) { emptyMap() } else { toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger, isPasient) },
+            utdypendeOpplysninger = if (skalFjerneSensitivInformasjon) { emptyMap() } else { toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger, isPasient) },
             egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
             papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
             harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder)
     )
-}
-
-private fun SykmeldingDbModel.getMedisinskVurderingDTO(isPasient: Boolean, ikkeTilgangTilDiagnose: Boolean): MedisinskVurderingDTO? {
-    if (ikkeTilgangTilDiagnose || (isPasient && sykmeldingsDokument.skjermesForPasient)) {
-        return null
-    }
-    return sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO()
 }
 
 fun Sporsmal.toSporsmalDTO(): SporsmalDTO {
