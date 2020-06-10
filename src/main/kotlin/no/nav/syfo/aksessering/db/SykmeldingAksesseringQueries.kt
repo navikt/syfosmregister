@@ -3,6 +3,7 @@ package no.nav.syfo.aksessering.db
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.ResultSet
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
@@ -27,22 +28,22 @@ import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.SykmeldingStatus
 
 fun DatabaseInterface.hentSykmeldinger(fnr: String): List<Sykmelding> =
-    connection.use { connection ->
-        val sykmeldingerMedSisteStatus = connection.hentSykmeldingerMedSisteStatus(fnr)
-        return sykmeldingerMedSisteStatus.map {
-            when {
-                it.sykmeldingStatus.statusEvent == StatusEvent.BEKREFTET ->
-                    it.copy(sykmeldingStatus = connection.hentStatusMedSporsmalOgSvar(it.id, it.sykmeldingStatus, false))
-                it.sykmeldingStatus.statusEvent == StatusEvent.SENDT ->
-                    it.copy(sykmeldingStatus = connection.hentStatusMedSporsmalOgSvar(it.id, it.sykmeldingStatus, true))
-                else -> it
+        connection.use { connection ->
+            val sykmeldingerMedSisteStatus = connection.hentSykmeldingerMedSisteStatus(fnr)
+            return sykmeldingerMedSisteStatus.map {
+                when {
+                    it.sykmeldingStatus.statusEvent == StatusEvent.BEKREFTET ->
+                        it.copy(sykmeldingStatus = connection.hentStatusMedSporsmalOgSvar(it.id, it.sykmeldingStatus, false))
+                    it.sykmeldingStatus.statusEvent == StatusEvent.SENDT ->
+                        it.copy(sykmeldingStatus = connection.hentStatusMedSporsmalOgSvar(it.id, it.sykmeldingStatus, true))
+                    else -> it
+                }
             }
         }
-    }
 
 private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmelding> =
-    this.prepareStatement(
-        """
+        this.prepareStatement(
+                """
                 SELECT opplysninger.id,
                        mottatt_tidspunkt,
                        behandlingsutfall,
@@ -60,7 +61,7 @@ private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmeld
                 FROM sykmeldingsopplysninger AS opplysninger
                          INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                          INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
-                         INNER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
+                         LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
                                                                        status.timestamp = (SELECT timestamp
                                                                                                  FROM sykmeldingstatus
                                                                                                  WHERE sykmelding_id = opplysninger.id
@@ -69,10 +70,10 @@ private fun Connection.hentSykmeldingerMedSisteStatus(fnr: String): List<Sykmeld
                 WHERE pasient_fnr = ?
                   AND NOT exists(SELECT 1 FROM sykmeldingstatus WHERE event = 'SLETTET' AND sykmelding_id = opplysninger.id);
             """
-    ).use {
-        it.setString(1, fnr)
-        it.executeQuery().toList { toSykmelding() }
-    }
+        ).use {
+            it.setString(1, fnr)
+            it.executeQuery().toList { toSykmelding() }
+        }
 
 internal fun Connection.hentStatusMedSporsmalOgSvar(sykmeldingId: String, sykmeldingStatus: SykmeldingStatus, skalHenteArbeidsgiver: Boolean): SykmeldingStatus {
     if (skalHenteArbeidsgiver) {
@@ -82,8 +83,8 @@ internal fun Connection.hentStatusMedSporsmalOgSvar(sykmeldingId: String, sykmel
 }
 
 fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
-    this.prepareStatement(
-        """
+        this.prepareStatement(
+                """
                 SELECT sporsmal.shortname,
                        sporsmal.tekst,
                        svar.sporsmal_id,
@@ -95,14 +96,14 @@ fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
                                     ON sporsmal.id = svar.sporsmal_id
                 WHERE svar.sykmelding_id = ?
             """
-    ).use {
-        it.setString(1, sykmeldingId)
-        it.executeQuery().toList { tilSporsmal() }
-    }
+        ).use {
+            it.setString(1, sykmeldingId)
+            it.executeQuery().toList { tilSporsmal() }
+        }
 
 private fun Connection.hentArbeidsgiverStatus(sykmeldingId: String): List<ArbeidsgiverStatus> =
-    this.prepareStatement(
-        """
+        this.prepareStatement(
+                """
                  SELECT orgnummer,
                         juridisk_orgnummer,
                         navn,
@@ -110,10 +111,10 @@ private fun Connection.hentArbeidsgiverStatus(sykmeldingId: String): List<Arbeid
                    FROM arbeidsgiver
                   WHERE sykmelding_id = ?
             """
-    ).use {
-        it.setString(1, sykmeldingId)
-        it.executeQuery().toList { tilArbeidsgiverStatus() }
-    }
+        ).use {
+            it.setString(1, sykmeldingId)
+            it.executeQuery().toList { tilArbeidsgiverStatus() }
+        }
 
 fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
         connection.use { connection ->
@@ -128,30 +129,39 @@ fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
             }
         }
 
-fun ResultSet.toSykmelding(): Sykmelding =
-        Sykmelding(
-                id = getString("id").trim(),
-                skjermesForPasient = getBoolean("skjermes_for_pasient"),
-                mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
-                behandlingsutfall = filterBehandlingsUtfall(objectMapper.readValue(getString("behandlingsutfall"))),
-                legekontorOrgnummer = getString("legekontor_org_nr")?.trim(),
-                legeNavn = getLegenavn(this),
-                arbeidsgiver = arbeidsgiverModelTilSykmeldingarbeidsgiver(
-                        objectMapper.readValue(
-                                getString(
-                                        "arbeidsgiver"
-                                )
-                        )
-                ),
-                sykmeldingsperioder = getSykmeldingsperioder(this).map {
-                    periodeTilBrukersykmeldingsperiode(it)
-                },
-                medisinskVurdering = objectMapper.readValue(getString("medisinsk_vurdering")),
-                sykmeldingStatus = SykmeldingStatus(timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
-                    statusEvent = tilStatusEvent(getString("event")),
-                    arbeidsgiver = null,
-                    sporsmalListe = null)
-        )
+fun ResultSet.toSykmelding(): Sykmelding {
+    val mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC)
+    return Sykmelding(
+            id = getString("id").trim(),
+            skjermesForPasient = getBoolean("skjermes_for_pasient"),
+            mottattTidspunkt = mottattTidspunkt,
+            behandlingsutfall = filterBehandlingsUtfall(objectMapper.readValue(getString("behandlingsutfall"))),
+            legekontorOrgnummer = getString("legekontor_org_nr")?.trim(),
+            legeNavn = getLegenavn(this),
+            arbeidsgiver = arbeidsgiverModelTilSykmeldingarbeidsgiver(
+                    objectMapper.readValue(
+                            getString(
+                                    "arbeidsgiver"
+                            )
+                    )
+            ),
+            sykmeldingsperioder = getSykmeldingsperioder(this).map {
+                periodeTilBrukersykmeldingsperiode(it)
+            },
+            medisinskVurdering = objectMapper.readValue(getString("medisinsk_vurdering")),
+            sykmeldingStatus = getSykmeldingStatus(mottattTidspunkt)
+    )
+}
+
+private fun ResultSet.getSykmeldingStatus(mottattTidspunkt: OffsetDateTime): SykmeldingStatus {
+    return when (getString("event")) {
+        null -> SykmeldingStatus(mottattTidspunkt, StatusEvent.APEN, null, null)
+        else -> SykmeldingStatus(timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
+                statusEvent = tilStatusEvent(getString("event")),
+                arbeidsgiver = null,
+                sporsmalListe = null)
+    }
+}
 
 fun filterBehandlingsUtfall(behandlingsutfall: Behandlingsutfall): Behandlingsutfall {
     if (behandlingsutfall.status == BehandlingsutfallStatus.MANUAL_PROCESSING) {
@@ -214,27 +224,27 @@ fun getLegenavn(resultSet: ResultSet): String? {
 }
 
 fun ResultSet.tilSporsmal(): Sporsmal =
-    Sporsmal(
-        tekst = getString("tekst"),
-        shortName = tilShortName(getString("shortname")),
-        svar = tilSvar()
-    )
+        Sporsmal(
+                tekst = getString("tekst"),
+                shortName = tilShortName(getString("shortname")),
+                svar = tilSvar()
+        )
 
 fun ResultSet.tilSvar(): Svar =
-    Svar(
-        sykmeldingId = getString("sykmelding_id"),
-        sporsmalId = getInt("sporsmal_id"),
-        svartype = tilSvartype(getString("svartype")),
-        svar = getString("svar")
-    )
+        Svar(
+                sykmeldingId = getString("sykmelding_id"),
+                sporsmalId = getInt("sporsmal_id"),
+                svartype = tilSvartype(getString("svartype")),
+                svar = getString("svar")
+        )
 
 fun ResultSet.tilArbeidsgiverStatus(): ArbeidsgiverStatus =
-    ArbeidsgiverStatus(
-        sykmeldingId = getString("sykmelding_id"),
-        orgnummer = getString("orgnummer"),
-        juridiskOrgnummer = getString("juridisk_orgnummer"),
-        orgnavn = getString("navn")
-    )
+        ArbeidsgiverStatus(
+                sykmeldingId = getString("sykmelding_id"),
+                orgnummer = getString("orgnummer"),
+                juridiskOrgnummer = getString("juridisk_orgnummer"),
+                orgnavn = getString("navn")
+        )
 
 fun tilStatusEvent(status: String): StatusEvent {
     return when (status) {
