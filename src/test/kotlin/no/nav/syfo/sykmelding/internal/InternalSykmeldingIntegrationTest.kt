@@ -17,6 +17,7 @@ import io.mockk.coEvery
 import io.mockk.mockkClass
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -74,6 +75,34 @@ class InternalSykmeldingIntegrationTest : Spek({
                     addHeader("accept", "application/json")
                     addHeader("Authorization", "Bearer 123")
                     addHeader("fnr", "pasientFnr")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    objectMapper.readValue<List<SykmeldingDTO>>(response.content!!) shouldNotEqual null
+                }
+            }
+        }
+
+        it("Should be able to get sykmelding without status") {
+            val sykmeldingId = UUID.randomUUID().toString()
+            val fnr = "pasientFnr2"
+            database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = sykmeldingId, pasientFnr = fnr), testSykmeldingsdokument.copy(id = sykmeldingId))
+            database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = sykmeldingId))
+            coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
+            with(TestApplicationEngine()) {
+                start(true)
+                application.install(ContentNegotiation) {
+                    jackson {
+                        registerKotlinModule()
+                        registerModule(JavaTimeModule())
+                        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                    }
+                }
+                application.routing { registrerInternalSykmeldingApi(internalSykmeldingService, tilgangskontrollService) }
+                with(handleRequest(HttpMethod.Get, "/api/v1/internal/sykmeldinger") {
+                    addHeader("accept", "application/json")
+                    addHeader("Authorization", "Bearer 123")
+                    addHeader("fnr", "pasientFnr2")
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                     objectMapper.readValue<List<SykmeldingDTO>>(response.content!!) shouldNotEqual null

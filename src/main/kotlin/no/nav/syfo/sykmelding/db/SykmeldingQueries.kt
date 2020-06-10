@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.db
 
 import java.sql.Connection
 import java.sql.ResultSet
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.aksessering.db.hentSporsmalOgSvar
 import no.nav.syfo.db.DatabaseInterface
@@ -124,34 +125,40 @@ private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id:
     }
 
 fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
+    val mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC)
     return SykmeldingDbModel(sykmeldingsDokument = objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java),
             id = getString("id"),
             mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
             legekontorOrgNr = getString("legekontor_org_nr"),
             behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java),
-            status = getStatus()
+            status = getStatus(mottattTidspunkt)
     )
 }
 
 fun ResultSet.toSykmeldingDbModelUtenBehandlingsutfall(): SykmeldingDbModelUtenBehandlingsutfall {
+    val mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC)
     return SykmeldingDbModelUtenBehandlingsutfall(sykmeldingsDokument = objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java),
         id = getString("id"),
         mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
         legekontorOrgNr = getString("legekontor_org_nr"),
-        status = getStatus()
+        status = getStatus(mottattTidspunkt)
     )
 }
 
-private fun ResultSet.getStatus(): StatusDbModel {
-    val status = getString("event")
-    val status_timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC)
-    val arbeidsgiverDbModel = when (status) {
-        StatusEvent.SENDT.name -> ArbeidsgiverDbModel(
-                orgnummer = getString("orgnummer"),
-                juridiskOrgnummer = getString("juridisk_orgnummer"),
-                orgNavn = getString("navn")
-        )
-        else -> null
+private fun ResultSet.getStatus(mottattTidspunkt: OffsetDateTime): StatusDbModel {
+    return when (val status = getString("event")) {
+        null -> StatusDbModel(StatusEvent.APEN.name, mottattTidspunkt, null)
+        else -> {
+            val status_timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC)
+            val arbeidsgiverDbModel = when (status) {
+                StatusEvent.SENDT.name -> ArbeidsgiverDbModel(
+                        orgnummer = getString("orgnummer"),
+                        juridiskOrgnummer = getString("juridisk_orgnummer"),
+                        orgNavn = getString("navn")
+                )
+                else -> null
+            }
+            return StatusDbModel(status, status_timestamp, arbeidsgiverDbModel)
+        }
     }
-    return StatusDbModel(status, status_timestamp, arbeidsgiverDbModel)
 }

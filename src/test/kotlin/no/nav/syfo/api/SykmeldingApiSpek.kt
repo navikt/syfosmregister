@@ -23,6 +23,7 @@ import io.mockk.mockkClass
 import io.mockk.verify
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.BehandlingsutfallStatusDTO
 import no.nav.syfo.aksessering.api.FullstendigSykmeldingDTO
@@ -130,6 +131,28 @@ object SykmeldingApiSpek : Spek({
                         .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
                     fullstendigSykmeldingDTO.medisinskVurdering.hovedDiagnose
                         ?.diagnosekode shouldEqual testSykmeldingsdokument.sykmelding.medisinskVurdering.hovedDiagnose?.kode
+                    fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.APEN
+                    fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual null
+                    fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe shouldEqual null
+                }
+            }
+
+            it("Skal hente sykmelding for bruker når status ikke er lagret enda") {
+                every { mockPayload.subject } returns "pasientFnr2"
+                val sykmeldingId = UUID.randomUUID().toString()
+                database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(pasientFnr = "pasientFnr2", id = sykmeldingId), testSykmeldingsdokument.copy(id = sykmeldingId))
+                database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = sykmeldingId))
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
+                    val fullstendigSykmeldingDTO =
+                            objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
+
+                    fullstendigSykmeldingDTO.sykmeldingsperioder[0]
+                            .type shouldEqual PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+                    fullstendigSykmeldingDTO.medisinskVurdering.hovedDiagnose
+                            ?.diagnosekode shouldEqual testSykmeldingsdokument.sykmelding.medisinskVurdering.hovedDiagnose?.kode
                     fullstendigSykmeldingDTO.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.APEN
                     fullstendigSykmeldingDTO.sykmeldingStatus.arbeidsgiver shouldEqual null
                     fullstendigSykmeldingDTO.sykmeldingStatus.sporsmalOgSvarListe shouldEqual null
