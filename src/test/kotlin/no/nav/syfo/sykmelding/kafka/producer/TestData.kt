@@ -3,7 +3,7 @@ package no.nav.syfo.sykmelding.kafka.producer
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
-import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
+import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.EnkelSykmelding
 import no.nav.syfo.sykmelding.model.AdresseDTO
@@ -47,6 +47,6 @@ fun getSykmeldingStatusEvent(id: String): SykmeldingStatusKafkaEventDTO {
             timestamp = OffsetDateTime.now(ZoneOffset.UTC),
             arbeidsgiver = null,
             sporsmals = null,
-            statusEvent = StatusEventDTO.BEKREFTET
+            statusEvent = STATUS_BEKREFTET
     )
 }

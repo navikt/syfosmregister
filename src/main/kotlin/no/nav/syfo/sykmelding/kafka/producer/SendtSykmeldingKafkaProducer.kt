@@ -14,4 +14,14 @@ class SendtSykmeldingKafkaProducer(private val kafkaProducer: KafkaProducer<Stri
             throw e
         }
     }
+
+    fun tombstoneSykmelding(sykmeldingId: String) {
+        log.info("Tombstone sykmelding {}", sykmeldingId)
+        try {
+            kafkaProducer.send(ProducerRecord(topic, sykmeldingId, null)).get()
+        } catch (e: Exception) {
+            log.error("Kunne ikke skrive tombstone til bekreft-topic for sykmeldingid $sykmeldingId: {}", e.message)
+            throw e
+        }
+    }
 }

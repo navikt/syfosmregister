@@ -13,7 +13,7 @@ import io.ktor.util.KtorExperimentalAPI
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
+import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import org.slf4j.Logger
@@ -37,7 +37,7 @@ fun Route.registerSykmeldingApi(sykmeldingService: SykmeldingService, sykmelding
             if (sykmeldingService.erEier(sykmeldingsid, fnr)) {
                 val statusEvent = SykmeldingStatusKafkaEventDTO(
                         sykmeldingId = sykmeldingsid,
-                        statusEvent = StatusEventDTO.BEKREFTET,
+                        statusEvent = STATUS_BEKREFTET,
                         timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 )
                 sykmeldingStatusKafkaProducer.send(statusEvent, fnr)

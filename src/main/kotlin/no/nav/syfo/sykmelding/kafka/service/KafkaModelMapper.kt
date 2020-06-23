@@ -1,9 +1,14 @@
 package no.nav.syfo.sykmelding.kafka.service
 
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
+import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
+import no.nav.syfo.model.sykmeldingstatus.STATUS_AVBRUTT
+import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
+import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
+import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
+import no.nav.syfo.model.sykmeldingstatus.STATUS_UTGATT
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
@@ -53,13 +58,15 @@ class KafkaModelMapper private constructor() {
             }
         }
 
-        private fun toStatusEvent(statusEvent: StatusEventDTO): StatusEvent {
+        private fun toStatusEvent(statusEvent: String): StatusEvent {
             return when (statusEvent) {
-                StatusEventDTO.APEN -> StatusEvent.APEN
-                StatusEventDTO.AVBRUTT -> StatusEvent.AVBRUTT
-                StatusEventDTO.UTGATT -> StatusEvent.UTGATT
-                StatusEventDTO.SENDT -> StatusEvent.SENDT
-                StatusEventDTO.BEKREFTET -> StatusEvent.BEKREFTET
+                STATUS_APEN -> StatusEvent.APEN
+                STATUS_AVBRUTT -> StatusEvent.AVBRUTT
+                STATUS_UTGATT -> StatusEvent.UTGATT
+                STATUS_SENDT -> StatusEvent.SENDT
+                STATUS_BEKREFTET -> StatusEvent.BEKREFTET
+                STATUS_SLETTET -> StatusEvent.SLETTET
+                else -> throw IllegalArgumentException("Unknown status")
             }
         }
     }

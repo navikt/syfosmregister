@@ -12,6 +12,7 @@ import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonNullableKafkaSerializer
@@ -40,7 +41,7 @@ class KafkaFactory private constructor() {
         fun getSendtSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): SendtSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
                     "${environment.applicationName}-producer",
-                    JacksonKafkaSerializer::class
+                    JacksonNullableKafkaSerializer::class
             )
             val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage>(kafkaProducerProperties)
             return SendtSykmeldingKafkaProducer(kafkaProducer, environment.sendSykmeldingKafkaTopic)
@@ -61,6 +62,21 @@ class KafkaFactory private constructor() {
             )
             val kafkaProducer = KafkaProducer<String, MottattSykmeldingKafkaMessage?>(kafkaProducerProperties)
             return MottattSykmeldingKafkaProducer(kafkaProducer, environment.mottattSykmeldingKafkaTopic)
+        }
+
+        fun getTombstoneProducer(kafkaConfig: Properties, environment: Environment): SykmeldingTombstoneProducer {
+            val kafkaProducerProperties = kafkaConfig.toProducerConfig(
+                    "${environment.applicationName}-producer",
+                    JacksonNullableKafkaSerializer::class
+            )
+            val kafkaProducer = KafkaProducer<String, Any?>(kafkaProducerProperties)
+            return SykmeldingTombstoneProducer(kafkaProducer, listOf(
+                    environment.kafkaSm2013AutomaticDigitalHandlingTopic,
+                    environment.sm2013ManualHandlingTopic,
+                    environment.sm2013InvalidHandlingTopic,
+                    environment.mottattSykmeldingKafkaTopic,
+                    environment.sm2013BehandlingsUtfallTopic)
+            )
         }
     }
 }

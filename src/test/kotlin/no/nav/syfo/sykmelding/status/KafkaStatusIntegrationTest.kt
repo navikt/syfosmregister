@@ -16,8 +16,11 @@ import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.verify
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.Properties
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -29,9 +32,12 @@ import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.createListener
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
+import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
+import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
+import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
+import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.objectMapper
@@ -69,10 +75,7 @@ class KafkaStatusIntegrationTest : Spek({
     val kafka = KafkaContainer()
     kafka.start()
     val environment = mockkClass(Environment::class)
-    every { environment.applicationName } returns "application"
-    every { environment.sykmeldingStatusTopic } returns "topic"
-    every { environment.sendSykmeldingKafkaTopic } returns "sendt-sykmelding-topic"
-    every { environment.bekreftSykmeldingKafkaTopic } returns "syfo-bekreftet-sykmelding"
+    setUpEnvironment(environment)
 
     fun setupKafkaConfig(): Properties {
         val kafkaConfig = Properties()
@@ -90,12 +93,13 @@ class KafkaStatusIntegrationTest : Spek({
     val sykmelding = testSykmeldingsopplysninger
     val kafkaConfig = setupKafkaConfig()
     val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
-    var applicationState = ApplicationState(alive = true, ready = true)
+    val applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
     val consumer = KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment)
-    val sendtSykmeldingKafkaProducer = KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment)
+    val sendtSykmeldingKafkaProducer = spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment))
     val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer)
+    val tomstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tomstoneProducer)
     val sykmeldingService = SykmeldingService(database)
     val mockPayload = mockk<Payload>()
 
@@ -109,10 +113,7 @@ class KafkaStatusIntegrationTest : Spek({
         applicationState.alive = true
         applicationState.ready = true
         clearAllMocks()
-        every { environment.applicationName } returns "application"
-        every { environment.sykmeldingStatusTopic } returns "topic"
-        every { environment.sendSykmeldingKafkaTopic } returns "sendt-sykmelding-topic"
-        every { environment.bekreftSykmeldingKafkaTopic } returns "syfo-bekreftet-sykmelding"
+        setUpEnvironment(environment)
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any()) } returns Unit
         database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)
@@ -214,6 +215,73 @@ class KafkaStatusIntegrationTest : Spek({
 
             database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 2
         }
+
+        it("Should test APEN and SLETTET") {
+            every { sykmeldingStatusService.slettSykmelding(any()) } answers {
+                callOriginal()
+                applicationState.alive = false
+                applicationState.ready = false
+            }
+            kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+            kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
+            }
+            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            sykmeldinger.size shouldEqual 0
+            verify(exactly = 1) { tomstoneProducer.tombstoneSykmelding(any()) }
+        }
+        it("should test APEN -> SENDT -> SLETTET") {
+            every { sykmeldingStatusService.slettSykmelding(any()) } answers {
+                callOriginal()
+                applicationState.alive = false
+                applicationState.ready = false
+            }
+            kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+            kafkaProducer.send(getSendtEvent(sykmelding), sykmelding.pasientFnr)
+            kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
+            }
+            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            sykmeldinger.size shouldEqual 0
+            assertFailsWith<NoSuchElementException> { database.finnArbeidsgiverStatusForSykmelding(sykmelding.id) }
+            assertFailsWith<NoSuchElementException> { database.finnStatusForSykmelding(sykmelding.id) }
+            database.finnSvarForSykmelding(sykmelding.id).size shouldEqual 0
+
+            verify(exactly = 1) { tomstoneProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            verify(exactly = 1) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 0) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
+            verify(exactly = 0) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+        }
+
+        it("should test APEN -> BEKREFTET -> SLETTET") {
+            every { sykmeldingStatusService.slettSykmelding(any()) } answers {
+                callOriginal()
+                applicationState.alive = false
+                applicationState.ready = false
+            }
+            kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+            kafkaProducer.send(getSykmeldingBekreftEvent(sykmelding), sykmelding.pasientFnr)
+            kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
+            }
+            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            sykmeldinger.size shouldEqual 0
+            verify(exactly = 1) { tomstoneProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            verify(exactly = 0) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
+            verify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+        }
     }
 
     describe("Test Kafka -> DB -> status API") {
@@ -231,7 +299,7 @@ class KafkaStatusIntegrationTest : Spek({
                     sykmeldingStatuser.size shouldEqual 1
                     val latestSykmeldingStatus = sykmeldingStatuser.get(0)
                     latestSykmeldingStatus shouldEqual SykmeldingStatusEventDTO(
-                            no.nav.syfo.sykmelding.status.StatusEventDTO.SENDT,
+                            StatusEventDTO.SENDT,
                             sendtEvent.timestamp
                     )
                 }
@@ -254,7 +322,7 @@ class KafkaStatusIntegrationTest : Spek({
                                     shortName = no.nav.syfo.sykmelding.status.api.ShortNameDTO.ARBEIDSSITUASJON
                             )),
                             arbeidsgiver = no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO("org", "jorg", "navn"),
-                            statusEvent = no.nav.syfo.sykmelding.status.StatusEventDTO.SENDT
+                            statusEvent = StatusEventDTO.SENDT
 
                     )
                 }
@@ -305,6 +373,22 @@ class KafkaStatusIntegrationTest : Spek({
     }
 })
 
+fun getSlettetEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
+    return SykmeldingStatusKafkaEventDTO(sykmelding.id, OffsetDateTime.now(), STATUS_SLETTET, null, null)
+}
+
+private fun setUpEnvironment(environment: Environment) {
+    every { environment.applicationName } returns "application"
+    every { environment.sykmeldingStatusTopic } returns "topic"
+    every { environment.sendSykmeldingKafkaTopic } returns "sendt-sykmelding-topic"
+    every { environment.bekreftSykmeldingKafkaTopic } returns "syfo-bekreftet-sykmelding"
+    every { environment.sm2013InvalidHandlingTopic } returns "invalid-topic"
+    every { environment.sm2013ManualHandlingTopic } returns "manuell-topic"
+    every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automatic-topic"
+    every { environment.mottattSykmeldingKafkaTopic } returns "syfo-mottatt-sykmelding"
+    every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall-topic"
+}
+
 private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService, applicationState: ApplicationState, kafkaProducer: SykmeldingStatusKafkaProducer, sykmelding: Sykmeldingsopplysninger, sykmeldingStatusConsumerService: SykmeldingStatusConsumerService): SykmeldingStatusKafkaEventDTO {
     every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
         callOriginal()
@@ -326,7 +410,7 @@ private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService,
 private fun getSykmeldingBekreftEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
             sykmeldingId = sykmelding.id,
-            statusEvent = StatusEventDTO.BEKREFTET,
+            statusEvent = STATUS_BEKREFTET,
             timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
             arbeidsgiver = null,
             sporsmals = listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI")))
@@ -337,7 +421,7 @@ private fun getSendtEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatus
             sykmeldingId = sykmelding.id,
             timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
             arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
-            statusEvent = StatusEventDTO.SENDT,
+            statusEvent = STATUS_SENDT,
             sporsmals = listOf(SporsmalOgSvarDTO("din arbeidssituasjon?", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER")
             ))
 }
@@ -346,5 +430,5 @@ private fun getApenEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusK
     return SykmeldingStatusKafkaEventDTO(
             sykmeldingId = sykmelding.id,
             timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
-            statusEvent = StatusEventDTO.APEN)
+            statusEvent = STATUS_APEN)
 }
