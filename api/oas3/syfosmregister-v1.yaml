@@ -51,6 +51,23 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
+  /api/v1/sykmelding/sykmeldtStatus:
+    post:
+      summary: Forteller om en bruker har en sykmelding en gitt dato og om den er gradert
+      operationId: sykmeldtStatus
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: '#/components/requestBodies/StatusRequest'
+      parameters:
+        - $ref: '#/components/parameters/sykmeldingId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SykmeldtStatus'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
 
   /api/v1/sykmeldinger/{sykmeldingId}/bekreft:
     post:
@@ -110,6 +127,13 @@ paths:
 
 
 components:
+  requestBodies:
+    StatusRequest:
+      description: "Hent status for sykmeldt"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StatusRequest'
   responses:
     UserSykmeldingerResponse:
       description: "Sykmelding response"
@@ -133,6 +157,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/sykmeldingList'
+    SykmeldtStatus:
+      description: "Status for den sykmeldte pr dato"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SykmeldtStatus'
 
   parameters:
     sykmeldingId:
@@ -777,6 +807,25 @@ components:
         sporsmalOgSvarListe:
           $ref: '#/components/schemas/SposmalOgSvarListe'
 
+    StatusRequest:
+      type: object
+      required:
+        - fnr
+        - dato
+      properties:
+        fnr:
+          type: string
+        dato:
+          $ref: '#/components/schemas/Date'
+    SykmeldtStatus:
+      type: object
+      required:
+        - erSykmeldt
+      properties:
+        erSykmeldt:
+          type: boolean
+        gradert:
+          type: boolean
 
   securitySchemes:
     bearerAuth:
