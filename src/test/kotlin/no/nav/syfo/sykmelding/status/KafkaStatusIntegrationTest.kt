@@ -103,6 +103,7 @@ class KafkaStatusIntegrationTest : Spek({
         kafka.stop()
         applicationState.ready = false
         applicationState.alive = false
+        database.stop()
     }
 
     beforeEachTest {

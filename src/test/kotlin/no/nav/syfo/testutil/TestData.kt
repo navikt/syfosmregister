@@ -15,6 +15,7 @@ import no.nav.syfo.sykmelding.db.Arbeidsgiver
 import no.nav.syfo.sykmelding.db.AvsenderSystem
 import no.nav.syfo.sykmelding.db.Behandler
 import no.nav.syfo.sykmelding.db.Diagnose
+import no.nav.syfo.sykmelding.db.Gradert
 import no.nav.syfo.sykmelding.db.HarArbeidsgiver
 import no.nav.syfo.sykmelding.db.KontaktMedPasient
 import no.nav.syfo.sykmelding.db.MedisinskArsak
@@ -29,6 +30,7 @@ import no.nav.syfo.sykmelding.model.AnnenFraversArsakDTO
 import no.nav.syfo.sykmelding.model.BehandlerDTO
 import no.nav.syfo.sykmelding.model.BehandlingsutfallDTO
 import no.nav.syfo.sykmelding.model.DiagnoseDTO
+import no.nav.syfo.sykmelding.model.GradertDTO
 import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
 import no.nav.syfo.sykmelding.model.MedisinskVurderingDTO
 import no.nav.syfo.sykmelding.model.RegelStatusDTO
@@ -93,6 +95,11 @@ fun getMedisinskVurdering(): MedisinskVurderingDTO {
 fun getPerioder(): List<SykmeldingsperiodeDTO> {
     return listOf(SykmeldingsperiodeDTO(LocalDate.now(), LocalDate.now(), null, null, null, PeriodetypeDTO.AKTIVITET_IKKE_MULIG, null, false))
 }
+
+fun getGradertePerioder(): List<SykmeldingsperiodeDTO> {
+    return listOf(SykmeldingsperiodeDTO(LocalDate.now(), LocalDate.now(), GradertDTO(50, false), null, null, PeriodetypeDTO.AKTIVITET_IKKE_MULIG, null, false))
+}
+
 fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = emptyList()): SykmeldingDbModel {
     return SykmeldingDbModel(
             id = "123",
@@ -152,12 +159,12 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
             ))
 }
 
-fun getPeriode(fom: LocalDate, tom: LocalDate): Periode {
+fun getPeriode(fom: LocalDate, tom: LocalDate, gradert: Gradert? = null): Periode {
     return Periode(
             fom = fom,
             tom = tom,
             aktivitetIkkeMulig = AktivitetIkkeMulig(medisinskArsak = MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
-            gradert = null,
+            gradert = gradert,
             behandlingsdager = null,
             reisetilskudd = false,
             avventendeInnspillTilArbeidsgiver = null

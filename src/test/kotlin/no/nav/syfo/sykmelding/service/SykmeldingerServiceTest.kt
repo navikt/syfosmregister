@@ -9,10 +9,15 @@ import java.time.OffsetDateTime
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.AvsenderSystem
 import no.nav.syfo.sykmelding.db.Diagnose
+import no.nav.syfo.sykmelding.db.Gradert
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
+import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
+import no.nav.syfo.sykmelding.serviceuser.api.model.SykmeldtStatus
+import no.nav.syfo.testutil.getGradertePerioder
 import no.nav.syfo.testutil.getPeriode
+import no.nav.syfo.testutil.getPerioder
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
 import no.nav.syfo.testutil.getSykmeldingerDBmodelEgenmeldt
 import org.amshove.kluent.shouldBe
@@ -328,6 +333,73 @@ class SykmeldingerServiceTest : Spek({
                     ))))
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, LocalDate.of(2020, 2, 21), LocalDate.of(2020, 2, 28))
             sykmeldinger.size shouldEqual 1
+        }
+    }
+
+    describe("Test av sykmeldtStatus") {
+        it("Skal få sykmeldt = true hvis sykmeldt på gitt dato (fom)") {
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 2, 10),
+                tom = LocalDate.of(2020, 2, 20),
+                gradert = Gradert(false, 50)
+            ))))
+
+            val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 10))
+
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = true, gradert = true)
+        }
+        it("Skal få sykmeldt = true hvis sykmeldt på gitt dato (tom)") {
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(perioder = listOf(
+                getPeriode(
+                    fom = LocalDate.of(2020, 2, 10),
+                    tom = LocalDate.of(2020, 2, 20)))),
+                getSykmeldingerDBmodel(perioder = listOf(
+                    getPeriode(
+                        fom = LocalDate.of(2019, 2, 10),
+                        tom = LocalDate.of(2019, 2, 20),
+                        gradert = Gradert(false, 50)
+                ))))
+
+            val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 20))
+
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = true, gradert = false)
+        }
+        it("Skal få sykmeldt = false hvis ikke sykmeldt på gitt dato (fom)") {
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 2, 10),
+                tom = LocalDate.of(2020, 2, 20)
+            ))))
+
+            val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 9))
+
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = false, gradert = null)
+        }
+        it("Skal få sykmeldt = false hvis ikke sykmeldt på gitt dato (tom)") {
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(perioder = listOf(getPeriode(
+                fom = LocalDate.of(2020, 2, 10),
+                tom = LocalDate.of(2020, 2, 20)
+            ))))
+
+            val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 21))
+
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = false, gradert = null)
+        }
+        it("Skal få inneholderGradertPeriode = true hvis inneholder en periode med gradering") {
+            val perioder = mutableListOf<SykmeldingsperiodeDTO>()
+            perioder.addAll(getPerioder())
+            perioder.addAll(getGradertePerioder())
+
+            val inneholderGradertPeriode = sykmeldingerService.inneholderGradertPeriode(perioder)
+
+            inneholderGradertPeriode shouldEqual true
+        }
+        it("Skal få inneholderGradertPeriode = false hvis ingen perioder er gradert") {
+            val perioder = mutableListOf<SykmeldingsperiodeDTO>()
+            perioder.addAll(getPerioder())
+
+            val inneholderGradertPeriode = sykmeldingerService.inneholderGradertPeriode(perioder)
+
+            inneholderGradertPeriode shouldEqual false
         }
     }
 })

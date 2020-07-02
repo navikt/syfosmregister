@@ -7,7 +7,9 @@ import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
+import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 import no.nav.syfo.sykmelding.model.toSykmeldingDTO
+import no.nav.syfo.sykmelding.serviceuser.api.model.SykmeldtStatus
 import no.nav.syfo.sykmelding.status.Sporsmal
 
 class SykmeldingerService(private val database: DatabaseInterface) {
@@ -21,6 +23,20 @@ class SykmeldingerService(private val database: DatabaseInterface) {
                 .filter(filterIncludeAndExclude(include, exclude))
                 .filter(filterFomDate(fom))
                 .filter(filterTomDate(tom))
+    }
+
+    fun getSykmeldtStatusForDato(fnr: String, dato: LocalDate): SykmeldtStatus {
+        val sykmeldinger = getInternalSykmeldinger(fnr, dato, dato)
+        return if (sykmeldinger.isEmpty()) {
+            SykmeldtStatus(erSykmeldt = false, gradert = null)
+        } else {
+            val sykmelding = sykmeldinger.first()
+            SykmeldtStatus(erSykmeldt = true, gradert = inneholderGradertPeriode(sykmelding.sykmeldingsperioder))
+        }
+    }
+
+    fun inneholderGradertPeriode(perioder: List<SykmeldingsperiodeDTO>): Boolean? {
+        return perioder.firstOrNull { it.gradert != null }?.gradert != null
     }
 
     private fun filterIncludeAndExclude(include: List<String>?, exclude: List<String>?): (SykmeldingDTO) -> Boolean {

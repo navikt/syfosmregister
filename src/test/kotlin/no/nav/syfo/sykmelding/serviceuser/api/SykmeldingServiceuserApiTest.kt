@@ -8,14 +8,18 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.setBody
 import io.mockk.every
 import io.mockk.mockkClass
 import java.nio.file.Paths
+import java.time.LocalDate
 import java.time.ZoneOffset
 import no.nav.syfo.application.setupAuth
+import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.service.SykmeldingerService
+import no.nav.syfo.sykmelding.serviceuser.api.model.StatusRequest
 import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.registerStatus
@@ -124,6 +128,21 @@ class SykmeldingServiceuserApiTest : Spek({
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
                 }) {
                     response.status() shouldEqual HttpStatusCode.BadRequest
+                }
+            }
+        }
+    }
+
+    describe("Test sykmeldtStatus") {
+        with(TestApplicationEngine()) {
+            setUpTestApplication()
+            application.routing { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerService) }
+            it("Skal sykmeldingstatus for fnr") {
+                with(handleRequest(HttpMethod.Post, "$sykmeldingUri/sykmeldtStatus") {
+                    setBody(objectMapper.writeValueAsString(StatusRequest("fnr", LocalDate.now())))
+                    addHeader("Content-Type", "application/json")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
             }
         }
