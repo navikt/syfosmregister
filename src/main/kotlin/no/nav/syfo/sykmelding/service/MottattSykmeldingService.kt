@@ -45,7 +45,7 @@ class MottattSykmeldingService(
                 )
         )
         while (applicationState.ready) {
-            kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
+            kafkaconsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
                 val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
                 val loggingMeta = LoggingMeta(
                         mottakId = receivedSykmelding.navLogId,

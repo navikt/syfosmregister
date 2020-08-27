@@ -31,7 +31,7 @@ class BehandlingsutfallService(
                 )
         )
         while (applicationState.ready) {
-            kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
+            kafkaconsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
                 val sykmeldingsid = it.key()
                 val validationResult: ValidationResult = objectMapper.readValue(it.value())
                 val loggingMeta = LoggingMeta(

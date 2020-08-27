@@ -13,9 +13,11 @@ import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.persistering.erBehandlingsutfallLagret
+import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.testutil.TestDB
+import no.nav.syfo.testutil.dropData
 import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -35,7 +37,12 @@ class BehandligsutfallServiceTest : Spek({
     kafka.start()
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "application"
-    every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingstopic"
+    every { environment.sm2013InvalidHandlingTopic } returns "invalidTopic"
+    every { environment.sm2013ManualHandlingTopic } returns "manualTopic"
+    every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automaticTopic"
+    every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
+    every { environment.sykmeldingStatusTopic } returns "statustopic"
+    every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
     val kafkaConfig = Properties()
     kafkaConfig.let {
         it["bootstrap.servers"] = kafka.bootstrapServers
@@ -62,9 +69,16 @@ class BehandligsutfallServiceTest : Spek({
             kafkaconsumer = behandlingsutfallKafkaConsumer
     )
 
+    val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
     beforeEachTest {
+        testDb.connection.dropData()
         every { environment.applicationName } returns "application"
-        every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingstopic"
+        every { environment.sm2013InvalidHandlingTopic } returns "invalidTopic"
+        every { environment.sm2013ManualHandlingTopic } returns "manualTopic"
+        every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automaticTopic"
+        every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
+        every { environment.sykmeldingStatusTopic } returns "statustopic"
+        every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
     }
 
     describe("Test BehandlingsuftallService") {
@@ -84,6 +98,23 @@ class BehandligsutfallServiceTest : Spek({
 
             val behandlingsutfall = testDb.connection.erBehandlingsutfallLagret("1")
             behandlingsutfall shouldEqual true
+        }
+
+        it("Should handle tombstone") {
+            tombstoneProducer.tombstoneSykmelding("1")
+            every { behandlingsutfallKafkaConsumer.poll(any<Duration>()) } answers {
+                val cr = callOriginal()
+                if (!cr.isEmpty) {
+                    applicationState.ready = false
+                }
+                cr
+            }
+            runBlocking {
+                behandlingsutfallService.start()
+            }
+
+            val behandlingsutfall = testDb.connection.erBehandlingsutfallLagret("1")
+            behandlingsutfall shouldEqual false
         }
     }
 })

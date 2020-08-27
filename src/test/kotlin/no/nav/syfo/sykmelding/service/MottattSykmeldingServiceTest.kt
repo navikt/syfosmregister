@@ -15,6 +15,7 @@ import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
+import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
@@ -62,7 +63,7 @@ class MottattSykmeldingServiceTest : Spek({
     val receivedSykmeldingKafkaConsumer = spyk(KafkaConsumer<String, String>(consumerProperties))
     val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
-
+    val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaConfig, environment)
     val mottattSykmeldingService = MottattSykmeldingService(
             applicationState = applicationState,
             kafkaconsumer = receivedSykmeldingKafkaConsumer,
@@ -135,6 +136,22 @@ class MottattSykmeldingServiceTest : Spek({
             lagretSykmelding shouldBe true
             verify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
+        it("Should handle tombstone") {
+            tombstoneProducer.tombstoneSykmelding(getReceivedSykmelding().sykmelding.id)
+            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+                val cr = callOriginal()
+                if (!cr.isEmpty) {
+                    applicationState.ready = false
+                }
+                cr
+            }
+            runBlocking {
+                mottattSykmeldingService.start()
+            }
+            val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
+            lagretSykmelding shouldBe false
+            verify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+        }
     }
 })
 
@@ -145,4 +162,5 @@ private fun mockEnvironment(environment: Environment) {
     every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automaticTopic"
     every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
     every { environment.sykmeldingStatusTopic } returns "statustopic"
+    every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
 }
