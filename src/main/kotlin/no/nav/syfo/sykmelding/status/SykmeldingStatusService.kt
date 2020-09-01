@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.status
 
 import no.nav.syfo.aksessering.db.erEier
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.nullstilling.slettSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfall
 import no.nav.syfo.sykmelding.kafka.model.EnkelSykmelding
 import no.nav.syfo.sykmelding.kafka.model.toEnkelSykmelding
@@ -46,4 +47,8 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
     }
 
     fun erEier(sykmeldingsid: String, fnr: String): Boolean = database.erEier(sykmeldingsid, fnr)
+
+    fun slettSykmelding(sykmeldingId: String) {
+        database.slettSykmelding(sykmeldingId)
+    }
 }

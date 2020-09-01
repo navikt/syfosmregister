@@ -20,7 +20,7 @@ enum class StatusEvent {
 }
 
 enum class StatusEventDTO {
-    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET
+    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET, SLETTET
 }
 
 data class SykmeldingSendEvent(

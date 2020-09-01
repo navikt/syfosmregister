@@ -13,7 +13,7 @@ import no.nav.syfo.log
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
-import no.nav.syfo.model.sykmeldingstatus.StatusEventDTO
+import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Sykmeldingsdokument
@@ -45,7 +45,7 @@ class MottattSykmeldingService(
                 )
         )
         while (applicationState.ready) {
-            kafkaconsumer.poll(Duration.ofMillis(0)).forEach {
+            kafkaconsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
                 val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
                 val loggingMeta = LoggingMeta(
                         mottakId = receivedSykmelding.navLogId,
@@ -109,7 +109,7 @@ class MottattSykmeldingService(
                 sykmeldingStatusKafkaProducer.send(SykmeldingStatusKafkaEventDTO(
                         receivedSykmelding.sykmelding.id,
                         receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
-                        StatusEventDTO.APEN),
+                        STATUS_APEN),
                         receivedSykmelding.personNrPasient)
 
                 log.info("Sykmelding SM2013 lagret i databasen, {}", StructuredArguments.fields(loggingMeta))
