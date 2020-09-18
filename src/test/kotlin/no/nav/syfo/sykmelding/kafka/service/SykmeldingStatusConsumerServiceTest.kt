@@ -28,8 +28,9 @@ class SykmeldingStatusConsumerServiceTest : Spek({
     }
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
     val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)
-    val tomstoneProducer = mockkClass(type = SykmeldingTombstoneProducer::class, relaxed = true)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, sykmeldingStatusKafkaConsumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tomstoneProducer)
+    val tombstoneProducer = mockkClass(type = SykmeldingTombstoneProducer::class, relaxed = true)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusKafkaConsumer, applicationState, mottattSykmeldingStatusService)
 
     describe("Test retry") {
         it("Should retry if error happens") {

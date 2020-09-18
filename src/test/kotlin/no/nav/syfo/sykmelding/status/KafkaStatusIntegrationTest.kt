@@ -46,6 +46,7 @@ import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
@@ -98,8 +99,9 @@ class KafkaStatusIntegrationTest : Spek({
     val consumer = KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment)
     val sendtSykmeldingKafkaProducer = spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment))
     val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
-    val tomstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusService, consumer, applicationState, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tomstoneProducer)
+    val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
     val sykmeldingService = SykmeldingService(database)
     val mockPayload = mockk<Payload>()
 
@@ -232,7 +234,7 @@ class KafkaStatusIntegrationTest : Spek({
             }
             val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 0
-            verify(exactly = 1) { tomstoneProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
         }
         it("should test APEN -> SENDT -> SLETTET") {
             every { sykmeldingStatusService.slettSykmelding(any()) } answers {
@@ -254,7 +256,7 @@ class KafkaStatusIntegrationTest : Spek({
             assertFailsWith<NoSuchElementException> { database.finnStatusForSykmelding(sykmelding.id) }
             database.finnSvarForSykmelding(sykmelding.id).size shouldEqual 0
 
-            verify(exactly = 1) { tomstoneProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
             verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
             verify(exactly = 1) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
             verify(exactly = 0) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -277,7 +279,7 @@ class KafkaStatusIntegrationTest : Spek({
             }
             val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 0
-            verify(exactly = 1) { tomstoneProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
             verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
             verify(exactly = 0) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
             verify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }

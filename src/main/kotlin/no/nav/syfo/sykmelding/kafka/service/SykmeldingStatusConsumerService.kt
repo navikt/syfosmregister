@@ -2,34 +2,13 @@ package no.nav.syfo.sykmelding.kafka.service
 
 import kotlinx.coroutines.delay
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
-import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
-import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
-import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
-import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
-import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
-import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
-import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper.Companion.toArbeidsgiverStatus
-import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper.Companion.toSporsmal
-import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper.Companion.toSykmeldingStatusEvent
-import no.nav.syfo.sykmelding.status.StatusEvent
-import no.nav.syfo.sykmelding.status.SykmeldingBekreftEvent
-import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
-import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import org.slf4j.LoggerFactory
 
 class SykmeldingStatusConsumerService(
-    private val sykmeldingStatusService: SykmeldingStatusService,
     private val sykmeldingStatusKafkaConsumer: SykmeldingStatusKafkaConsumer,
     private val applicationState: ApplicationState,
-    private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer,
-    private val bekreftetSykmeldingKafkaProducer: BekreftSykmeldingKafkaProducer,
-    private val tombstoneProducer: SykmeldingTombstoneProducer
+    private val mottattSykmeldingStatusService: MottattSykmeldingStatusService
 ) {
 
     companion object {
@@ -41,8 +20,9 @@ class SykmeldingStatusConsumerService(
         sykmeldingStatusKafkaConsumer.subscribe()
         while (applicationState.ready) {
             val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
-            kafkaEvents
-                    .forEach(handleStatusEvent())
+            kafkaEvents.forEach {
+                mottattSykmeldingStatusService.handleStatusEvent(it)
+            }
             if (kafkaEvents.isNotEmpty()) {
                 sykmeldingStatusKafkaConsumer.commitSync()
             }
@@ -60,107 +40,5 @@ class SykmeldingStatusConsumerService(
             }
             delay(delayStart)
         }
-    }
-
-    private fun handleStatusEvent(): (SykmeldingStatusKafkaMessageDTO) -> Unit = { sykmeldingStatusKafkaMessage ->
-        log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent)
-        try {
-            when (sykmeldingStatusKafkaMessage.event.statusEvent) {
-                STATUS_SENDT -> {
-                    handleSendtSykmelding(sykmeldingStatusKafkaMessage)
-                }
-                STATUS_BEKREFTET -> {
-                    registrerBekreftet(sykmeldingStatusKafkaMessage)
-                    publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage)
-                }
-                STATUS_SLETTET -> {
-                    slettSykmelding(sykmeldingStatusKafkaMessage)
-                }
-                else -> registrerStatus(sykmeldingStatusKafkaMessage)
-            }
-        } catch (e: Exception) {
-            log.error("Kunne ikke prosessere statusendring {} for sykmeldingid {} fordi {}", sykmeldingStatusKafkaMessage.event.statusEvent, sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, e.cause)
-            throw e
-        }
-    }
-
-    private fun slettSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val latestStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId, "LATEST")
-        val status = latestStatus[0]
-        sykmeldingStatusService.slettSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
-        when (status.event) {
-            StatusEvent.SENDT -> sendtSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
-            StatusEvent.BEKREFTET -> bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
-            else -> {}
-        }
-        tombstoneProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
-    }
-
-    private fun handleSendtSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val latestStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId, null)
-        if (latestStatus.any {
-                    it.event == StatusEvent.SENDT
-                }) {
-            log.warn("Sykmelding er allerede sendt sykmeldingId {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
-            return
-        }
-        registrerSendt(sykmeldingStatusKafkaMessage)
-        publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage)
-    }
-
-    private fun publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val sendtSykmeldingKafkaMessage = getKafkaMessage(sykmeldingStatusKafkaMessage)
-        bekreftetSykmeldingKafkaProducer.sendSykmelding(sendtSykmeldingKafkaMessage)
-    }
-
-    private fun publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val sendtSykmeldingKafkaMessage = getKafkaMessage(sykmeldingStatusKafkaMessage)
-        sendtSykmeldingKafkaProducer.sendSykmelding(sendtSykmeldingKafkaMessage)
-    }
-
-    private fun getKafkaMessage(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO): SykmeldingKafkaMessage {
-        val sendtSykmelding = sykmeldingStatusService.getEnkelSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
-        val sendEvent = sykmeldingStatusKafkaMessage.event
-        val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
-
-        val sendtSykmeldingKafkaMessage = SykmeldingKafkaMessage(sendtSykmelding!!, metadata, sendEvent)
-        return sendtSykmeldingKafkaMessage
-    }
-
-    private fun registrerBekreftet(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val sykmeldingStatusEvent = toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
-        val sykmeldingBekreftEvent = SykmeldingBekreftEvent(
-                sykmeldingStatusKafkaMessage.event.sykmeldingId,
-                sykmeldingStatusKafkaMessage.event.timestamp,
-                sykmeldingStatusKafkaMessage.event.sporsmals?.map { toSporsmal(it, sykmeldingStatusKafkaMessage.event.sykmeldingId) }
-        )
-
-        sykmeldingStatusService.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
-    }
-
-    private fun registrerStatus(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val lastStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingsid = sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, filter = "LATEST")
-        if (lastStatus.any { it.event == StatusEvent.BEKREFTET }) {
-            bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
-        }
-        val sykmeldingStatusEvent = toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
-        sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
-    }
-
-    private fun registrerSendt(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val arbeidsgiver: ArbeidsgiverStatusDTO = sykmeldingStatusKafkaMessage.event.arbeidsgiver
-                ?: throw IllegalArgumentException("Arbeidsgiver er ikke oppgitt")
-        val arbeidsgiverSporsmal: SporsmalOgSvarDTO = sykmeldingStatusKafkaMessage.event.sporsmals?.first { sporsmal -> sporsmal.shortName == ShortNameDTO.ARBEIDSSITUASJON }
-                ?: throw IllegalArgumentException("Ingen sporsmal funnet")
-        val sykmeldingId = sykmeldingStatusKafkaMessage.event.sykmeldingId
-        val timestamp = sykmeldingStatusKafkaMessage.event.timestamp
-        val sykmeldingSendEvent = SykmeldingSendEvent(sykmeldingId,
-                timestamp,
-                toArbeidsgiverStatus(sykmeldingId, arbeidsgiver),
-                toSporsmal(arbeidsgiverSporsmal, sykmeldingId)
-        )
-        val sykmeldingStatusEvent = toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
-
-        sykmeldingStatusService.registrerSendt(sykmeldingSendEvent, sykmeldingStatusEvent)
     }
 }
