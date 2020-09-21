@@ -183,7 +183,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, STATUS_APEN, null, null)
-                val sykmeldingBekreftEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(1), STATUS_BEKREFTET, null, null)
+                val sykmeldingBekreftEvent = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(1), STATUS_BEKREFTET, null, emptyList())
                 val sykmeldingApenEvent2 = SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(2), STATUS_APEN, null, null)
                 every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
                 every { sykmeldingStatusService.registrerBekreftet(any(), any()) } returns Unit
@@ -316,7 +316,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         timestamp,
                         STATUS_BEKREFTET,
                         null,
-                        null
+                        emptyList()
                 )
                 every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
                 every { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
@@ -334,7 +334,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 sykmeldingBekreftEvent shouldEqual SykmeldingBekreftEvent(
                         sykmeldingId,
                         timestamp,
-                        null
+                        emptyList()
                 )
                 sykmeldingStatusEvent shouldEqual SykmeldingStatusEvent(
                         sykmeldingId,
