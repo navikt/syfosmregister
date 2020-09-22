@@ -30,9 +30,9 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 
 object MottattSykmeldingStatusServiceTest : Spek({
-    val sykmeldingStatusService = mockk<SykmeldingStatusService>()
+    val sykmeldingStatusService = mockk<SykmeldingStatusService>(relaxed = true)
     val sendtSykmeldingKafkaProducer = mockk<SendtSykmeldingKafkaProducer>()
-    val bekreftetSykmeldingKafkaProducer = mockk<BekreftSykmeldingKafkaProducer>()
+    val bekreftetSykmeldingKafkaProducer = mockk<BekreftSykmeldingKafkaProducer>(relaxed = true)
     val tombstoneProducer = mockk<SykmeldingTombstoneProducer>()
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, tombstoneProducer)
 
@@ -76,6 +76,29 @@ object MottattSykmeldingStatusServiceTest : Spek({
             verify(exactly = 0) { sykmeldingStatusService.slettSykmelding(any()) }
         }
     }
+
+    describe("Test av bekreft") {
+        it("Bekreft oppdaterer kafka og database") {
+            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(
+                sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN)
+            )
+
+            mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
+
+            verify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+            verify { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
+        }
+        it("Bekreft avvist sykmelding oppdaterer kun database") {
+            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(
+                sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN)
+            )
+
+            mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmeldingAvvistSykmelding())
+
+            verify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+            verify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
+        }
+    }
 })
 
 val sykmeldingId = UUID.randomUUID().toString()
@@ -111,6 +134,23 @@ private fun opprettBekreftStatusmelding() =
             "BEKREFTET",
             null,
             emptyList()
+        )
+    )
+
+private fun opprettBekreftStatusmeldingAvvistSykmelding() =
+    SykmeldingStatusKafkaMessageDTO(
+        KafkaMetadataDTO(
+            sykmeldingId,
+            OffsetDateTime.now(ZoneOffset.UTC),
+            "fnr",
+            "user"
+        ),
+        SykmeldingStatusKafkaEventDTO(
+            sykmeldingId,
+            OffsetDateTime.now(ZoneOffset.UTC),
+            "BEKREFTET",
+            null,
+            null
         )
     )
 

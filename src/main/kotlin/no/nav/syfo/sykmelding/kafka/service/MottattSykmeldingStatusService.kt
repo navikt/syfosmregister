@@ -7,6 +7,7 @@ import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
 import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
+import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
@@ -31,7 +32,9 @@ class MottattSykmeldingStatusService(
                     handleSendtSykmelding(sykmeldingStatusKafkaMessage)
                 }
                 STATUS_BEKREFTET -> {
-                    publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage)
+                    if (!erAvvist(sykmeldingStatusKafkaMessage.event)) {
+                        publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage)
+                    }
                     registrerBekreftet(sykmeldingStatusKafkaMessage)
                 }
                 STATUS_SLETTET -> {
@@ -69,6 +72,9 @@ class MottattSykmeldingStatusService(
         publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage)
         registrerSendt(sykmeldingStatusKafkaMessage)
     }
+
+    private fun erAvvist(event: SykmeldingStatusKafkaEventDTO): Boolean =
+        event.statusEvent == STATUS_BEKREFTET && event.sporsmals == null
 
     private fun publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val sendtSykmeldingKafkaMessage = getKafkaMessage(sykmeldingStatusKafkaMessage)
