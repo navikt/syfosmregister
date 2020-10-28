@@ -38,7 +38,9 @@ object KafkaITSpek : Spek({
         sm2013ManualHandlingTopic = "topic2",
         jwtIssuer = "",
         appIds = listOf("123"),
-        clientId = ""
+        clientId = "",
+        loginserviceIdportenAudience = listOf("clientid"),
+        loginserviceIdportenDiscoveryUrl = "url.com"
     )
 
     fun Properties.overrideForTest(): Properties = apply {

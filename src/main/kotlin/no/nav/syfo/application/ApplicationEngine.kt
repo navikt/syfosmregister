@@ -72,7 +72,9 @@ fun createApplicationEngine(
                 configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             }
         }
-        setupAuth(vaultSecrets = vaultSecrets,
+        setupAuth(
+            loginserviceIdportenAudience = env.loginserviceIdportenAudience,
+            vaultSecrets = vaultSecrets,
             jwkProvider = jwkProvider,
             issuer = issuer,
             jwkProviderInternal = jwkProviderInternal,
