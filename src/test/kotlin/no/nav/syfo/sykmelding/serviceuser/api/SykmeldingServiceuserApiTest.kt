@@ -164,14 +164,14 @@ class SykmeldingServiceuserApiTest : Spek({
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
             application.setupAuth(
-                    listOf("clientId"),
-                    getVaultSecrets(),
-                    jwkProvider,
-                    "",
-                    jwkProvider,
-                    "https://sts.issuer.net/myid",
-                    "clientId",
-                    listOf("syfosoknad")
+                    loginserviceIdportenAudience = listOf(""),
+                    vaultSecrets = getVaultSecrets(),
+                    jwkProvider = jwkProvider,
+                    issuer = "",
+                    jwkProviderInternal = jwkProvider,
+                    issuerServiceuser = "https://sts.issuer.net/myid",
+                    clientId = "clientId",
+                    appIds = listOf("syfosoknad")
             )
             application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
             it("get sykmeldinger OK") {
@@ -184,6 +184,7 @@ class SykmeldingServiceuserApiTest : Spek({
                     response.status() shouldEqual HttpStatusCode.OK
                 }
             }
+
             it("Get sykmeldinger Unauthorized without JWT") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger")) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized

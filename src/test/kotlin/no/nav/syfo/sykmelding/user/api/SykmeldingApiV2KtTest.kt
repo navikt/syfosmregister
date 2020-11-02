@@ -188,20 +188,21 @@ class SykmeldingApiV2KtTest : Spek({
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
             application.setupAuth(
-                    listOf("clientId"),
-                    getVaultSecrets().copy(loginserviceClientId = "clientId"),
-                    jwkProvider,
-                    "https://sts.issuer.net/myid",
-                    jwkProvider,
-                    "",
-                    "",
-                    emptyList())
+                    loginserviceIdportenAudience = listOf("loginservice-client-id"),
+                    vaultSecrets = getVaultSecrets(),
+                    jwkProvider = jwkProvider,
+                    issuer = "https://sts.issuer.net/myid",
+                    jwkProviderInternal = jwkProvider,
+                    issuerServiceuser = "",
+                    clientId = "",
+                    appIds = emptyList()
+            )
             application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
             it("get sykmeldinger OK") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                     addHeader(HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("", "clientId", subject = "123")}")
+                            "Bearer ${generateJWT("", "loginservice-client-id", subject = "123")}")
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
@@ -216,6 +217,14 @@ class SykmeldingApiV2KtTest : Spek({
             it("Get sykmeldinger Unauthorized with incorrect audience") {
                 with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                     addHeader("Authorization", "Bearer ${generateJWT("", "error", subject = "123")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
+                }
+            }
+
+            it("Get sykmeldinger Unauthorized with incorrect issuer") {
+                with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
+                    addHeader("Authorization", "Bearer ${generateJWT("",  "loginservice-client-id", subject = "123", issuer = "microsoft")}")
                 }) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized
                 }

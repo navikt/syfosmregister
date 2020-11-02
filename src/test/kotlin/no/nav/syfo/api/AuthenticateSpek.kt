@@ -82,8 +82,6 @@ object AuthenticateSpek : Spek({
                     VaultSecrets(
                         serviceuserUsername = "username",
                         serviceuserPassword = "password",
-                        oidcWellKnownUri = "https://sts.issuer.net/myid",
-                        loginserviceClientId = "clientId",
                         syfomockUsername = "syfomock",
                         syfomockPassword = "test",
                         internalJwtIssuer = "",
