@@ -160,6 +160,17 @@ object AuthenticateSpek : Spek({
                     response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
+
+            it("Gyldig JWT med feil issuer gir Unauthorized") {
+                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                    addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${generateJWT("2", "clientId", issuer = "microsoft")}"
+                    )
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
+                }
+            }
         }
     }
 })
