@@ -15,6 +15,7 @@ import no.nav.syfo.VaultSecrets
 import no.nav.syfo.log
 
 fun Application.setupAuth(
+    loginserviceIdportenAudience: List<String>,
     vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
     issuer: String,
@@ -37,7 +38,7 @@ fun Application.setupAuth(
             verifier(jwkProvider, issuer)
             validate { credentials ->
                 when {
-                    hasLoginserviceClientIdAudience(credentials, vaultSecrets) -> JWTPrincipal(credentials.payload)
+                    hasLoginserviceIdportenClientIdAudience(credentials, loginserviceIdportenAudience) -> JWTPrincipal(credentials.payload)
                     else -> unauthorized(credentials)
                 }
             }
@@ -72,8 +73,8 @@ fun unauthorized(credentials: JWTCredential): Principal? {
     return null
 }
 
-fun hasLoginserviceClientIdAudience(credentials: JWTCredential, vaultSecrets: VaultSecrets): Boolean {
-    return credentials.payload.audience.contains(vaultSecrets.loginserviceClientId)
+fun hasLoginserviceIdportenClientIdAudience(credentials: JWTCredential, loginserviceIdportenClientId: List<String>): Boolean {
+    return loginserviceIdportenClientId.any { credentials.payload.audience.contains(it) }
 }
 
 fun hasInternalLoginServiceClientIdAudience(credentials: JWTCredential, vaultSecrets: VaultSecrets): Boolean {

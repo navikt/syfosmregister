@@ -56,7 +56,7 @@ fun main() {
     val environment = Environment()
     val vaultSecrets =
             objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
-    val wellKnown = getWellKnown(vaultSecrets.oidcWellKnownUri)
+    val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
             .cached(10, 24, TimeUnit.HOURS)
             .rateLimited(10, 1, TimeUnit.MINUTES)

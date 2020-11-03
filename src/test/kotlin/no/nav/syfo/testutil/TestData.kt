@@ -45,9 +45,8 @@ fun getVaultSecrets(): VaultSecrets {
             "",
             "",
             "",
-            "",
-            "",
-            "")
+            ""
+    )
 }
 
 fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<SykmeldingsperiodeDTO> = getPerioder()): SykmeldingDTO {

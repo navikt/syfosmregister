@@ -76,7 +76,16 @@ class SykmeldingServiceuserApiTest : Spek({
             val uri = Paths.get(path).toUri().toURL()
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
-            application.setupAuth(getVaultSecrets(), jwkProvider, "", jwkProvider, "https://sts.issuer.net/myid", "clientId", listOf("syfosoknad"))
+            application.setupAuth(
+                    listOf("clientId"),
+                    getVaultSecrets(),
+                    jwkProvider,
+                    "",
+                    jwkProvider,
+                    "https://sts.issuer.net/myid",
+                    "clientId",
+                    listOf("syfosoknad")
+            )
             application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
             it("get sykmelding OK") {
                 every { sykmeldingerServiceMedMock.getSykmeldingMedId(any()) } returns getSykmeldingDto()
@@ -154,7 +163,16 @@ class SykmeldingServiceuserApiTest : Spek({
             val uri = Paths.get(path).toUri().toURL()
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
-            application.setupAuth(getVaultSecrets(), jwkProvider, "", jwkProvider, "https://sts.issuer.net/myid", "clientId", listOf("syfosoknad"))
+            application.setupAuth(
+                    loginserviceIdportenAudience = listOf(""),
+                    vaultSecrets = getVaultSecrets(),
+                    jwkProvider = jwkProvider,
+                    issuer = "",
+                    jwkProviderInternal = jwkProvider,
+                    issuerServiceuser = "https://sts.issuer.net/myid",
+                    clientId = "clientId",
+                    appIds = listOf("syfosoknad")
+            )
             application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
             it("get sykmeldinger OK") {
                 every { sykmeldingerServiceMedMock.getInternalSykmeldinger(any()) } returns listOf(getSykmeldingDto())
@@ -166,6 +184,7 @@ class SykmeldingServiceuserApiTest : Spek({
                     response.status() shouldEqual HttpStatusCode.OK
                 }
             }
+
             it("Get sykmeldinger Unauthorized without JWT") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger")) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized

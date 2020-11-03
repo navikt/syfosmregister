@@ -26,7 +26,9 @@ data class Environment(
     val sykmeldingStatusTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_TOPIC", "aapen-syfo-sykmeldingstatus-leesah-v1"),
     val sendSykmeldingKafkaTopic: String = "syfo-sendt-sykmelding",
     val bekreftSykmeldingKafkaTopic: String = "syfo-bekreftet-sykmelding",
-    val mottattSykmeldingKafkaTopic: String = "syfo-mottatt-sykmelding"
+    val mottattSykmeldingKafkaTopic: String = "syfo-mottatt-sykmelding",
+    val loginserviceIdportenDiscoveryUrl: String = getEnvVar("LOGINSERVICE_IDPORTEN_DISCOVERY_URL"),
+    val loginserviceIdportenAudience: List<String> = getEnvVar("LOGINSERVICE_IDPORTEN_AUDIENCE").split(",")
 ) : KafkaConfig
 
 data class VaultSecrets(
@@ -34,8 +36,6 @@ data class VaultSecrets(
     val serviceuserPassword: String,
     val syfomockUsername: String,
     val syfomockPassword: String,
-    val oidcWellKnownUri: String,
-    val loginserviceClientId: String,
     val internalJwtIssuer: String,
     val internalJwtWellKnownUri: String,
     val internalLoginServiceClientId: String
