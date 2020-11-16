@@ -53,7 +53,7 @@ paths:
           description: Forbidden
   /api/v1/sykmelding/sykmeldtStatus:
     post:
-      summary: Forteller om en bruker har en sykmelding en gitt dato og om den er gradert
+      summary: Forteller om en bruker har en sykmelding en gitt dato, om den er gradert og tidligste fom/seneste tom
       operationId: sykmeldtStatus
       security:
         - bearerAuth: []
@@ -826,6 +826,10 @@ components:
           type: boolean
         gradert:
           type: boolean
+        fom:
+          $ref: '#/components/schemas/Date'
+        tom:
+          $ref: '#/components/schemas/Date'
 
   securitySchemes:
     bearerAuth:
