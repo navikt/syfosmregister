@@ -224,7 +224,7 @@ class SykmeldingApiV2KtTest : Spek({
 
             it("Get sykmeldinger Unauthorized with incorrect issuer") {
                 with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
-                    addHeader("Authorization", "Bearer ${generateJWT("",  "loginservice-client-id", subject = "123", issuer = "microsoft")}")
+                    addHeader("Authorization", "Bearer ${generateJWT("", "loginservice-client-id", subject = "123", issuer = "microsoft")}")
                 }) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized
                 }

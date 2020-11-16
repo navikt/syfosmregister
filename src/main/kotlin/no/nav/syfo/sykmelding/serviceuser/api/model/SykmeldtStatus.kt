@@ -9,5 +9,7 @@ data class StatusRequest(
 
 data class SykmeldtStatus(
     val erSykmeldt: Boolean,
-    val gradert: Boolean?
+    val gradert: Boolean?,
+    val fom: LocalDate?,
+    val tom: LocalDate?
 )

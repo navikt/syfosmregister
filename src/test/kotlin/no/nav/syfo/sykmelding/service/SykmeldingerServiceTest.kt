@@ -346,23 +346,24 @@ class SykmeldingerServiceTest : Spek({
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 10))
 
-            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = true, gradert = true)
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = true, gradert = true, fom = LocalDate.of(2020, 2, 10), tom = LocalDate.of(2020, 2, 20))
         }
         it("Skal få sykmeldt = true hvis sykmeldt på gitt dato (tom)") {
-            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(perioder = listOf(
-                getPeriode(
-                    fom = LocalDate.of(2020, 2, 10),
-                    tom = LocalDate.of(2020, 2, 20)))),
+            every { database.getSykmeldinger(any()) } returns listOf(
+                getSykmeldingerDBmodel(perioder = listOf(
+                    getPeriode(
+                        fom = LocalDate.of(2020, 2, 10),
+                        tom = LocalDate.of(2020, 2, 20)))),
                 getSykmeldingerDBmodel(perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2019, 2, 10),
                         tom = LocalDate.of(2019, 2, 20),
                         gradert = Gradert(false, 50)
-                ))))
+                    ))))
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 20))
 
-            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = true, gradert = false)
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = true, gradert = false, fom = LocalDate.of(2020, 2, 10), tom = LocalDate.of(2020, 2, 20))
         }
         it("Skal få sykmeldt = false hvis ikke sykmeldt på gitt dato (fom)") {
             every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(perioder = listOf(getPeriode(
@@ -372,7 +373,7 @@ class SykmeldingerServiceTest : Spek({
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 9))
 
-            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = false, gradert = null)
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = false, gradert = null, fom = null, tom = null)
         }
         it("Skal få sykmeldt = false hvis ikke sykmeldt på gitt dato (tom)") {
             every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(perioder = listOf(getPeriode(
@@ -382,7 +383,7 @@ class SykmeldingerServiceTest : Spek({
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 21))
 
-            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = false, gradert = null)
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = false, gradert = null, fom = null, tom = null)
         }
         it("Skal få inneholderGradertPeriode = true hvis inneholder en periode med gradering") {
             val perioder = mutableListOf<SykmeldingsperiodeDTO>()
@@ -400,6 +401,29 @@ class SykmeldingerServiceTest : Spek({
             val inneholderGradertPeriode = sykmeldingerService.inneholderGradertPeriode(perioder)
 
             inneholderGradertPeriode shouldEqual false
+        }
+        it("Skal få tidligste fom og seneste tom hvis sykmelding har flere perioder") {
+            every { database.getSykmeldinger(any()) } returns listOf(
+                getSykmeldingerDBmodel(perioder = listOf(
+                    getPeriode(
+                        fom = LocalDate.of(2020, 2, 8),
+                        tom = LocalDate.of(2020, 2, 15)),
+                    getPeriode(
+                        fom = LocalDate.of(2020, 2, 16),
+                        tom = LocalDate.of(2020, 2, 25),
+                        gradert = Gradert(false, 50)
+                    ))),
+                getSykmeldingerDBmodel(perioder = listOf(
+                    getPeriode(
+                        fom = LocalDate.of(2019, 2, 10),
+                        tom = LocalDate.of(2019, 2, 20),
+                        gradert = Gradert(false, 50)
+                    )))
+            )
+
+            val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 20))
+
+            sykmeldtStatus shouldEqual SykmeldtStatus(erSykmeldt = true, gradert = true, fom = LocalDate.of(2020, 2, 8), tom = LocalDate.of(2020, 2, 25))
         }
     }
 })
