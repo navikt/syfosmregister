@@ -28,15 +28,23 @@ class SykmeldingerService(private val database: DatabaseInterface) {
     fun getSykmeldtStatusForDato(fnr: String, dato: LocalDate): SykmeldtStatus {
         val sykmeldinger = getInternalSykmeldinger(fnr, dato, dato)
         return if (sykmeldinger.isEmpty()) {
-            SykmeldtStatus(erSykmeldt = false, gradert = null)
+            SykmeldtStatus(erSykmeldt = false, gradert = null, fom = null, tom = null)
         } else {
             val sykmelding = sykmeldinger.first()
-            SykmeldtStatus(erSykmeldt = true, gradert = inneholderGradertPeriode(sykmelding.sykmeldingsperioder))
+            SykmeldtStatus(erSykmeldt = true, gradert = inneholderGradertPeriode(sykmelding.sykmeldingsperioder), fom = finnForsteFom(sykmelding.sykmeldingsperioder), tom = finnSisteTom(sykmelding.sykmeldingsperioder))
         }
     }
 
     fun inneholderGradertPeriode(perioder: List<SykmeldingsperiodeDTO>): Boolean? {
         return perioder.firstOrNull { it.gradert != null }?.gradert != null
+    }
+
+    fun finnForsteFom(perioder: List<SykmeldingsperiodeDTO>): LocalDate {
+        return perioder.minBy { it.fom }?.fom ?: throw IllegalStateException("Skal ikke kunne ha periode uten fom")
+    }
+
+    fun finnSisteTom(perioder: List<SykmeldingsperiodeDTO>): LocalDate {
+        return perioder.maxBy { it.tom }?.tom ?: throw IllegalStateException("Skal ikke kunne ha periode uten tom")
     }
 
     private fun filterIncludeAndExclude(include: List<String>?, exclude: List<String>?): (SykmeldingDTO) -> Boolean {
