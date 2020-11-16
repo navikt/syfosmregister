@@ -32,7 +32,7 @@ val smCommonVersion = "1.c22544d"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9.3"
 val nimbusdsVersion = "7.5.1"
-val testContainerKafkaVersion = "1.12.5"
+val testContainerKafkaVersion = "1.15.0"
 val smCommonDiagnosisCodesVersion = "1.c22544d"
 
 tasks.withType<Jar> {
