@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
+import io.ktor.util.KtorExperimentalAPI
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -72,6 +73,7 @@ import org.spekframework.spek2.style.specification.describe
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.utility.DockerImageName
 
+@KtorExperimentalAPI
 class KafkaStatusIntegrationTest : Spek({
 
     val database = TestDB()

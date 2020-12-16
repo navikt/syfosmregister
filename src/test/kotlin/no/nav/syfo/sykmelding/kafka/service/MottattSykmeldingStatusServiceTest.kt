@@ -188,5 +188,6 @@ private fun opprettEnkelSykmelding(): EnkelSykmelding =
         prognose = null,
         egenmeldt = false,
         papirsykmelding = false,
-        harRedusertArbeidsgiverperiode = false
+        harRedusertArbeidsgiverperiode = false,
+        merknader = null
     )

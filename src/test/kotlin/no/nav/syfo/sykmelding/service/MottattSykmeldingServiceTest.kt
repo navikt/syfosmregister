@@ -13,6 +13,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
+import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
@@ -24,7 +25,9 @@ import no.nav.syfo.testutil.KAFKA_IMAGE_NAME
 import no.nav.syfo.testutil.KAFKA_IMAGE_VERSION
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
+import no.nav.syfo.testutil.getMerknaderForId
 import org.amshove.kluent.shouldBe
+import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -107,6 +110,25 @@ class MottattSykmeldingServiceTest : Spek({
             }
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
+            verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+        }
+
+        it("should receive sykmelding med merknad from automatic topic and publish to mottatt sykmelding topic") {
+            val receivedSykmelding = getReceivedSykmelding(merknader = listOf(Merknad("UGYLDIG_TILBAKEDATERING", "ikke godkjent")))
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+                val cr = callOriginal()
+                if (!cr.isEmpty) {
+                    applicationState.ready = false
+                }
+                cr
+            }
+            runBlocking {
+                mottattSykmeldingService.start()
+            }
+            val merknader = testDb.connection.getMerknaderForId("1")
+            merknader!![0].type shouldEqual "UGYLDIG_TILBAKEDATERING"
+            merknader!![0].beskrivelse shouldEqual "ikke godkjent"
             verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 

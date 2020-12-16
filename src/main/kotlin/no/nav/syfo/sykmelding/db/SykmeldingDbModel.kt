@@ -24,7 +24,8 @@ data class SykmeldingDbModel(
     val legekontorOrgNr: String?,
     val behandlingsutfall: ValidationResult,
     val sykmeldingsDokument: Sykmelding,
-    val status: StatusDbModel
+    val status: StatusDbModel,
+    val merknader: List<Merknad>?
 )
 
 data class SykmeldingDbModelUtenBehandlingsutfall(
@@ -32,7 +33,8 @@ data class SykmeldingDbModelUtenBehandlingsutfall(
     val mottattTidspunkt: OffsetDateTime,
     val legekontorOrgNr: String?,
     val sykmeldingsDokument: Sykmelding,
-    val status: StatusDbModel
+    val status: StatusDbModel,
+    val merknader: List<Merknad>?
 )
 
 data class Sykmelding(
@@ -213,3 +215,8 @@ enum class AnnenFraverGrunn(val codeValue: String, val text: String, val oid: St
     DONOR("9", "Når vedkommende er donor eller er under vurdering som donor"),
     BEHANDLING_STERILISERING("10", "Når vedkommende er arbeidsufør som følge av behandling i forbindelse med sterilisering")
 }
+
+data class Merknad(
+    val type: String,
+    val beskrivelse: String?
+)

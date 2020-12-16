@@ -9,10 +9,11 @@ import no.nav.syfo.model.Behandler
 import no.nav.syfo.model.HarArbeidsgiver
 import no.nav.syfo.model.KontaktMedPasient
 import no.nav.syfo.model.MedisinskVurdering
+import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Sykmelding
 
-fun getReceivedSykmelding(): ReceivedSykmelding {
+fun getReceivedSykmelding(merknader: List<Merknad>? = null): ReceivedSykmelding {
     return ReceivedSykmelding(
             sykmelding = Sykmelding(
                     id = "1",
@@ -60,6 +61,6 @@ fun getReceivedSykmelding(): ReceivedSykmelding {
             rulesetVersion = null,
             tlfPasient = null,
             tssid = null,
-            merknader = null
+            merknader = merknader
     )
 }

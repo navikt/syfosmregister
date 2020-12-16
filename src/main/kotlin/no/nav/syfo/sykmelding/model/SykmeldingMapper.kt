@@ -67,7 +67,8 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             utdypendeOpplysninger = if (skalFjerneSensitivInformasjon) { emptyMap() } else { toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger, isPasient) },
             egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
             papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
-            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder)
+            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
+            merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
     )
 }
 

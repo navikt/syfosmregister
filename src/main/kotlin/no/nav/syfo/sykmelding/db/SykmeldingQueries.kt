@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.db
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.OffsetDateTime
@@ -45,7 +46,8 @@ private fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<Sykmelding
                     status.timestamp,
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
-                    arbeidsgiver.navn
+                    arbeidsgiver.navn,
+                    merknader
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
@@ -76,7 +78,8 @@ private fun Connection.getSykmeldingMedSisteStatusForId(id: String): SykmeldingD
                     status.timestamp,
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
-                    arbeidsgiver.navn
+                    arbeidsgiver.navn,
+                    merknader
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
@@ -106,7 +109,8 @@ private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id:
                     status.timestamp,
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
-                    arbeidsgiver.navn
+                    arbeidsgiver.navn,
+                    merknader
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
@@ -131,7 +135,8 @@ fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
             mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
             legekontorOrgNr = getString("legekontor_org_nr"),
             behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java),
-            status = getStatus(mottattTidspunkt)
+            status = getStatus(mottattTidspunkt),
+            merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
     )
 }
 
@@ -141,7 +146,8 @@ fun ResultSet.toSykmeldingDbModelUtenBehandlingsutfall(): SykmeldingDbModelUtenB
         id = getString("id"),
         mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
         legekontorOrgNr = getString("legekontor_org_nr"),
-        status = getStatus(mottattTidspunkt)
+        status = getStatus(mottattTidspunkt),
+        merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
     )
 }
 

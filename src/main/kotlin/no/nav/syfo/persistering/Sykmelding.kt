@@ -32,3 +32,8 @@ fun Sykmelding.toPGObject() = PGobject().also {
     it.type = "json"
     it.value = objectMapper.writeValueAsString(this)
 }
+
+fun List<Merknad>.toPGObject() = PGobject().also {
+    it.type = "json"
+    it.value = objectMapper.writeValueAsString(this)
+}
