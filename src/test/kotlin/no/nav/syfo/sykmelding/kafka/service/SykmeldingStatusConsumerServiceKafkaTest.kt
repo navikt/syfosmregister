@@ -49,13 +49,15 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import org.testcontainers.containers.KafkaContainer
+import org.testcontainers.utility.DockerImageName
 
 class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "application"
     every { environment.sykmeldingStatusTopic } returns "topic"
+    every { environment.cluster } returns "localhost"
     val fnr = "12345678901"
-    val kafka = KafkaContainer()
+    val kafka = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka").withTag("5.4.3"))
     kafka.start()
     fun setupKafkaConfig(): Properties {
         val kafkaConfig = Properties()
@@ -95,6 +97,10 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
         every { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) } returns Unit
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any()) } returns Unit
+    }
+
+    afterGroup {
+        kafka.stop()
     }
 
     describe("Should retry on error") {

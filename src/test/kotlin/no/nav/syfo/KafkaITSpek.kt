@@ -32,7 +32,7 @@ object KafkaITSpek : Spek({
         kafkaBootstrapServers = embeddedEnvironment.brokersURL,
         syfosmregisterDBURL = "12314.adeo.no",
         mountPathVault = "vault.adeo.no",
-        cluster = "local",
+        cluster = "localhost",
         databaseName = "syfosmregister",
         applicationName = "syfosmregister",
         sm2013ManualHandlingTopic = "topic2",
@@ -40,7 +40,9 @@ object KafkaITSpek : Spek({
         appIds = listOf("123"),
         clientId = "",
         loginserviceIdportenAudience = listOf("clientid"),
-        loginserviceIdportenDiscoveryUrl = "url.com"
+        loginserviceIdportenDiscoveryUrl = "url.com",
+        truststore = "",
+        truststorePassword = ""
     )
 
     fun Properties.overrideForTest(): Properties = apply {

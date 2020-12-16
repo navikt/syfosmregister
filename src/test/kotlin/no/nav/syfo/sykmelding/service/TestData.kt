@@ -59,6 +59,7 @@ fun getReceivedSykmelding(): ReceivedSykmelding {
             personNrPasient = "12345678901",
             rulesetVersion = null,
             tlfPasient = null,
-            tssid = null
+            tssid = null,
+            merknader = null
     )
 }

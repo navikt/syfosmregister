@@ -68,12 +68,13 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import org.testcontainers.containers.KafkaContainer
+import org.testcontainers.utility.DockerImageName
 
 class KafkaStatusIntegrationTest : Spek({
 
     val database = TestDB()
 
-    val kafka = KafkaContainer()
+    val kafka = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka").withTag("5.4.3"))
     kafka.start()
     val environment = mockkClass(Environment::class)
     setUpEnvironment(environment)
@@ -390,6 +391,7 @@ private fun setUpEnvironment(environment: Environment) {
     every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automatic-topic"
     every { environment.mottattSykmeldingKafkaTopic } returns "syfo-mottatt-sykmelding"
     every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall-topic"
+    every { environment.cluster } returns "localhost"
 }
 
 private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService, applicationState: ApplicationState, kafkaProducer: SykmeldingStatusKafkaProducer, sykmelding: Sykmeldingsopplysninger, sykmeldingStatusConsumerService: SykmeldingStatusConsumerService): SykmeldingStatusKafkaEventDTO {

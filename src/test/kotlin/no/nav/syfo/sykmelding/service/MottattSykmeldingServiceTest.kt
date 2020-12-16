@@ -34,10 +34,11 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.Network
+import org.testcontainers.utility.DockerImageName
 
 class MottattSykmeldingServiceTest : Spek({
     val testDb = TestDB()
-    val kafka = KafkaContainer().withNetwork(Network.newNetwork())
+    val kafka = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka").withTag("5.4.3")).withNetwork(Network.newNetwork())
     kafka.start()
     val environment = mockkClass(Environment::class)
     mockEnvironment(environment)
@@ -81,6 +82,11 @@ class MottattSykmeldingServiceTest : Spek({
     beforeEachTest {
         applicationState.ready = true
         mockEnvironment(environment)
+    }
+
+    afterGroup {
+        testDb.stop()
+        kafka.stop()
     }
 
     describe("Test receive sykmelding") {
@@ -163,4 +169,5 @@ private fun mockEnvironment(environment: Environment) {
     every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
     every { environment.sykmeldingStatusTopic } returns "statustopic"
     every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
+    every { environment.cluster } returns "localhost"
 }

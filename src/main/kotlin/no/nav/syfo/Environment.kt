@@ -15,7 +15,9 @@ data class Environment(
     override val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
     val syfosmregisterDBURL: String = getEnvVar("SYFOSMREGISTER_DB_URL"),
     val mountPathVault: String = getEnvVar("MOUNT_PATH_VAULT"),
-    val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
+    override val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
+    override val truststore: String? = getEnvVar("NAV_TRUSTSTORE_PATH"),
+    override val truststorePassword: String? = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
     val jwtIssuer: String = getEnvVar("JWT_ISSUER"),
     val appIds: List<String> = getEnvVar("ALLOWED_APP_IDS")
             .split(",")
