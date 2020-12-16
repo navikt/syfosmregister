@@ -53,6 +53,8 @@ import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.sykmelding.status.api.SykmeldingStatusDTO
 import no.nav.syfo.sykmelding.status.api.model.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
+import no.nav.syfo.testutil.KAFKA_IMAGE_NAME
+import no.nav.syfo.testutil.KAFKA_IMAGE_VERSION
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.setUpTestApplication
@@ -74,7 +76,7 @@ class KafkaStatusIntegrationTest : Spek({
 
     val database = TestDB()
 
-    val kafka = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka").withTag("5.4.3"))
+    val kafka = KafkaContainer(DockerImageName.parse(KAFKA_IMAGE_NAME).withTag(KAFKA_IMAGE_VERSION))
     kafka.start()
     val environment = mockkClass(Environment::class)
     setUpEnvironment(environment)
