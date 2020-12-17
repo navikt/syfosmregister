@@ -19,7 +19,6 @@ import io.mockk.every
 import io.mockk.mockkClass
 import java.nio.file.Paths
 import java.util.Base64
-import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.api.registerSykmeldingApi
@@ -44,17 +43,6 @@ object AuthenticateSpek : Spek({
     val path = "src/test/resources/jwkset.json"
     val uri = Paths.get(path).toUri().toURL()
     val jwkProvider = JwkProviderBuilder(uri).build()
-    val env = Environment(
-        kafkaBootstrapServers = "",
-        syfosmregisterDBURL = "",
-        mountPathVault = "",
-        cluster = "cluster",
-        jwtIssuer = "issuer",
-        appIds = listOf("10", "11"),
-        clientId = "1",
-        loginserviceIdportenDiscoveryUrl = "url.com",
-        loginserviceIdportenAudience = listOf("clientid")
-    )
 
     val database = TestDB()
     val sykmeldingService = SykmeldingService(database)

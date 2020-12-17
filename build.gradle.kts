@@ -28,12 +28,11 @@ val h2Version = "1.4.197"
 val flywayVersion = "5.2.4"
 val hikariVersion = "3.3.0"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.c22544d"
+val smCommonVersion = "1.836b169"
 val postgresEmbeddedVersion = "0.13.1"
 val mockkVersion = "1.9.3"
 val nimbusdsVersion = "7.5.1"
 val testContainerKafkaVersion = "1.15.0"
-val smCommonDiagnosisCodesVersion = "1.c22544d"
 
 tasks.withType<Jar> {
     manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -106,7 +105,7 @@ dependencies {
 
     implementation("no.nav.helse:syfosm-common-models:$smCommonVersion")
     implementation("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
-    implementation("no.nav.helse:syfosm-common-diagnosis-codes:$smCommonDiagnosisCodesVersion")
+    implementation("no.nav.helse:syfosm-common-diagnosis-codes:$smCommonVersion")
 
     //Database
     implementation("org.postgresql:postgresql:$postgresVersion")

@@ -10,6 +10,7 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.AvsenderSystem
 import no.nav.syfo.sykmelding.db.Diagnose
 import no.nav.syfo.sykmelding.db.Gradert
+import no.nav.syfo.sykmelding.db.Merknad
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
@@ -96,6 +97,15 @@ class SykmeldingerServiceTest : Spek({
             sykmeldinger.size shouldEqual 1
             sykmeldinger[0].medisinskVurdering shouldNotBe null
             sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
+        }
+
+        it("Skal få med merknader") {
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel().copy(merknader = listOf(Merknad(type = "UGYLDIG_TILBAKEDATERING", beskrivelse = null))))
+            val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null)
+            sykmeldinger.size shouldEqual 1
+            sykmeldinger[0].medisinskVurdering shouldNotBe null
+            sykmeldinger[0].harRedusertArbeidsgiverperiode shouldEqual false
+            sykmeldinger[0].merknader!![0].type shouldEqual "UGYLDIG_TILBAKEDATERING"
         }
 
         it("Should not get medisinsk vurderering når sykmeldingen skal skjermes for pasient") {

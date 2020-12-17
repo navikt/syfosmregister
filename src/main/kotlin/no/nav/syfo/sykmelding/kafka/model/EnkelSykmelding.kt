@@ -5,6 +5,7 @@ import java.time.OffsetDateTime
 import no.nav.syfo.sykmelding.model.ArbeidsgiverDTO
 import no.nav.syfo.sykmelding.model.BehandlerDTO
 import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
+import no.nav.syfo.sykmelding.model.MerknadDTO
 import no.nav.syfo.sykmelding.model.PrognoseDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 
@@ -24,5 +25,6 @@ data class EnkelSykmelding(
     val prognose: PrognoseDTO?,
     val egenmeldt: Boolean,
     val papirsykmelding: Boolean,
-    val harRedusertArbeidsgiverperiode: Boolean
+    val harRedusertArbeidsgiverperiode: Boolean,
+    val merknader: List<MerknadDTO>?
 )

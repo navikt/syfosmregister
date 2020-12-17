@@ -99,7 +99,8 @@ class MottattSykmeldingService(
                                 epjSystemNavn = receivedSykmelding.sykmelding.avsenderSystem.navn,
                                 epjSystemVersjon = receivedSykmelding.sykmelding.avsenderSystem.versjon,
                                 mottattTidspunkt = receivedSykmelding.mottattDato,
-                                tssid = receivedSykmelding.tssid
+                                tssid = receivedSykmelding.tssid,
+                                merknader = receivedSykmelding.merknader
                         ),
                         Sykmeldingsdokument(
                                 id = receivedSykmelding.sykmelding.id,

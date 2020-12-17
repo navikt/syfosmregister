@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
+import io.ktor.util.KtorExperimentalAPI
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -53,6 +54,8 @@ import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.sykmelding.status.api.SykmeldingStatusDTO
 import no.nav.syfo.sykmelding.status.api.model.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
+import no.nav.syfo.testutil.KAFKA_IMAGE_NAME
+import no.nav.syfo.testutil.KAFKA_IMAGE_VERSION
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.setUpTestApplication
@@ -68,12 +71,14 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import org.testcontainers.containers.KafkaContainer
+import org.testcontainers.utility.DockerImageName
 
+@KtorExperimentalAPI
 class KafkaStatusIntegrationTest : Spek({
 
     val database = TestDB()
 
-    val kafka = KafkaContainer()
+    val kafka = KafkaContainer(DockerImageName.parse(KAFKA_IMAGE_NAME).withTag(KAFKA_IMAGE_VERSION))
     kafka.start()
     val environment = mockkClass(Environment::class)
     setUpEnvironment(environment)
@@ -390,6 +395,7 @@ private fun setUpEnvironment(environment: Environment) {
     every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automatic-topic"
     every { environment.mottattSykmeldingKafkaTopic } returns "syfo-mottatt-sykmelding"
     every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall-topic"
+    every { environment.cluster } returns "localhost"
 }
 
 private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService, applicationState: ApplicationState, kafkaProducer: SykmeldingStatusKafkaProducer, sykmelding: Sykmeldingsopplysninger, sykmeldingStatusConsumerService: SykmeldingStatusConsumerService): SykmeldingStatusKafkaEventDTO {

@@ -513,6 +513,10 @@ components:
           type: boolean
         harRedusertArbeidsgiverperiode:
           type: boolean
+        merknader:
+          type: array
+          items:
+            $ref: '#/components/schemas/Merknad'
     InternalSykmelding:
       type: object
       required:
@@ -578,6 +582,10 @@ components:
           type: boolean
         harRedusertArbeidsgiverperiode:
           type: boolean
+        merknader:
+          type: array
+          items:
+            $ref: '#/components/schemas/Merknad'
     Prognose:
       type: object
       required:
@@ -784,6 +792,15 @@ components:
              UFOR_GRUNNET_BARNLOSHET,
              DONOR,
              BEHANDLING_STERILISERING]
+    Merknad:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        beskrivelse:
+          type: string
     SykmeldingStatus:
       type: object
       required:

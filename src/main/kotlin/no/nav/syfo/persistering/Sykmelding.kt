@@ -1,6 +1,7 @@
 package no.nav.syfo.persistering
 
 import java.time.LocalDateTime
+import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.objectMapper
 import org.postgresql.util.PGobject
@@ -18,7 +19,8 @@ data class Sykmeldingsopplysninger(
     val epjSystemNavn: String,
     val epjSystemVersjon: String,
     val mottattTidspunkt: LocalDateTime,
-    val tssid: String?
+    val tssid: String?,
+    val merknader: List<Merknad>?
 )
 
 data class Sykmeldingsdokument(
@@ -27,6 +29,11 @@ data class Sykmeldingsdokument(
 )
 
 fun Sykmelding.toPGObject() = PGobject().also {
+    it.type = "json"
+    it.value = objectMapper.writeValueAsString(this)
+}
+
+fun List<Merknad>.toPGObject() = PGobject().also {
     it.type = "json"
     it.value = objectMapper.writeValueAsString(this)
 }

@@ -9,6 +9,8 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonNullableKafkaSerializer
+import no.nav.syfo.testutil.KAFKA_IMAGE_NAME
+import no.nav.syfo.testutil.KAFKA_IMAGE_VERSION
 import no.nav.syfo.testutil.KafkaTestReader
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldNotBe
@@ -21,9 +23,10 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.Network
+import org.testcontainers.utility.DockerImageName
 
 class BekreftSykmeldingKafkaProducerTest : Spek({
-    val kafka = KafkaContainer().withNetwork(Network.newNetwork())
+    val kafka = KafkaContainer(DockerImageName.parse(KAFKA_IMAGE_NAME).withTag(KAFKA_IMAGE_VERSION)).withNetwork(Network.newNetwork())
     kafka.start()
     fun setupKafkaConfig(): Properties {
         val kafkaConfig = Properties()
@@ -41,6 +44,7 @@ class BekreftSykmeldingKafkaProducerTest : Spek({
     val environment = mockkClass(Environment::class)
     every { environment.bekreftSykmeldingKafkaTopic } returns "syfo-bekreft-sykmelding"
     every { environment.applicationName } returns "application"
+    every { environment.cluster } returns "localhost"
 
     val kafkaProducer = KafkaFactory.getBekreftetSykmeldingKafkaProducer(setupKafkaConfig(), environment)
     val properties = setupKafkaConfig().toConsumerConfig("${environment.applicationName}-consumer", JacksonKafkaDeserializer::class)
@@ -48,6 +52,10 @@ class BekreftSykmeldingKafkaProducerTest : Spek({
     val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
     val kafkaConsumer = KafkaConsumer<String, SykmeldingKafkaMessage>(properties, StringDeserializer(), JacksonKafkaDeserializer(SykmeldingKafkaMessage::class))
     kafkaConsumer.subscribe(listOf("syfo-bekreft-sykmelding"))
+
+    afterGroup {
+        kafka.stop()
+    }
 
     describe("Test kafka") {
         it("Should bekreft value to topic") {

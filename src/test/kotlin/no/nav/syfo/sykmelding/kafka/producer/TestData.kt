@@ -28,7 +28,8 @@ fun getEnkelSykmelding(id: String): EnkelSykmelding {
             legekontorOrgnummer = null,
             egenmeldt = false,
             harRedusertArbeidsgiverperiode = false,
-            papirsykmelding = false
+            papirsykmelding = false,
+            merknader = null
     )
 }
 

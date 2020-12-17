@@ -28,6 +28,7 @@ import no.nav.syfo.sykmelding.model.GradertDTO
 import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
 import no.nav.syfo.sykmelding.model.MedisinskArsakDTO
 import no.nav.syfo.sykmelding.model.MedisinskArsakTypeDTO
+import no.nav.syfo.sykmelding.model.MerknadDTO
 import no.nav.syfo.sykmelding.model.PrognoseDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 import no.nav.syfo.sykmelding.model.getUtcTime
@@ -49,7 +50,8 @@ fun ReceivedSykmelding.toEnkelSykmelding(): EnkelSykmelding {
             legekontorOrgnummer = legekontorOrgNr,
             mottattTidspunkt = getUtcTime(mottattDato),
             sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeDto() },
-            harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder)
+            harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder),
+            merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
     )
 }
 

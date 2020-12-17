@@ -28,8 +28,9 @@ private fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger: S
                 epj_system_navn,
                 epj_system_versjon,
                 mottatt_tidspunkt,
-                tss_id)
-            VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                tss_id,
+                merknader)
+            VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
     ).use {
         it.setString(1, sykmeldingsopplysninger.id)
@@ -45,6 +46,7 @@ private fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger: S
         it.setString(11, sykmeldingsopplysninger.epjSystemVersjon)
         it.setTimestamp(12, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
         it.setString(13, sykmeldingsopplysninger.tssid)
+        it.setObject(14, sykmeldingsopplysninger.merknader?.toPGObject())
         it.executeUpdate()
     }
 }

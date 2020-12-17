@@ -77,7 +77,8 @@ fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<Sykmeldingsperiod
             andreTiltak = null,
             egenmeldt = false,
             harRedusertArbeidsgiverperiode = false,
-            papirsykmelding = false)
+            papirsykmelding = false,
+            merknader = null)
 }
 
 fun getMedisinskVurdering(): MedisinskVurderingDTO {
@@ -155,7 +156,8 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
                     avsenderSystem = AvsenderSystem("Navn", "verjosn"),
                     perioder = perioder,
                     signaturDato = LocalDateTime.now()
-            ))
+            ),
+            merknader = null)
 }
 
 fun getPeriode(fom: LocalDate, tom: LocalDate, gradert: Gradert? = null): Periode {
@@ -226,5 +228,6 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
                     avsenderSystem = avsenderSystem,
                     perioder = perioder,
                     signaturDato = LocalDateTime.now()
-            ))
+            ),
+            merknader = null)
 }

@@ -1,13 +1,16 @@
 package no.nav.syfo.testutil
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
 import java.net.ServerSocket
 import java.sql.Connection
+import java.sql.ResultSet
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.db.toList
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.AnnenFraversArsak
@@ -31,9 +34,11 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.model.SvarRestriksjon
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
+import no.nav.syfo.sykmelding.db.Merknad
 import org.flywaydb.core.Flyway
 
 class TestDB : DatabaseInterface {
@@ -65,6 +70,22 @@ fun Connection.dropData() {
     }
 }
 
+fun Connection.getMerknaderForId(id: String): List<Merknad>? =
+    this.prepareStatement(
+        """
+                    SELECT merknader 
+                    FROM sykmeldingsopplysninger
+                    where id = ?
+            """
+    ).use {
+        it.setString(1, id)
+        it.executeQuery().toList { tilMerknadliste() }.firstOrNull()
+    }
+
+private fun ResultSet.tilMerknadliste(): List<Merknad>? {
+    return getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
+}
+
 fun getSykmeldingOpplysninger(fnr: String = "pasientFnr", id: String = "123"): Sykmeldingsopplysninger {
     return testSykmeldingsopplysninger.copy(pasientFnr = fnr, id = id)
 }
@@ -82,7 +103,8 @@ val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
     epjSystemNavn = "epjSystemNavn",
     epjSystemVersjon = "epjSystemVersjon",
     mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC).toLocalDateTime(),
-    tssid = "13455"
+    tssid = "13455",
+    merknader = null
 )
 
 val testSykmeldingsdokument = Sykmeldingsdokument(

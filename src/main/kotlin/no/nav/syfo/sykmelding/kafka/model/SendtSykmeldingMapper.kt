@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.kafka.model
 
 import no.nav.syfo.sykmelding.db.SykmeldingDbModelUtenBehandlingsutfall
+import no.nav.syfo.sykmelding.model.MerknadDTO
 import no.nav.syfo.sykmelding.model.getUtcTime
 import no.nav.syfo.sykmelding.model.toArbeidsgiverDTO
 import no.nav.syfo.sykmelding.model.toBehandlerDTO
@@ -25,6 +26,7 @@ fun SykmeldingDbModelUtenBehandlingsutfall.toEnkelSykmelding(): EnkelSykmelding 
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
             egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
             papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
-            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder)
+            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
+            merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
     )
 }
