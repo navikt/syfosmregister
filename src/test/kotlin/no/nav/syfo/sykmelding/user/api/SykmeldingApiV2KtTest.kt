@@ -208,6 +208,16 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
+            it("get sykmeldinger Unauthorized for nivå 3") {
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
+                    addHeader(HttpHeaders.Authorization,
+                        "Bearer ${generateJWT("", "loginservice-client-id", subject = "123", level = "Level3")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
+                }
+            }
+
             it("Get sykmeldinger Unauthorized without JWT") {
                 with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri)) {
                     response.status() shouldEqual HttpStatusCode.Unauthorized
