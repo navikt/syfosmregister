@@ -23,7 +23,8 @@ fun generateJWT(
     audience: String,
     expiry: LocalDateTime? = LocalDateTime.now().plusHours(1),
     subject: String = "subject",
-    issuer: String = "https://sts.issuer.net/myid"
+    issuer: String = "https://sts.issuer.net/myid",
+    level: String = "Level4"
 ): String? {
     val now = Date()
     val key = getDefaultRSAKey()
@@ -42,6 +43,7 @@ fun generateJWT(
         .withClaim("azp", consumerClientId)
         .withClaim("appid", consumerClientId)
         .withClaim("iat", now)
+        .withClaim("acr", level)
         .withClaim("exp", Date.from(expiry?.atZone(ZoneId.systemDefault())?.toInstant()))
         .sign(alg)
 }
