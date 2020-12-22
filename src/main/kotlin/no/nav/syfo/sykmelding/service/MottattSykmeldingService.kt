@@ -53,13 +53,12 @@ class MottattSykmeldingService(
                         msgId = receivedSykmelding.msgId,
                         sykmeldingId = receivedSykmelding.sykmelding.id
                 )
-
-                if (receivedSykmelding.msgId == "0a739259-c479-48dc-82f9-9073873f9b56") {
-                    log.warn("Ignorerer ugyldig sykmelding {}", StructuredArguments.fields(loggingMeta))
+                try {
+                    handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer)
+                } catch (e: Exception) {
+                    log.warn("Ignorerer ugyldig sykmelding {}, {}", StructuredArguments.fields(loggingMeta), e.stackTrace)
                     return@forEach
                 }
-
-                handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer)
                 if (it.topic() != env.sm2013InvalidHandlingTopic) {
                     sendtToMottattSykmeldingTopic(receivedSykmelding)
                 }
