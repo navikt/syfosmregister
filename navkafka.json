@@ -45,6 +45,7 @@
         {"member":"srvsyfosyketilfelle", "role":"CONSUMER"},
         {"member":"srvflexreisetilskudd", "role":"CONSUMER"},
         {"member":"srvsyfosmaltinn", "role":"CONSUMER"},
+        {"member":"srvsykmeldingarbeid", "role":"CONSUMER"},
         {"member":"s151890", "role":"MANAGER"},
         {"member":"k143566", "role":"MANAGER"},
         {"member":"f133008", "role":"MANAGER"},
