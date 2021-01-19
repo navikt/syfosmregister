@@ -6,8 +6,10 @@ import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.db.AnnenFraverGrunn
 import no.nav.syfo.sykmelding.db.AnnenFraversArsak
+import no.nav.syfo.sykmelding.db.Diagnose
 import no.nav.syfo.sykmelding.db.SporsmalSvar
 import no.nav.syfo.testutil.getPeriode
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
@@ -172,6 +174,15 @@ class SykmeldingMapperKtTest : Spek({
             mappetSykmelding.medisinskVurdering shouldEqual MedisinskVurderingDTO(hovedDiagnose = DiagnoseDTO("L87", "ICPC-2", "Bursitt/tendinitt/synovitt IKA"), biDiagnoser = emptyList(), annenFraversArsak = null, svangerskap = false, yrkesskade = false, yrkesskadeDato = null)
             mappetSykmelding.meldingTilNAV shouldEqual MeldingTilNavDTO(true, "Masse bistand")
             mappetSykmelding.utdypendeOpplysninger shouldEqual objectMapper.readValue(mappedOpplysningerJson)
+        }
+        it("Bruker legens diagnosetekst hvis den er satt") {
+            val diagnoseFraDb = Diagnose(system = Diagnosekoder.ICPC2_CODE, kode = "Y80", tekst = "KNUSNINGSSKADE BEKKEN (M)")
+
+            val diagnose = diagnoseFraDb.toDiagnoseDTO()
+
+            diagnose.kode shouldEqual "Y80"
+            diagnose.system shouldEqual "ICPC-2"
+            diagnose.tekst shouldEqual "KNUSNINGSSKADE BEKKEN (M)"
         }
     }
 })

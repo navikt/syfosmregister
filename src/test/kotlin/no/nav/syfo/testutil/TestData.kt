@@ -119,7 +119,7 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
                             stillingsprosent = null,
                             yrkesbetegnelse = null),
                     medisinskVurdering = MedisinskVurdering(
-                            hovedDiagnose = Diagnose(Diagnosekoder.ICPC2_CODE, "L87", "tekst"),
+                            hovedDiagnose = Diagnose(Diagnosekoder.ICPC2_CODE, "L87", null),
                             biDiagnoser = emptyList(),
                             yrkesskade = false,
                             svangerskap = false,
