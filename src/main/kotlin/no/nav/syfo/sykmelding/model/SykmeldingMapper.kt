@@ -302,7 +302,7 @@ private fun AnnenFraverGrunn.toDTO(): AnnenFraverGrunnDTO {
     }
 }
 
-private fun Diagnose.toDiagnoseDTO(): DiagnoseDTO {
+fun Diagnose.toDiagnoseDTO(): DiagnoseDTO {
     return DiagnoseDTO(
             kode = kode,
             system = getDiagnosesystem(system),
@@ -344,14 +344,18 @@ fun finnPeriodetype(periode: Periode): Periodetype =
             else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode")
         }
 
-private fun getDiagnosetekst(diagnose: Diagnose): String =
-        when (diagnose.system) {
-            Diagnosekoder.ICD10_CODE ->
-                (Diagnosekoder.icd10[diagnose.kode])?.text ?: "Ukjent"
-            Diagnosekoder.ICPC2_CODE ->
-                (Diagnosekoder.icpc2[diagnose.kode])?.text ?: "Ukjent"
-            else -> "Ukjent"
-        }
+private fun getDiagnosetekst(diagnose: Diagnose): String {
+    if (!diagnose.tekst.isNullOrEmpty()) {
+        return diagnose.tekst
+    }
+    return when (diagnose.system) {
+        Diagnosekoder.ICD10_CODE ->
+            (Diagnosekoder.icd10[diagnose.kode])?.text ?: "Ukjent"
+        Diagnosekoder.ICPC2_CODE ->
+            (Diagnosekoder.icpc2[diagnose.kode])?.text ?: "Ukjent"
+        else -> "Ukjent"
+    }
+}
 
 private fun getDiagnosesystem(system: String): String =
         when (system) {
