@@ -74,8 +74,12 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfig = loadBaseConfig(environment, vaultSecrets).envOverrides()
-    kafkaBaseConfig["auto.offset.reset"] = "none"
+    val kafkaBaseConfig = loadBaseConfig(environment, vaultSecrets)
+        .also {
+            it["auto.offset.reset"] = "none"
+        }
+        .envOverrides()
+
     val consumerProperties = kafkaBaseConfig.toConsumerConfig(
             "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
