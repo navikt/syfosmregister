@@ -12,7 +12,9 @@ class SykmeldingStatusApiModelMapper private constructor() {
         fun toSykmeldingStatusEventDTO(sykmeldingStatusEvent: SykmeldingStatusEvent): SykmeldingStatusEventDTO {
             return SykmeldingStatusEventDTO(
                     statusEvent = sykmeldingStatusEvent.event.toStatusEventDTO(),
-                    timestamp = sykmeldingStatusEvent.timestamp
+                    timestamp = sykmeldingStatusEvent.timestamp,
+                    erAvvist = sykmeldingStatusEvent.erAvvist,
+                    erEgenmeldt = sykmeldingStatusEvent.erEgenmeldt
             )
         }
     }

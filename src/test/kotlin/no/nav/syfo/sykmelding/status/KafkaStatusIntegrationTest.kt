@@ -152,7 +152,7 @@ class KafkaStatusIntegrationTest : Spek({
             }
             val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 1
-            sykmeldinger.get(0).sykmeldingStatus shouldEqual SykmeldingStatus(
+            sykmeldinger[0].sykmeldingStatus shouldEqual SykmeldingStatus(
                     timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
                     statusEvent = StatusEvent.APEN,
                     arbeidsgiver = null,
@@ -183,7 +183,7 @@ class KafkaStatusIntegrationTest : Spek({
             }
             val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 1
-            val sykmeldingstatus = sykmeldinger.get(0).sykmeldingStatus
+            val sykmeldingstatus = sykmeldinger[0].sykmeldingStatus
             sykmeldingstatus shouldEqual SykmeldingStatus(
                     timestamp = sendEvent.timestamp,
                     statusEvent = StatusEvent.SENDT,
@@ -212,7 +212,7 @@ class KafkaStatusIntegrationTest : Spek({
             }
             val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 1
-            val sykmeldingStatus = sykmeldinger.get(0).sykmeldingStatus
+            val sykmeldingStatus = sykmeldinger[0].sykmeldingStatus
             sykmeldingStatus shouldEqual SykmeldingStatus(
                     timestamp = bekreftetEvent.timestamp,
                     statusEvent = StatusEvent.BEKREFTET,
@@ -305,10 +305,12 @@ class KafkaStatusIntegrationTest : Spek({
                     response.status() shouldEqual HttpStatusCode.OK
                     val sykmeldingStatuser = objectMapper.readValue<List<SykmeldingStatusEventDTO>>(response.content!!)
                     sykmeldingStatuser.size shouldEqual 1
-                    val latestSykmeldingStatus = sykmeldingStatuser.get(0)
+                    val latestSykmeldingStatus = sykmeldingStatuser[0]
                     latestSykmeldingStatus shouldEqual SykmeldingStatusEventDTO(
                             StatusEventDTO.SENDT,
-                            sendtEvent.timestamp
+                            sendtEvent.timestamp,
+                            erAvvist = false,
+                            erEgenmeldt = false
                     )
                 }
             }
@@ -372,7 +374,7 @@ class KafkaStatusIntegrationTest : Spek({
                     fullstendigSykmeldingDTO.sykmeldingStatus shouldEqual SykmeldingStatusDTO(
                             timestamp = fullstendigSykmeldingDTO.bekreftetDato!!,
                             arbeidsgiver = null,
-                            statusEvent = no.nav.syfo.sykmelding.status.StatusEventDTO.BEKREFTET,
+                            statusEvent = StatusEventDTO.BEKREFTET,
                             sporsmalOgSvarListe = null
                     )
                 }

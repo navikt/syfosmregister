@@ -10,6 +10,9 @@ import no.nav.syfo.aksessering.db.tilStatusEvent
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.log
+import no.nav.syfo.model.Status
+import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.objectMapper
 
 fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
     connection.use { connection ->
@@ -62,7 +65,15 @@ private fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: OffsetDat
 
 private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
     this.prepareStatement("""
-        SELECT * FROM sykmeldingstatus ss where ss.sykmelding_id = ?
+        SELECT status.sykmelding_id,
+        status.timestamp,
+        status.event,
+        utfall.behandlingsutfall,
+        opplysninger.epj_system_navn 
+        FROM sykmeldingstatus AS status 
+            INNER JOIN sykmeldingsopplysninger AS opplysninger ON status.sykmelding_id = opplysninger.id
+            INNER JOIN behandlingsutfall AS utfall ON status.sykmelding_id = utfall.id 
+        WHERE status.sykmelding_id = ?
     """).use {
         it.setString(1, sykmeldingId)
         return it.executeQuery().toList { toSykmeldingStatusEvent() }
@@ -71,9 +82,11 @@ private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<Sykmeld
 
 private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
     return SykmeldingStatusEvent(
-            getString("sykmelding_id"),
-            getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
-            tilStatusEvent(getString("event"))
+            sykmeldingId = getString("sykmelding_id"),
+            timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
+            event = tilStatusEvent(getString("event")),
+            erAvvist = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java).status == Status.INVALID,
+            erEgenmeldt = getString("epj_system_navn") == "Egenmeldt"
     )
 }
 
