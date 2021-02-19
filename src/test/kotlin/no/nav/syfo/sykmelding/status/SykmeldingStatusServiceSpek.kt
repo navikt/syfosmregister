@@ -110,6 +110,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldingstatuser.size shouldEqual 1
             sykmeldingstatuser[0].event shouldEqual StatusEvent.SENDT
             sykmeldingstatuser[0].erAvvist shouldEqual false
+            sykmeldingstatuser[0].erEgenmeldt shouldEqual false
         }
 
         it("Status skal vises som avvist hvis sykmelding er avvist") {
@@ -124,6 +125,20 @@ class SykmeldingStatusServiceSpek : Spek({
             val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid2", "LATEST")
 
             sykmeldingstatuser[0].erAvvist shouldEqual true
+        }
+
+        it("Status skal vises som egenmeldt hvis sykmelding er egenmelding") {
+            val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
+            val copySykmeldingopplysning = testSykmeldingsopplysninger.copy(
+                id = "uuid2", epjSystemNavn = "Egenmeldt"
+            )
+            database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument)
+            database.registerStatus(SykmeldingStatusEvent(copySykmeldingopplysning.id, copySykmeldingopplysning.mottattTidspunkt.atOffset(ZoneOffset.UTC), StatusEvent.APEN))
+            database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
+
+            val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid2", "LATEST")
+
+            sykmeldingstatuser[0].erEgenmeldt shouldEqual true
         }
 
         it("registrer bekreftet skal ikke lagre spørsmål og svar om den ikke er nyest") {

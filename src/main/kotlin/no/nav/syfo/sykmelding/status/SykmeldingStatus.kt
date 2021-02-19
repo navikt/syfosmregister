@@ -13,7 +13,8 @@ data class SykmeldingStatusEvent(
     val sykmeldingId: String,
     val timestamp: OffsetDateTime,
     val event: StatusEvent,
-    val erAvvist: Boolean? = null
+    val erAvvist: Boolean? = null,
+    val erEgenmeldt: Boolean? = null
 )
 
 enum class StatusEvent {

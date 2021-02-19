@@ -309,7 +309,8 @@ class KafkaStatusIntegrationTest : Spek({
                     latestSykmeldingStatus shouldEqual SykmeldingStatusEventDTO(
                             StatusEventDTO.SENDT,
                             sendtEvent.timestamp,
-                            false
+                            erAvvist = false,
+                            erEgenmeldt = false
                     )
                 }
             }
