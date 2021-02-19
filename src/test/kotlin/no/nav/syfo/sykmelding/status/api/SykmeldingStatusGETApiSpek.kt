@@ -79,7 +79,7 @@ class SykmeldingStatusGETApiSpek : Spek({
 
             it("Should get latest status") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
-                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT))
+                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT, false))
 
                 with(handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
                     addHeader("Content-Type", ContentType.Application.Json.toString())
@@ -88,7 +88,8 @@ class SykmeldingStatusGETApiSpek : Spek({
                     response.status() shouldEqual HttpStatusCode.OK
                     val responseData = objectMapper.readValue<List<SykmeldingStatusEventDTO>>(response.content!!)
                     responseData.size shouldEqual 1
-                    responseData.get(0).statusEvent == StatusEventDTO.SENDT
+                    responseData[0].statusEvent shouldEqual StatusEventDTO.SENDT
+                    responseData[0].erAvvist shouldEqual false
                 }
             }
 

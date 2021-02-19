@@ -5,5 +5,6 @@ import no.nav.syfo.sykmelding.status.StatusEventDTO
 
 data class SykmeldingStatusEventDTO(
     val statusEvent: StatusEventDTO,
-    val timestamp: OffsetDateTime
+    val timestamp: OffsetDateTime,
+    val erAvvist: Boolean? = null
 )

@@ -4,6 +4,10 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.aksessering.SykmeldingService
 import no.nav.syfo.aksessering.db.hentSporsmalOgSvar
+import no.nav.syfo.model.RuleInfo
+import no.nav.syfo.model.Status
+import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.testutil.TestDB
@@ -104,7 +108,22 @@ class SykmeldingStatusServiceSpek : Spek({
             database.registerStatus(SykmeldingStatusEvent("uuid", OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(10), StatusEvent.SENDT))
             val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid", "LATEST")
             sykmeldingstatuser.size shouldEqual 1
-            sykmeldingstatuser.get(0).event shouldEqual StatusEvent.SENDT
+            sykmeldingstatuser[0].event shouldEqual StatusEvent.SENDT
+            sykmeldingstatuser[0].erAvvist shouldEqual false
+        }
+
+        it("Status skal vises som avvist hvis sykmelding er avvist") {
+            val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
+            val copySykmeldingopplysning = testSykmeldingsopplysninger.copy(
+                id = "uuid2"
+            )
+            database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument)
+            database.registerStatus(SykmeldingStatusEvent(copySykmeldingopplysning.id, copySykmeldingopplysning.mottattTidspunkt.atOffset(ZoneOffset.UTC), StatusEvent.APEN))
+            database.connection.opprettBehandlingsutfall(Behandlingsutfall(id = "uuid2", behandlingsutfall = ValidationResult(Status.INVALID, listOf(RuleInfo("navn", "message", "message", Status.INVALID)))))
+
+            val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid2", "LATEST")
+
+            sykmeldingstatuser[0].erAvvist shouldEqual true
         }
 
         it("registrer bekreftet skal ikke lagre spørsmål og svar om den ikke er nyest") {
