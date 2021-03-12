@@ -5,6 +5,12 @@ import io.prometheus.client.Histogram
 
 const val METRICS_NS = "syfosmregister"
 
+val SYKMELDING_DUPLIKAT_COUNTER: Counter = Counter.build()
+    .name(METRICS_NS)
+    .name("sykmelding_kafka_duplikat")
+    .help("Counts antall duplikate sykmeldinger lest fra kafka")
+    .register()
+
 val MESSAGE_STORED_IN_DB_COUNTER: Counter = Counter.build()
         .namespace(METRICS_NS)
         .name("message_stored_in_db_count")

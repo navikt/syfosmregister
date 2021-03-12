@@ -11,6 +11,7 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
+import no.nav.syfo.metrics.SYKMELDING_DUPLIKAT_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
@@ -83,7 +84,8 @@ class MottattSykmeldingService(
             log.info("Mottatt sykmelding SM2013, {}", StructuredArguments.fields(loggingMeta))
 
             if (database.connection.erSykmeldingsopplysningerLagret(receivedSykmelding.sykmelding.id)) {
-                log.error("Sykmelding med id {} allerede lagret i databasen, {}", receivedSykmelding.sykmelding.id, StructuredArguments.fields(loggingMeta))
+                SYKMELDING_DUPLIKAT_COUNTER.inc()
+                log.warn("Sykmelding med id {} allerede lagret i databasen, {}", receivedSykmelding.sykmelding.id, StructuredArguments.fields(loggingMeta))
             } else {
                 database.lagreMottattSykmelding(
                         Sykmeldingsopplysninger(
