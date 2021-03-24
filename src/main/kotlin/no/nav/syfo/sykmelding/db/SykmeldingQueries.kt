@@ -23,6 +23,11 @@ fun DatabaseInterface.getSykmeldingerMedId(id: String): SykmeldingDbModel? =
         return connection.getSykmeldingMedSisteStatusForId(id)
     }
 
+fun DatabaseInterface.getSykmelding(sykmeldingId: String, fnr: String): SykmeldingDbModel? =
+    connection.use { connection ->
+        return connection.getSykmelding(sykmeldingId, fnr)
+    }
+
 fun DatabaseInterface.getSykmeldingerMedIdUtenBehandlingsutfall(id: String): SykmeldingDbModelUtenBehandlingsutfall? =
     connection.use { connection ->
         return connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id)
@@ -95,6 +100,40 @@ private fun Connection.getSykmeldingMedSisteStatusForId(id: String): SykmeldingD
                     """
     ).use {
         it.setString(1, id)
+        it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
+    }
+
+private fun Connection.getSykmelding(id: String, fnr: String): SykmeldingDbModel? =
+    this.prepareStatement(
+        """
+                    SELECT opplysninger.id,
+                    mottatt_tidspunkt,
+                    behandlingsutfall,
+                    legekontor_org_nr,
+                    sykmelding,
+                    status.event,
+                    status.timestamp,
+                    arbeidsgiver.orgnummer,
+                    arbeidsgiver.juridisk_orgnummer,
+                    arbeidsgiver.navn,
+                    merknader
+                    FROM sykmeldingsopplysninger AS opplysninger
+                        INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
+                        INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
+                        LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
+                        LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
+                                                                   status.timestamp = (SELECT timestamp
+                                                                                             FROM sykmeldingstatus
+                                                                                             WHERE sykmelding_id = opplysninger.id
+                                                                                             ORDER BY timestamp DESC
+                                                                                             LIMIT 1)
+                    where opplysninger.id = ?
+                    and pasient_fnr = ?
+                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    """
+    ).use {
+        it.setString(1, id)
+        it.setString(2, fnr)
         it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
     }
 

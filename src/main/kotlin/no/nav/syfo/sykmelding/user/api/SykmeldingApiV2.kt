@@ -17,7 +17,7 @@ import no.nav.syfo.sykmelding.status.StatusEventDTO
 fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
     route("api/v2/sykmeldinger") {
         accept(ContentType.Application.Json) {
-            get {
+            get("/") {
                 val principal: JWTPrincipal = call.authentication.principal()!!
                 val fnr = principal.payload.subject
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
@@ -30,6 +30,18 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     checkFomAndTomDate(fom, tom) -> call.respond(HttpStatusCode.BadRequest, "FOM should be before or equal to TOM")
                     hasInvalidStatus(exclude ?: include) -> call.respond(HttpStatusCode.BadRequest, "include or exclude can only contain ${StatusEventDTO.values().joinToString()}")
                     else -> call.respond(sykmeldingerService.getUserSykmelding(fnr, fom, tom, include, exclude))
+                }
+            }
+            get("/{sykmeldingId}") {
+                val principal: JWTPrincipal = call.authentication.principal()!!
+                val fnr = principal.payload.subject
+                val sykmeldingId = call.parameters["sykmeldingId"]!!
+
+                val sykmelding = sykmeldingerService.getSykmelding(sykmeldingId, fnr)
+
+                when (sykmelding) {
+                    null -> call.respond(HttpStatusCode.NotFound)
+                    else -> call.respond(sykmelding)
                 }
             }
         }

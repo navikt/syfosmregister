@@ -3,6 +3,7 @@ package no.nav.syfo.sykmelding.service
 import java.time.LocalDate
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
+import no.nav.syfo.sykmelding.db.getSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
@@ -62,6 +63,11 @@ class SykmeldingerService(private val database: DatabaseInterface) {
     fun getSykmeldingMedId(sykmeldingId: String): SykmeldingDTO? =
             database.getSykmeldingerMedId(sykmeldingId)?.let {
                 it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = false, ikkeTilgangTilDiagnose = true)
+            }
+
+    fun getSykmelding(sykmeldingId: String, fnr: String): SykmeldingDTO? =
+            database.getSykmelding(sykmeldingId, fnr)?.let {
+                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = true, ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient)
             }
 
     private fun getSykmeldingerWithSporsmal(fnr: String, isPasient: Boolean = false): List<SykmeldingDTO> {
