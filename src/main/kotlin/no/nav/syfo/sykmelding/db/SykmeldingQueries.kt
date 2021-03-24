@@ -18,9 +18,9 @@ fun DatabaseInterface.getSykmeldinger(fnr: String): List<SykmeldingDbModel> =
             return connection.getSykmeldingMedSisteStatus(fnr)
         }
 
-fun DatabaseInterface.getSykmeldingerMedId(id: String, fnr: String): SykmeldingDbModel? =
+fun DatabaseInterface.getSykmeldingerMedId(id: String): SykmeldingDbModel? =
     connection.use { connection ->
-        return connection.getSykmeldingMedSisteStatusForId(id, fnr)
+        return connection.getSykmeldingMedSisteStatusForId(id)
     }
 
 fun DatabaseInterface.getSykmeldingerMedIdUtenBehandlingsutfall(id: String): SykmeldingDbModelUtenBehandlingsutfall? =
@@ -66,7 +66,7 @@ private fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<Sykmelding
             it.executeQuery().toList { toSykmeldingDbModel() }
         }
 
-private fun Connection.getSykmeldingMedSisteStatusForId(id: String, fnr: String): SykmeldingDbModel? =
+private fun Connection.getSykmeldingMedSisteStatusForId(id: String): SykmeldingDbModel? =
     this.prepareStatement(
         """
                     SELECT opplysninger.id,
@@ -91,12 +91,10 @@ private fun Connection.getSykmeldingMedSisteStatusForId(id: String, fnr: String)
                                                                                              ORDER BY timestamp DESC
                                                                                              LIMIT 1)
                     where opplysninger.id = ?
-                    and pasient_fnr = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
                     """
     ).use {
         it.setString(1, id)
-        it.setString(2, fnr)
         it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
     }
 

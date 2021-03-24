@@ -59,8 +59,8 @@ class SykmeldingerService(private val database: DatabaseInterface) {
         }
     }
 
-    fun getSykmeldingMedId(sykmeldingId: String, fnr: String): SykmeldingDTO? =
-            database.getSykmeldingerMedId(sykmeldingId, fnr)?.let {
+    fun getSykmeldingMedId(sykmeldingId: String): SykmeldingDTO? =
+            database.getSykmeldingerMedId(sykmeldingId)?.let {
                 it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = false, ikkeTilgangTilDiagnose = true)
             }
 
