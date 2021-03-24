@@ -32,6 +32,18 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     else -> call.respond(sykmeldingerService.getUserSykmelding(fnr, fom, tom, include, exclude))
                 }
             }
+            get("/{sykmeldingId}") {
+                val principal: JWTPrincipal = call.authentication.principal()!!
+                val fnr = principal.payload.subject
+                val sykmeldingId = call.parameters["sykmeldingId"]!!
+
+                val sykmelding = sykmeldingerService.getSykmelding(sykmeldingId, fnr)
+
+                when (sykmelding) {
+                    null -> call.respond(HttpStatusCode.NotFound)
+                    else -> call.respond(sykmelding)
+                }
+            }
         }
     }
 }
