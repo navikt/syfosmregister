@@ -17,7 +17,7 @@ import no.nav.syfo.sykmelding.status.StatusEventDTO
 fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
     route("api/v2/sykmeldinger") {
         accept(ContentType.Application.Json) {
-            get("/") {
+            get {
                 val principal: JWTPrincipal = call.authentication.principal()!!
                 val fnr = principal.payload.subject
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
