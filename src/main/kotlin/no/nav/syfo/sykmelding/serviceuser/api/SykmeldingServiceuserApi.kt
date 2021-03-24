@@ -20,19 +20,12 @@ fun Route.registrerSykmeldingServiceuserApiV1(sykmeldingerService: SykmeldingerS
         accept(ContentType.Application.Json) {
             get("/{sykmeldingId}") {
                 val sykmeldingId = call.parameters["sykmeldingId"]!!
-                val fnr = call.request.headers["fnr"]
-
-                if (fnr.isNullOrEmpty()) {
-                    call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
+                val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
+                if (sykmelding == null) {
+                    log.info("Fant ikke sykmelding med id {}", sykmeldingId)
+                    call.respond(HttpStatusCode.NotFound)
                 } else {
-                    val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId, fnr)
-
-                    if (sykmelding == null) {
-                        log.info("Fant ikke sykmelding med id {}", sykmeldingId)
-                        call.respond(HttpStatusCode.NotFound)
-                    } else {
-                        call.respond(sykmelding)
-                    }
+                    call.respond(sykmelding)
                 }
             }
             get("/sykmeldinger") {

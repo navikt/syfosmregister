@@ -11,7 +11,6 @@ import io.ktor.routing.accept
 import io.ktor.routing.get
 import io.ktor.routing.route
 import java.time.LocalDate
-import no.nav.syfo.log
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.StatusEventDTO
 
@@ -33,7 +32,7 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     else -> call.respond(sykmeldingerService.getUserSykmelding(fnr, fom, tom, include, exclude))
                 }
             }
-            get("/{sykmeldingId}") {
+            get("/{sykmeldingid}") {
                 val principal: JWTPrincipal = call.authentication.principal()!!
                 val fnr = principal.payload.subject
                 val sykmeldingId = call.parameters["sykmeldingId"]!!
