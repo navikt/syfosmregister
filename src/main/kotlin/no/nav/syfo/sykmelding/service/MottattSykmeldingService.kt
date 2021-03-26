@@ -27,6 +27,7 @@ import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.wrapExceptions
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import java.time.OffsetDateTime
 
 class MottattSykmeldingService(
     private val applicationState: ApplicationState,
@@ -111,7 +112,7 @@ class MottattSykmeldingService(
 
                 sykmeldingStatusKafkaProducer.send(SykmeldingStatusKafkaEventDTO(
                         receivedSykmelding.sykmelding.id,
-                        receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                        OffsetDateTime.now(ZoneOffset.UTC),
                         STATUS_APEN),
                         receivedSykmelding.personNrPasient)
 
