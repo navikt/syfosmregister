@@ -30,8 +30,6 @@ import io.ktor.util.KtorExperimentalAPI
 import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
-import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.aksessering.api.registerSykmeldingApi
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
@@ -40,7 +38,6 @@ import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV1
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
@@ -58,7 +55,6 @@ fun createApplicationEngine(
     cluster: String,
     jwkProviderInternal: JwkProvider,
     sykmeldingStatusService: SykmeldingStatusService,
-    sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     issuerServiceuser: String,
     clientId: String,
     appIds: List<String>
@@ -109,7 +105,6 @@ fun createApplicationEngine(
 
         val httpClient = HttpClient(Apache, config)
 
-        val sykmeldingService = SykmeldingService(database)
         val sykmeldingerService = SykmeldingerService(database)
 
         val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
@@ -122,7 +117,6 @@ fun createApplicationEngine(
             registerNaisApi(applicationState)
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
-                registerSykmeldingApi(sykmeldingService, sykmeldingStatusKafkaProducer)
                 registrerSykmeldingApiV2(sykmeldingerService)
             }
             authenticate("jwtserviceuser") {

@@ -5,7 +5,6 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.VaultSecrets
-import no.nav.syfo.aksessering.api.PeriodetypeDTO
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.sm.Diagnosekoder
@@ -33,6 +32,7 @@ import no.nav.syfo.sykmelding.model.DiagnoseDTO
 import no.nav.syfo.sykmelding.model.GradertDTO
 import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
 import no.nav.syfo.sykmelding.model.MedisinskVurderingDTO
+import no.nav.syfo.sykmelding.model.PeriodetypeDTO
 import no.nav.syfo.sykmelding.model.RegelStatusDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO

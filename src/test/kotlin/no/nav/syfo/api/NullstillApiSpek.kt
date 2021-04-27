@@ -7,10 +7,10 @@ import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
 import java.time.ZoneOffset
-import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.registerStatus
@@ -53,23 +53,23 @@ object NullstillApiSpek : Spek({
             }
 
             it("Nullstiller bruker") {
-                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.getSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
 
-                database.hentSykmeldinger("pasientFnr").shouldBeEmpty()
+                database.getSykmeldinger("pasientFnr").shouldBeEmpty()
             }
 
             it("Nullstiller ikke annen brukers sykmeldinger") {
-                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.getSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/annenAktor")) {
                     response.status() shouldEqual HttpStatusCode.OK
                 }
 
-                database.hentSykmeldinger("pasientFnr").shouldNotBeEmpty()
+                database.getSykmeldinger("pasientFnr").shouldNotBeEmpty()
             }
 
             it("Er tilgjengelig i test") {

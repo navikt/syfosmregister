@@ -6,8 +6,8 @@ import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.route
 import io.ktor.util.KtorExperimentalAPI
-import no.nav.syfo.aksessering.api.log
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.log
 
 @KtorExperimentalAPI
 fun Route.registerNullstillApi(database: DatabaseInterface, clusterName: String) {

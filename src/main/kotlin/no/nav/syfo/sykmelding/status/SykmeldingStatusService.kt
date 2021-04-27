@@ -1,6 +1,5 @@
 package no.nav.syfo.sykmelding.status
 
-import no.nav.syfo.aksessering.db.erEier
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.nullstilling.slettSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfall

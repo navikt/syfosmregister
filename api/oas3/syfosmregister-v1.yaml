@@ -7,21 +7,6 @@ info:
 servers:
   - url: 'https://syfosmregister.nais.preprod.local'
 paths:
-  /api/v1/sykmeldinger:
-    get:
-      operationId: getSykmeldingerForBruker
-      security:
-        - bearerAuth: []
-      tags:
-        - Sykmelding
-      summary: Returnerer sykmeldinger fnr i access_token
-      responses:
-        '200':
-          $ref: '#/components/responses/SykmeldingListResponse'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
   /api/v2/sykmeldinger:
     get:
       summary: V2 av sykmeldinger api, returnerer liste av sykmeldinger for fnr i access_token
@@ -64,22 +49,6 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/SykmeldtStatus'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
-
-  /api/v1/sykmeldinger/{sykmeldingId}/bekreft:
-    post:
-      operationId: bekreftAvvistSykmelding
-      tags:
-        - Sykmelding
-      summary: Bekreft avviste sykmeldinger
-      parameters:
-        - $ref: '#/components/parameters/sykmeldingId'
-      responses:
-        '200':
-          description: Ok
         '401':
           description: Unauthorized
         '403':
@@ -151,12 +120,6 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/InternalSykmelding'
-    SykmeldingListResponse:
-      description: "Returnerer liste med sykmeldinger"
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/sykmeldingList'
     SykmeldtStatus:
       description: "Status for den sykmeldte pr dato"
       content:
@@ -307,33 +270,6 @@ components:
     Periodetype:
       type: string
       enum: [ AKTIVITET_IKKE_MULIG, AVVENTENDE, BEHANDLINGSDAGER, GRADERT, REISETILSKUDD]
-    Sykmeldingsperiode:
-      type: object
-      required:
-        - fom
-        - tom
-        - type
-        - reisetilskudd
-      properties:
-        fom:
-          $ref: '#/components/schemas/Date'
-        tom:
-          $ref: '#/components/schemas/Date'
-        gradert:
-          $ref: '#/components/schemas/Gradert'
-        behandlingsdager:
-          type: integer
-        innspillTilArbeidsgiver:
-          type: string
-        type:
-          $ref: '#/components/schemas/Periodetype'
-      example:
-         {
-          fom: '2019-10-01',
-          tom: '2019-10-04',
-          type: AKTIVITET_IKKE_MULIG,
-          reisetilskudd: false,
-      }
     AktivitetIkkeMulig:
       type: object
       properties:
@@ -374,54 +310,6 @@ components:
           type: string
         tekst:
           type: string
-    MedisinskVurdering:
-      description: Medisinsk vurdering er bare tilgjengelig for brukere med tilgang til det.
-      type: object
-      required:
-        - biDiagnoser
-      properties:
-        hovedDiagnose:
-          $ref: '#/components/schemas/Diagnose'
-        biDiagnoser:
-          type: array
-          description: påkreved men kan være en tom liste
-          items:
-            $ref: '#/components/schemas/Diagnose'
-    sykmeldingList:
-      type: array
-      items:
-        $ref: '#/components/schemas/Sykmelding'
-    Sykmelding:
-      type: object
-      required:
-        - id
-        - mottattTidspunkt
-        - sykmeldingStatus
-        - behandlingsutfall
-        - sykmeldingsperioder
-      properties:
-        id:
-          $ref: '#/components/schemas/Fodselsnummer'
-        mottattTidspunkt:
-          $ref: '#/components/schemas/Timestamp'
-        sykmeldingStatus:
-          $ref: '#/components/schemas/SykmeldingStatus'
-        behandlingsutfall:
-          $ref: '#/components/schemas/Behandlingsutfall'
-        legekontorOrgnummer:
-          type: string
-        legeNavn:
-          type: string
-        arbeidsgiver:
-          $ref: '#/components/schemas/Arbeidsgiver'
-        sykmeldingsperioder:
-          type: array
-          items:
-            $ref: '#/components/schemas/Sykmeldingsperiode'
-          example:
-            []
-        medisinskVurdering:
-          $ref: '#/components/schemas/MedisinskVurdering'
     SvarType:
       type: string
       enum: [ARBEIDSSITUASJON, PERIODER, JA_NEI]
@@ -856,11 +744,3 @@ components:
 
 security:
   - bearerAuth: []
-
-
-
-
-
-
-
-

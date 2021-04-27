@@ -15,18 +15,15 @@ import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.ktor.util.KtorExperimentalAPI
-import io.mockk.every
-import io.mockk.mockkClass
 import java.nio.file.Paths
 import java.util.Base64
 import no.nav.syfo.VaultSecrets
-import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.aksessering.api.registerSykmeldingApi
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmelding.service.SykmeldingerService
+import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
@@ -45,10 +42,8 @@ object AuthenticateSpek : Spek({
     val jwkProvider = JwkProviderBuilder(uri).build()
 
     val database = TestDB()
-    val sykmeldingService = SykmeldingService(database)
-    val sykmeldingStatusKafkaProducer = mockkClass(SykmeldingStatusKafkaProducer::class)
+    val sykmeldingerService = SykmeldingerService(database)
 
-    every { sykmeldingStatusKafkaProducer.send(any(), any()) } returns Unit
     beforeEachTest {
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
@@ -85,7 +80,7 @@ object AuthenticateSpek : Spek({
             )
             application.routing {
                 authenticate("jwt") {
-                    registerSykmeldingApi(sykmeldingService, sykmeldingStatusKafkaProducer)
+                    registrerSykmeldingApiV2(sykmeldingerService)
                 }
                 authenticate("basic") {
                     registerNullstillApi(database, "dev-fss")
@@ -128,7 +123,7 @@ object AuthenticateSpek : Spek({
             }
 
             it("Aksepterer gyldig JWT med riktig audience") {
-                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                with(handleRequest(HttpMethod.Get, "api/v2/sykmeldinger") {
                     addHeader(
                             HttpHeaders.Authorization,
                             "Bearer ${generateJWT("2", "clientId")}"
@@ -139,7 +134,7 @@ object AuthenticateSpek : Spek({
             }
 
             it("Gyldig JWT med feil audience gir Unauthorized") {
-                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                with(handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
                     addHeader(
                             HttpHeaders.Authorization,
                             "Bearer ${generateJWT("2", "annenClientId")}"
@@ -150,7 +145,7 @@ object AuthenticateSpek : Spek({
             }
 
             it("Gyldig JWT med feil issuer gir Unauthorized") {
-                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                with(handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
                     addHeader(
                             HttpHeaders.Authorization,
                             "Bearer ${generateJWT("2", "clientId", issuer = "microsoft")}"

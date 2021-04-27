@@ -26,10 +26,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
-import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.aksessering.api.FullstendigSykmeldingDTO
-import no.nav.syfo.aksessering.api.registerSykmeldingApi
-import no.nav.syfo.aksessering.db.hentSykmeldinger
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.createListener
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
@@ -45,15 +41,22 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
+import no.nav.syfo.sykmelding.db.StatusDbModel
+import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
-import no.nav.syfo.sykmelding.status.api.SykmeldingStatusDTO
+import no.nav.syfo.sykmelding.model.SporsmalDTO
+import no.nav.syfo.sykmelding.model.SvarDTO
+import no.nav.syfo.sykmelding.model.SykmeldingDTO
+import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.api.model.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
+import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.testutil.KAFKA_IMAGE_NAME
 import no.nav.syfo.testutil.KAFKA_IMAGE_VERSION
 import no.nav.syfo.testutil.TestDB
@@ -63,7 +66,6 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldEqual
-import org.amshove.kluent.shouldNotEqual
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -107,7 +109,7 @@ class KafkaStatusIntegrationTest : Spek({
     val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
-    val sykmeldingService = SykmeldingService(database)
+    val sykmeldingerService = SykmeldingerService(database)
     val mockPayload = mockk<Payload>()
 
     afterGroup {
@@ -150,13 +152,12 @@ class KafkaStatusIntegrationTest : Spek({
                     sykmeldingStatusConsumerService.start()
                 }
             }
-            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 1
-            sykmeldinger[0].sykmeldingStatus shouldEqual SykmeldingStatus(
-                    timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
-                    statusEvent = StatusEvent.APEN,
-                    arbeidsgiver = null,
-                    sporsmalListe = null
+            sykmeldinger[0].status shouldEqual StatusDbModel(
+                statusTimestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
+                    statusEvent = "APEN",
+                    arbeidsgiver = null
             )
             database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 1
         }
@@ -181,16 +182,14 @@ class KafkaStatusIntegrationTest : Spek({
                     sykmeldingStatusConsumerService.start()
                 }
             }
-            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 1
-            val sykmeldingstatus = sykmeldinger[0].sykmeldingStatus
-            sykmeldingstatus shouldEqual SykmeldingStatus(
-                    timestamp = sendEvent.timestamp,
-                    statusEvent = StatusEvent.SENDT,
-                    arbeidsgiver = ArbeidsgiverStatus(sykmelding.id, "org", "jorg", "navn"),
-                    sporsmalListe = listOf(Sporsmal("din arbeidssituasjon?", ShortName.ARBEIDSSITUASJON, Svar(
-                            sykmelding.id, sykmeldingstatus.sporsmalListe?.get(0)?.svar?.sporsmalId, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"
-                    ))))
+            val sykmeldingstatus = sykmeldinger[0].status
+            sykmeldingstatus shouldEqual StatusDbModel(
+                statusTimestamp = sendEvent.timestamp,
+                    statusEvent = "SENDT",
+                    arbeidsgiver = ArbeidsgiverDbModel("org", "jorg", "navn")
+            )
 
             database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 2
         }
@@ -210,16 +209,14 @@ class KafkaStatusIntegrationTest : Spek({
                     sykmeldingStatusConsumerService.start()
                 }
             }
-            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 1
-            val sykmeldingStatus = sykmeldinger[0].sykmeldingStatus
-            sykmeldingStatus shouldEqual SykmeldingStatus(
-                    timestamp = bekreftetEvent.timestamp,
-                    statusEvent = StatusEvent.BEKREFTET,
-                    arbeidsgiver = null,
-                    sporsmalListe = listOf(Sporsmal("sporsmal", ShortName.FORSIKRING, Svar(
-                            sykmelding.id, sykmeldingStatus.sporsmalListe?.get(0)?.svar?.sporsmalId, Svartype.JA_NEI, "NEI"
-                    ))))
+            val sykmeldingStatus = sykmeldinger[0].status
+            sykmeldingStatus shouldEqual StatusDbModel(
+                    statusTimestamp = bekreftetEvent.timestamp,
+                    statusEvent = "BEKREFTET",
+                    arbeidsgiver = null
+            )
 
             database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 2
         }
@@ -237,7 +234,7 @@ class KafkaStatusIntegrationTest : Spek({
                     sykmeldingStatusConsumerService.start()
                 }
             }
-            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 0
             verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
         }
@@ -255,7 +252,7 @@ class KafkaStatusIntegrationTest : Spek({
                     sykmeldingStatusConsumerService.start()
                 }
             }
-            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 0
             assertFailsWith<NoSuchElementException> { database.finnArbeidsgiverStatusForSykmelding(sykmelding.id) }
             assertFailsWith<NoSuchElementException> { database.finnStatusForSykmelding(sykmelding.id) }
@@ -282,7 +279,7 @@ class KafkaStatusIntegrationTest : Spek({
                     sykmeldingStatusConsumerService.start()
                 }
             }
-            val sykmeldinger = database.hentSykmeldinger(sykmelding.pasientFnr)
+            val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 0
             verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
             verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -296,7 +293,7 @@ class KafkaStatusIntegrationTest : Spek({
         with(TestApplicationEngine()) {
             setUpTestApplication()
             application.routing { registerSykmeldingStatusGETApi(sykmeldingStatusService) }
-            application.routing { registerSykmeldingApi(sykmeldingService, kafkaProducer) }
+            application.routing { registrerSykmeldingApiV2(sykmeldingerService) }
             it("Test get stykmeldingstatus latest should be SENDT") {
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(handleRequest(HttpMethod.Get, "/sykmeldinger/uuid/status?filter=LATEST") {
@@ -314,68 +311,24 @@ class KafkaStatusIntegrationTest : Spek({
                     )
                 }
             }
-
             it("test get sykmelding with latest status SENDT") {
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
-                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
+                with(handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
                 }) {
                     response.status() shouldEqual HttpStatusCode.OK
-                    val fullstendigSykmeldingDTO: FullstendigSykmeldingDTO = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
-                    val latestSykmeldingStatus = fullstendigSykmeldingDTO.sykmeldingStatus
-                    latestSykmeldingStatus shouldEqual SykmeldingStatusDTO(
+                    val sykmeldingDTO = objectMapper.readValue<List<SykmeldingDTO>>(response.content!!)[0]
+                    val latestSykmeldingStatus = sykmeldingDTO.sykmeldingStatus
+                    latestSykmeldingStatus shouldEqual no.nav.syfo.sykmelding.model.SykmeldingStatusDTO(
                             timestamp = sendtEvent.timestamp,
-                            sporsmalOgSvarListe = listOf(no.nav.syfo.sykmelding.status.api.SporsmalOgSvarDTO(
+                            sporsmalOgSvarListe = listOf(SporsmalDTO(
                                     tekst = "din arbeidssituasjon?",
-                                    svar = "ARBEIDSTAKER",
-                                    svartype = no.nav.syfo.sykmelding.status.api.SvartypeDTO.ARBEIDSSITUASJON,
-                                    shortName = no.nav.syfo.sykmelding.status.api.ShortNameDTO.ARBEIDSSITUASJON
-                            )),
+                                    svar = SvarDTO(no.nav.syfo.sykmelding.model.SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                                    shortName = no.nav.syfo.sykmelding.model.ShortNameDTO.ARBEIDSSITUASJON)
+                            ),
                             arbeidsgiver = no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO("org", "jorg", "navn"),
-                            statusEvent = StatusEventDTO.SENDT
+                            statusEvent = "SENDT"
 
-                    )
-                }
-            }
-        }
-    }
-
-    describe("Test bereft API -> Kafka -> DB -> API") {
-        it("Should test BEKREFT API") {
-            with(TestApplicationEngine()) {
-                setUpTestApplication()
-                application.routing { registerSykmeldingApi(sykmeldingService, kafkaProducer) }
-                every { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
-                    callOriginal()
-                    applicationState.alive = false
-                    applicationState.ready = false
-                }
-
-                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-
-                val job = createListener(applicationState) {
-                    sykmeldingStatusConsumerService.start()
-                }
-
-                with(handleRequest(HttpMethod.Post, "/api/v1/sykmeldinger/uuid/bekreft") {
-                    call.authentication.principal = JWTPrincipal(mockPayload)
-                }) {
-                    response.status() shouldEqual HttpStatusCode.OK
-                }
-                runBlocking {
-                    job.join()
-                }
-                with(handleRequest(HttpMethod.Get, "/api/v1/sykmeldinger") {
-                    call.authentication.principal = JWTPrincipal(mockPayload)
-                }) {
-                    response.status() shouldEqual HttpStatusCode.OK
-                    val fullstendigSykmeldingDTO: FullstendigSykmeldingDTO = objectMapper.readValue<List<FullstendigSykmeldingDTO>>(response.content!!)[0]
-                    fullstendigSykmeldingDTO.bekreftetDato shouldNotEqual null
-                    fullstendigSykmeldingDTO.sykmeldingStatus shouldEqual SykmeldingStatusDTO(
-                            timestamp = fullstendigSykmeldingDTO.bekreftetDato!!,
-                            arbeidsgiver = null,
-                            statusEvent = StatusEventDTO.BEKREFTET,
-                            sporsmalOgSvarListe = null
                     )
                 }
             }

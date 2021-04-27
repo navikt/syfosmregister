@@ -6,7 +6,6 @@ import java.sql.Statement
 import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import no.nav.syfo.aksessering.db.tilStatusEvent
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.log
@@ -52,6 +51,19 @@ fun DatabaseInterface.registrerBekreftet(sykmeldingBekreftEvent: SykmeldingBekre
         connection.commit()
     }
 }
+
+fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
+    connection.use { connection ->
+        connection.prepareStatement(
+            """
+           SELECT 1 FROM SYKMELDINGSOPPLYSNINGER WHERE id=? AND pasient_fnr=?
+            """
+        ).use {
+            it.setString(1, sykmeldingsid)
+            it.setString(2, fnr)
+            it.executeQuery().next()
+        }
+    }
 
 private fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: OffsetDateTime): Boolean {
     this.prepareStatement("""
@@ -215,5 +227,16 @@ private fun Connection.slettSvar(sykmeldingId: String) {
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()
+    }
+}
+
+private fun tilStatusEvent(status: String): StatusEvent {
+    return when (status) {
+        "BEKREFTET" -> StatusEvent.BEKREFTET
+        "APEN" -> StatusEvent.APEN
+        "SENDT" -> StatusEvent.SENDT
+        "AVBRUTT" -> StatusEvent.AVBRUTT
+        "UTGATT" -> StatusEvent.UTGATT
+        else -> throw IllegalStateException("Sykmeldingen har ukjent status eller er slettet, skal ikke kunne skje")
     }
 }
