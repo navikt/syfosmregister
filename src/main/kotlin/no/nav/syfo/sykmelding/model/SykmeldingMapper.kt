@@ -3,8 +3,6 @@ package no.nav.syfo.sykmelding.model
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import no.nav.syfo.domain.Periodetype
-import no.nav.syfo.domain.toDTO
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
@@ -28,6 +26,7 @@ import no.nav.syfo.sykmelding.db.MedisinskArsakType
 import no.nav.syfo.sykmelding.db.MedisinskVurdering
 import no.nav.syfo.sykmelding.db.MeldingTilNAV
 import no.nav.syfo.sykmelding.db.Periode
+import no.nav.syfo.sykmelding.db.Periodetype
 import no.nav.syfo.sykmelding.db.Prognose
 import no.nav.syfo.sykmelding.db.SporsmalSvar
 import no.nav.syfo.sykmelding.db.StatusDbModel
@@ -203,6 +202,9 @@ fun Periode.toSykmeldingsperiodeDTO(): SykmeldingsperiodeDTO {
             reisetilskudd = reisetilskudd
     )
 }
+
+fun Periodetype.toDTO(): PeriodetypeDTO =
+    PeriodetypeDTO.valueOf(this.name)
 
 private fun AktivitetIkkeMulig.toDto(): AktivitetIkkeMuligDTO {
     return AktivitetIkkeMuligDTO(medisinskArsak = medisinskArsak?.toMedisinskArsakDto(),

@@ -1,7 +1,7 @@
 package no.nav.syfo.sykmelding.user.api
 
 import java.time.LocalDate
-import no.nav.syfo.aksessering.api.PeriodetypeDTO
+import no.nav.syfo.sykmelding.model.PeriodetypeDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 
 fun getSykmeldingperiodeDto(fom: LocalDate, tom: LocalDate): SykmeldingsperiodeDTO {

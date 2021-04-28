@@ -1,7 +1,5 @@
 package no.nav.syfo.sykmelding.kafka.model
 
-import no.nav.syfo.aksessering.db.finnPeriodetype
-import no.nav.syfo.domain.toDTO
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.Arbeidsgiver
 import no.nav.syfo.model.ArbeidsrelatertArsak
@@ -16,6 +14,7 @@ import no.nav.syfo.model.MedisinskArsakType
 import no.nav.syfo.model.Periode
 import no.nav.syfo.model.Prognose
 import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.sykmelding.db.Periodetype
 import no.nav.syfo.sykmelding.model.AdresseDTO
 import no.nav.syfo.sykmelding.model.AktivitetIkkeMuligDTO
 import no.nav.syfo.sykmelding.model.ArbeidsgiverDTO
@@ -32,6 +31,7 @@ import no.nav.syfo.sykmelding.model.MerknadDTO
 import no.nav.syfo.sykmelding.model.PrognoseDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 import no.nav.syfo.sykmelding.model.getUtcTime
+import no.nav.syfo.sykmelding.model.toDTO
 
 fun ReceivedSykmelding.toEnkelSykmelding(): EnkelSykmelding {
     return EnkelSykmelding(
@@ -67,6 +67,16 @@ private fun Periode.toPeriodeDto(): SykmeldingsperiodeDTO {
             aktivitetIkkeMulig = aktivitetIkkeMulig.toAktivitetIkkeMuligDto()
     )
 }
+
+private fun finnPeriodetype(periode: Periode): Periodetype =
+    when {
+        periode.aktivitetIkkeMulig != null -> Periodetype.AKTIVITET_IKKE_MULIG
+        periode.avventendeInnspillTilArbeidsgiver != null -> Periodetype.AVVENTENDE
+        periode.behandlingsdager != null -> Periodetype.BEHANDLINGSDAGER
+        periode.gradert != null -> Periodetype.GRADERT
+        periode.reisetilskudd -> Periodetype.REISETILSKUDD
+        else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode")
+    }
 
 private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligDto(): AktivitetIkkeMuligDTO? {
     return when (this) {

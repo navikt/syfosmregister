@@ -2,20 +2,19 @@ package no.nav.syfo.sykmelding.status
 
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import no.nav.syfo.aksessering.SykmeldingService
-import no.nav.syfo.aksessering.db.hentSporsmalOgSvar
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
+import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
-import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.amshove.kluent.shouldNotEqual
 import org.spekframework.spek2.Spek
@@ -24,7 +23,7 @@ import org.spekframework.spek2.style.specification.describe
 class SykmeldingStatusServiceSpek : Spek({
 
     val database = TestDB()
-    val sykmeldingService = SykmeldingService(database)
+    val sykmeldingerService = SykmeldingerService(database)
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
     beforeEachTest {
@@ -42,28 +41,14 @@ class SykmeldingStatusServiceSpek : Spek({
     }
 
     describe("Test registrerStatus") {
-        it("BekreftetDato skal være null når sykmelding ikke er bekreftet") {
-            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
-            savedSykmelding.bekreftetDato shouldBe null
-            savedSykmelding.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.APEN
-        }
-
-        it("Skal få bekreftetDato hvis sykmelding er bekreftet") {
-            val confirmedDateTime = OffsetDateTime.now(ZoneOffset.UTC)
-            sykmeldingStatusService.registrerStatus(SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET))
-            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
-            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
-            savedSykmelding.sykmeldingStatus.statusEvent shouldEqual StatusEventDTO.BEKREFTET
-        }
-
         it("Skal ikke kaste feil hvis man oppdaterer med eksisterende status på nytt") {
             val confirmedDateTime = OffsetDateTime.now(ZoneOffset.UTC)
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET)
             sykmeldingStatusService.registrerStatus(status)
             sykmeldingStatusService.registrerStatus(status)
 
-            val savedSykmelding = sykmeldingService.hentSykmeldinger("pasientFnr")[0]
-            savedSykmelding.bekreftetDato shouldEqual confirmedDateTime
+            val savedSykmelding = sykmeldingerService.getUserSykmelding("pasientFnr", null, null)[0]
+            savedSykmelding.sykmeldingStatus.timestamp shouldEqual confirmedDateTime
         }
 
         it("Skal ikke hente sykmeldinger med status SLETTET") {
@@ -73,7 +58,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldingStatusService.registrerStatus(status)
             database.registerStatus(deletedStatus)
 
-            val sykmeldinger = sykmeldingService.hentSykmeldinger("pasientFnr")
+            val sykmeldinger = sykmeldingerService.getUserSykmelding("pasientFnr", null, null)
 
             sykmeldinger shouldEqual emptyList()
         }
@@ -92,7 +77,7 @@ class SykmeldingStatusServiceSpek : Spek({
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
             database.registerStatus(deletedStatus)
 
-            val sykmeldinger = sykmeldingService.hentSykmeldinger("pasientFnr")
+            val sykmeldinger = sykmeldingerService.getUserSykmelding("pasientFnr", null, null)
 
             sykmeldinger.size shouldEqual 1
             sykmeldinger.first().id shouldEqual "uuid2"

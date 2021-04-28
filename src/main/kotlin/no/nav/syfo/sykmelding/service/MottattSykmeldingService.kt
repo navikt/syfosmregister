@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.time.Duration
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
@@ -27,7 +28,6 @@ import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.wrapExceptions
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import java.time.OffsetDateTime
 
 class MottattSykmeldingService(
     private val applicationState: ApplicationState,

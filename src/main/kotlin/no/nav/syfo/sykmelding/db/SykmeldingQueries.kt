@@ -5,13 +5,15 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import no.nav.syfo.aksessering.db.hentSporsmalOgSvar
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
 import no.nav.syfo.sykmelding.status.StatusEvent
+import no.nav.syfo.sykmelding.status.Svar
+import no.nav.syfo.sykmelding.status.Svartype
 
 fun DatabaseInterface.getSykmeldinger(fnr: String): List<SykmeldingDbModel> =
         connection.use { connection ->
@@ -167,6 +169,25 @@ private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id:
         it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }.firstOrNull()
     }
 
+fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
+    this.prepareStatement(
+        """
+                SELECT sporsmal.shortname,
+                       sporsmal.tekst,
+                       svar.sporsmal_id,
+                       svar.svar,
+                       svar.svartype,
+                       svar.sykmelding_id
+                FROM svar
+                         INNER JOIN sporsmal
+                                    ON sporsmal.id = svar.sporsmal_id
+                WHERE svar.sykmelding_id = ?
+            """
+    ).use {
+        it.setString(1, sykmeldingId)
+        it.executeQuery().toList { tilSporsmal() }
+    }
+
 fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
     val mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC)
     return SykmeldingDbModel(sykmeldingsDokument = objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java),
@@ -205,5 +226,40 @@ private fun ResultSet.getStatus(mottattTidspunkt: OffsetDateTime): StatusDbModel
             }
             return StatusDbModel(status, status_timestamp, arbeidsgiverDbModel)
         }
+    }
+}
+
+fun ResultSet.tilSporsmal(): Sporsmal =
+    Sporsmal(
+        tekst = getString("tekst"),
+        shortName = tilShortName(getString("shortname")),
+        svar = tilSvar()
+    )
+
+fun ResultSet.tilSvar(): Svar =
+    Svar(
+        sykmeldingId = getString("sykmelding_id"),
+        sporsmalId = getInt("sporsmal_id"),
+        svartype = tilSvartype(getString("svartype")),
+        svar = getString("svar")
+    )
+
+private fun tilShortName(shortname: String): ShortName {
+    return when (shortname) {
+        "ARBEIDSSITUASJON" -> ShortName.ARBEIDSSITUASJON
+        "FORSIKRING" -> ShortName.FORSIKRING
+        "FRAVAER" -> ShortName.FRAVAER
+        "PERIODE" -> ShortName.PERIODE
+        "NY_NARMESTE_LEDER" -> ShortName.NY_NARMESTE_LEDER
+        else -> throw IllegalStateException("Sykmeldingen har en ukjent spørsmålskode, skal ikke kunne skje")
+    }
+}
+
+private fun tilSvartype(svartype: String): Svartype {
+    return when (svartype) {
+        "ARBEIDSSITUASJON" -> Svartype.ARBEIDSSITUASJON
+        "PERIODER" -> Svartype.PERIODER
+        "JA_NEI" -> Svartype.JA_NEI
+        else -> throw IllegalStateException("Sykmeldingen har en ukjent svartype, skal ikke kunne skje")
     }
 }

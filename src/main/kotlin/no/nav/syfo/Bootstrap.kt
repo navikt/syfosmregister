@@ -120,7 +120,6 @@ fun main() {
         cluster = environment.cluster,
         jwkProviderInternal = jwkProviderInternal,
         sykmeldingStatusService = sykmeldingStatusService,
-        sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
         issuerServiceuser = environment.jwtIssuer,
         clientId = environment.clientId,
         appIds = environment.appIds

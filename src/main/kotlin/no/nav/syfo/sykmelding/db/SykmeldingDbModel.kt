@@ -104,6 +104,14 @@ data class Periode(
     val reisetilskudd: Boolean
 )
 
+enum class Periodetype {
+    AKTIVITET_IKKE_MULIG,
+    AVVENTENDE,
+    BEHANDLINGSDAGER,
+    GRADERT,
+    REISETILSKUDD,
+}
+
 data class AktivitetIkkeMulig(
     val medisinskArsak: MedisinskArsak?,
     val arbeidsrelatertArsak: ArbeidsrelatertArsak?
