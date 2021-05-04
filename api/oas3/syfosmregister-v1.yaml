@@ -390,7 +390,7 @@ components:
         behandletTidspunkt:
           $ref: '#/components/schemas/Timestamp'
         behandler:
-          $ref: '#/components/schemas/Behandler'
+          $ref: '#/components/schemas/UserBehandler'
         syketilfelleStartDato:
           $ref: '#/components/schemas/Date'
         navnFastlege:
@@ -546,6 +546,24 @@ components:
         hpr:
           type: string
         her:
+          type: string
+        adresse:
+          $ref: '#/components/schemas/Adresse'
+        tlf:
+          type: string
+    UserBehandler:
+      type: object
+      required:
+        - fornavn
+        - etternavn
+        - aktoerId
+        - adresse
+      properties:
+        fornavn:
+          type: string
+        mellomnavn:
+          type: string
+        etternavn:
           type: string
         adresse:
           $ref: '#/components/schemas/Adresse'
