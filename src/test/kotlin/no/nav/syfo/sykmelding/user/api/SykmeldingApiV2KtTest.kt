@@ -48,7 +48,7 @@ class SykmeldingApiV2KtTest : Spek({
             application.routing { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) }
 
             it("Should get sykmeldinger for user with exclude filter") {
-                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 every { mockPayload.subject } returns "123"
                 with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
@@ -57,7 +57,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
             it("Should get sykmeldinger for user with include filter") {
-                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 every { mockPayload.subject } returns "123"
                 with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=APEN") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
@@ -66,7 +66,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
             it("Should get sykmeldinger for user with multiple exclude filters") {
-                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 every { mockPayload.subject } returns "123"
                 with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT") {
                     call.authentication.principal = JWTPrincipal(mockPayload)
@@ -105,7 +105,7 @@ class SykmeldingApiV2KtTest : Spek({
             }
 
             it("Should get sykmeldinger for user") {
-                every { sykmeldingerService.getUserSykmelding(any(), null, null) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), null, null, any(), any(), any()) } returns listOf(getSykmeldingDto())
                 every { mockPayload.subject } returns "123"
                 with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                     call.authentication.principal = JWTPrincipal(mockPayload)
@@ -119,7 +119,7 @@ class SykmeldingApiV2KtTest : Spek({
                         fom = LocalDate.of(2020, 1, 20),
                         tom = LocalDate.of(2020, 2, 10)
                 )
-                every { sykmeldingerService.getUserSykmelding(any(), periode.fom, periode.tom
+                every { sykmeldingerService.getUserSykmelding(any(), periode.fom, periode.tom, any(), any(), any()
                 ) } returns listOf(getSykmeldingDto(
                     perioder = listOf(periode)
                 ))
@@ -139,7 +139,7 @@ class SykmeldingApiV2KtTest : Spek({
                         fom = LocalDate.of(2020, 2, 11),
                         tom = LocalDate.of(2020, 2, 20)
                 )
-                every { sykmeldingerService.getUserSykmelding(any(), LocalDate.of(2020, 2, 20), null) } returns listOf(getSykmeldingDto(
+                every { sykmeldingerService.getUserSykmelding(any(), LocalDate.of(2020, 2, 20), null, any(), any(), any()) } returns listOf(getSykmeldingDto(
                         perioder = listOf(periode)
                 ))
                 every { mockPayload.subject } returns "123"
@@ -157,7 +157,7 @@ class SykmeldingApiV2KtTest : Spek({
                         fom = LocalDate.of(2020, 2, 11),
                         tom = LocalDate.of(2020, 2, 20)
                 )
-                every { sykmeldingerService.getUserSykmelding(any(), null, LocalDate.of(2020, 2, 20)) } returns listOf(getSykmeldingDto(
+                every { sykmeldingerService.getUserSykmelding(any(), null, LocalDate.of(2020, 2, 20), any(), any(), any()) } returns listOf(getSykmeldingDto(
                         perioder = listOf(periode)
                 ))
                 every { mockPayload.subject } returns "123"
@@ -199,7 +199,7 @@ class SykmeldingApiV2KtTest : Spek({
             )
             application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
             it("get sykmeldinger OK") {
-                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                     addHeader(HttpHeaders.Authorization,
                             "Bearer ${generateJWT("", "loginservice-client-id", subject = "123")}")
