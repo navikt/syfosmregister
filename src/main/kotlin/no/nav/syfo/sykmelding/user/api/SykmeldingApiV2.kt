@@ -29,7 +29,7 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     checkExcludeInclude(exclude, include) -> call.respond(HttpStatusCode.BadRequest, "Can not use both include and exclude")
                     checkFomAndTomDate(fom, tom) -> call.respond(HttpStatusCode.BadRequest, "FOM should be before or equal to TOM")
                     hasInvalidStatus(exclude ?: include) -> call.respond(HttpStatusCode.BadRequest, "include or exclude can only contain ${StatusEventDTO.values().joinToString()}")
-                    else -> call.respond(sykmeldingerService.getUserSykmelding(fnr, fom, tom, include, exclude))
+                    else -> call.respond(sykmeldingerService.getUserSykmelding(fnr, fom, tom, include, exclude, fullBehandler = false))
                 }
             }
             get("/{sykmeldingId}") {
@@ -37,7 +37,7 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                 val fnr = principal.payload.subject
                 val sykmeldingId = call.parameters["sykmeldingId"]!!
 
-                val sykmelding = sykmeldingerService.getSykmelding(sykmeldingId, fnr)
+                val sykmelding = sykmeldingerService.getSykmelding(sykmeldingId, fnr, fullBehandler = false)
 
                 when (sykmelding) {
                     null -> call.respond(HttpStatusCode.NotFound)

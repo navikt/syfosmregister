@@ -19,8 +19,8 @@ class SykmeldingerService(private val database: DatabaseInterface) {
                     .filter(filterFomDate(fom))
                     .filter(filterTomDate(tom))
 
-    fun getUserSykmelding(fnr: String, fom: LocalDate?, tom: LocalDate?, include: List<String>? = null, exclude: List<String>? = null): List<SykmeldingDTO> {
-        return getSykmeldingerWithSporsmal(fnr, true)
+    fun getUserSykmelding(fnr: String, fom: LocalDate?, tom: LocalDate?, include: List<String>? = null, exclude: List<String>? = null, fullBehandler: Boolean = true): List<SykmeldingDTO> {
+        return getSykmeldingerWithSporsmal(fnr, true, fullBehandler)
                 .filter(filterIncludeAndExclude(include, exclude))
                 .filter(filterFomDate(fom))
                 .filter(filterTomDate(tom))
@@ -65,14 +65,14 @@ class SykmeldingerService(private val database: DatabaseInterface) {
                 it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = false, ikkeTilgangTilDiagnose = true)
             }
 
-    fun getSykmelding(sykmeldingId: String, fnr: String): SykmeldingDTO? =
+    fun getSykmelding(sykmeldingId: String, fnr: String, fullBehandler: Boolean = false): SykmeldingDTO? =
             database.getSykmelding(sykmeldingId, fnr)?.let {
-                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = true, ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient)
+                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = true, ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient, fullBehandler = fullBehandler)
             }
 
-    private fun getSykmeldingerWithSporsmal(fnr: String, isPasient: Boolean = false): List<SykmeldingDTO> {
+    private fun getSykmeldingerWithSporsmal(fnr: String, isPasient: Boolean = false, fullBehandler: Boolean = true): List<SykmeldingDTO> {
         return database.getSykmeldinger(fnr).map {
-            it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = isPasient, ikkeTilgangTilDiagnose = false)
+            it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = isPasient, ikkeTilgangTilDiagnose = false, fullBehandler = fullBehandler)
         }
     }
 

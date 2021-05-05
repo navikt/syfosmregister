@@ -58,6 +58,30 @@ class SykmeldingerServiceTest : Spek({
             sykmeldinger[0].sykmeldingStatus.statusEvent shouldEqual "AVBRUTT"
         }
 
+        it("getUserSykmelding should filter behandler fnr if fullBehandler = false") {
+            every { database.getSykmeldinger(any()) } returns listOf(
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
+            )
+
+            val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, null, null, fullBehandler = false)
+            sykmeldinger.size shouldEqual 2
+            sykmeldinger.first().behandler.fornavn shouldEqual "fornavn"
+            sykmeldinger.first().behandler.fnr shouldEqual null
+        }
+
+        it("getUserSykmelding should not filter behandler fnr if fullBehandler = true") {
+            every { database.getSykmeldinger(any()) } returns listOf(
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
+                    getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
+            )
+
+            val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, null, null, fullBehandler = true)
+            sykmeldinger.size shouldEqual 2
+            sykmeldinger.first().behandler.fornavn shouldEqual "fornavn"
+            sykmeldinger.first().behandler.fnr shouldEqual "01234567891"
+        }
+
         it("should filter multiple include statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
                     getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),

@@ -39,7 +39,7 @@ import no.nav.syfo.sykmelding.status.Svar
 import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO
 
-internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasient: Boolean = false, ikkeTilgangTilDiagnose: Boolean): SykmeldingDTO {
+internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasient: Boolean = false, ikkeTilgangTilDiagnose: Boolean, fullBehandler: Boolean = true): SykmeldingDTO {
     val skjermetForPasient = sykmeldingsDokument.skjermesForPasient
     val skalFjerneSensitivInformasjon = (isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose
     return SykmeldingDTO(
@@ -54,7 +54,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
             syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
             tiltakNAV = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.tiltakNAV },
-            behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
+            behandler = sykmeldingsDokument.behandler.toBehandlerDTO(fullBehandler),
             medisinskVurdering = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO() },
             behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(isPasient),
             sykmeldingStatus = status.toSykmeldingStatusDTO(sporsmal.map { it.toSporsmalDTO() }),
@@ -312,15 +312,15 @@ fun Diagnose.toDiagnoseDTO(): DiagnoseDTO {
     )
 }
 
-fun Behandler.toBehandlerDTO(): BehandlerDTO {
+fun Behandler.toBehandlerDTO(fullBehandler: Boolean = true): BehandlerDTO {
     return BehandlerDTO(
             fornavn = fornavn,
             mellomnavn = mellomnavn,
             etternavn = etternavn,
-            aktoerId = aktoerId,
-            fnr = fnr,
-            her = her,
-            hpr = hpr,
+            aktoerId = if (fullBehandler) { aktoerId } else null,
+            fnr = if (fullBehandler) { fnr } else null,
+            her = if (fullBehandler) { her } else null,
+            hpr = if (fullBehandler) { hpr } else null,
             tlf = tlf,
             adresse = adresse.toAdresseDTO()
     )
