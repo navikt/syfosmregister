@@ -104,7 +104,8 @@ val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
     epjSystemVersjon = "epjSystemVersjon",
     mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC).toLocalDateTime(),
     tssid = "13455",
-    merknader = null
+    merknader = null,
+    partnerreferanse = null
 )
 
 val testSykmeldingsdokument = Sykmeldingsdokument(
