@@ -58,6 +58,6 @@ jobs:
       - name: Deploy to Preprod
         uses: nais/deploy/actions/deploy@master
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY_SYKMELDING }}
           CLUSTER: dev-fss
           RESOURCE: naiserator-dev.yaml

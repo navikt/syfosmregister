@@ -2,9 +2,9 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: syfosmregister
-  namespace: default
+  namespace: teamsykmelding
   labels:
-    team: teamsykefravr
+    team: teamsykmelding
 spec:
   image: {{ image }}
   replicas:
