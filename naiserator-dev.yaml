@@ -33,6 +33,18 @@ spec:
     requests:
       cpu: 400m
       memory: 768Mi
+  azure:
+    application:
+      enabled: true
+      tenant: trygdeetaten.no
+  accessPolicy:
+    inbound:
+      rules:
+        - application: syfosoknad
+          namespace: flex
+        - application: syfooppfolgingsplanservice
+          namespace: team-esyfo
+        - application: sparenaproxy
   vault:
     enabled: true
   ingresses:

@@ -67,6 +67,11 @@ fun main() {
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
+    val jwkProviderAadV2 = JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
+
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
 
@@ -122,7 +127,8 @@ fun main() {
         sykmeldingStatusService = sykmeldingStatusService,
         issuerServiceuser = environment.jwtIssuer,
         clientId = environment.clientId,
-        appIds = environment.appIds
+        appIds = environment.appIds,
+        jwkProviderAadV2 = jwkProviderAadV2
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)

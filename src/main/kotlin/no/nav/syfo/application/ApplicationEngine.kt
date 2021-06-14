@@ -41,6 +41,7 @@ import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV1
+import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV2
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
@@ -58,7 +59,8 @@ fun createApplicationEngine(
     sykmeldingStatusService: SykmeldingStatusService,
     issuerServiceuser: String,
     clientId: String,
-    appIds: List<String>
+    appIds: List<String>,
+    jwkProviderAadV2: JwkProvider
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -78,7 +80,10 @@ fun createApplicationEngine(
             jwkProviderInternal = jwkProviderInternal,
             issuerServiceuser = issuerServiceuser,
             clientId = clientId,
-            appIds = appIds)
+            appIds = appIds,
+            jwkProviderAadV2 = jwkProviderAadV2,
+            environment = env
+        )
         install(CallId) {
             generate { UUID.randomUUID().toString() }
             verify { callId: String -> callId.isNotEmpty() }
@@ -123,6 +128,9 @@ fun createApplicationEngine(
             }
             authenticate("jwtserviceuser") {
                 registrerSykmeldingServiceuserApiV1(sykmeldingerService)
+            }
+            authenticate("jwtserviceuserv2") {
+                registrerSykmeldingServiceuserApiV2(sykmeldingerService)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)

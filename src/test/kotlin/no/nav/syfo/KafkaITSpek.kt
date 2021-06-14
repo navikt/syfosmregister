@@ -42,7 +42,11 @@ object KafkaITSpek : Spek({
         loginserviceIdportenAudience = listOf("clientid"),
         loginserviceIdportenDiscoveryUrl = "url.com",
         truststore = "",
-        truststorePassword = ""
+        truststorePassword = "",
+        clientIdV2 = "",
+        clientSecretV2 = "",
+        jwkKeysUrlV2 = "",
+        jwtIssuerV2 = ""
     )
 
     fun Properties.overrideForTest(): Properties = apply {

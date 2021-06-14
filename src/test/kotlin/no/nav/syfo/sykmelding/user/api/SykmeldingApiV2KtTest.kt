@@ -23,6 +23,7 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.testutil.generateJWT
+import no.nav.syfo.testutil.getEnvironment
 import no.nav.syfo.testutil.getSykmeldingDto
 import no.nav.syfo.testutil.getVaultSecrets
 import no.nav.syfo.testutil.setUpTestApplication
@@ -195,7 +196,9 @@ class SykmeldingApiV2KtTest : Spek({
                     jwkProviderInternal = jwkProvider,
                     issuerServiceuser = "",
                     clientId = "",
-                    appIds = emptyList()
+                    appIds = emptyList(),
+                    jwkProviderAadV2 = jwkProvider,
+                    environment = getEnvironment()
             )
             application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
             it("get sykmeldinger OK") {
