@@ -47,6 +47,11 @@ spec:
         - application: sparenaproxy
   vault:
     enabled: true
+    paths:
+      - kvPath: serviceuser/data/dev/srvsyfosmregister
+        mountPath: /secrets/serviceuser
+      - kvPath: /kv/preprod/fss/syfosmregister/teamsykmelding
+        mountPath: /var/run/secrets/nais.io/vault
   ingresses:
     - "https://syfosmregister.nais.preprod.local"
   webproxy: true

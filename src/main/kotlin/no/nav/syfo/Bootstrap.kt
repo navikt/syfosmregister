@@ -54,6 +54,7 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 @KtorExperimentalAPI
 fun main() {
     val environment = Environment()
+    val vaultServiceUser = VaultServiceUser()
     val vaultSecrets =
             objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
@@ -79,7 +80,7 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfig = loadBaseConfig(environment, vaultSecrets)
+    val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
         .also {
             it["auto.offset.reset"] = "none"
         }

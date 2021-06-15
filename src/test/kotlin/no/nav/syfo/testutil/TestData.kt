@@ -44,8 +44,6 @@ fun getVaultSecrets(): VaultSecrets {
             "",
             "",
             "",
-            "",
-            "",
             ""
     )
 }

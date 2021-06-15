@@ -64,8 +64,6 @@ object AuthenticateSpek : Spek({
             application.setupAuth(
                     listOf("clientId"),
                     VaultSecrets(
-                        serviceuserUsername = "username",
-                        serviceuserPassword = "password",
                         syfomockUsername = "syfomock",
                         syfomockPassword = "test",
                         internalJwtIssuer = "",
