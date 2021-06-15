@@ -42,7 +42,7 @@ spec:
       rules:
         - application: syfosoknad
           namespace: flex
-        - application: syfooppfolgingsplanservice
+        - application: esyfovarsel
           namespace: team-esyfo
         - application: sparenaproxy
   vault:
