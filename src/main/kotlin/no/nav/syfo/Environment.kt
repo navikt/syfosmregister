@@ -1,5 +1,8 @@
 package no.nav.syfo
 
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
 import no.nav.syfo.kafka.KafkaConfig
 import no.nav.syfo.kafka.KafkaCredentials
 
@@ -30,21 +33,30 @@ data class Environment(
     val bekreftSykmeldingKafkaTopic: String = "syfo-bekreftet-sykmelding",
     val mottattSykmeldingKafkaTopic: String = "syfo-mottatt-sykmelding",
     val loginserviceIdportenDiscoveryUrl: String = getEnvVar("LOGINSERVICE_IDPORTEN_DISCOVERY_URL"),
-    val loginserviceIdportenAudience: List<String> = getEnvVar("LOGINSERVICE_IDPORTEN_AUDIENCE").split(",")
+    val loginserviceIdportenAudience: List<String> = getEnvVar("LOGINSERVICE_IDPORTEN_AUDIENCE").split(","),
+    val clientIdV2: String = getEnvVar("AZURE_APP_CLIENT_ID"),
+    val clientSecretV2: String = getEnvVar("AZURE_APP_CLIENT_SECRET"),
+    val jwkKeysUrlV2: String = getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI"),
+    val jwtIssuerV2: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER")
 ) : KafkaConfig
 
-data class VaultSecrets(
-    val serviceuserUsername: String,
-    val serviceuserPassword: String,
-    val syfomockUsername: String,
-    val syfomockPassword: String,
-    val internalJwtIssuer: String,
-    val internalJwtWellKnownUri: String,
-    val internalLoginServiceClientId: String
+data class VaultServiceUser(
+    val serviceuserUsername: String = getFileAsString("/secrets/serviceuser/username"),
+    val serviceuserPassword: String = getFileAsString("/secrets/serviceuser/password")
 ) : KafkaCredentials {
     override val kafkaUsername: String = serviceuserUsername
     override val kafkaPassword: String = serviceuserPassword
 }
 
+data class VaultSecrets(
+    val syfomockUsername: String,
+    val syfomockPassword: String,
+    val internalJwtIssuer: String,
+    val internalJwtWellKnownUri: String,
+    val internalLoginServiceClientId: String
+)
+
 fun getEnvVar(varName: String, defaultValue: String? = null) =
         System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
+
+fun getFileAsString(filePath: String) = String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8)

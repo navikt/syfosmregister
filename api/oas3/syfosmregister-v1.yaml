@@ -23,10 +23,10 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
-  /api/v1/sykmelding/{sykmeldingId}:
+  /api/v2/sykmelding/{sykmeldingId}:
     get:
       summary: Returnerer sykmelding med gitt sykmeldingId
-      operationId: getSykmeldingV1
+      operationId: getSykmeldingV2
       parameters:
         - $ref: '#/components/parameters/sykmeldingId'
       responses:
@@ -36,7 +36,7 @@ paths:
           description: Unauthorized
         '403':
           description: Forbidden
-  /api/v1/sykmelding/sykmeldtStatus:
+  /api/v2/sykmelding/sykmeldtStatus:
     post:
       summary: Forteller om en bruker har en sykmelding en gitt dato, om den er gradert og tidligste fom/seneste tom
       operationId: sykmeldtStatus

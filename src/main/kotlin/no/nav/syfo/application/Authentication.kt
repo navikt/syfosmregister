@@ -11,6 +11,7 @@ import io.ktor.auth.jwt.JWTCredential
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
 import net.logstash.logback.argument.StructuredArguments
+import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.log
 
@@ -22,7 +23,9 @@ fun Application.setupAuth(
     jwkProviderInternal: JwkProvider,
     issuerServiceuser: String,
     clientId: String,
-    appIds: List<String>
+    appIds: List<String>,
+    jwkProviderAadV2: JwkProvider,
+    environment: Environment
 ) {
     install(Authentication) {
         jwt(name = "internal") {
@@ -54,6 +57,15 @@ fun Application.setupAuth(
                 }
             }
         }
+        jwt(name = "jwtserviceuserv2") {
+            verifier(jwkProviderAadV2, environment.jwtIssuerV2)
+            validate { credentials ->
+                when {
+                    harTilgang(credentials, environment.clientIdV2) -> JWTPrincipal(credentials.payload)
+                    else -> unauthorized(credentials)
+                }
+            }
+        }
         basic(name = "basic") {
             validate { credentials ->
                 if (credentials.name == vaultSecrets.syfomockUsername && credentials.password == vaultSecrets.syfomockPassword) {
@@ -62,6 +74,12 @@ fun Application.setupAuth(
             }
         }
     }
+}
+
+fun harTilgang(credentials: JWTCredential, clientId: String): Boolean {
+    val appid: String = credentials.payload.getClaim("azp").asString()
+    log.debug("authorization attempt for $appid")
+    return credentials.payload.audience.contains(clientId)
 }
 
 fun unauthorized(credentials: JWTCredential): Principal? {

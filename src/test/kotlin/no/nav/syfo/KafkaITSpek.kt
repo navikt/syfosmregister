@@ -7,7 +7,6 @@ import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.testutil.getRandomPort
-import no.nav.syfo.testutil.getVaultSecrets
 import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -25,7 +24,7 @@ object KafkaITSpek : Spek({
             topics = listOf(topic)
     )
 
-    val credentials = getVaultSecrets()
+    val credentials = VaultServiceUser("", "")
     val env = Environment(
         applicationPort = getRandomPort(),
         kafkaSm2013AutomaticDigitalHandlingTopic = "topic3",
@@ -42,7 +41,11 @@ object KafkaITSpek : Spek({
         loginserviceIdportenAudience = listOf("clientid"),
         loginserviceIdportenDiscoveryUrl = "url.com",
         truststore = "",
-        truststorePassword = ""
+        truststorePassword = "",
+        clientIdV2 = "",
+        clientSecretV2 = "",
+        jwkKeysUrlV2 = "",
+        jwtIssuerV2 = ""
     )
 
     fun Properties.overrideForTest(): Properties = apply {

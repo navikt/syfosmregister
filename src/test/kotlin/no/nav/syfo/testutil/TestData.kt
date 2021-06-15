@@ -4,6 +4,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
@@ -43,10 +44,28 @@ fun getVaultSecrets(): VaultSecrets {
             "",
             "",
             "",
-            "",
-            "",
             ""
     )
+}
+
+fun getEnvironment(): Environment {
+        return Environment(
+                kafkaBootstrapServers = "",
+                syfosmregisterDBURL = "",
+                mountPathVault = "",
+                cluster = "",
+                truststore = "",
+                truststorePassword = "",
+                jwtIssuer = "",
+                appIds = emptyList(),
+                clientId = "",
+                loginserviceIdportenAudience = emptyList(),
+                loginserviceIdportenDiscoveryUrl = "",
+                clientIdV2 = "",
+                clientSecretV2 = "",
+                jwkKeysUrlV2 = "",
+                jwtIssuerV2 = ""
+        )
 }
 
 fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<SykmeldingsperiodeDTO> = getPerioder()): SykmeldingDTO {

@@ -54,6 +54,7 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 @KtorExperimentalAPI
 fun main() {
     val environment = Environment()
+    val vaultServiceUser = VaultServiceUser()
     val vaultSecrets =
             objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
@@ -67,6 +68,11 @@ fun main() {
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
+    val jwkProviderAadV2 = JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
+
     val vaultCredentialService = VaultCredentialService()
     val database = Database(environment, vaultCredentialService)
 
@@ -74,7 +80,7 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfig = loadBaseConfig(environment, vaultSecrets)
+    val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
         .also {
             it["auto.offset.reset"] = "none"
         }
@@ -122,7 +128,8 @@ fun main() {
         sykmeldingStatusService = sykmeldingStatusService,
         issuerServiceuser = environment.jwtIssuer,
         clientId = environment.clientId,
-        appIds = environment.appIds
+        appIds = environment.appIds,
+        jwkProviderAadV2 = jwkProviderAadV2
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)

@@ -33,8 +33,25 @@ spec:
     requests:
       cpu: 400m
       memory: 768Mi
+  azure:
+    application:
+      enabled: true
+      tenant: trygdeetaten.no
+  accessPolicy:
+    inbound:
+      rules:
+        - application: syfosoknad
+          namespace: flex
+        - application: syfooppfolgingsplanservice
+          namespace: team-esyfo
+        - application: sparenaproxy
   vault:
     enabled: true
+    paths:
+      - kvPath: serviceuser/data/dev/srvsyfosmregister
+        mountPath: /secrets/serviceuser
+      - kvPath: /kv/preprod/fss/syfosmregister/teamsykmelding
+        mountPath: /var/run/secrets/nais.io/vault
   ingresses:
     - "https://syfosmregister.nais.preprod.local"
   webproxy: true

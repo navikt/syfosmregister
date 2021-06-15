@@ -27,6 +27,7 @@ import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
+import no.nav.syfo.testutil.getEnvironment
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
@@ -63,8 +64,6 @@ object AuthenticateSpek : Spek({
             application.setupAuth(
                     listOf("clientId"),
                     VaultSecrets(
-                        serviceuserUsername = "username",
-                        serviceuserPassword = "password",
                         syfomockUsername = "syfomock",
                         syfomockPassword = "test",
                         internalJwtIssuer = "",
@@ -76,7 +75,9 @@ object AuthenticateSpek : Spek({
                     jwkProvider,
                     "",
                     "",
-                    emptyList()
+                    emptyList(),
+                    jwkProvider,
+                    getEnvironment()
             )
             application.routing {
                 authenticate("jwt") {

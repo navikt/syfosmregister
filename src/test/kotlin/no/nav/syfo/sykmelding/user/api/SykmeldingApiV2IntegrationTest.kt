@@ -20,6 +20,7 @@ import no.nav.syfo.sykmelding.status.registerStatus
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
+import no.nav.syfo.testutil.getEnvironment
 import no.nav.syfo.testutil.getVaultSecrets
 import no.nav.syfo.testutil.setUpTestApplication
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -61,7 +62,9 @@ class SykmeldingApiV2IntegrationTest : Spek({
                     jwkProvider,
                     "https://sts.issuer.net/myid",
                     "clientId",
-                    listOf("syfosoknad")
+                    listOf("syfosoknad"),
+                    jwkProvider,
+                    getEnvironment()
             )
             application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
 
