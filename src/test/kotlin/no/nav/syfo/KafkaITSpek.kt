@@ -37,6 +37,7 @@ object KafkaITSpek : Spek({
         sm2013ManualHandlingTopic = "topic2",
         jwtIssuer = "",
         appIds = listOf("123"),
+        syfoTilgangskontrollUrl = "url",
         clientId = "",
         loginserviceIdportenAudience = listOf("clientid"),
         loginserviceIdportenDiscoveryUrl = "url.com",

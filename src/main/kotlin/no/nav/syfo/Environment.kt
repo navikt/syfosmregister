@@ -26,7 +26,7 @@ data class Environment(
             .split(",")
             .map { it.trim() },
     val clientId: String = getEnvVar("CLIENT_ID"),
-    val syfoTilgangskontrollUrl: String = getEnvVar("SYFO_TILGANGSKONTROLL_URL", "http://syfo-tilgangskontroll.default/syfo-tilgangskontroll/api/tilgang/bruker"),
+    val syfoTilgangskontrollUrl: String = getEnvVar("SYFOTILGANGSKONTROLL_URL"),
     val sykmeldingStatusBackupTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_BACKUP_TOPIC", "privat-syfo-register-status-backup"),
     val sykmeldingStatusTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_TOPIC", "aapen-syfo-sykmeldingstatus-leesah-v1"),
     val sendSykmeldingKafkaTopic: String = "syfo-sendt-sykmelding",
