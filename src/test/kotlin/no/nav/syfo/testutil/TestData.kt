@@ -59,6 +59,7 @@ fun getEnvironment(): Environment {
                 jwtIssuer = "",
                 appIds = emptyList(),
                 clientId = "",
+                syfoTilgangskontrollUrl = "",
                 loginserviceIdportenAudience = emptyList(),
                 loginserviceIdportenDiscoveryUrl = "",
                 clientIdV2 = "",
