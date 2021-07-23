@@ -23,7 +23,7 @@ async function isonline(done) {
     var status = 0;
     do {
         status = await get();
-    } while (status !== 200 && new Date().getTime() - d < 30_000);
+    } while (status !== 200 && new Date().getTime() - d < 180_000);
     done();
 }
 
