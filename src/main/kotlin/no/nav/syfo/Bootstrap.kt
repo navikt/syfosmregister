@@ -13,6 +13,7 @@ import java.net.URL
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -37,6 +38,7 @@ import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmelding.service.BehandlingsutfallService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
+import no.nav.syfo.util.util.Unbounded
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
@@ -145,7 +147,7 @@ fun main() {
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
-        GlobalScope.launch {
+        GlobalScope.launch(Dispatchers.Unbounded) {
             try {
                 action()
             } catch (e: TrackableException) {
