@@ -53,6 +53,7 @@ spec:
       - kvPath: /kv/prod/fss/syfosmregister/teamsykmelding
         mountPath: /var/run/secrets/nais.io/vault
   ingresses:
+    - "https://syfosmregister.intern.nav.no"
     - "https://syfosmregister.nais.adeo.no"
   webproxy: true
   envFrom:
