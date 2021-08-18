@@ -46,7 +46,9 @@ object KafkaITSpek : Spek({
         clientIdV2 = "",
         clientSecretV2 = "",
         jwkKeysUrlV2 = "",
-        jwtIssuerV2 = ""
+        jwtIssuerV2 = "",
+        syfotilgangskontrollClientId = "",
+        azureTokenEndpoint = ""
     )
 
     fun Properties.overrideForTest(): Properties = apply {

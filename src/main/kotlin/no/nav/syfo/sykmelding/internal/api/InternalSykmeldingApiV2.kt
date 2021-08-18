@@ -11,8 +11,8 @@ import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.util.getFrnFromHeader
 
-fun Route.registrerInternalSykmeldingApi(sykmeldingService: SykmeldingerService, tilgangskontrollService: TilgangskontrollService) {
-    route("/api/v1/internal") {
+fun Route.registrerInternalSykmeldingApiV2(sykmeldingService: SykmeldingerService, tilgangskontrollService: TilgangskontrollService) {
+    route("/api/v2/internal") {
         get("/sykmeldinger") {
             val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
 
@@ -25,7 +25,7 @@ fun Route.registrerInternalSykmeldingApi(sykmeldingService: SykmeldingerService,
 
                 when {
                     fnr.isNullOrEmpty() -> call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
-                    tilgangskontrollService.hasAccessToUser(fnr, token) -> call.respond(HttpStatusCode.OK, sykmeldingService.getInternalSykmeldinger(fnr, fom, tom))
+                    tilgangskontrollService.hasAccessToUserOboToken(fnr, token) -> call.respond(HttpStatusCode.OK, sykmeldingService.getInternalSykmeldinger(fnr, fom, tom))
                     else -> call.respond(HttpStatusCode.Forbidden, "Forbidden")
                 }
             }

@@ -2,8 +2,10 @@ package no.nav.syfo.sykmelding.internal.tilgang
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.util.InternalAPI
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import kotlinx.coroutines.runBlocking
+import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.objectMapper
 import no.nav.syfo.testutil.HttpClientTest
 import no.nav.syfo.testutil.ResponseData
@@ -15,8 +17,9 @@ import org.spekframework.spek2.style.specification.describe
 class TilgangskontrollServiceTest : Spek({
 
     val httpClientTest = HttpClientTest()
+    val azureadClient = mockk<AzureAdV2Client>(relaxed = true)
+    val tilgangskontrollService = TilgangskontrollService(azureadClient, httpClientTest.httpClient, "/api/v1/", "clientId")
 
-    val tilgangskontrollService = TilgangskontrollService(httpClientTest.httpClient, "/api/v1/")
     mockkStatic("io.ktor.client.request.BuildersKt")
 
     describe("Test TilgangskontrollService") {

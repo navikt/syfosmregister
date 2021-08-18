@@ -32,11 +32,13 @@ import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.api.registerNaisApi
+import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
+import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
@@ -114,7 +116,9 @@ fun createApplicationEngine(
 
         val sykmeldingerService = SykmeldingerService(database)
 
-        val tilgangskontrollService = TilgangskontrollService(httpClient, env.syfoTilgangskontrollUrl)
+        val azureAdV2Client = AzureAdV2Client(env.clientIdV2, env.clientSecretV2, env.azureTokenEndpoint, httpClient)
+        val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, env.syfoTilgangskontrollUrl, env.syfotilgangskontrollClientId)
+
         routing {
 
             if (env.cluster == "dev-fss") {
@@ -131,6 +135,7 @@ fun createApplicationEngine(
             }
             authenticate("jwtserviceuserv2") {
                 registrerSykmeldingServiceuserApiV2(sykmeldingerService)
+                registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)
