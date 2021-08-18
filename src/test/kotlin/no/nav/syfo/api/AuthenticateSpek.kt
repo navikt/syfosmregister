@@ -46,12 +46,9 @@ object AuthenticateSpek : Spek({
     val sykmeldingerService = SykmeldingerService(database)
 
     beforeEachTest {
+        database.connection.dropData()
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-    }
-
-    afterEachTest {
-        database.connection.dropData()
     }
 
     afterGroup {

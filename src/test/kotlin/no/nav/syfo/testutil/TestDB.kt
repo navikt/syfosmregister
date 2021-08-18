@@ -42,30 +42,35 @@ import no.nav.syfo.sykmelding.db.Merknad
 import org.flywaydb.core.Flyway
 
 class TestDB : DatabaseInterface {
-    private var pg: EmbeddedPostgres? = null
-    override val connection: Connection
-        get() = pg!!.postgresDatabase.connection.apply { autoCommit = false }
-
-    init {
-        pg = EmbeddedPostgres.start()
-        Flyway.configure().run {
-            dataSource(pg?.postgresDatabase).load().migrate()
+    companion object {
+        private var staticPG: EmbeddedPostgres = EmbeddedPostgres.start()
+        init {
+            Flyway.configure().run {
+                dataSource(staticPG.postgresDatabase).load().migrate()
+            }
         }
     }
+    private var pg: EmbeddedPostgres = staticPG
+
+    override val connection: Connection
+        get() = pg.postgresDatabase.connection.apply { autoCommit = false }
 
     fun stop() {
-        pg?.close()
+        this.connection.dropData()
     }
 }
 
 fun Connection.dropData() {
     use { connection ->
         connection.prepareStatement("DELETE FROM behandlingsutfall").executeUpdate()
+        connection.prepareStatement("DELETE FROM sykmeldingsdokument").executeUpdate()
         connection.prepareStatement("DELETE FROM sykmeldingsopplysninger").executeUpdate()
         connection.prepareStatement("DELETE FROM sykmeldingstatus").executeUpdate()
         connection.prepareStatement("DELETE FROM arbeidsgiver").executeUpdate()
         connection.prepareStatement("DELETE FROM svar").executeUpdate()
         connection.prepareStatement("DELETE FROM sporsmal").executeUpdate()
+        connection.prepareStatement("ALTER SEQUENCE svar_id_seq RESTART WITH 1").executeUpdate()
+        connection.prepareStatement("ALTER SEQUENCE sporsmal_id_seq RESTART WITH 1").executeUpdate()
         connection.commit()
     }
 }

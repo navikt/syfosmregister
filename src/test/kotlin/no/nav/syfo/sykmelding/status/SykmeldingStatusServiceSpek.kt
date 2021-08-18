@@ -27,6 +27,7 @@ class SykmeldingStatusServiceSpek : Spek({
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
     beforeEachTest {
+        database.connection.dropData()
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC), StatusEvent.APEN))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)

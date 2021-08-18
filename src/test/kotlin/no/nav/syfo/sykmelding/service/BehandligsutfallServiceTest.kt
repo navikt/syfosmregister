@@ -55,7 +55,6 @@ class BehandligsutfallServiceTest : Spek({
 
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
     beforeEachTest {
-        testDb.connection.dropData()
         every { environment.applicationName } returns "application"
         every { environment.sm2013InvalidHandlingTopic } returns "invalidTopic"
         every { environment.sm2013ManualHandlingTopic } returns "manualTopic"
@@ -63,6 +62,10 @@ class BehandligsutfallServiceTest : Spek({
         every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
         every { environment.sykmeldingStatusTopic } returns "statustopic"
         every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
+    }
+
+    afterEachTest {
+        testDb.connection.dropData()
     }
 
     afterGroup {
