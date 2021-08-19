@@ -9,7 +9,7 @@ import io.ktor.routing.route
 import java.time.LocalDate
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
-import no.nav.syfo.util.getFrnFromHeader
+import no.nav.syfo.util.getFnrFromHeader
 
 fun Route.registrerInternalSykmeldingApiV2(sykmeldingService: SykmeldingerService, tilgangskontrollService: TilgangskontrollService) {
     route("/api/v2/internal") {
@@ -19,7 +19,7 @@ fun Route.registrerInternalSykmeldingApiV2(sykmeldingService: SykmeldingerServic
             if (token == null) {
                 call.respond(HttpStatusCode.Unauthorized)
             } else {
-                val fnr = getFrnFromHeader()
+                val fnr = getFnrFromHeader()
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
                 val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
 
