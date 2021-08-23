@@ -37,9 +37,15 @@ spec:
     application:
       enabled: true
       tenant: nav.no
+      claims:
+        extra:
+          - "NAVident"
   accessPolicy:
     inbound:
       rules:
+        - application: syfomodiaperson
+          namespace: teamsykefravr
+          cluster: prod-fss
         - application: syfosoknad
           namespace: flex
         - application: esyfovarsel

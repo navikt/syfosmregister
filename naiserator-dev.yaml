@@ -37,9 +37,15 @@ spec:
     application:
       enabled: true
       tenant: trygdeetaten.no
+      claims:
+        extra:
+          - "NAVident"
   accessPolicy:
     inbound:
       rules:
+        - application: syfomodiaperson
+          namespace: teamsykefravr
+          cluster: dev-fss
         - application: syfosoknad
           namespace: flex
         - application: esyfovarsel
