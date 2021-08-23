@@ -37,9 +37,6 @@ spec:
     application:
       enabled: true
       tenant: nav.no
-      claims:
-        extra:
-          - "NAVident"
   accessPolicy:
     inbound:
       rules:
