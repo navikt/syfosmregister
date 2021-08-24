@@ -25,6 +25,7 @@ import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
+import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
@@ -64,6 +65,7 @@ fun main() {
     val sykmeldingerService = SykmeldingerService(database = db)
     val mockPayload = mockk<Payload>()
     coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true
+    coEvery { tilgangskontrollService.hasAccessToUserOboToken(any(), any()) } returns true
     every { mockPayload.subject } returns "01234567891"
     embeddedServer(Netty, 8080) {
         install(ContentNegotiation) {
@@ -82,6 +84,7 @@ fun main() {
             registrerInternalSykmeldingApi(sykmeldingerService, tilgangskontrollService)
             registerSykmeldingStatusGETApi(sykmeldingStatusService)
             registrerSykmeldingApiV2(sykmeldingerService)
+            registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
         }
     }.start(true)
 }

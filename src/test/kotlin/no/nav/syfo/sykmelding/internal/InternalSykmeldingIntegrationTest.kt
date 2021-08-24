@@ -36,6 +36,7 @@ import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.registerStatus
 import no.nav.syfo.sykmelding.status.registrerSendt
 import no.nav.syfo.testutil.TestDB
+import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
@@ -57,6 +58,9 @@ class InternalSykmeldingIntegrationTest : Spek({
     val internalSykmeldingService = SykmeldingerService(database)
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
 
+    afterEachTest {
+        database.connection.dropData()
+    }
     describe("Test get InternalSykmelding") {
         it("Should be able to get sykmelidng") {
             coEvery { tilgangskontrollService.hasAccessToUser(any(), any()) } returns true

@@ -7,6 +7,7 @@ import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.testutil.TestDB
+import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldEqual
@@ -16,6 +17,10 @@ import org.spekframework.spek2.style.specification.describe
 class DatebaseTimestampTest : Spek({
 
     val db = TestDB()
+
+    afterEachTest {
+        db.connection.dropData()
+    }
 
     afterGroup {
         db.stop()

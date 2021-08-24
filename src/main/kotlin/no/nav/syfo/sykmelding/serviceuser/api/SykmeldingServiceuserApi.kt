@@ -14,6 +14,7 @@ import java.time.LocalDate
 import no.nav.syfo.log
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.model.StatusRequest
+import no.nav.syfo.util.getFnrFromHeader
 
 fun Route.registrerSykmeldingServiceuserApiV1(sykmeldingerService: SykmeldingerService) {
     route("api/v1/sykmelding") {
@@ -29,7 +30,7 @@ fun Route.registrerSykmeldingServiceuserApiV1(sykmeldingerService: SykmeldingerS
                 }
             }
             get("/sykmeldinger") {
-                val fnr = call.request.headers["fnr"]
+                val fnr = getFnrFromHeader()
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
                 val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
 

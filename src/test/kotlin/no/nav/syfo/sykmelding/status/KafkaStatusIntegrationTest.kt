@@ -20,7 +20,6 @@ import io.mockk.spyk
 import io.mockk.verify
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.util.Properties
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -48,8 +47,6 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
-import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
-import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.sykmelding.model.SporsmalDTO
 import no.nav.syfo.sykmelding.model.SvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
@@ -57,8 +54,7 @@ import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.api.model.SykmeldingStatusEventDTO
 import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
-import no.nav.syfo.testutil.KAFKA_IMAGE_NAME
-import no.nav.syfo.testutil.KAFKA_IMAGE_VERSION
+import no.nav.syfo.testutil.KafkaTest
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.setUpTestApplication
@@ -66,40 +62,19 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldEqual
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import org.testcontainers.containers.KafkaContainer
-import org.testcontainers.utility.DockerImageName
 
 @KtorExperimentalAPI
 class KafkaStatusIntegrationTest : Spek({
 
     val database = TestDB()
 
-    val kafka = KafkaContainer(DockerImageName.parse(KAFKA_IMAGE_NAME).withTag(KAFKA_IMAGE_VERSION))
-    kafka.start()
     val environment = mockkClass(Environment::class)
     setUpEnvironment(environment)
 
-    fun setupKafkaConfig(): Properties {
-        val kafkaConfig = Properties()
-        kafkaConfig.let {
-            it["bootstrap.servers"] = kafka.bootstrapServers
-            it[ConsumerConfig.GROUP_ID_CONFIG] = "groupId"
-            it[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
-            it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JacksonKafkaDeserializer::class.java
-            it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
-            it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
-            it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-        }
-        return kafkaConfig
-    }
     val sykmelding = testSykmeldingsopplysninger
-    val kafkaConfig = setupKafkaConfig()
+    val kafkaConfig = KafkaTest.setupKafkaConfig()
     val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
     val applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
@@ -113,7 +88,6 @@ class KafkaStatusIntegrationTest : Spek({
     val mockPayload = mockk<Payload>()
 
     afterGroup {
-        kafka.stop()
         applicationState.ready = false
         applicationState.alive = false
         database.stop()
@@ -341,15 +315,15 @@ fun getSlettetEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaE
 }
 
 private fun setUpEnvironment(environment: Environment) {
-    every { environment.applicationName } returns "application"
-    every { environment.sykmeldingStatusTopic } returns "topic"
-    every { environment.sendSykmeldingKafkaTopic } returns "sendt-sykmelding-topic"
-    every { environment.bekreftSykmeldingKafkaTopic } returns "syfo-bekreftet-sykmelding"
-    every { environment.sm2013InvalidHandlingTopic } returns "invalid-topic"
-    every { environment.sm2013ManualHandlingTopic } returns "manuell-topic"
-    every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automatic-topic"
-    every { environment.mottattSykmeldingKafkaTopic } returns "syfo-mottatt-sykmelding"
-    every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall-topic"
+    every { environment.applicationName } returns "KafkaStatusIntegrationTest-application"
+    every { environment.sykmeldingStatusTopic } returns "KafkaStatusIntegrationTest-topic"
+    every { environment.sendSykmeldingKafkaTopic } returns "KafkaStatusIntegrationTest-sendt-sykmelding-topic"
+    every { environment.bekreftSykmeldingKafkaTopic } returns "KafkaStatusIntegrationTest-syfo-bekreftet-sykmelding"
+    every { environment.sm2013InvalidHandlingTopic } returns "KafkaStatusIntegrationTest-invalid-topic"
+    every { environment.sm2013ManualHandlingTopic } returns "KafkaStatusIntegrationTest-manuell-topic"
+    every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "KafkaStatusIntegrationTest-automatic-topic"
+    every { environment.mottattSykmeldingKafkaTopic } returns "KafkaStatusIntegrationTest-syfo-mottatt-sykmelding"
+    every { environment.sm2013BehandlingsUtfallTopic } returns "KafkaStatusIntegrationTest-behandlingsutfall-topic"
     every { environment.cluster } returns "localhost"
 }
 

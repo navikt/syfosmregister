@@ -9,7 +9,6 @@ import io.mockk.spyk
 import io.mockk.verify
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.util.Properties
 import java.util.UUID
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -29,8 +28,6 @@ import no.nav.syfo.sykmelding.kafka.model.EnkelSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
-import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
-import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
 import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
@@ -41,41 +38,18 @@ import no.nav.syfo.sykmelding.status.SykmeldingBekreftEvent
 import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
-import no.nav.syfo.testutil.KAFKA_IMAGE_NAME
-import no.nav.syfo.testutil.KAFKA_IMAGE_VERSION
+import no.nav.syfo.testutil.KafkaTest
 import org.amshove.kluent.shouldEqual
-import org.apache.kafka.clients.consumer.ConsumerConfig
-import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.common.serialization.StringDeserializer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import org.testcontainers.containers.KafkaContainer
-import org.testcontainers.utility.DockerImageName
 
 class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     val environment = mockkClass(Environment::class)
-    every { environment.applicationName } returns "application"
-    every { environment.sykmeldingStatusTopic } returns "topic"
+    every { environment.applicationName } returns "${SykmeldingStatusConsumerServiceKafkaTest::class.simpleName}"
+    every { environment.sykmeldingStatusTopic } returns "${environment.applicationName}-topic"
     every { environment.cluster } returns "localhost"
     val fnr = "12345678901"
-    val kafka = KafkaContainer(DockerImageName.parse(KAFKA_IMAGE_NAME).withTag(KAFKA_IMAGE_VERSION))
-    kafka.start()
-    fun setupKafkaConfig(): Properties {
-        val kafkaConfig = Properties()
-        kafkaConfig.let {
-            it["bootstrap.servers"] = kafka.bootstrapServers
-            it[ConsumerConfig.GROUP_ID_CONFIG] = "groupId"
-            it[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
-            it[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JacksonKafkaDeserializer::class.java
-            it[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JacksonKafkaSerializer::class.java
-            it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
-            it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
-        }
-        return kafkaConfig
-    }
-
-    val kafkaConfig = setupKafkaConfig()
+    val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
@@ -92,17 +66,14 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     beforeEachTest {
         applicationState.alive = true
         applicationState.ready = true
-        every { environment.applicationName } returns "application"
-        every { environment.sykmeldingStatusTopic } returns "topic"
+        every { environment.applicationName } returns "${SykmeldingStatusConsumerServiceKafkaTest::class.simpleName}"
+        every { environment.sykmeldingStatusTopic } returns "${environment.applicationName}-topic"
+        every { environment.cluster } returns "localhost"
         every { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
         every { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
         every { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) } returns Unit
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any()) } returns Unit
-    }
-
-    afterGroup {
-        kafka.stop()
     }
 
     describe("Should retry on error") {

@@ -40,6 +40,9 @@ spec:
   accessPolicy:
     inbound:
       rules:
+        - application: syfomodiaperson
+          namespace: teamsykefravr
+          cluster: prod-fss
         - application: syfosoknad
           namespace: flex
         - application: esyfovarsel
@@ -72,4 +75,6 @@ spec:
     - name: ALLOWED_APP_IDS
       value: ffca591d-dfc9-4ecf-9ac2-050d75b39fc0,de494f0f-fc49-4420-89d6-16d8198ed211,496407da-c441-4053-a3f4-94ed9e21d32a
     - name: SYFOTILGANGSKONTROLL_URL
-      value: https://syfo-tilgangskontroll.nais.adeo.no/syfo-tilgangskontroll/api/tilgang/bruker
+      value: https://syfo-tilgangskontroll.nais.adeo.no
+    - name: SYFOTILGANGSKONTROLL_CLIENT_ID
+      value: dfaa2699-7390-4459-9cfc-2e8de64dfaf9

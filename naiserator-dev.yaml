@@ -8,7 +8,7 @@ metadata:
 spec:
   image: {{ image }}
   replicas:
-    min: 2
+    min: 1
     max: 2
     cpuThresholdPercentage: 90
   port: 8080
@@ -40,6 +40,9 @@ spec:
   accessPolicy:
     inbound:
       rules:
+        - application: syfomodiaperson
+          namespace: teamsykefravr
+          cluster: dev-fss
         - application: syfosoknad
           namespace: flex
         - application: esyfovarsel
@@ -72,4 +75,6 @@ spec:
     - name: ALLOWED_APP_IDS
       value: 281ba984-745f-48b8-a79c-9444b8688361,1f74844d-759f-4d1f-8f32-243f9c52ef5d,8e294ba4-f37c-4cb9-871b-cce06f63e0b9
     - name: SYFOTILGANGSKONTROLL_URL
-      value: https://syfo-tilgangskontroll.nais.preprod.local/syfo-tilgangskontroll/api/tilgang/bruker
+      value: https://syfo-tilgangskontroll.nais.preprod.local
+    - name: SYFOTILGANGSKONTROLL_CLIENT_ID
+      value: 32e36aa5-1d12-452a-9b1e-9f3f557cbb4d

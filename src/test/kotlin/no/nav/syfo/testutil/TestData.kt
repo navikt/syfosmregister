@@ -65,7 +65,9 @@ fun getEnvironment(): Environment {
                 clientIdV2 = "",
                 clientSecretV2 = "",
                 jwkKeysUrlV2 = "",
-                jwtIssuerV2 = ""
+                jwtIssuerV2 = "",
+                syfotilgangskontrollClientId = "",
+                azureTokenEndpoint = ""
         )
 }
 
