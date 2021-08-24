@@ -40,6 +40,7 @@ fun Route.registrerInternalSykmeldingApiV2(
                 }
             } catch (ex: Exception) {
                 log.error("Error in v2 endpoint", ex)
+                call.respond(HttpStatusCode.InternalServerError, "unknown error")
             }
         }
     }

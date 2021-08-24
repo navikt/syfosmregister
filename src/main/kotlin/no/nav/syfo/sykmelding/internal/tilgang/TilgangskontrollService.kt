@@ -5,7 +5,6 @@ import io.ktor.client.call.receive
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import no.nav.syfo.azuread.v2.AzureAdV2Client
@@ -29,7 +28,7 @@ class TilgangskontrollService(
     }
 
     suspend fun hasAccessToUserOboToken(fnr: String, accessToken: String): Boolean {
-        log.info("checkign access to user with obo-token")
+        log.info("checking access to user with obo-token")
         val oboToken = azureAdV2Client.getOnBehalfOfToken(scopeClientId = syfotilgangskontrollClientId, token = accessToken)
             ?.accessToken
 
