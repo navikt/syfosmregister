@@ -27,21 +27,21 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/.*gradle*') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Run tests
-        env:
-          ORG_GRADLE_PROJECT_githubUser: x-access-token
-          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ./gradlew build test jacocoTestReport sonarqube
-      - name: Run API tests
-        env:
-          ORG_GRADLE_PROJECT_githubUser: x-access-token
-          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          npm install dredd@latest
-          ./gradlew testApi
+#      - name: Run tests
+#        env:
+#          ORG_GRADLE_PROJECT_githubUser: x-access-token
+#          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          ./gradlew build test jacocoTestReport sonarqube
+#      - name: Run API tests
+#        env:
+#          ORG_GRADLE_PROJECT_githubUser: x-access-token
+#          ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          npm install dredd@latest
+#          ./gradlew testApi
       - name: Build jar
         env:
           ORG_GRADLE_PROJECT_githubUser: x-access-token

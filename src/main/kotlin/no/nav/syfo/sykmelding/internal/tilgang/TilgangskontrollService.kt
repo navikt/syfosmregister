@@ -5,6 +5,7 @@ import io.ktor.client.call.receive
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import no.nav.syfo.azuread.v2.AzureAdV2Client
@@ -42,10 +43,17 @@ class TilgangskontrollService(
     }
 
     private suspend fun hasAccess(accessToken: String, requestUrl: String): Boolean {
+        log.info("Checking access with token")
+        log.info(accessToken)
         val response: HttpResponse = httpClient.get(requestUrl) {
             accept(ContentType.Application.Json)
             headers.append(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
         }
+        log.info("logging headers")
+        response.request.headers.forEach { s, list ->
+            log.info("$s, ${list.joinToString(",")}")
+        }
+
         return when (response.status) {
             HttpStatusCode.OK -> response.receive<Tilgang>().harTilgang
             else -> {
