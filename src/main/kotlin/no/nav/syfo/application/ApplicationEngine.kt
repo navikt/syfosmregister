@@ -116,7 +116,8 @@ fun createApplicationEngine(
 
         val sykmeldingerService = SykmeldingerService(database)
 
-        val azureAdV2Client = AzureAdV2Client(env.clientIdV2, env.clientSecretV2, env.azureTokenEndpoint, httpClient)
+        val httpProxyClient = HttpClient(Apache, proxyConfig)
+        val azureAdV2Client = AzureAdV2Client(env.clientIdV2, env.clientSecretV2, env.azureTokenEndpoint, httpProxyClient)
         val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, env.syfoTilgangskontrollUrl, env.syfotilgangskontrollClientId)
 
         routing {
