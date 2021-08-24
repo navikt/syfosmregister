@@ -57,7 +57,7 @@ fun Application.setupAuth(
                 }
             }
         }
-        jwt(name = "jwtserviceuserv2") {
+        jwt(name = "azureadv2") {
             verifier(jwkProviderAadV2, environment.jwtIssuerV2)
             validate { credentials ->
                 when {

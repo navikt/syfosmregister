@@ -134,7 +134,7 @@ fun createApplicationEngine(
             authenticate("jwtserviceuser") {
                 registrerSykmeldingServiceuserApiV1(sykmeldingerService)
             }
-            authenticate("jwtserviceuserv2") {
+            authenticate("azureadv2") {
                 registrerSykmeldingServiceuserApiV2(sykmeldingerService)
                 registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
             }
