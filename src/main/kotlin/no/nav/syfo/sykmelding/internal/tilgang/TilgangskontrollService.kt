@@ -35,7 +35,7 @@ class TilgangskontrollService(
 
         if (oboToken != null) {
             log.info("Got obo-token checking access for ${getTilgangskontrollV2Url("FNR")}")
-            return hasAccessToUser(oboToken, getTilgangskontrollV2Url(fnr))
+            return hasAccess(oboToken, getTilgangskontrollV2Url(fnr))
         } else {
             log.info("did not get obo-token")
             return false
@@ -43,15 +43,9 @@ class TilgangskontrollService(
     }
 
     private suspend fun hasAccess(accessToken: String, requestUrl: String): Boolean {
-        log.info("Checking access with token")
-        log.info(accessToken)
         val response: HttpResponse = httpClient.get(requestUrl) {
             accept(ContentType.Application.Json)
             headers.append(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
-        }
-        log.info("logging headers")
-        response.request.headers.forEach { s, list ->
-            log.info("$s, ${list.joinToString(",")}")
         }
 
         return when (response.status) {
