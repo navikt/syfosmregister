@@ -1,6 +1,7 @@
 package no.nav.syfo.azuread.v2
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 data class AzureAdV2TokenResponse(
     val access_token: String,
@@ -9,7 +10,7 @@ data class AzureAdV2TokenResponse(
 )
 
 fun AzureAdV2TokenResponse.toAzureAdV2Token(): AzureAdV2Token {
-    val expiresOn = LocalDateTime.now().plusSeconds(this.expires_in)
+    val expiresOn = OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(this.expires_in)
     return AzureAdV2Token(
         accessToken = this.access_token,
         expires = expiresOn

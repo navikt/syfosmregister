@@ -37,7 +37,6 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.nullstilling.registerNullstillApi
-import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApi
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
@@ -125,7 +124,6 @@ fun createApplicationEngine(
             if (env.cluster == "dev-fss") {
                 setupSwaggerDocApi()
             }
-
             registerNaisApi(applicationState)
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
@@ -140,9 +138,6 @@ fun createApplicationEngine(
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)
-            }
-            authenticate("internal") {
-                registrerInternalSykmeldingApi(sykmeldingerService, tilgangskontrollService)
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())

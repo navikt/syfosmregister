@@ -8,8 +8,7 @@ server-wait: 5
 init: true
 custom: {}
 names: false
-only: ['/api/v1/internal/sykmeldinger > API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr > 200 > application/json',
-       '/api/v2/internal/sykmeldinger > API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr > 200 > application/json',
+only: ['/api/v2/internal/sykmeldinger > API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr > 200 > application/json',
        '/sykmeldinger/{sykmeldingId}/status > GET > 200 > application/json',
        '/api/v2/sykmeldinger > V2 av sykmeldinger api, returnerer liste av sykmeldinger for fnr i access_token > 200 > application/json'
 ]

@@ -77,22 +77,6 @@ paths:
         '403':
           description: Forbidden
 
-  /api/v1/internal/sykmeldinger:
-    get:
-      operationId: getSykmeldinger
-      tags:
-        - Sykmelding
-        - Internal
-      parameters:
-        - $ref: '#/components/parameters/fnrHeaderParam'
-      summary: API for saksbehandlere og interne. Returnerer liste med sykmledinger basert på fnr
-      responses:
-        '200':
-          $ref: '#/components/responses/InternalSykmeldingerResponse'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Forbidden
   /api/v2/internal/sykmeldinger:
     get:
       operationId: getSykmeldinger
