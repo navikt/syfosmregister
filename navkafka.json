@@ -43,7 +43,6 @@
         {"member":"srvsyfosyketilfelle", "role":"CONSUMER"},
         {"member":"srvsyfosmaltinn", "role":"CONSUMER"},
         {"member":"srvsykmeldingarbeid", "role":"CONSUMER"},
-        {"member":"srvnarmesteleder", "role":"CONSUMER"},
         {"member":"srvnlvarsel", "role":"CONSUMER"},
         {"member":"s151890", "role":"MANAGER"},
         {"member":"f133008", "role":"MANAGER"},
