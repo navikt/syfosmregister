@@ -2,10 +2,13 @@ package no.nav.syfo.sykmelding.internal.tilgang
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.util.InternalAPI
+import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import java.time.OffsetDateTime
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.azuread.v2.AzureAdV2Client
+import no.nav.syfo.azuread.v2.AzureAdV2Token
 import no.nav.syfo.objectMapper
 import no.nav.syfo.testutil.HttpClientTest
 import no.nav.syfo.testutil.ResponseData
@@ -19,28 +22,30 @@ class TilgangskontrollServiceTest : Spek({
     val httpClientTest = HttpClientTest()
     val azureadClient = mockk<AzureAdV2Client>(relaxed = true)
     val tilgangskontrollService = TilgangskontrollService(azureadClient, httpClientTest.httpClient, "/api/v1/", "clientId")
-
+    coEvery {
+        azureadClient.getOnBehalfOfToken(any(), any())
+    } returns AzureAdV2Token("token", OffsetDateTime.now().plusSeconds(3599))
     mockkStatic("io.ktor.client.request.BuildersKt")
 
     describe("Test TilgangskontrollService") {
         it("Should get false when user not have access") {
             runBlocking {
                 httpClientTest.responseData = ResponseData(HttpStatusCode.OK, objectMapper.writeValueAsString(Tilgang(false, "har ikke tilgang")))
-                val tilgang = tilgangskontrollService.hasAccessToUser("123", "Bearer 123")
+                val tilgang = tilgangskontrollService.hasAccessToUserOboToken("123", "Bearer 123")
                 tilgang shouldEqual false
             }
         }
         it("Should get true when user have access") {
             runBlocking {
                 httpClientTest.responseData = ResponseData(HttpStatusCode.OK, objectMapper.writeValueAsString(Tilgang(true, "")))
-                val tilgang = tilgangskontrollService.hasAccessToUser("123", "bearer 123")
+                val tilgang = tilgangskontrollService.hasAccessToUserOboToken("123", "bearer 123")
                 tilgang shouldEqual true
             }
         }
         it("Should get false when services returns 401 Unauthorized") {
             runBlocking {
                 httpClientTest.responseData = ResponseData(HttpStatusCode.Unauthorized, "Unauthorized")
-                val tilgang = tilgangskontrollService.hasAccessToUser("123", "Bearer 123")
+                val tilgang = tilgangskontrollService.hasAccessToUserOboToken("123", "Bearer 123")
                 tilgang shouldEqual false
             }
         }
@@ -48,13 +53,13 @@ class TilgangskontrollServiceTest : Spek({
         it("Should get false when service returns 403 forbidden") {
             runBlocking {
                 httpClientTest.responseData = ResponseData(HttpStatusCode.Forbidden, "Forbidden")
-                tilgangskontrollService.hasAccessToUser("123", "Bearer 123") shouldEqual false
+                tilgangskontrollService.hasAccessToUserOboToken("123", "Bearer 123") shouldEqual false
             }
         }
         it("Should get false when service returns 500 internal servver error") {
             runBlocking {
                 httpClientTest.responseData = ResponseData(HttpStatusCode.InternalServerError, "Internal Server Errror")
-                tilgangskontrollService.hasAccessToUser("123", "Bearer 123") shouldEqual false
+                tilgangskontrollService.hasAccessToUserOboToken("123", "Bearer 123") shouldEqual false
             }
         }
     }

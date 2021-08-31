@@ -23,10 +23,6 @@ class TilgangskontrollService(
         const val TILGANGSKONTROLL_V1_PERSON_PATH = "/syfo-tilgangskontroll/api/tilgang/bruker?fnr="
     }
 
-    suspend fun hasAccessToUser(fnr: String, accessToken: String): Boolean {
-        return hasAccess(accessToken, getTilgangskontrollUrl(fnr))
-    }
-
     suspend fun hasAccessToUserOboToken(fnr: String, accessToken: String): Boolean {
         log.info("checking access to user with obo-token")
         val oboToken = azureAdV2Client.getOnBehalfOfToken(scopeClientId = syfotilgangskontrollClientId, token = accessToken)

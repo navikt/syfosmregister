@@ -28,15 +28,6 @@ fun Application.setupAuth(
     environment: Environment
 ) {
     install(Authentication) {
-        jwt(name = "internal") {
-            verifier(jwkProviderInternal, vaultSecrets.internalJwtIssuer)
-            validate { credentials ->
-                when {
-                    hasInternalLoginServiceClientIdAudience(credentials, vaultSecrets) -> JWTPrincipal(credentials.payload)
-                    else -> unauthorized(credentials)
-                }
-            }
-        }
         jwt(name = "jwt") {
             verifier(jwkProvider, issuer)
             validate { credentials ->
@@ -93,10 +84,6 @@ fun unauthorized(credentials: JWTCredential): Principal? {
 
 fun hasLoginserviceIdportenClientIdAudience(credentials: JWTCredential, loginserviceIdportenClientId: List<String>): Boolean {
     return loginserviceIdportenClientId.any { credentials.payload.audience.contains(it) }
-}
-
-fun hasInternalLoginServiceClientIdAudience(credentials: JWTCredential, vaultSecrets: VaultSecrets): Boolean {
-    return credentials.payload.audience.contains(vaultSecrets.internalLoginServiceClientId)
 }
 
 fun erNiva4(credentials: JWTCredential): Boolean {
