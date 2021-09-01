@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 
 class AzureAdV2Cache {
     companion object {
-        private final val log = LoggerFactory.getLogger(AzureAdV2Cache::class.java)
+        private val log = LoggerFactory.getLogger(AzureAdV2Cache::class.java)
     }
 
     private val cache = Caffeine
@@ -20,7 +20,6 @@ class AzureAdV2Cache {
     fun getOboToken(token: String): AzureAdV2Token? {
         val key = getSha256Key(token)
         return cache.getIfPresent(key)?.let {
-            log.info("Got token from cache")
             when (it.expires.isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
                 true -> cache.invalidate(key).let {
                     log.info("Token in cache has expired")
