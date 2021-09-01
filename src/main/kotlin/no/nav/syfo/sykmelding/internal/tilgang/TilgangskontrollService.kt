@@ -8,19 +8,25 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import no.nav.syfo.azuread.v2.AzureAdV2Client
+import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import org.apache.http.HttpHeaders
 import org.slf4j.LoggerFactory
 
 class TilgangskontrollService(
     private val azureAdV2Client: AzureAdV2Client,
     private val httpClient: HttpClient,
-    private val url: String,
+    url: String,
     private val syfotilgangskontrollClientId: String
 ) {
     companion object {
         val log = LoggerFactory.getLogger(TilgangskontrollService::class.java)
-        const val TILGANGSKONTROLL_V2_PERSON_PATH = "/syfo-tilgangskontroll/api/tilgang/navident/bruker"
-        const val TILGANGSKONTROLL_V1_PERSON_PATH = "/syfo-tilgangskontroll/api/tilgang/bruker?fnr="
+        const val TILGANGSKONTROLL_PERSON_PATH = "/syfo-tilgangskontroll/api/tilgang/navident/person"
+    }
+
+    private val tilgangskontrollPersonUrl: String
+
+    init {
+        tilgangskontrollPersonUrl = "$url$TILGANGSKONTROLL_PERSON_PATH"
     }
 
     suspend fun hasAccessToUserOboToken(fnr: String, accessToken: String): Boolean {
@@ -29,18 +35,19 @@ class TilgangskontrollService(
             ?.accessToken
 
         if (oboToken != null) {
-            log.info("Got obo-token checking access for ${getTilgangskontrollV2Url("FNR")}")
-            return hasAccess(oboToken, getTilgangskontrollV2Url(fnr))
+            log.info("Got obo-token checking access for $tilgangskontrollPersonUrl")
+            return hasAccess(oboToken, tilgangskontrollPersonUrl, fnr)
         } else {
             log.info("did not get obo-token")
             return false
         }
     }
 
-    private suspend fun hasAccess(accessToken: String, requestUrl: String): Boolean {
+    private suspend fun hasAccess(accessToken: String, requestUrl: String, fnr: String): Boolean {
         val response: HttpResponse = httpClient.get(requestUrl) {
             accept(ContentType.Application.Json)
             headers.append(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+            headers.append(NAV_PERSONIDENT_HEADER, fnr)
         }
 
         return when (response.status) {
@@ -50,13 +57,5 @@ class TilgangskontrollService(
                 false
             }
         }
-    }
-
-    private fun getTilgangskontrollV2Url(fnr: String): String {
-        return "$url$TILGANGSKONTROLL_V2_PERSON_PATH/$fnr"
-    }
-
-    private fun getTilgangskontrollUrl(fnr: String): String {
-        return "$url$TILGANGSKONTROLL_V1_PERSON_PATH$fnr"
     }
 }
