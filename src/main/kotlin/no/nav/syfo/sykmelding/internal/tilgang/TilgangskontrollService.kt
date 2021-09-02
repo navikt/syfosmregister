@@ -30,12 +30,10 @@ class TilgangskontrollService(
     }
 
     suspend fun hasAccessToUserOboToken(fnr: String, accessToken: String): Boolean {
-        log.info("checking access to user with obo-token")
         val oboToken = azureAdV2Client.getOnBehalfOfToken(scopeClientId = syfotilgangskontrollClientId, token = accessToken)
             ?.accessToken
 
         if (oboToken != null) {
-            log.info("Got obo-token checking access for $tilgangskontrollPersonUrl")
             return hasAccess(oboToken, tilgangskontrollPersonUrl, fnr)
         } else {
             log.info("did not get obo-token")

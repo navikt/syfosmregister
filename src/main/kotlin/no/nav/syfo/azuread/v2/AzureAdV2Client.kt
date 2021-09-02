@@ -17,12 +17,22 @@ class AzureAdV2Client(
     private val azureAppClientId: String,
     private val azureAppClientSecret: String,
     private val azureTokenEndpoint: String,
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val azureAdV2Cache: AzureAdV2Cache = AzureAdV2Cache()
 ) {
-
     suspend fun getOnBehalfOfToken(
         scopeClientId: String,
         token: String
+    ): AzureAdV2Token? {
+        return azureAdV2Cache.getOboToken(token)
+            ?: getAccessToken(token, scopeClientId)?.let {
+                azureAdV2Cache.putValue(token, it)
+            }
+    }
+
+    private suspend fun getAccessToken(
+        token: String,
+        scopeClientId: String
     ): AzureAdV2Token? {
         return getAccessToken(
             Parameters.build {
