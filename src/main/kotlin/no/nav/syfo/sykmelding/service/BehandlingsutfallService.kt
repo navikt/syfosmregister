@@ -14,6 +14,7 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.erBehandlingsutfallLagret
 import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.persistering.updateBehandlingsutfall
 import no.nav.syfo.wrapExceptions
 import org.apache.kafka.clients.consumer.KafkaConsumer
 
@@ -59,6 +60,7 @@ class BehandlingsutfallService(
                 log.warn(
                         "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}", StructuredArguments.fields(loggingMeta)
                 )
+                database.connection.updateBehandlingsutfall(Behandlingsutfall(id = sykmeldingsid, behandlingsutfall = validationResult))
             } else {
                 database.connection.opprettBehandlingsutfall(
                         Behandlingsutfall(

@@ -24,6 +24,14 @@ class MottattSykmeldingStatusService(
     private val bekreftetSykmeldingKafkaProducer: BekreftSykmeldingKafkaProducer,
     private val tombstoneProducer: SykmeldingTombstoneProducer
 ) {
+    fun handleStatusEventForResentSykmelding(sykmeldingId: String) {
+        val statuses = sykmeldingStatusService.getSykmeldingStatus(sykmeldingId, "LATEST")
+        val status = statuses[0]
+//      TODO: her må vi mappe til en sån SykmeldingStatusKafkaMessageDTO og bruke metoden under
+//      TODO: status.SykmeldingStatusKafkaMessageDTO() eller noe
+//      TODO: Det skal egentlig være alt
+    }
+
     fun handleStatusEvent(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent)
         try {

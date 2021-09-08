@@ -108,7 +108,8 @@ fun main() {
             kafkaconsumer = receivedSykmeldingKafkaConsumer,
             database = database,
             sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
-            mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer)
+            mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
+            mottattSykmeldingStatusService = mottattSykmeldingStatusService)
 
     val behandlingsutfallKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
     val behandligsutfallService = BehandlingsutfallService(
