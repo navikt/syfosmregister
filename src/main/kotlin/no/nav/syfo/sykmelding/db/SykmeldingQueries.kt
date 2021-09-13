@@ -15,6 +15,26 @@ import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.Svar
 import no.nav.syfo.sykmelding.status.Svartype
 
+fun DatabaseInterface.getArbeidsgiverStatus(sykmeldingId: String): ArbeidsgiverDbModel? {
+    return connection.use { connection ->
+        connection.prepareStatement("""
+           Select * from arbeidsgiver where sykmelding_id = ? 
+        """).use { ps ->
+            ps.setString(1, sykmeldingId)
+            ps.executeQuery().use {
+                when (it.next()) {
+                    true -> ArbeidsgiverDbModel(
+                        orgnummer = it.getString("orgnummer"),
+                        juridiskOrgnummer = it.getString("juridisk_orgnummer"),
+                        orgNavn = it.getString("navn")
+                    )
+                    else -> null
+                }
+            }
+        }
+    }
+}
+
 fun DatabaseInterface.getSykmeldinger(fnr: String): List<SykmeldingDbModel> =
         connection.use { connection ->
             return connection.getSykmeldingMedSisteStatus(fnr)

@@ -96,7 +96,7 @@ class MottattSykmeldingService(
                 SYKMELDING_DUPLIKAT_COUNTER.inc()
                 log.warn("Sykmelding med id {} allerede lagret i databasen, {}", receivedSykmelding.sykmelding.id, StructuredArguments.fields(loggingMeta))
                 database.updateMottattSykmelding(sykmeldingsopplysninger, sykmeldingsdokument)
-                mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId = sykmeldingsopplysninger.id)
+                mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId = sykmeldingsopplysninger.id, fnr = sykmeldingsopplysninger.pasientFnr)
             } else {
                 sykmeldingStatusKafkaProducer.send(SykmeldingStatusKafkaEventDTO(
                     receivedSykmelding.sykmelding.id,

@@ -78,6 +78,30 @@ class MottattSykmeldingServiceTest : Spek({
     }
 
     describe("Test receive sykmelding") {
+
+        it("Handle resending to automatic topic") {
+            val receivedSykmelding = getReceivedSykmelding()
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            var first = true
+            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+                val cr = callOriginal()
+                if (!cr.isEmpty) {
+                    if (!first) {
+                        applicationState.ready = false
+                    }
+                    first = false
+                }
+                cr
+            }
+            runBlocking {
+                mottattSykmeldingService.start()
+            }
+
+            verify(exactly = 2) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            verify(exactly = 1) { mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(receivedSykmelding.sykmelding.id, receivedSykmelding.personNrPasient) }
+        }
+
         it("should receive sykmelding from automatic topic and publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
             receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
