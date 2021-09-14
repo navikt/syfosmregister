@@ -20,7 +20,6 @@ import io.mockk.spyk
 import io.mockk.verify
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.test.assertFailsWith
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -82,7 +81,7 @@ class KafkaStatusIntegrationTest : Spek({
     val sendtSykmeldingKafkaProducer = spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment))
     val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
     val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
     val sykmeldingerService = SykmeldingerService(database)
     val mockPayload = mockk<Payload>()
@@ -228,8 +227,6 @@ class KafkaStatusIntegrationTest : Spek({
             }
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldEqual 0
-            assertFailsWith<NoSuchElementException> { database.finnArbeidsgiverStatusForSykmelding(sykmelding.id) }
-            assertFailsWith<NoSuchElementException> { database.finnStatusForSykmelding(sykmelding.id) }
             database.finnSvarForSykmelding(sykmelding.id).size shouldEqual 0
 
             verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }

@@ -1,7 +1,11 @@
 package no.nav.syfo.sykmelding.kafka.service
 
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
+import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
 import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
 import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
@@ -9,10 +13,15 @@ import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
+import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
+import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
+import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
+import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper.Companion.toSykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.status.Sporsmal
 import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingBekreftEvent
 import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
@@ -22,8 +31,30 @@ class MottattSykmeldingStatusService(
     private val sykmeldingStatusService: SykmeldingStatusService,
     private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer,
     private val bekreftetSykmeldingKafkaProducer: BekreftSykmeldingKafkaProducer,
-    private val tombstoneProducer: SykmeldingTombstoneProducer
+    private val tombstoneProducer: SykmeldingTombstoneProducer,
+    private val databaseInterface: DatabaseInterface
 ) {
+    fun handleStatusEventForResentSykmelding(sykmeldingId: String, fnr: String) {
+        val statuses = sykmeldingStatusService.getSykmeldingStatus(sykmeldingId, "LATEST")
+        val status = statuses[0]
+        val sykmeldingStatusKafkaEventDTO = toSykmeldingStatusKafkaEventDTO(status, getArbeidsgiverStatus(sykmeldingId, status.event), getSporsmalOgSvar(sykmeldingId))
+        val kafkaMetadata = KafkaMetadataDTO(sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), fnr, "syfosmregister")
+        val sykmeldingStatus = SykmeldingStatusKafkaMessageDTO(kafkaMetadata = kafkaMetadata, event = sykmeldingStatusKafkaEventDTO)
+        when (status.event) {
+            StatusEvent.SENDT -> {
+                log.info("Status is sendt, need to resendt to sendt-sykmelding-topic")
+                sendtSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
+            }
+            StatusEvent.BEKREFTET -> {
+                log.info("Status is bekreftet, need to resendt to bekreftet-sykmelding-topic")
+                bekreftetSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
+            }
+            else -> {
+                log.info("Does not need to resend sykmelding")
+            }
+        }
+    }
+
     fun handleStatusEvent(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent)
         try {
@@ -129,5 +160,16 @@ class MottattSykmeldingStatusService(
         val sykmeldingStatusEvent = KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
 
         sykmeldingStatusService.registrerSendt(sykmeldingSendEvent, sykmeldingStatusEvent)
+    }
+
+    private fun getSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> {
+        return databaseInterface.hentSporsmalOgSvar(sykmeldingId)
+    }
+
+    private fun getArbeidsgiverStatus(sykmeldingId: String, event: StatusEvent): ArbeidsgiverDbModel? {
+        return when (event) {
+            StatusEvent.SENDT -> databaseInterface.getArbeidsgiverStatus(sykmeldingId)
+            else -> null
+        }
     }
 }

@@ -18,6 +18,7 @@ import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.testutil.KafkaTest
 import no.nav.syfo.testutil.TestDB
@@ -51,13 +52,15 @@ class MottattSykmeldingServiceTest : Spek({
     val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaConfig, environment)
+    val mottattSykmeldingStatusService = mockk<MottattSykmeldingStatusService>(relaxed = true)
     val mottattSykmeldingService = MottattSykmeldingService(
             applicationState = applicationState,
             kafkaconsumer = receivedSykmeldingKafkaConsumer,
             env = environment,
             database = testDb,
             mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
-            sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer
+            sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
+            mottattSykmeldingStatusService = mottattSykmeldingStatusService
     )
 
     afterEachTest {
@@ -75,6 +78,30 @@ class MottattSykmeldingServiceTest : Spek({
     }
 
     describe("Test receive sykmelding") {
+
+        it("Handle resending to automatic topic") {
+            val receivedSykmelding = getReceivedSykmelding()
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            var first = true
+            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+                val cr = callOriginal()
+                if (!cr.isEmpty) {
+                    if (!first) {
+                        applicationState.ready = false
+                    }
+                    first = false
+                }
+                cr
+            }
+            runBlocking {
+                mottattSykmeldingService.start()
+            }
+
+            verify(exactly = 2) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            verify(exactly = 1) { mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(receivedSykmelding.sykmelding.id, receivedSykmelding.personNrPasient) }
+        }
+
         it("should receive sykmelding from automatic topic and publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
             receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))

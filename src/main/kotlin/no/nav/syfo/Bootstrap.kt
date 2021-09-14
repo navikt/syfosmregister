@@ -98,7 +98,7 @@ fun main() {
     val bekreftSykmeldingKafkaProducer = getBekreftetSykmeldingKafkaProducer(kafkaBaseConfig, environment)
     val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
     val tombstoneProducer = getTombstoneProducer(kafkaBaseConfig, environment)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusKafkaConsumer, applicationState, mottattSykmeldingStatusService)
     val mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfig, environment)
 
@@ -108,7 +108,8 @@ fun main() {
             kafkaconsumer = receivedSykmeldingKafkaConsumer,
             database = database,
             sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
-            mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer)
+            mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
+            mottattSykmeldingStatusService = mottattSykmeldingStatusService)
 
     val behandlingsutfallKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
     val behandligsutfallService = BehandlingsutfallService(

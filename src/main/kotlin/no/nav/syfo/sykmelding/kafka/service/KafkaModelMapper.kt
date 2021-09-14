@@ -11,6 +11,7 @@ import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
 import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
@@ -22,7 +23,12 @@ import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 class KafkaModelMapper private constructor() {
     companion object {
         fun toArbeidsgiverStatus(sykmeldingId: String, arbeidsgiver: ArbeidsgiverStatusDTO) =
-                ArbeidsgiverStatus(sykmeldingId, arbeidsgiver.orgnummer, arbeidsgiver.juridiskOrgnummer, arbeidsgiver.orgNavn)
+            ArbeidsgiverStatus(
+                sykmeldingId,
+                arbeidsgiver.orgnummer,
+                arbeidsgiver.juridiskOrgnummer,
+                arbeidsgiver.orgNavn
+            )
 
         fun toSporsmal(sporsmal: SporsmalOgSvarDTO, sykmeldingId: String): Sporsmal {
             return Sporsmal(sporsmal.tekst, toShortName(sporsmal.shortName), toSvar(sporsmal, sykmeldingId))
@@ -34,11 +40,24 @@ class KafkaModelMapper private constructor() {
 
         private fun toSvar(arbeidsgiverSporsmal: SporsmalOgSvarDTO, sykmeldingId: String): Svar {
             return Svar(
-                    sykmeldingId,
-                    sporsmalId = null,
-                    svartype = toSvartype(arbeidsgiverSporsmal.svartype),
-                    svar = arbeidsgiverSporsmal.svar)
+                sykmeldingId,
+                sporsmalId = null,
+                svartype = toSvartype(arbeidsgiverSporsmal.svartype),
+                svar = arbeidsgiverSporsmal.svar
+            )
         }
+
+        fun toSykmeldingStatusKafkaEventDTO(
+            status: SykmeldingStatusEvent,
+            arbeidsgiverStatus: ArbeidsgiverDbModel?,
+            sporsmal: List<Sporsmal>
+        ) = SykmeldingStatusKafkaEventDTO(
+            sykmeldingId = status.sykmeldingId,
+            timestamp = status.timestamp,
+            statusEvent = status.event.name,
+            arbeidsgiver = toArbeidsgiverStatusDto(arbeidsgiverStatus),
+            sporsmals = sporsmal.map { toSporsmalOgSvar(it) }
+        )
 
         private fun toSvartype(svartype: SvartypeDTO): Svartype {
             return when (svartype) {
@@ -67,6 +86,43 @@ class KafkaModelMapper private constructor() {
                 STATUS_BEKREFTET -> StatusEvent.BEKREFTET
                 STATUS_SLETTET -> StatusEvent.SLETTET
                 else -> throw IllegalArgumentException("Unknown status")
+            }
+        }
+
+        fun toArbeidsgiverStatusDto(it: ArbeidsgiverDbModel?): ArbeidsgiverStatusDTO? {
+            return it?.let {
+                ArbeidsgiverStatusDTO(
+                    orgnummer = it.orgnummer,
+                    juridiskOrgnummer = it.juridiskOrgnummer,
+                    orgNavn = it.orgNavn
+                )
+            }
+        }
+
+        fun toSporsmalOgSvar(it: Sporsmal): SporsmalOgSvarDTO {
+            return SporsmalOgSvarDTO(
+                tekst = it.tekst,
+                shortName = toShortNameDto(it.shortName),
+                svartype = toSvartypeDto(it.svar.svartype),
+                svar = it.svar.svar
+            )
+        }
+
+        private fun toSvartypeDto(svartype: Svartype): SvartypeDTO {
+            return when (svartype) {
+                Svartype.ARBEIDSSITUASJON -> SvartypeDTO.ARBEIDSSITUASJON
+                Svartype.PERIODER -> SvartypeDTO.PERIODER
+                Svartype.JA_NEI -> SvartypeDTO.JA_NEI
+            }
+        }
+
+        private fun toShortNameDto(shortName: ShortName): ShortNameDTO {
+            return when (shortName) {
+                ShortName.ARBEIDSSITUASJON -> ShortNameDTO.ARBEIDSSITUASJON
+                ShortName.NY_NARMESTE_LEDER -> ShortNameDTO.NY_NARMESTE_LEDER
+                ShortName.FRAVAER -> ShortNameDTO.FRAVAER
+                ShortName.PERIODE -> ShortNameDTO.PERIODE
+                ShortName.FORSIKRING -> ShortNameDTO.FORSIKRING
             }
         }
     }
