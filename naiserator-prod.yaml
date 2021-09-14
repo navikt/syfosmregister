@@ -48,6 +48,7 @@ spec:
         - application: esyfovarsel
           namespace: team-esyfo
         - application: sparenaproxy
+        - application: syfosmregler
   vault:
     enabled: true
     paths:
