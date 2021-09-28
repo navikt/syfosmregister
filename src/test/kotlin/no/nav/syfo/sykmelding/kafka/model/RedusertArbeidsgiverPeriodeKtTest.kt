@@ -202,6 +202,24 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
 
             innenforKoronaPeriode shouldBe false
         }
+
+        it("FOM = 1. oktober 2021 og TOM = 15. oktober skal gi false") {
+            val fom = LocalDate.of(2021, Month.OCTOBER, 1)
+            val tom = LocalDate.of(2021, Month.OCTOBER, 15)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe false
+        }
+
+        it("FOM = 30. september 2021 og TOM = 15. oktober skal gi true") {
+            val fom = LocalDate.of(2021, Month.SEPTEMBER, 30)
+            val tom = LocalDate.of(2021, Month.OCTOBER, 15)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe true
+        }
     }
 })
 
