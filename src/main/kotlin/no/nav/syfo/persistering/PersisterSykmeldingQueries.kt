@@ -39,6 +39,8 @@ private fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysninger: Sy
             pasient_fnr = ?,
             pasient_aktoer_id = ?,
             lege_fnr = ?,
+            lege_hpr = ?,
+            lege_helsepersonellkategori = ?,
             lege_aktoer_id = ?,
             mottak_id = ?,
             legekontor_org_nr = ?,
@@ -52,21 +54,24 @@ private fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysninger: Sy
             partnerreferanse = ?
         where id = ?;
     """).use {
-        it.setString(1, sykmeldingsopplysninger.pasientFnr)
-        it.setString(2, sykmeldingsopplysninger.pasientAktoerId)
-        it.setString(3, sykmeldingsopplysninger.legeFnr)
-        it.setString(4, sykmeldingsopplysninger.legeAktoerId)
-        it.setString(5, sykmeldingsopplysninger.mottakId)
-        it.setString(6, sykmeldingsopplysninger.legekontorOrgNr)
-        it.setString(7, sykmeldingsopplysninger.legekontorHerId)
-        it.setString(8, sykmeldingsopplysninger.legekontorReshId)
-        it.setString(9, sykmeldingsopplysninger.epjSystemNavn)
-        it.setString(10, sykmeldingsopplysninger.epjSystemVersjon)
-        it.setTimestamp(11, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
-        it.setString(12, sykmeldingsopplysninger.tssid)
-        it.setObject(13, sykmeldingsopplysninger.merknader?.toPGObject())
-        it.setString(14, sykmeldingsopplysninger.partnerreferanse)
-        it.setString(15, sykmeldingsopplysninger.id)
+        var i = 1
+        it.setString(i++, sykmeldingsopplysninger.pasientFnr)
+        it.setString(i++, sykmeldingsopplysninger.pasientAktoerId)
+        it.setString(i++, sykmeldingsopplysninger.legeFnr)
+        it.setString(i++, sykmeldingsopplysninger.legeHpr)
+        it.setString(i++, sykmeldingsopplysninger.legeHelsepersonellkategori)
+        it.setString(i++, sykmeldingsopplysninger.legeAktoerId)
+        it.setString(i++, sykmeldingsopplysninger.mottakId)
+        it.setString(i++, sykmeldingsopplysninger.legekontorOrgNr)
+        it.setString(i++, sykmeldingsopplysninger.legekontorHerId)
+        it.setString(i++, sykmeldingsopplysninger.legekontorReshId)
+        it.setString(i++, sykmeldingsopplysninger.epjSystemNavn)
+        it.setString(i++, sykmeldingsopplysninger.epjSystemVersjon)
+        it.setTimestamp(i++, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
+        it.setString(i++, sykmeldingsopplysninger.tssid)
+        it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
+        it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
+        it.setString(i++, sykmeldingsopplysninger.id)
         it.executeUpdate()
     }
 }
@@ -79,6 +84,8 @@ private fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger: S
                 pasient_fnr,
                 pasient_aktoer_id,
                 lege_fnr,
+                lege_hpr,
+                lege_helsepersonellkategori,
                 lege_aktoer_id,
                 mottak_id,
                 legekontor_org_nr,
@@ -90,24 +97,27 @@ private fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger: S
                 tss_id,
                 merknader,
                 partnerreferanse)
-            VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
     ).use {
-        it.setString(1, sykmeldingsopplysninger.id)
-        it.setString(2, sykmeldingsopplysninger.pasientFnr)
-        it.setString(3, sykmeldingsopplysninger.pasientAktoerId)
-        it.setString(4, sykmeldingsopplysninger.legeFnr)
-        it.setString(5, sykmeldingsopplysninger.legeAktoerId)
-        it.setString(6, sykmeldingsopplysninger.mottakId)
-        it.setString(7, sykmeldingsopplysninger.legekontorOrgNr)
-        it.setString(8, sykmeldingsopplysninger.legekontorHerId)
-        it.setString(9, sykmeldingsopplysninger.legekontorReshId)
-        it.setString(10, sykmeldingsopplysninger.epjSystemNavn)
-        it.setString(11, sykmeldingsopplysninger.epjSystemVersjon)
-        it.setTimestamp(12, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
-        it.setString(13, sykmeldingsopplysninger.tssid)
-        it.setObject(14, sykmeldingsopplysninger.merknader?.toPGObject())
-        it.setString(15, sykmeldingsopplysninger.partnerreferanse)
+        var i = 1
+        it.setString(i++, sykmeldingsopplysninger.id)
+        it.setString(i++, sykmeldingsopplysninger.pasientFnr)
+        it.setString(i++, sykmeldingsopplysninger.pasientAktoerId)
+        it.setString(i++, sykmeldingsopplysninger.legeFnr)
+        it.setString(i++, sykmeldingsopplysninger.legeHpr)
+        it.setString(i++, sykmeldingsopplysninger.legeHelsepersonellkategori)
+        it.setString(i++, sykmeldingsopplysninger.legeAktoerId)
+        it.setString(i++, sykmeldingsopplysninger.mottakId)
+        it.setString(i++, sykmeldingsopplysninger.legekontorOrgNr)
+        it.setString(i++, sykmeldingsopplysninger.legekontorHerId)
+        it.setString(i++, sykmeldingsopplysninger.legekontorReshId)
+        it.setString(i++, sykmeldingsopplysninger.epjSystemNavn)
+        it.setString(i++, sykmeldingsopplysninger.epjSystemVersjon)
+        it.setTimestamp(i++, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
+        it.setString(i++, sykmeldingsopplysninger.tssid)
+        it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
+        it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
         it.executeUpdate()
     }
 }
