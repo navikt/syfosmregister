@@ -11,6 +11,8 @@ data class Sykmeldingsopplysninger(
     val pasientFnr: String,
     val pasientAktoerId: String,
     val legeFnr: String,
+    val legeHpr: String?,
+    val legeHelsepersonellkategori: String?,
     val legeAktoerId: String,
     val mottakId: String,
     val legekontorOrgNr: String?,

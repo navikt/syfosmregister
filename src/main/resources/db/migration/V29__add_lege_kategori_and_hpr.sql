@@ -1,0 +1,3 @@
+ALTER TABLE SYKMELDINGSOPPLYSNINGER
+    ADD COLUMN lege_hpr VARCHAR NULL,
+        COLUMN lege_helsepersonellkategori VARCHAR NULL;
