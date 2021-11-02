@@ -77,7 +77,6 @@ as follows:
 
 Use The Vault Browser CLI that is build in https://vault.adeo.no
 
-
 Preprod credentials:
 
 ```
