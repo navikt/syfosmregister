@@ -87,6 +87,56 @@ fun Connection.getMerknaderForId(id: String): List<Merknad>? =
         it.executeQuery().toList { tilMerknadliste() }.firstOrNull()
     }
 
+fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? {
+    this.prepareStatement(
+        """
+            SELECT id,
+                pasient_fnr,
+                pasient_aktoer_id,
+                lege_fnr,
+                lege_hpr,
+                lege_helsepersonellkategori,
+                lege_aktoer_id,
+                mottak_id,
+                legekontor_org_nr,
+                legekontor_her_id,
+                legekontor_resh_id,
+                epj_system_navn,
+                epj_system_versjon,
+                mottatt_tidspunkt,
+                tss_id,
+                merknader,
+                partnerreferanse  
+            FROM SYKMELDINGSOPPLYSNINGER 
+            WHERE id = ?;
+        """).use {
+                it.setString(1, id)
+                return it.executeQuery().toList { toSykmeldingsopplysninger() }.firstOrNull()
+        }
+    }
+
+private fun ResultSet.toSykmeldingsopplysninger(): Sykmeldingsopplysninger {
+    return Sykmeldingsopplysninger(
+        id = getString("id"),
+        pasientFnr = getString("pasient_fnr"),
+        pasientAktoerId = getString("pasient_aktoer_id"),
+        legeFnr = getString("lege_fnr"),
+        legeHpr = getString("lege_hpr"),
+        legeHelsepersonellkategori = getString("lege_helsepersonellkategori"),
+        legeAktoerId = getString("lege_aktoer_id"),
+        mottakId = getString("mottak_id"),
+        legekontorOrgNr = getString("legekontor_org_nr"),
+        legekontorHerId = getString("legekontor_her_id"),
+        legekontorReshId = getString("legekontor_resh_id"),
+        epjSystemNavn = getString("epj_system_navn"),
+        epjSystemVersjon = getString("epj_system_versjon"),
+        mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
+        tssid = getString("tss_id"),
+        merknader = getString("merknader")?.let { objectMapper.readValue<List<no.nav.syfo.model.Merknad>>(it) },
+        partnerreferanse = getString("partnerreferanse")
+    )
+}
+
 private fun ResultSet.tilMerknadliste(): List<Merknad>? {
     return getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
 }
@@ -100,6 +150,8 @@ val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
     pasientFnr = "pasientFnr",
     pasientAktoerId = "pasientAktorId",
     legeFnr = "legeFnr",
+    legeHpr = "123774",
+    legeHelsepersonellkategori = "LE",
     legeAktoerId = "legeAktorId",
     mottakId = "eid-1",
     legekontorOrgNr = "lege-orgnummer",
