@@ -20,7 +20,7 @@ fun SykmeldingDbModelUtenBehandlingsutfall.toEnkelSykmelding(): EnkelSykmelding 
             tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
             syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
             behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
-            sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO() },
+            sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO(id) },
             arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
             kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
             prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),

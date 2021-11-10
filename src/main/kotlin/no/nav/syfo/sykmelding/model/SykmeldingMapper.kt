@@ -58,7 +58,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
             medisinskVurdering = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO() },
             behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(isPasient),
             sykmeldingStatus = status.toSykmeldingStatusDTO(sporsmal.map { it.toSporsmalDTO() }),
-            sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO() },
+            sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO(id) },
             arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
             kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
             meldingTilNAV = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO() },
@@ -190,14 +190,14 @@ fun Arbeidsgiver.toArbeidsgiverDTO(): ArbeidsgiverDTO {
     return ArbeidsgiverDTO(navn, stillingsprosent)
 }
 
-fun Periode.toSykmeldingsperiodeDTO(): SykmeldingsperiodeDTO {
+fun Periode.toSykmeldingsperiodeDTO(sykmeldingId: String): SykmeldingsperiodeDTO {
     return SykmeldingsperiodeDTO(
             fom = fom,
             tom = tom,
             behandlingsdager = behandlingsdager,
             gradert = gradert?.toGradertDTO(),
             innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
-            type = finnPeriodetype(this).toDTO(),
+            type = finnPeriodetype(this, sykmeldingId).toDTO(),
             aktivitetIkkeMulig = aktivitetIkkeMulig?.toDto(),
             reisetilskudd = reisetilskudd
     )
@@ -336,14 +336,14 @@ private fun Adresse.toAdresseDTO(): AdresseDTO {
     )
 }
 
-fun finnPeriodetype(periode: Periode): Periodetype =
+fun finnPeriodetype(periode: Periode, sykmeldingId: String): Periodetype =
         when {
             periode.aktivitetIkkeMulig != null -> Periodetype.AKTIVITET_IKKE_MULIG
             periode.avventendeInnspillTilArbeidsgiver != null -> Periodetype.AVVENTENDE
             periode.behandlingsdager != null -> Periodetype.BEHANDLINGSDAGER
             periode.gradert != null -> Periodetype.GRADERT
             periode.reisetilskudd -> Periodetype.REISETILSKUDD
-            else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode")
+            else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode for sykmelding med id $sykmeldingId")
         }
 
 private fun getDiagnosetekst(diagnose: Diagnose): String {
