@@ -42,7 +42,7 @@ plugins {
     kotlin("jvm") version "1.5.30"
     id("com.diffplug.spotless") version "5.16.0"
     id("com.github.johnrengelman.shadow") version "6.1.0"
-    id("org.hidetake.swagger.generator") version "2.18.1" apply true
+    id("org.hidetake.swagger.generator") version "2.18.2" apply true
 }
 
 buildscript {
