@@ -43,8 +43,6 @@ plugins {
     id("com.diffplug.spotless") version "5.16.0"
     id("com.github.johnrengelman.shadow") version "6.1.0"
     id("org.hidetake.swagger.generator") version "2.18.1" apply true
-    id("org.sonarqube") version "2.8"
-    jacoco
 }
 
 buildscript {
@@ -144,22 +142,6 @@ swaggerSources {
     }
 }
 
-sonarqube {
-    properties {
-        property("sonar.projectKey", "syfosmregister")
-        property("sonar.organization", "navit")
-        property("sonar.host.url", "https://sonarcloud.io")
-        property("sonar.login", System.getenv("SONAR_TOKEN") )
-    }
-}
-
-tasks.jacocoTestReport {
-    reports {
-        xml.isEnabled = true
-        html.isEnabled = true
-    }
-}
-
 tasks {
     withType<Jar> {
         manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
@@ -177,14 +159,6 @@ tasks {
         kotlinOptions.jvmTarget = "14"
     }
 
-    withType<JacocoReport> {
-        classDirectories.setFrom(
-                sourceSets.main.get().output.asFileTree.matching {
-                    exclude()
-                }
-        )
-
-    }
     withType<ShadowJar> {
         transform(ServiceFileTransformer::class.java) {
             setPath("META-INF/cxf")
