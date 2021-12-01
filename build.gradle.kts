@@ -5,45 +5,43 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val coroutinesVersion = "1.3.3"
+val coroutinesVersion = "1.5.1"
 val javaxActivationVersion = "1.1.1"
-val jacksonVersion = "2.9.7"
+val jacksonVersion = "2.13.0"
 val jaxbApiVersion = "2.4.0-b180830.0359"
 val jaxbVersion = "2.3.0.1"
-val kafkaVersion = "2.0.0"
-val confluentVersion = "5.0.0"
-val kafkaEmbeddedVersion = "2.0.2"
-val kluentVersion = "1.49"
-val ktorVersion = "1.3.0"
-val logbackVersion = "1.2.3"
-val logstashEncoderVersion = "5.1"
-val prometheusVersion = "0.6.0"
+val kafkaVersion = "2.4.0"
+val confluentVersion = "5.3.0"
+val kafkaEmbeddedVersion = "2.4.0"
+val kluentVersion = "1.68"
+val ktorVersion = "1.6.5"
+val logbackVersion = "1.2.7"
+val logstashEncoderVersion = "6.6"
+val prometheusVersion = "0.12.0"
 val spekVersion = "2.0.17"
 val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
 val jaxwsApiVersion = "2.3.1"
 val javaxAnnotationApiVersion = "1.3.2"
 val jaxbRuntimeVersion = "2.4.0-b180830.0438"
-val postgresVersion = "42.2.5"
+val postgresVersion = "42.2.24"
 val h2Version = "1.4.197"
-val flywayVersion = "5.2.4"
-val hikariVersion = "3.3.0"
+val flywayVersion = "7.15.0"
+val hikariVersion = "5.0.0"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "1.e6f10d8"
-val postgresEmbeddedVersion = "0.13.3"
-val mockkVersion = "1.9.3"
-val nimbusdsVersion = "7.5.1"
-val testContainerKafkaVersion = "1.15.2"
-val caffeineVersion = "2.8.5"
-
-tasks.withType<Jar> {
-    manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
-}
+val postgresEmbeddedVersion = "0.13.4"
+val mockkVersion = "1.12.0"
+val nimbusdsVersion = "9.2"
+val testContainerKafkaVersion = "1.16.2"
+val caffeineVersion = "3.0.4"
+val kotlinVersion = "1.5.30"
+val swaggerUiVersion = "3.10.0"
 
 plugins {
-    id("org.jmailen.kotlinter") version "2.1.1"
-    kotlin("jvm") version "1.3.70"
-    id("com.diffplug.gradle.spotless") version "3.23.1"
-    id("com.github.johnrengelman.shadow") version "4.0.4"
+    id("org.jmailen.kotlinter") version "3.6.0"
+    kotlin("jvm") version "1.5.30"
+    id("com.diffplug.spotless") version "5.16.0"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
     id("org.hidetake.swagger.generator") version "2.18.1" apply true
     id("org.sonarqube") version "2.8"
     jacoco
@@ -63,11 +61,7 @@ val githubPassword: String by project
 
 repositories {
     mavenCentral()
-    jcenter()
-    maven(url = "https://dl.bintray.com/kotlin/ktor")
-    maven(url = "https://dl.bintray.com/spekframework/spek-dev")
     maven(url = "https://packages.confluent.io/maven/")
-    maven(url = "https://kotlin.bintray.com/kotlinx")
     maven {
         url = uri("https://maven.pkg.github.com/navikt/syfosm-common")
         credentials {
@@ -97,7 +91,6 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
 
     implementation("org.apache.kafka:kafka_2.12:$kafkaVersion")
-    implementation("org.apache.kafka:kafka-streams:$kafkaVersion")
 
     implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -124,9 +117,11 @@ dependencies {
     implementation("javax.activation:activation:$javaxActivationVersion")
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
+    testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty") // conflicts with WireMock
     }
@@ -140,7 +135,7 @@ dependencies {
     testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion") {
         exclude(group = "org.jetbrains.kotlin")
     }
-    swaggerUI( "org.webjars:swagger-ui:3.10.0")
+    swaggerUI("org.webjars:swagger-ui:$swaggerUiVersion")
 
 }
 swaggerSources {
@@ -166,15 +161,8 @@ tasks.jacocoTestReport {
 }
 
 tasks {
-
-    register("runApi", JavaExec::class) {
-        classpath = sourceSets["test"].runtimeClasspath
-        main = "no.nav.syfo.application.ApiMainTestKt"
-
-    }
-    register("testApi", Exec::class) {
-        executable = "./node_modules/dredd/bin/dredd"
-        args("--config", "api/test/dredd.yml")
+    withType<Jar> {
+        manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
     }
 
     create("printVersion") {
@@ -186,7 +174,7 @@ tasks {
     }
 
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "12"
+        kotlinOptions.jvmTarget = "14"
     }
 
     withType<JacocoReport> {
@@ -213,6 +201,6 @@ tasks {
     }
 
     "check" {
-        dependsOn("formatKotlin", "generateSwaggerUI")
+        dependsOn("formatKotlin")
     }
 }

@@ -1,8 +1,5 @@
 package no.nav.syfo.sykmelding.model
 
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
@@ -38,44 +35,47 @@ import no.nav.syfo.sykmelding.status.Sporsmal
 import no.nav.syfo.sykmelding.status.Svar
 import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasient: Boolean = false, ikkeTilgangTilDiagnose: Boolean, fullBehandler: Boolean = true): SykmeldingDTO {
     val skjermetForPasient = sykmeldingsDokument.skjermesForPasient
     val skalFjerneSensitivInformasjon = (isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose
     return SykmeldingDTO(
-            id = id,
-            andreTiltak = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.andreTiltak },
-            skjermesForPasient = skjermetForPasient,
-            mottattTidspunkt = mottattTidspunkt,
-            legekontorOrgnummer = legekontorOrgNr,
-            behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
-            meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
-            navnFastlege = sykmeldingsDokument.navnFastlege,
-            tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
-            syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
-            tiltakNAV = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.tiltakNAV },
-            behandler = sykmeldingsDokument.behandler.toBehandlerDTO(fullBehandler),
-            medisinskVurdering = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO() },
-            behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(isPasient),
-            sykmeldingStatus = status.toSykmeldingStatusDTO(sporsmal.map { it.toSporsmalDTO() }),
-            sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO(id) },
-            arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
-            kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
-            meldingTilNAV = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO() },
-            prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
-            utdypendeOpplysninger = if (skalFjerneSensitivInformasjon) { emptyMap() } else { toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger, isPasient) },
-            egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
-            papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
-            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
-            merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
+        id = id,
+        andreTiltak = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.andreTiltak },
+        skjermesForPasient = skjermetForPasient,
+        mottattTidspunkt = mottattTidspunkt,
+        legekontorOrgnummer = legekontorOrgNr,
+        behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
+        meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
+        navnFastlege = sykmeldingsDokument.navnFastlege,
+        tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
+        syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
+        tiltakNAV = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.tiltakNAV },
+        behandler = sykmeldingsDokument.behandler.toBehandlerDTO(fullBehandler),
+        medisinskVurdering = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.medisinskVurdering.toMedisinskVurderingDTO() },
+        behandlingsutfall = behandlingsutfall.toBehandlingsutfallDTO(isPasient),
+        sykmeldingStatus = status.toSykmeldingStatusDTO(sporsmal.map { it.toSporsmalDTO() }),
+        sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO(id) },
+        arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
+        kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
+        meldingTilNAV = if (skalFjerneSensitivInformasjon) { null } else { sykmeldingsDokument.meldingTilNAV?.toMeldingTilNavDTO() },
+        prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
+        utdypendeOpplysninger = if (skalFjerneSensitivInformasjon) { emptyMap() } else { toUtdypendeOpplysninger(sykmeldingsDokument.utdypendeOpplysninger, isPasient) },
+        egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
+        papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
+        harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
+        merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
     )
 }
 
 fun Sporsmal.toSporsmalDTO(): SporsmalDTO {
     return SporsmalDTO(
-            tekst = tekst,
-            svar = svar.toDTO(),
-            shortName = shortName.toDTO()
+        tekst = tekst,
+        svar = svar.toDTO(),
+        shortName = shortName.toDTO()
     )
 }
 
@@ -91,8 +91,8 @@ private fun ShortName.toDTO(): ShortNameDTO {
 
 private fun Svar.toDTO(): SvarDTO {
     return SvarDTO(
-            svar = svar,
-            svarType = svartype.toDTO()
+        svar = svar,
+        svarType = svartype.toDTO()
     )
 }
 
@@ -125,15 +125,15 @@ fun toUtdypendeOpplysninger(utdypendeOpplysninger: Map<String, Map<String, Spors
     }
     return utdypendeOpplysninger.mapValues {
         it.value.mapValues { entry -> entry.value.toSporsmalSvarDTO() }
-                .filterValues { sporsmalSvar -> !sporsmalSvar.restriksjoner.contains(SvarRestriksjonDTO.SKJERMET_FOR_NAV) }
+            .filterValues { sporsmalSvar -> !sporsmalSvar.restriksjoner.contains(SvarRestriksjonDTO.SKJERMET_FOR_NAV) }
     }
 }
 
 fun SporsmalSvar.toSporsmalSvarDTO(): SporsmalSvarDTO {
     return SporsmalSvarDTO(
-            sporsmal = sporsmal,
-            svar = svar,
-            restriksjoner = restriksjoner.map { it.toSvarRestriksjonDTO() }
+        sporsmal = sporsmal,
+        svar = svar,
+        restriksjoner = restriksjoner.map { it.toSvarRestriksjonDTO() }
 
     )
 }
@@ -148,41 +148,41 @@ private fun SvarRestriksjon.toSvarRestriksjonDTO(): SvarRestriksjonDTO {
 
 fun Prognose.toPrognoseDTO(): PrognoseDTO {
     return PrognoseDTO(
-            arbeidsforEtterPeriode = arbeidsforEtterPeriode,
-            erIArbeid = erIArbeid?.toErIArbeidDTO(),
-            erIkkeIArbeid = erIkkeIArbeid?.toErIkkeIArbeidDTO(),
-            hensynArbeidsplassen = hensynArbeidsplassen
+        arbeidsforEtterPeriode = arbeidsforEtterPeriode,
+        erIArbeid = erIArbeid?.toErIArbeidDTO(),
+        erIkkeIArbeid = erIkkeIArbeid?.toErIkkeIArbeidDTO(),
+        hensynArbeidsplassen = hensynArbeidsplassen
     )
 }
 
 private fun ErIkkeIArbeid.toErIkkeIArbeidDTO(): ErIkkeIArbeidDTO {
     return ErIkkeIArbeidDTO(
-            arbeidsforPaSikt = arbeidsforPaSikt,
-            arbeidsforFOM = arbeidsforFOM,
-            vurderingsdato = vurderingsdato
+        arbeidsforPaSikt = arbeidsforPaSikt,
+        arbeidsforFOM = arbeidsforFOM,
+        vurderingsdato = vurderingsdato
     )
 }
 
 private fun ErIArbeid.toErIArbeidDTO(): ErIArbeidDTO {
     return ErIArbeidDTO(
-            egetArbeidPaSikt = egetArbeidPaSikt,
-            annetArbeidPaSikt = annetArbeidPaSikt,
-            arbeidFOM = arbeidFOM,
-            vurderingsdato = vurderingsdato
+        egetArbeidPaSikt = egetArbeidPaSikt,
+        annetArbeidPaSikt = annetArbeidPaSikt,
+        arbeidFOM = arbeidFOM,
+        vurderingsdato = vurderingsdato
     )
 }
 
 private fun MeldingTilNAV.toMeldingTilNavDTO(): MeldingTilNavDTO? {
     return MeldingTilNavDTO(
-            bistandUmiddelbart = bistandUmiddelbart,
-            beskrivBistand = beskrivBistand
+        bistandUmiddelbart = bistandUmiddelbart,
+        beskrivBistand = beskrivBistand
     )
 }
 
 fun KontaktMedPasient.toKontaktMedPasientDTO(): KontaktMedPasientDTO {
     return KontaktMedPasientDTO(
-            kontaktDato = kontaktDato,
-            begrunnelseIkkeKontakt = begrunnelseIkkeKontakt
+        kontaktDato = kontaktDato,
+        begrunnelseIkkeKontakt = begrunnelseIkkeKontakt
     )
 }
 
@@ -192,14 +192,14 @@ fun Arbeidsgiver.toArbeidsgiverDTO(): ArbeidsgiverDTO {
 
 fun Periode.toSykmeldingsperiodeDTO(sykmeldingId: String): SykmeldingsperiodeDTO {
     return SykmeldingsperiodeDTO(
-            fom = fom,
-            tom = tom,
-            behandlingsdager = behandlingsdager,
-            gradert = gradert?.toGradertDTO(),
-            innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
-            type = finnPeriodetype(this, sykmeldingId).toDTO(),
-            aktivitetIkkeMulig = aktivitetIkkeMulig?.toDto(),
-            reisetilskudd = reisetilskudd
+        fom = fom,
+        tom = tom,
+        behandlingsdager = behandlingsdager,
+        gradert = gradert?.toGradertDTO(),
+        innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
+        type = finnPeriodetype(this, sykmeldingId).toDTO(),
+        aktivitetIkkeMulig = aktivitetIkkeMulig?.toDto(),
+        reisetilskudd = reisetilskudd
     )
 }
 
@@ -207,14 +207,16 @@ fun Periodetype.toDTO(): PeriodetypeDTO =
     PeriodetypeDTO.valueOf(this.name)
 
 private fun AktivitetIkkeMulig.toDto(): AktivitetIkkeMuligDTO {
-    return AktivitetIkkeMuligDTO(medisinskArsak = medisinskArsak?.toMedisinskArsakDto(),
-            arbeidsrelatertArsak = arbeidsrelatertArsak?.toArbeidsrelatertArsakDto())
+    return AktivitetIkkeMuligDTO(
+        medisinskArsak = medisinskArsak?.toMedisinskArsakDto(),
+        arbeidsrelatertArsak = arbeidsrelatertArsak?.toArbeidsrelatertArsakDto()
+    )
 }
 
 private fun ArbeidsrelatertArsak.toArbeidsrelatertArsakDto(): ArbeidsrelatertArsakDTO {
     return ArbeidsrelatertArsakDTO(
-            beskrivelse = beskrivelse,
-            arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
+        beskrivelse = beskrivelse,
+        arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
     )
 }
 
@@ -227,8 +229,8 @@ fun toArbeidsrelatertArsakTypeDto(arbeidsrelatertArsakType: ArbeidsrelatertArsak
 
 private fun MedisinskArsak.toMedisinskArsakDto(): MedisinskArsakDTO {
     return MedisinskArsakDTO(
-            beskrivelse = beskrivelse,
-            arsak = arsak.map { toMedisinskArsakTypeDto(it) }
+        beskrivelse = beskrivelse,
+        arsak = arsak.map { toMedisinskArsakTypeDto(it) }
     )
 }
 
@@ -247,17 +249,17 @@ private fun Gradert.toGradertDTO(): GradertDTO {
 
 fun ValidationResult.toBehandlingsutfallDTO(isPasient: Boolean): BehandlingsutfallDTO {
     return BehandlingsutfallDTO(
-            status = status.toRuleStatusDTO(),
-            ruleHits = ruleHits.map { it.toRegeleinfoDTO() }.filterNot { it.ruleStatus == RegelStatusDTO.MANUAL_PROCESSING && isPasient }
+        status = status.toRuleStatusDTO(),
+        ruleHits = ruleHits.map { it.toRegeleinfoDTO() }.filterNot { it.ruleStatus == RegelStatusDTO.MANUAL_PROCESSING && isPasient }
     )
 }
 
 private fun RuleInfo.toRegeleinfoDTO(): RegelinfoDTO {
     return RegelinfoDTO(
-            messageForSender = messageForSender,
-            messageForUser = messageForUser,
-            ruleName = ruleName,
-            ruleStatus = ruleStatus.toRuleStatusDTO()
+        messageForSender = messageForSender,
+        messageForUser = messageForUser,
+        ruleName = ruleName,
+        ruleStatus = ruleStatus.toRuleStatusDTO()
     )
 }
 
@@ -271,21 +273,22 @@ private fun Status.toRuleStatusDTO(): RegelStatusDTO {
 
 private fun MedisinskVurdering.toMedisinskVurderingDTO(): MedisinskVurderingDTO {
     return MedisinskVurderingDTO(
-            hovedDiagnose = hovedDiagnose?.toDiagnoseDTO(),
-            biDiagnoser = biDiagnoser.map {
-                it.toDiagnoseDTO()
-            },
+        hovedDiagnose = hovedDiagnose?.toDiagnoseDTO(),
+        biDiagnoser = biDiagnoser.map {
+            it.toDiagnoseDTO()
+        },
 
-            annenFraversArsak = annenFraversArsak?.toDTO(),
-            svangerskap = svangerskap,
-            yrkesskade = yrkesskade,
-            yrkesskadeDato = yrkesskadeDato)
+        annenFraversArsak = annenFraversArsak?.toDTO(),
+        svangerskap = svangerskap,
+        yrkesskade = yrkesskade,
+        yrkesskadeDato = yrkesskadeDato
+    )
 }
 
 private fun AnnenFraversArsak.toDTO(): AnnenFraversArsakDTO {
     return AnnenFraversArsakDTO(
-            beskrivelse = beskrivelse,
-            grunn = grunn.map { it.toDTO() }
+        beskrivelse = beskrivelse,
+        grunn = grunn.map { it.toDTO() }
     )
 }
 
@@ -306,45 +309,45 @@ private fun AnnenFraverGrunn.toDTO(): AnnenFraverGrunnDTO {
 
 fun Diagnose.toDiagnoseDTO(): DiagnoseDTO {
     return DiagnoseDTO(
-            kode = kode,
-            system = getDiagnosesystem(system),
-            tekst = getDiagnosetekst(this)
+        kode = kode,
+        system = getDiagnosesystem(system),
+        tekst = getDiagnosetekst(this)
     )
 }
 
 fun Behandler.toBehandlerDTO(fullBehandler: Boolean = true): BehandlerDTO {
     return BehandlerDTO(
-            fornavn = fornavn,
-            mellomnavn = mellomnavn,
-            etternavn = etternavn,
-            aktoerId = if (fullBehandler) { aktoerId } else null,
-            fnr = if (fullBehandler) { fnr } else null,
-            her = if (fullBehandler) { her } else null,
-            hpr = if (fullBehandler) { hpr } else null,
-            tlf = tlf,
-            adresse = adresse.toAdresseDTO()
+        fornavn = fornavn,
+        mellomnavn = mellomnavn,
+        etternavn = etternavn,
+        aktoerId = if (fullBehandler) { aktoerId } else null,
+        fnr = if (fullBehandler) { fnr } else null,
+        her = if (fullBehandler) { her } else null,
+        hpr = if (fullBehandler) { hpr } else null,
+        tlf = tlf,
+        adresse = adresse.toAdresseDTO()
     )
 }
 
 private fun Adresse.toAdresseDTO(): AdresseDTO {
     return AdresseDTO(
-            gate = gate,
-            kommune = kommune,
-            land = land,
-            postboks = postboks,
-            postnummer = postnummer
+        gate = gate,
+        kommune = kommune,
+        land = land,
+        postboks = postboks,
+        postnummer = postnummer
     )
 }
 
 fun finnPeriodetype(periode: Periode, sykmeldingId: String): Periodetype =
-        when {
-            periode.aktivitetIkkeMulig != null -> Periodetype.AKTIVITET_IKKE_MULIG
-            periode.avventendeInnspillTilArbeidsgiver != null -> Periodetype.AVVENTENDE
-            periode.behandlingsdager != null -> Periodetype.BEHANDLINGSDAGER
-            periode.gradert != null -> Periodetype.GRADERT
-            periode.reisetilskudd -> Periodetype.REISETILSKUDD
-            else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode for sykmelding med id $sykmeldingId")
-        }
+    when {
+        periode.aktivitetIkkeMulig != null -> Periodetype.AKTIVITET_IKKE_MULIG
+        periode.avventendeInnspillTilArbeidsgiver != null -> Periodetype.AVVENTENDE
+        periode.behandlingsdager != null -> Periodetype.BEHANDLINGSDAGER
+        periode.gradert != null -> Periodetype.GRADERT
+        periode.reisetilskudd -> Periodetype.REISETILSKUDD
+        else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode for sykmelding med id $sykmeldingId")
+    }
 
 private fun getDiagnosetekst(diagnose: Diagnose): String {
     if (!diagnose.tekst.isNullOrEmpty()) {
@@ -360,8 +363,8 @@ private fun getDiagnosetekst(diagnose: Diagnose): String {
 }
 
 private fun getDiagnosesystem(system: String): String =
-        when (system) {
-            Diagnosekoder.ICD10_CODE -> "ICD-10"
-            Diagnosekoder.ICPC2_CODE -> "ICPC-2"
-            else -> "Ukjent"
-        }
+    when (system) {
+        Diagnosekoder.ICD10_CODE -> "ICD-10"
+        Diagnosekoder.ICPC2_CODE -> "ICPC-2"
+        else -> "Ukjent"
+    }

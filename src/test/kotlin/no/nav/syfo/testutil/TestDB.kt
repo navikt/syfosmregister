@@ -2,13 +2,6 @@ package no.nav.syfo.testutil
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.opentable.db.postgres.embedded.EmbeddedPostgres
-import java.net.ServerSocket
-import java.sql.Connection
-import java.sql.ResultSet
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.model.Adresse
@@ -40,6 +33,13 @@ import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.sykmelding.db.Merknad
 import org.flywaydb.core.Flyway
+import java.net.ServerSocket
+import java.sql.Connection
+import java.sql.ResultSet
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class TestDB : DatabaseInterface {
     companion object {
@@ -109,11 +109,12 @@ fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? 
                 partnerreferanse  
             FROM SYKMELDINGSOPPLYSNINGER 
             WHERE id = ?;
-        """).use {
-                it.setString(1, id)
-                return it.executeQuery().toList { toSykmeldingsopplysninger() }.firstOrNull()
-        }
+        """
+    ).use {
+        it.setString(1, id)
+        return it.executeQuery().toList { toSykmeldingsopplysninger() }.firstOrNull()
     }
+}
 
 private fun ResultSet.toSykmeldingsopplysninger(): Sykmeldingsopplysninger {
     return Sykmeldingsopplysninger(
@@ -228,10 +229,12 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
                 reisetilskudd = false
             )
         ),
-        prognose = Prognose(true,
-                null,
-                ErIArbeid(false, false, null, null),
-                ErIkkeIArbeid(false, null, null)),
+        prognose = Prognose(
+            true,
+            null,
+            ErIArbeid(false, false, null, null),
+            ErIkkeIArbeid(false, null, null)
+        ),
         signaturDato = LocalDateTime.now(),
         skjermesForPasient = false,
         syketilfelleStartDato = LocalDate.now(),

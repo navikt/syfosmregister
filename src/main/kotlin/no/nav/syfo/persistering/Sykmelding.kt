@@ -1,10 +1,10 @@
 package no.nav.syfo.persistering
 
-import java.time.LocalDateTime
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.objectMapper
 import org.postgresql.util.PGobject
+import java.time.LocalDateTime
 
 data class Sykmeldingsopplysninger(
     val id: String,

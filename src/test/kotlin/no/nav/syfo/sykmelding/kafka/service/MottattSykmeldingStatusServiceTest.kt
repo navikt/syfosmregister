@@ -4,10 +4,6 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
-import java.util.UUID
-import kotlin.test.assertFailsWith
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
@@ -36,6 +32,10 @@ import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.util.UUID
+import kotlin.test.assertFailsWith
 
 object MottattSykmeldingStatusServiceTest : Spek({
     val sykmeldingStatusService = mockk<SykmeldingStatusService>(relaxed = true)
@@ -56,8 +56,14 @@ object MottattSykmeldingStatusServiceTest : Spek({
                 SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(), StatusEvent.SENDT)
             )
             every { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
-            every { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(Sporsmal("ARBEIDSGIVER", ShortName.ARBEIDSSITUASJON, Svar(
-                sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")))
+            every { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(
+                Sporsmal(
+                    "ARBEIDSGIVER", ShortName.ARBEIDSSITUASJON,
+                    Svar(
+                        sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"
+                    )
+                )
+            )
 
             mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId, "123")
 
@@ -69,8 +75,14 @@ object MottattSykmeldingStatusServiceTest : Spek({
                 SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(), StatusEvent.BEKREFTET)
             )
             every { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
-            every { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(Sporsmal("ARBEIDSGIVER", ShortName.ARBEIDSSITUASJON, Svar(
-                sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")))
+            every { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(
+                Sporsmal(
+                    "ARBEIDSGIVER", ShortName.ARBEIDSSITUASJON,
+                    Svar(
+                        sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"
+                    )
+                )
+            )
 
             mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId, "123")
 
@@ -94,8 +106,10 @@ object MottattSykmeldingStatusServiceTest : Spek({
     describe("Skal ikke oppdatere database hvis skriv til kafka feiler") {
 
         it("SENDT") {
-            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(
-                sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN)
+            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
+                SykmeldingStatusEvent(
+                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                )
             )
             every { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -105,8 +119,10 @@ object MottattSykmeldingStatusServiceTest : Spek({
             verify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
         }
         it("BEKREFTET") {
-            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(
-                sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN)
+            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
+                SykmeldingStatusEvent(
+                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                )
             )
             every { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -116,8 +132,10 @@ object MottattSykmeldingStatusServiceTest : Spek({
             verify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
         }
         it("SLETTET") {
-            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(
-                sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN)
+            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
+                SykmeldingStatusEvent(
+                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                )
             )
             every { tombstoneProducer.tombstoneSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -130,8 +148,10 @@ object MottattSykmeldingStatusServiceTest : Spek({
 
     describe("Test av bekreft") {
         it("Bekreft oppdaterer kafka og database") {
-            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(
-                sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN)
+            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
+                SykmeldingStatusEvent(
+                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                )
             )
 
             mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
@@ -140,8 +160,10 @@ object MottattSykmeldingStatusServiceTest : Spek({
             verify { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
         it("Bekreft avvist sykmelding oppdaterer kun database") {
-            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(
-                sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN)
+            every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
+                SykmeldingStatusEvent(
+                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                )
             )
 
             mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmeldingAvvistSykmelding())

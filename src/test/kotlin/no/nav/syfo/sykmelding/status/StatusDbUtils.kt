@@ -1,8 +1,8 @@
 package no.nav.syfo.sykmelding.status
 
-import java.sql.ResultSet
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
+import java.sql.ResultSet
 
 fun DatabaseInterface.finnSvarForSykmelding(sykmeldingId: String): List<Sporsmal> {
     connection.use { connection ->
