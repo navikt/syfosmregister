@@ -32,7 +32,7 @@ jobs:
           ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew build test
+          ./gradlew test
       - name: Build jar
         env:
           ORG_GRADLE_PROJECT_githubUser: x-access-token
