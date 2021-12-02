@@ -1,7 +1,7 @@
 package no.nav.syfo.testutil
 
-import java.time.Duration
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import java.time.Duration
 
 class KafkaTestReader<T> {
     fun getMessagesFromTopic(kafkaConsumer: KafkaConsumer<String, T>, messagesToRead: Int): Map<String, T?> {

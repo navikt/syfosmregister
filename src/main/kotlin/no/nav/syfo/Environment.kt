@@ -1,10 +1,10 @@
 package no.nav.syfo
 
+import no.nav.syfo.kafka.KafkaConfig
+import no.nav.syfo.kafka.KafkaCredentials
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
-import no.nav.syfo.kafka.KafkaConfig
-import no.nav.syfo.kafka.KafkaCredentials
 
 data class Environment(
     val applicationPort: Int = getEnvVar("APPLICATION_PORT", "8080").toInt(),
@@ -23,8 +23,8 @@ data class Environment(
     override val truststorePassword: String? = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
     val jwtIssuer: String = getEnvVar("JWT_ISSUER"),
     val appIds: List<String> = getEnvVar("ALLOWED_APP_IDS")
-            .split(",")
-            .map { it.trim() },
+        .split(",")
+        .map { it.trim() },
     val clientId: String = getEnvVar("CLIENT_ID"),
     val syfoTilgangskontrollUrl: String = getEnvVar("SYFOTILGANGSKONTROLL_URL"),
     val sykmeldingStatusBackupTopic: String = getEnvVar("KAFKA_SYKMELDING_STATUS_BACKUP_TOPIC", "privat-syfo-register-status-backup"),
@@ -59,6 +59,6 @@ data class VaultSecrets(
 )
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
-        System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
+    System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
 
 fun getFileAsString(filePath: String) = String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8)

@@ -1,7 +1,7 @@
 package no.nav.syfo.sykmelding.status.api
 
-import java.time.OffsetDateTime
 import no.nav.syfo.sykmelding.status.StatusEventDTO
+import java.time.OffsetDateTime
 
 data class SykmeldingStatusDTO(
     val timestamp: OffsetDateTime,

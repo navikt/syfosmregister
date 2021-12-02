@@ -38,7 +38,7 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
         database.getSykmeldingerMedIdUtenBehandlingsutfall(sykmeldingId)?.toEnkelSykmelding()
 
     private fun getLatestSykmeldingStatus(sykmeldingStatus: List<SykmeldingStatusEvent>): List<SykmeldingStatusEvent> {
-        val latest = sykmeldingStatus.maxBy { it.timestamp }
+        val latest = sykmeldingStatus.maxByOrNull { it.timestamp }
         return when (latest) {
             null -> emptyList()
             else -> listOf(latest)

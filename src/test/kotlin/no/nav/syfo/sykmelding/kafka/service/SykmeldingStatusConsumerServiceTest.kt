@@ -26,7 +26,7 @@ class SykmeldingStatusConsumerServiceTest : Spek({
 
     beforeEachTest {
         mockkStatic("kotlinx.coroutines.DelayKt")
-        coEvery { delay(any()) } returns Unit
+        coEvery { delay(any<Long>()) } returns Unit
     }
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
     val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)

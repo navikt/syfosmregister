@@ -75,9 +75,9 @@ fun harTilgang(credentials: JWTCredential, clientId: String): Boolean {
 
 fun unauthorized(credentials: JWTCredential): Principal? {
     log.warn(
-            "Auth: Unexpected audience for jwt {}, {}",
-            StructuredArguments.keyValue("issuer", credentials.payload.issuer),
-            StructuredArguments.keyValue("audience", credentials.payload.audience)
+        "Auth: Unexpected audience for jwt {}, {}",
+        StructuredArguments.keyValue("issuer", credentials.payload.issuer),
+        StructuredArguments.keyValue("audience", credentials.payload.audience)
     )
     return null
 }

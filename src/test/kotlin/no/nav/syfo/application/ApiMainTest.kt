@@ -19,8 +19,6 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -44,6 +42,8 @@ import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.getSykmeldingOpplysninger
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 fun main() {
 
@@ -52,12 +52,15 @@ fun main() {
     db.lagreMottattSykmelding(sykmeldingsopplysning, testSykmeldingsdokument.copy(id = "123"))
     db.registerStatus(SykmeldingStatusEvent(sykmeldingsopplysning.id, sykmeldingsopplysning.mottattTidspunkt.atOffset(ZoneOffset.UTC), StatusEvent.APEN))
     db.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "123"))
-    db.registrerSendt(SykmeldingSendEvent(
+    db.registrerSendt(
+        SykmeldingSendEvent(
             sykmeldingsopplysning.id,
             OffsetDateTime.now(ZoneOffset.UTC),
             ArbeidsgiverStatus(sykmeldingsopplysning.id, "123", "123", "navn"),
-            Sporsmal("Arbeidssituajson", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingsopplysning.id, null, Svartype.ARBEIDSSITUASJON, "EN_ARBEIDSGIVER"))),
-            SykmeldingStatusEvent(sykmeldingsopplysning.id, OffsetDateTime.now(ZoneOffset.UTC), StatusEvent.SENDT))
+            Sporsmal("Arbeidssituajson", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingsopplysning.id, null, Svartype.ARBEIDSSITUASJON, "EN_ARBEIDSGIVER"))
+        ),
+        SykmeldingStatusEvent(sykmeldingsopplysning.id, OffsetDateTime.now(ZoneOffset.UTC), StatusEvent.SENDT)
+    )
 
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)
     val sykmeldingStatusService = SykmeldingStatusService(db)

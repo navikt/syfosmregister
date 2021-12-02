@@ -5,8 +5,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
-import io.ktor.util.KtorExperimentalAPI
-import java.time.ZoneOffset
 import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -21,12 +19,12 @@ import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEmpty
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.ZoneOffset
 
-@KtorExperimentalAPI
 object NullstillApiSpek : Spek({
 
     val database = TestDB()
@@ -56,7 +54,7 @@ object NullstillApiSpek : Spek({
                 database.getSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status() shouldEqual HttpStatusCode.OK
+                    response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
 
                 database.getSykmeldinger("pasientFnr").shouldBeEmpty()
@@ -66,7 +64,7 @@ object NullstillApiSpek : Spek({
                 database.getSykmeldinger("pasientFnr").shouldNotBeEmpty()
 
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/annenAktor")) {
-                    response.status() shouldEqual HttpStatusCode.OK
+                    response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
 
                 database.getSykmeldinger("pasientFnr").shouldNotBeEmpty()
@@ -74,7 +72,7 @@ object NullstillApiSpek : Spek({
 
             it("Er tilgjengelig i test") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status() shouldEqual HttpStatusCode.OK
+                    response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
             }
         }
@@ -89,7 +87,7 @@ object NullstillApiSpek : Spek({
 
             it("Er ikke tilgjengelig i prod") {
                 with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/pasientAktorId")) {
-                    response.status() shouldBe null
+                    response.status() shouldBe HttpStatusCode.NotFound
                 }
             }
         }
