@@ -39,7 +39,8 @@ data class Environment(
     val jwkKeysUrlV2: String = getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI"),
     val jwtIssuerV2: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
     val syfotilgangskontrollClientId: String = getEnvVar("SYFOTILGANGSKONTROLL_CLIENT_ID"),
-    val azureTokenEndpoint: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT")
+    val azureTokenEndpoint: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
+    val pdlAktorTopic: String = "aapen-person-pdl-aktor-v1"
 ) : KafkaConfig
 
 data class VaultServiceUser(
