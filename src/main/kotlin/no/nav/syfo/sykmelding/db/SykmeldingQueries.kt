@@ -57,9 +57,31 @@ fun DatabaseInterface.getSykmeldingerMedIdUtenBehandlingsutfall(id: String): Syk
         return connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id)
     }
 
+fun DatabaseInterface.getSykmeldingerMedIdUtenBehandlingsutfallForFnr(fnr: String): List<SykmeldingDbModelUtenBehandlingsutfall> =
+    connection.use { connection ->
+        return connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfallForFnr(fnr)
+    }
+
 fun DatabaseInterface.hentSporsmalOgSvar(id: String): List<Sporsmal> {
     connection.use { connection ->
         return connection.hentSporsmalOgSvar(id)
+    }
+}
+
+fun DatabaseInterface.updateFnr(fnr: String, nyttFnr: String): Int {
+    connection.use { connection ->
+        var updated = 0
+        connection.prepareStatement(
+            """
+            UPDATE sykmeldingsopplysninger set pasient_fnr = ? where pasient_fnr = ?;
+        """
+        ).use {
+            it.setString(1, nyttFnr)
+            it.setString(2, fnr)
+            updated = it.executeUpdate()
+        }
+        connection.commit()
+        return updated
     }
 }
 
@@ -189,6 +211,36 @@ private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id:
     ).use {
         it.setString(1, id)
         it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }.firstOrNull()
+    }
+
+private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfallForFnr(fnr: String): List<SykmeldingDbModelUtenBehandlingsutfall> =
+    this.prepareStatement(
+        """
+                    SELECT opplysninger.id,
+                    mottatt_tidspunkt,
+                    legekontor_org_nr,
+                    sykmelding,
+                    status.event,
+                    status.timestamp,
+                    arbeidsgiver.orgnummer,
+                    arbeidsgiver.juridisk_orgnummer,
+                    arbeidsgiver.navn,
+                    merknader
+                    FROM sykmeldingsopplysninger AS opplysninger
+                        INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
+                        LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
+                        LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
+                                                                   status.timestamp = (SELECT timestamp
+                                                                                             FROM sykmeldingstatus
+                                                                                             WHERE sykmelding_id = opplysninger.id
+                                                                                             ORDER BY timestamp DESC
+                                                                                             LIMIT 1)
+                    where pasient_fnr = ?
+                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    """
+    ).use {
+        it.setString(1, fnr)
+        it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }
     }
 
 fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =

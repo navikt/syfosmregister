@@ -124,7 +124,7 @@ fun main() {
         database = database
     )
 
-    val identendringService = IdentendringService(database)
+    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer)
     val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
 
     val applicationEngine = createApplicationEngine(
