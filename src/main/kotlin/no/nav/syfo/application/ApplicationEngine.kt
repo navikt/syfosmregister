@@ -23,6 +23,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
 import io.ktor.response.respond
+import io.ktor.routing.IgnoreTrailingSlash
 import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
@@ -96,6 +97,7 @@ fun createApplicationEngine(
                 throw cause
             }
         }
+        install(IgnoreTrailingSlash)
 
         val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
             install(JsonFeature) {
