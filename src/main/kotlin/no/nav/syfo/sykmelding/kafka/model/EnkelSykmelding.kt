@@ -1,13 +1,13 @@
 package no.nav.syfo.sykmelding.kafka.model
 
+import java.time.LocalDate
+import java.time.OffsetDateTime
 import no.nav.syfo.sykmelding.model.ArbeidsgiverDTO
 import no.nav.syfo.sykmelding.model.BehandlerDTO
 import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
 import no.nav.syfo.sykmelding.model.MerknadDTO
 import no.nav.syfo.sykmelding.model.PrognoseDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
-import java.time.LocalDate
-import java.time.OffsetDateTime
 
 data class EnkelSykmelding(
     val id: String,

@@ -10,11 +10,11 @@ import io.ktor.routing.accept
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
+import java.time.LocalDate
 import no.nav.syfo.log
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.model.StatusRequest
 import no.nav.syfo.util.getFnrFromHeader
-import java.time.LocalDate
 
 fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerService) {
     route("api/v2/sykmelding") {

@@ -5,9 +5,11 @@ import io.ktor.response.respondText
 import io.ktor.routing.Route
 import io.ktor.routing.delete
 import io.ktor.routing.route
+import io.ktor.util.KtorExperimentalAPI
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 
+@KtorExperimentalAPI
 fun Route.registerNullstillApi(database: DatabaseInterface, clusterName: String) {
     if (clusterName == "dev-fss") {
         route("/internal") {

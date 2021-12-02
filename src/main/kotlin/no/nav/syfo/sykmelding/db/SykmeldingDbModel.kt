@@ -1,9 +1,9 @@
 package no.nav.syfo.sykmelding.db
 
-import no.nav.syfo.model.ValidationResult
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import no.nav.syfo.model.ValidationResult
 
 data class ArbeidsgiverDbModel(
     val orgnummer: String,

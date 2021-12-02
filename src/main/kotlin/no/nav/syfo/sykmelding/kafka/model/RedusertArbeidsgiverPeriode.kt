@@ -1,10 +1,10 @@
 package no.nav.syfo.sykmelding.kafka.model
 
+import java.time.LocalDate
+import java.time.Month
 import no.nav.syfo.model.AnnenFraverGrunn
 import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.sykmelding.db.Periode
-import java.time.LocalDate
-import java.time.Month
 
 typealias MedisinskVurderingDB = no.nav.syfo.sykmelding.db.MedisinskVurdering
 typealias DiagnoseDB = no.nav.syfo.sykmelding.db.Diagnose
@@ -28,7 +28,7 @@ fun MedisinskVurderingDB.getHarRedusertArbeidsgiverperiode(sykmeldingsperioder: 
 }
 
 private fun MedisinskVurderingDB.checkSmittefare() =
-    annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == no.nav.syfo.sykmelding.db.AnnenFraverGrunn.SMITTEFARE } == true
+        annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == no.nav.syfo.sykmelding.db.AnnenFraverGrunn.SMITTEFARE } == true
 
 fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsperioder: List<no.nav.syfo.model.Periode>): Boolean {
     val sykmeldingsperioderInnenforKoronaregler = sykmeldingsperioder.filter { periodeErInnenforKoronaregler(it.fom, it.tom) }
@@ -44,7 +44,7 @@ fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsperioder: Li
 }
 
 private fun MedisinskVurdering.checkSmittefare() =
-    annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == AnnenFraverGrunn.SMITTEFARE } == true
+        annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == AnnenFraverGrunn.SMITTEFARE } == true
 
 fun periodeErInnenforKoronaregler(fom: LocalDate, tom: LocalDate): Boolean {
     if (fom.isAfter(koronaFraDato) || (fom.isBefore(koronaFraDato) && tom.isAfter(koronaFraDato))) {

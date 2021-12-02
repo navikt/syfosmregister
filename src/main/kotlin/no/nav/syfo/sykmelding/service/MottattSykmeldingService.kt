@@ -1,6 +1,9 @@
 package no.nav.syfo.sykmelding.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.time.Duration
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
@@ -27,9 +30,6 @@ import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.util.mapToSykmeldingsopplysninger
 import no.nav.syfo.wrapExceptions
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import java.time.Duration
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class MottattSykmeldingService(
     private val applicationState: ApplicationState,
@@ -43,20 +43,20 @@ class MottattSykmeldingService(
 
     suspend fun start() {
         kafkaconsumer.subscribe(
-            listOf(
-                env.sm2013ManualHandlingTopic,
-                env.kafkaSm2013AutomaticDigitalHandlingTopic,
-                env.sm2013InvalidHandlingTopic
-            )
+                listOf(
+                        env.sm2013ManualHandlingTopic,
+                        env.kafkaSm2013AutomaticDigitalHandlingTopic,
+                        env.sm2013InvalidHandlingTopic
+                )
         )
         while (applicationState.ready) {
             kafkaconsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
                 val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
                 val loggingMeta = LoggingMeta(
-                    mottakId = receivedSykmelding.navLogId,
-                    orgNr = receivedSykmelding.legekontorOrgNr,
-                    msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id
+                        mottakId = receivedSykmelding.navLogId,
+                        orgNr = receivedSykmelding.legekontorOrgNr,
+                        msgId = receivedSykmelding.msgId,
+                        sykmeldingId = receivedSykmelding.sykmelding.id
                 )
                 handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer)
                 if (it.topic() != env.sm2013InvalidHandlingTopic) {
@@ -70,10 +70,10 @@ class MottattSykmeldingService(
     private fun sendtToMottattSykmeldingTopic(receivedSykmelding: ReceivedSykmelding) {
         val sykmelding = receivedSykmelding.toEnkelSykmelding()
         val message = MottattSykmeldingKafkaMessage(
-            sykmelding = sykmelding,
-            kafkaMetadata = KafkaMetadataDTO(
-                receivedSykmelding.msgId, receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC), receivedSykmelding.personNrPasient, "syfosmregister"
-            )
+                sykmelding = sykmelding,
+                kafkaMetadata = KafkaMetadataDTO(
+                        receivedSykmelding.msgId, receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC), receivedSykmelding.personNrPasient, "syfosmregister"
+                )
         )
         mottattSykmeldingKafkaProducer.sendMottattSykmelding(message)
     }
@@ -98,19 +98,15 @@ class MottattSykmeldingService(
                 database.updateMottattSykmelding(sykmeldingsopplysninger, sykmeldingsdokument)
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId = sykmeldingsopplysninger.id, fnr = sykmeldingsopplysninger.pasientFnr)
             } else {
-                sykmeldingStatusKafkaProducer.send(
-                    SykmeldingStatusKafkaEventDTO(
-                        receivedSykmelding.sykmelding.id,
-                        OffsetDateTime.now(ZoneOffset.UTC),
-                        STATUS_APEN
-                    ),
-                    receivedSykmelding.personNrPasient
-                )
+                sykmeldingStatusKafkaProducer.send(SykmeldingStatusKafkaEventDTO(
+                    receivedSykmelding.sykmelding.id,
+                    OffsetDateTime.now(ZoneOffset.UTC),
+                    STATUS_APEN),
+                    receivedSykmelding.personNrPasient)
 
                 database.lagreMottattSykmelding(
                     sykmeldingsopplysninger,
-                    sykmeldingsdokument
-                )
+                        sykmeldingsdokument)
 
                 log.info("Sykmelding SM2013 lagret i databasen, {}", StructuredArguments.fields(loggingMeta))
                 MESSAGE_STORED_IN_DB_COUNTER.inc()

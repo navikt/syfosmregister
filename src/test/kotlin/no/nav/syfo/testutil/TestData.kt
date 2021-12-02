@@ -1,5 +1,9 @@
 package no.nav.syfo.testutil
 
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.model.Status
@@ -33,86 +37,80 @@ import no.nav.syfo.sykmelding.model.PeriodetypeDTO
 import no.nav.syfo.sykmelding.model.RegelStatusDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 fun getVaultSecrets(): VaultSecrets {
     return VaultSecrets(
-        "",
-        "",
-        "",
-        "",
-        ""
+            "",
+            "",
+            "",
+            "",
+            ""
     )
 }
 
 fun getEnvironment(): Environment {
-    return Environment(
-        kafkaBootstrapServers = "",
-        syfosmregisterDBURL = "",
-        mountPathVault = "",
-        cluster = "",
-        truststore = "",
-        truststorePassword = "",
-        jwtIssuer = "",
-        appIds = emptyList(),
-        clientId = "",
-        syfoTilgangskontrollUrl = "",
-        loginserviceIdportenAudience = emptyList(),
-        loginserviceIdportenDiscoveryUrl = "",
-        clientIdV2 = "",
-        clientSecretV2 = "",
-        jwkKeysUrlV2 = "",
-        jwtIssuerV2 = "",
-        syfotilgangskontrollClientId = "",
-        azureTokenEndpoint = ""
-    )
+        return Environment(
+                kafkaBootstrapServers = "",
+                syfosmregisterDBURL = "",
+                mountPathVault = "",
+                cluster = "",
+                truststore = "",
+                truststorePassword = "",
+                jwtIssuer = "",
+                appIds = emptyList(),
+                clientId = "",
+                syfoTilgangskontrollUrl = "",
+                loginserviceIdportenAudience = emptyList(),
+                loginserviceIdportenDiscoveryUrl = "",
+                clientIdV2 = "",
+                clientSecretV2 = "",
+                jwkKeysUrlV2 = "",
+                jwtIssuerV2 = "",
+                syfotilgangskontrollClientId = "",
+                azureTokenEndpoint = ""
+        )
 }
 
 fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<SykmeldingsperiodeDTO> = getPerioder()): SykmeldingDTO {
     return SykmeldingDTO(
-        id = "1",
-        utdypendeOpplysninger = emptyMap(),
-        kontaktMedPasient = KontaktMedPasientDTO(null, null),
-        sykmeldingsperioder = perioder,
-        sykmeldingStatus = no.nav.syfo.sykmelding.model.SykmeldingStatusDTO("APEN", OffsetDateTime.now(ZoneOffset.UTC), null, emptyList()),
-        behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
-        medisinskVurdering = getMedisinskVurdering(),
-        behandler = BehandlerDTO(
-            "fornavn", null, "etternavn",
-            "123", "01234567891", null, null,
-            AdresseDTO(null, null, null, null, null), null
-        ),
-        behandletTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
-        mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
-        skjermesForPasient = false,
-        meldingTilNAV = null,
-        prognose = null,
-        arbeidsgiver = null,
-        tiltakNAV = null,
-        syketilfelleStartDato = null,
-        tiltakArbeidsplassen = null,
-        navnFastlege = null,
-        meldingTilArbeidsgiver = null,
-        legekontorOrgnummer = null,
-        andreTiltak = null,
-        egenmeldt = false,
-        harRedusertArbeidsgiverperiode = false,
-        papirsykmelding = false,
-        merknader = null
-    )
+            id = "1",
+            utdypendeOpplysninger = emptyMap(),
+            kontaktMedPasient = KontaktMedPasientDTO(null, null),
+            sykmeldingsperioder = perioder,
+            sykmeldingStatus = no.nav.syfo.sykmelding.model.SykmeldingStatusDTO("APEN", OffsetDateTime.now(ZoneOffset.UTC), null, emptyList()),
+            behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
+            medisinskVurdering = getMedisinskVurdering(),
+            behandler = BehandlerDTO(
+                    "fornavn", null, "etternavn",
+                    "123", "01234567891", null, null,
+                    AdresseDTO(null, null, null, null, null), null),
+            behandletTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
+            mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
+            skjermesForPasient = false,
+            meldingTilNAV = null,
+            prognose = null,
+            arbeidsgiver = null,
+            tiltakNAV = null,
+            syketilfelleStartDato = null,
+            tiltakArbeidsplassen = null,
+            navnFastlege = null,
+            meldingTilArbeidsgiver = null,
+            legekontorOrgnummer = null,
+            andreTiltak = null,
+            egenmeldt = false,
+            harRedusertArbeidsgiverperiode = false,
+            papirsykmelding = false,
+            merknader = null)
 }
 
 fun getMedisinskVurdering(): MedisinskVurderingDTO {
     return MedisinskVurderingDTO(
-        hovedDiagnose = DiagnoseDTO("1", "system", "hoveddiagnose"),
-        biDiagnoser = listOf(DiagnoseDTO("2", "system2", "bidagnose")),
-        annenFraversArsak = AnnenFraversArsakDTO("", emptyList()),
-        svangerskap = false,
-        yrkesskade = false,
-        yrkesskadeDato = null
+            hovedDiagnose = DiagnoseDTO("1", "system", "hoveddiagnose"),
+            biDiagnoser = listOf(DiagnoseDTO("2", "system2", "bidagnose")),
+            annenFraversArsak = AnnenFraversArsakDTO("", emptyList()),
+            svangerskap = false,
+            yrkesskade = false,
+            yrkesskadeDato = null
     )
 }
 
@@ -126,138 +124,132 @@ fun getGradertePerioder(): List<SykmeldingsperiodeDTO> {
 
 fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = emptyList()): SykmeldingDbModel {
     return SykmeldingDbModel(
-        id = "123",
-        behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-        mottattTidspunkt = OffsetDateTime.now(),
-        status = StatusDbModel(
-            statusEvent = "APEN",
-            arbeidsgiver = null,
-            statusTimestamp = OffsetDateTime.now()
-        ),
-        legekontorOrgNr = "123456789",
-        sykmeldingsDokument = Sykmelding(
             id = "123",
-            arbeidsgiver = Arbeidsgiver(
-                harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
-                navn = "navn",
-                stillingsprosent = null,
-                yrkesbetegnelse = null
+            behandlingsutfall = ValidationResult(Status.OK, emptyList()),
+            mottattTidspunkt = OffsetDateTime.now(),
+            status = StatusDbModel(
+                    statusEvent = "APEN",
+                    arbeidsgiver = null,
+                    statusTimestamp = OffsetDateTime.now()
             ),
-            medisinskVurdering = MedisinskVurdering(
-                hovedDiagnose = Diagnose(Diagnosekoder.ICPC2_CODE, "L87", null),
-                biDiagnoser = emptyList(),
-                yrkesskade = false,
-                svangerskap = false,
-                annenFraversArsak = null,
-                yrkesskadeDato = null
+            legekontorOrgNr = "123456789",
+            sykmeldingsDokument = Sykmelding(
+                    id = "123",
+                    arbeidsgiver = Arbeidsgiver(
+                            harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
+                            navn = "navn",
+                            stillingsprosent = null,
+                            yrkesbetegnelse = null),
+                    medisinskVurdering = MedisinskVurdering(
+                            hovedDiagnose = Diagnose(Diagnosekoder.ICPC2_CODE, "L87", null),
+                            biDiagnoser = emptyList(),
+                            yrkesskade = false,
+                            svangerskap = false,
+                            annenFraversArsak = null,
+                            yrkesskadeDato = null
+                    ),
+                    andreTiltak = "Andre tiltak",
+                    meldingTilArbeidsgiver = null,
+                    navnFastlege = null,
+                    tiltakArbeidsplassen = null,
+                    syketilfelleStartDato = null,
+                    tiltakNAV = "Tiltak NAV",
+                    prognose = null,
+                    meldingTilNAV = MeldingTilNAV(true, "Masse bistand"),
+                    skjermesForPasient = skjermet,
+                    behandletTidspunkt = LocalDateTime.now(),
+                    behandler = Behandler(
+                            "fornavn",
+                            null,
+                            "etternavn",
+                            "aktorId",
+                            "01234567891",
+                            null,
+                            null,
+                            Adresse(null, null, null, null, null),
+                            null),
+                    kontaktMedPasient = KontaktMedPasient(
+                            LocalDate.now(),
+                            "Begrunnelse"
+                    ),
+                    utdypendeOpplysninger = emptyMap(),
+                    msgId = "msgid",
+                    pasientAktoerId = "aktorId",
+                    avsenderSystem = AvsenderSystem("Navn", "verjosn"),
+                    perioder = perioder,
+                    signaturDato = LocalDateTime.now()
             ),
-            andreTiltak = "Andre tiltak",
-            meldingTilArbeidsgiver = null,
-            navnFastlege = null,
-            tiltakArbeidsplassen = null,
-            syketilfelleStartDato = null,
-            tiltakNAV = "Tiltak NAV",
-            prognose = null,
-            meldingTilNAV = MeldingTilNAV(true, "Masse bistand"),
-            skjermesForPasient = skjermet,
-            behandletTidspunkt = LocalDateTime.now(),
-            behandler = Behandler(
-                "fornavn",
-                null,
-                "etternavn",
-                "aktorId",
-                "01234567891",
-                null,
-                null,
-                Adresse(null, null, null, null, null),
-                null
-            ),
-            kontaktMedPasient = KontaktMedPasient(
-                LocalDate.now(),
-                "Begrunnelse"
-            ),
-            utdypendeOpplysninger = emptyMap(),
-            msgId = "msgid",
-            pasientAktoerId = "aktorId",
-            avsenderSystem = AvsenderSystem("Navn", "verjosn"),
-            perioder = perioder,
-            signaturDato = LocalDateTime.now()
-        ),
-        merknader = null
-    )
+            merknader = null)
 }
 
 fun getPeriode(fom: LocalDate, tom: LocalDate, gradert: Gradert? = null): Periode {
     return Periode(
-        fom = fom,
-        tom = tom,
-        aktivitetIkkeMulig = AktivitetIkkeMulig(medisinskArsak = MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
-        gradert = gradert,
-        behandlingsdager = null,
-        reisetilskudd = false,
-        avventendeInnspillTilArbeidsgiver = null
+            fom = fom,
+            tom = tom,
+            aktivitetIkkeMulig = AktivitetIkkeMulig(medisinskArsak = MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
+            gradert = gradert,
+            behandlingsdager = null,
+            reisetilskudd = false,
+            avventendeInnspillTilArbeidsgiver = null
     )
 }
 
 fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnoser: List<Diagnose> = emptyList(), avsenderSystem: AvsenderSystem = AvsenderSystem("Nobody", "versjon"), perioder: List<Periode> = emptyList()): SykmeldingDbModel {
     return SykmeldingDbModel(
-        id = "123",
-        behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-        mottattTidspunkt = OffsetDateTime.now(),
-        status = StatusDbModel(
-            statusEvent = "APEN",
-            arbeidsgiver = null,
-            statusTimestamp = OffsetDateTime.now()
-        ),
-        legekontorOrgNr = "123456789",
-        sykmeldingsDokument = Sykmelding(
             id = "123",
-            arbeidsgiver = Arbeidsgiver(
-                harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
-                navn = "navn",
-                stillingsprosent = null,
-                yrkesbetegnelse = null
+            behandlingsutfall = ValidationResult(Status.OK, emptyList()),
+            mottattTidspunkt = OffsetDateTime.now(),
+            status = StatusDbModel(
+                    statusEvent = "APEN",
+                    arbeidsgiver = null,
+                    statusTimestamp = OffsetDateTime.now()
             ),
-            medisinskVurdering = MedisinskVurdering(
-                hovedDiagnose = Diagnose("system", hovediagnosekode, "tekst"),
-                biDiagnoser = bidiagnoser,
-                yrkesskade = false,
-                svangerskap = false,
-                annenFraversArsak = null,
-                yrkesskadeDato = null
+            legekontorOrgNr = "123456789",
+            sykmeldingsDokument = Sykmelding(
+                    id = "123",
+                    arbeidsgiver = Arbeidsgiver(
+                            harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
+                            navn = "navn",
+                            stillingsprosent = null,
+                            yrkesbetegnelse = null),
+                    medisinskVurdering = MedisinskVurdering(
+                            hovedDiagnose = Diagnose("system", hovediagnosekode, "tekst"),
+                            biDiagnoser = bidiagnoser,
+                            yrkesskade = false,
+                            svangerskap = false,
+                            annenFraversArsak = null,
+                            yrkesskadeDato = null
+                    ),
+                    andreTiltak = null,
+                    meldingTilArbeidsgiver = null,
+                    navnFastlege = null,
+                    tiltakArbeidsplassen = null,
+                    syketilfelleStartDato = null,
+                    tiltakNAV = null,
+                    prognose = null,
+                    meldingTilNAV = null,
+                    skjermesForPasient = false,
+                    behandletTidspunkt = LocalDateTime.now(),
+                    behandler = Behandler(
+                            "fornavn",
+                            null,
+                            "etternavn",
+                            "aktorId",
+                            "01234567891",
+                            null,
+                            null,
+                            Adresse(null, null, null, null, null),
+                            null),
+                    kontaktMedPasient = KontaktMedPasient(
+                            LocalDate.now(),
+                            "Begrunnelse"
+                    ),
+                    utdypendeOpplysninger = emptyMap(),
+                    msgId = "msgid",
+                    pasientAktoerId = "aktorId",
+                    avsenderSystem = avsenderSystem,
+                    perioder = perioder,
+                    signaturDato = LocalDateTime.now()
             ),
-            andreTiltak = null,
-            meldingTilArbeidsgiver = null,
-            navnFastlege = null,
-            tiltakArbeidsplassen = null,
-            syketilfelleStartDato = null,
-            tiltakNAV = null,
-            prognose = null,
-            meldingTilNAV = null,
-            skjermesForPasient = false,
-            behandletTidspunkt = LocalDateTime.now(),
-            behandler = Behandler(
-                "fornavn",
-                null,
-                "etternavn",
-                "aktorId",
-                "01234567891",
-                null,
-                null,
-                Adresse(null, null, null, null, null),
-                null
-            ),
-            kontaktMedPasient = KontaktMedPasient(
-                LocalDate.now(),
-                "Begrunnelse"
-            ),
-            utdypendeOpplysninger = emptyMap(),
-            msgId = "msgid",
-            pasientAktoerId = "aktorId",
-            avsenderSystem = avsenderSystem,
-            perioder = perioder,
-            signaturDato = LocalDateTime.now()
-        ),
-        merknader = null
-    )
+            merknader = null)
 }

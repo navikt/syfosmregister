@@ -11,6 +11,9 @@ import io.ktor.server.testing.handleRequest
 import io.ktor.server.testing.setBody
 import io.mockk.every
 import io.mockk.mockkClass
+import java.nio.file.Paths
+import java.time.LocalDate
+import java.time.ZoneOffset
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
@@ -30,12 +33,9 @@ import no.nav.syfo.testutil.setUpTestApplication
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
-import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.nio.file.Paths
-import java.time.LocalDate
-import java.time.ZoneOffset
 
 class SykmeldingServiceuserApiTest : Spek({
     val sykmeldingUri = "api/v1/sykmelding/"
@@ -63,11 +63,9 @@ class SykmeldingServiceuserApiTest : Spek({
             setUpTestApplication()
             application.routing { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerService) }
             it("Skal få sykmelding") {
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/uuid") {
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/uuid") {
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
             }
         }
@@ -80,54 +78,46 @@ class SykmeldingServiceuserApiTest : Spek({
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
             application.setupAuth(
-                listOf("clientId"),
-                getVaultSecrets(),
-                jwkProvider,
-                "",
-                jwkProvider,
-                "https://sts.issuer.net/myid",
-                "clientId",
-                listOf("syfosoknad"),
-                jwkProvider,
-                getEnvironment()
+                    listOf("clientId"),
+                    getVaultSecrets(),
+                    jwkProvider,
+                    "",
+                    jwkProvider,
+                    "https://sts.issuer.net/myid",
+                    "clientId",
+                    listOf("syfosoknad"),
+                    jwkProvider,
+                    getEnvironment()
             )
             application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
             it("get sykmelding OK") {
                 every { sykmeldingerServiceMedMock.getSykmeldingMedId(any()) } returns getSykmeldingDto()
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
-                        addHeader(
-                            HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "123")}"
-                        )
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
+                    addHeader(HttpHeaders.Authorization,
+                        "Bearer ${generateJWT("syfosoknad", "clientId", subject = "123")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
             }
             it("Get sykmelding Unauthorized without JWT") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/1234")) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
 
             it("Get sykmelding Unauthorized with incorrect audience") {
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
-                        addHeader("Authorization", "Bearer ${generateJWT("syfosoknad", "error", subject = "123")}")
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
+                    addHeader("Authorization", "Bearer ${generateJWT("syfosoknad", "error", subject = "123")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
 
             it("Get sykmelding Unauthorized with incorrect azp") {
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
-                        addHeader("Authorization", "Bearer ${generateJWT("error", "clientId", subject = "123")}")
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/1234") {
+                    addHeader("Authorization", "Bearer ${generateJWT("error", "clientId", subject = "123")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
         }
@@ -139,21 +129,17 @@ class SykmeldingServiceuserApiTest : Spek({
             setUpTestApplication()
             application.routing { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerService) }
             it("Skal få en liste av sykmeldinger for fnr") {
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
-                        addHeader("fnr", "pasientFnr")
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                    addHeader("fnr", "pasientFnr")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
             }
 
             it("Skal kaste feil hvis fnr mangler") {
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.BadRequest
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                }) {
+                    response.status() shouldEqual HttpStatusCode.BadRequest
                 }
             }
         }
@@ -164,13 +150,11 @@ class SykmeldingServiceuserApiTest : Spek({
             setUpTestApplication()
             application.routing { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerService) }
             it("Skal sykmeldingstatus for fnr") {
-                with(
-                    handleRequest(HttpMethod.Post, "$sykmeldingUri/sykmeldtStatus") {
-                        setBody(objectMapper.writeValueAsString(StatusRequest("fnr", LocalDate.now())))
-                        addHeader("Content-Type", "application/json")
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Post, "$sykmeldingUri/sykmeldtStatus") {
+                    setBody(objectMapper.writeValueAsString(StatusRequest("fnr", LocalDate.now())))
+                    addHeader("Content-Type", "application/json")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
             }
         }
@@ -183,56 +167,48 @@ class SykmeldingServiceuserApiTest : Spek({
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
             application.setupAuth(
-                loginserviceIdportenAudience = listOf(""),
-                vaultSecrets = getVaultSecrets(),
-                jwkProvider = jwkProvider,
-                issuer = "",
-                jwkProviderInternal = jwkProvider,
-                issuerServiceuser = "https://sts.issuer.net/myid",
-                clientId = "clientId",
-                appIds = listOf("syfosoknad"),
-                jwkProviderAadV2 = jwkProvider,
-                environment = getEnvironment()
+                    loginserviceIdportenAudience = listOf(""),
+                    vaultSecrets = getVaultSecrets(),
+                    jwkProvider = jwkProvider,
+                    issuer = "",
+                    jwkProviderInternal = jwkProvider,
+                    issuerServiceuser = "https://sts.issuer.net/myid",
+                    clientId = "clientId",
+                    appIds = listOf("syfosoknad"),
+                    jwkProviderAadV2 = jwkProvider,
+                    environment = getEnvironment()
             )
             application.routing { authenticate("jwtserviceuser") { registrerSykmeldingServiceuserApiV1(sykmeldingerService = sykmeldingerServiceMedMock) } }
             it("get sykmeldinger OK") {
                 every { sykmeldingerServiceMedMock.getInternalSykmeldinger(any()) } returns listOf(getSykmeldingDto())
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
-                        addHeader(
-                            HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "123")}"
-                        )
-                        addHeader("fnr", "pasientFnr")
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                    addHeader(HttpHeaders.Authorization,
+                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "123")}")
+                    addHeader("fnr", "pasientFnr")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                 }
             }
 
             it("Get sykmeldinger Unauthorized without JWT") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger")) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
 
             it("Get sykmeldinger Unauthorized with incorrect audience") {
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
-                        addHeader("Authorization", "Bearer ${generateJWT("syfosoknad", "error", subject = "123")}")
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                    addHeader("Authorization", "Bearer ${generateJWT("syfosoknad", "error", subject = "123")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
 
             it("Get sykmeldinger Unauthorized with incorrect azp") {
-                with(
-                    handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
-                        addHeader("Authorization", "Bearer ${generateJWT("error", "clientId", subject = "123")}")
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                with(handleRequest(HttpMethod.Get, "$sykmeldingUri/sykmeldinger") {
+                    addHeader("Authorization", "Bearer ${generateJWT("error", "clientId", subject = "123")}")
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Unauthorized
                 }
             }
         }

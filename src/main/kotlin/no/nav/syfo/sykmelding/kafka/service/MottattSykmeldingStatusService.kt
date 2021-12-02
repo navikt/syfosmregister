@@ -1,5 +1,7 @@
 package no.nav.syfo.sykmelding.kafka.service
 
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
@@ -24,8 +26,6 @@ import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingBekreftEvent
 import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class MottattSykmeldingStatusService(
     private val sykmeldingStatusService: SykmeldingStatusService,
@@ -95,9 +95,8 @@ class MottattSykmeldingStatusService(
     private fun handleSendtSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val latestStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId, null)
         if (latestStatus.any {
-            it.event == StatusEvent.SENDT
-        }
-        ) {
+                it.event == StatusEvent.SENDT
+            }) {
             log.warn("Sykmelding er allerede sendt sykmeldingId {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
             return
         }
@@ -153,8 +152,7 @@ class MottattSykmeldingStatusService(
             ?: throw IllegalArgumentException("Ingen sporsmal funnet")
         val sykmeldingId = sykmeldingStatusKafkaMessage.event.sykmeldingId
         val timestamp = sykmeldingStatusKafkaMessage.event.timestamp
-        val sykmeldingSendEvent = SykmeldingSendEvent(
-            sykmeldingId,
+        val sykmeldingSendEvent = SykmeldingSendEvent(sykmeldingId,
             timestamp,
             KafkaModelMapper.toArbeidsgiverStatus(sykmeldingId, arbeidsgiver),
             KafkaModelMapper.toSporsmal(arbeidsgiverSporsmal, sykmeldingId)

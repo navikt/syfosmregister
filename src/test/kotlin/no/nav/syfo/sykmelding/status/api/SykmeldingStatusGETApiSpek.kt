@@ -16,6 +16,8 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.StatusEventDTO
@@ -23,11 +25,9 @@ import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.sykmelding.status.api.model.SykmeldingStatusEventDTO
 import no.nav.syfo.testutil.setUpContentNegotiation
-import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class SykmeldingStatusGETApiSpek : Spek({
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
@@ -48,38 +48,32 @@ class SykmeldingStatusGETApiSpek : Spek({
             it("Should get all statuses sykmeldingstatus") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                    SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
-                    SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT)
-                )
+                        SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
+                        SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT))
 
-                with(
-                    handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=ALL") {
-                        addHeader("Content-Type", ContentType.Application.Json.toString())
-                        call.authentication.principal = JWTPrincipal(mockPayload)
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=ALL") {
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                     val responseData = objectMapper.readValue<List<SykmeldingStatusEventDTO>>(response.content!!)
-                    responseData.size shouldBeEqualTo 2
+                    responseData.size shouldEqual 2
                 }
             }
 
             it("Should get all statuses without filter") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                    SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
-                    SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT)
-                )
+                        SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
+                        SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT))
 
-                with(
-                    handleRequest(HttpMethod.Get, "/sykmeldinger/123/status") {
-                        addHeader("Content-Type", ContentType.Application.Json.toString())
-                        call.authentication.principal = JWTPrincipal(mockPayload)
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "/sykmeldinger/123/status") {
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                     val responseData = objectMapper.readValue<List<SykmeldingStatusEventDTO>>(response.content!!)
-                    responseData.size shouldBeEqualTo 2
+                    responseData.size shouldEqual 2
                 }
             }
 
@@ -87,30 +81,26 @@ class SykmeldingStatusGETApiSpek : Spek({
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT, erAvvist = false, erEgenmeldt = false))
 
-                with(
-                    handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
-                        addHeader("Content-Type", ContentType.Application.Json.toString())
-                        call.authentication.principal = JWTPrincipal(mockPayload)
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                     val responseData = objectMapper.readValue<List<SykmeldingStatusEventDTO>>(response.content!!)
-                    responseData.size shouldBeEqualTo 1
-                    responseData[0].statusEvent shouldBeEqualTo StatusEventDTO.SENDT
-                    responseData[0].erAvvist shouldBeEqualTo false
-                    responseData[0].erEgenmeldt shouldBeEqualTo false
+                    responseData.size shouldEqual 1
+                    responseData[0].statusEvent shouldEqual StatusEventDTO.SENDT
+                    responseData[0].erAvvist shouldEqual false
+                    responseData[0].erEgenmeldt shouldEqual false
                 }
             }
 
             it("Should get forbidden when not owner") {
                 every { sykmeldingStatusService.erEier(any(), any()) } returns false
-                with(
-                    handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
-                        addHeader("Content-Type", ContentType.Application.Json.toString())
-                        call.authentication.principal = JWTPrincipal(mockPayload)
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Forbidden
+                with(handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
+                    addHeader("Content-Type", ContentType.Application.Json.toString())
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.Forbidden
                 }
             }
         }

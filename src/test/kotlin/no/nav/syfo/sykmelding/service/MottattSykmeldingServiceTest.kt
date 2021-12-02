@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.spyk
 import io.mockk.verify
+import java.time.Duration
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
@@ -24,14 +25,13 @@ import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getMerknaderForId
 import org.amshove.kluent.shouldBe
-import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
 
 class MottattSykmeldingServiceTest : Spek({
     val testDb = TestDB()
@@ -41,10 +41,10 @@ class MottattSykmeldingServiceTest : Spek({
     val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(true, true)
     val consumerProperties = kafkaConfig.toConsumerConfig(
-        "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
+            "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
     val producerProperties = kafkaConfig.toProducerConfig(
-        "${environment.applicationName}-consumer", valueSerializer = JacksonKafkaSerializer::class
+            "${environment.applicationName}-consumer", valueSerializer = JacksonKafkaSerializer::class
     )
 
     val receivedSykmeldingKafkaProducer = KafkaProducer<String, ReceivedSykmelding>(producerProperties)
@@ -54,13 +54,13 @@ class MottattSykmeldingServiceTest : Spek({
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaConfig, environment)
     val mottattSykmeldingStatusService = mockk<MottattSykmeldingStatusService>(relaxed = true)
     val mottattSykmeldingService = MottattSykmeldingService(
-        applicationState = applicationState,
-        kafkaconsumer = receivedSykmeldingKafkaConsumer,
-        env = environment,
-        database = testDb,
-        mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
-        sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
-        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+            applicationState = applicationState,
+            kafkaconsumer = receivedSykmeldingKafkaConsumer,
+            env = environment,
+            database = testDb,
+            mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
+            sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
+            mottattSykmeldingStatusService = mottattSykmeldingStatusService
     )
 
     afterEachTest {
@@ -121,15 +121,8 @@ class MottattSykmeldingServiceTest : Spek({
         }
 
         it("should receive sykmelding med merknad from automatic topic and publish to mottatt sykmelding topic") {
-            val receivedSykmelding =
-                getReceivedSykmelding(merknader = listOf(Merknad("UGYLDIG_TILBAKEDATERING", "ikke godkjent")))
-            receivedSykmeldingKafkaProducer.send(
-                ProducerRecord(
-                    environment.kafkaSm2013AutomaticDigitalHandlingTopic,
-                    receivedSykmelding.sykmelding.id,
-                    receivedSykmelding
-                )
-            )
+            val receivedSykmelding = getReceivedSykmelding(merknader = listOf(Merknad("UGYLDIG_TILBAKEDATERING", "ikke godkjent")))
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
             every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
@@ -141,8 +134,8 @@ class MottattSykmeldingServiceTest : Spek({
                 mottattSykmeldingService.start()
             }
             val merknader = testDb.connection.getMerknaderForId("1")
-            merknader!![0].type shouldBeEqualTo "UGYLDIG_TILBAKEDATERING"
-            merknader!![0].beskrivelse shouldBeEqualTo "ikke godkjent"
+            merknader!![0].type shouldEqual "UGYLDIG_TILBAKEDATERING"
+            merknader!![0].beskrivelse shouldEqual "ikke godkjent"
             verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 
