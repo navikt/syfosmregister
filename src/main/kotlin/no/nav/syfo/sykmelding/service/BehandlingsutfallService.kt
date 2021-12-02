@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.time.Duration
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
@@ -16,7 +17,6 @@ import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.persistering.updateBehandlingsutfall
 import no.nav.syfo.wrapExceptions
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import java.time.Duration
 
 class BehandlingsutfallService(
     private val applicationState: ApplicationState,
@@ -27,19 +27,19 @@ class BehandlingsutfallService(
 
     suspend fun start() {
         kafkaconsumer.subscribe(
-            listOf(
-                env.sm2013BehandlingsUtfallTopic
-            )
+                listOf(
+                        env.sm2013BehandlingsUtfallTopic
+                )
         )
         while (applicationState.ready) {
             kafkaconsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
                 val sykmeldingsid = it.key()
                 val validationResult: ValidationResult = objectMapper.readValue(it.value())
                 val loggingMeta = LoggingMeta(
-                    mottakId = "",
-                    orgNr = "",
-                    msgId = "",
-                    sykmeldingId = sykmeldingsid
+                        mottakId = "",
+                        orgNr = "",
+                        msgId = "",
+                        sykmeldingId = sykmeldingsid
                 )
                 handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta)
             }
@@ -58,15 +58,15 @@ class BehandlingsutfallService(
 
             if (database.connection.erBehandlingsutfallLagret(sykmeldingsid)) {
                 log.warn(
-                    "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}", StructuredArguments.fields(loggingMeta)
+                        "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}", StructuredArguments.fields(loggingMeta)
                 )
                 database.connection.updateBehandlingsutfall(Behandlingsutfall(id = sykmeldingsid, behandlingsutfall = validationResult))
             } else {
                 database.connection.opprettBehandlingsutfall(
-                    Behandlingsutfall(
-                        id = sykmeldingsid,
-                        behandlingsutfall = validationResult
-                    )
+                        Behandlingsutfall(
+                                id = sykmeldingsid,
+                                behandlingsutfall = validationResult
+                        )
                 )
                 log.info("Behandlingsutfall lagret i databasen, {}", StructuredArguments.fields(loggingMeta))
             }

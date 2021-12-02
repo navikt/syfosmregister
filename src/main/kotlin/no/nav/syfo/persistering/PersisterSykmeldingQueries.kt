@@ -1,8 +1,8 @@
 package no.nav.syfo.persistering
 
-import no.nav.syfo.db.DatabaseInterface
 import java.sql.Connection
 import java.sql.Timestamp
+import no.nav.syfo.db.DatabaseInterface
 
 fun DatabaseInterface.lagreMottattSykmelding(sykmeldingsopplysninger: Sykmeldingsopplysninger, sykmeldingsdokument: Sykmeldingsdokument) {
     connection.use { connection ->
@@ -34,8 +34,7 @@ private fun Connection.updateSykmeldingsdokument(sykmeldingsdokument: Sykmelding
 }
 
 private fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysninger: Sykmeldingsopplysninger) {
-    this.prepareStatement(
-        """
+    this.prepareStatement("""
         update sykmeldingsopplysninger set 
             pasient_fnr = ?,
             pasient_aktoer_id = ?,
@@ -54,8 +53,7 @@ private fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysninger: Sy
             merknader = ?,
             partnerreferanse = ?
         where id = ?;
-    """
-    ).use {
+    """).use {
         var i = 1
         it.setString(i++, sykmeldingsopplysninger.pasientFnr)
         it.setString(i++, sykmeldingsopplysninger.pasientAktoerId)
@@ -138,11 +136,9 @@ private fun Connection.opprettSykmeldingsdokument(sykmeldingsdokument: Sykmeldin
 
 fun Connection.updateBehandlingsutfall(behandlingsutfall: Behandlingsutfall) {
     use { connection ->
-        connection.prepareStatement(
-            """
+        connection.prepareStatement("""
            update behandlingsutfall set behandlingsutfall = ? where id = ?;
-        """
-        ).use {
+        """).use {
             it.setObject(1, behandlingsutfall.behandlingsutfall.toPGObject())
             it.setString(2, behandlingsutfall.id)
             it.executeUpdate()

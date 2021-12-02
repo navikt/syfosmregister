@@ -1,17 +1,17 @@
 package no.nav.syfo.sykmelding.status
 
-import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.db.toList
-import no.nav.syfo.log
-import no.nav.syfo.model.Status
-import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.objectMapper
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.db.toList
+import no.nav.syfo.log
+import no.nav.syfo.model.Status
+import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.objectMapper
 
 fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
     connection.use { connection ->
@@ -66,11 +66,9 @@ fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
     }
 
 private fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: OffsetDateTime): Boolean {
-    this.prepareStatement(
-        """
+    this.prepareStatement("""
         SELECT 1 FROM sykmeldingstatus WHERE sykmelding_id = ? and timestamp > ?
-        """
-    ).use {
+        """).use {
         it.setString(1, sykmeldingId)
         it.setTimestamp(2, Timestamp.from(timestamp.toInstant()))
         return it.executeQuery().next()
@@ -78,8 +76,7 @@ private fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: OffsetDat
 }
 
 private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
-    this.prepareStatement(
-        """
+    this.prepareStatement("""
         SELECT status.sykmelding_id,
         status.timestamp,
         status.event,
@@ -89,8 +86,7 @@ private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<Sykmeld
             INNER JOIN sykmeldingsopplysninger AS opplysninger ON status.sykmelding_id = opplysninger.id
             INNER JOIN behandlingsutfall AS utfall ON status.sykmelding_id = utfall.id 
         WHERE status.sykmelding_id = ?
-    """
-    ).use {
+    """).use {
         it.setString(1, sykmeldingId)
         return it.executeQuery().toList { toSykmeldingStatusEvent() }
     }
@@ -98,11 +94,11 @@ private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<Sykmeld
 
 private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
     return SykmeldingStatusEvent(
-        sykmeldingId = getString("sykmelding_id"),
-        timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
-        event = tilStatusEvent(getString("event")),
-        erAvvist = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java).status == Status.INVALID,
-        erEgenmeldt = getString("epj_system_navn") == "Egenmeldt"
+            sykmeldingId = getString("sykmelding_id"),
+            timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
+            event = tilStatusEvent(getString("event")),
+            erAvvist = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java).status == Status.INVALID,
+            erEgenmeldt = getString("epj_system_navn") == "Egenmeldt"
     )
 }
 

@@ -35,36 +35,36 @@ import no.nav.syfo.sykmelding.model.toDTO
 
 fun ReceivedSykmelding.toEnkelSykmelding(): EnkelSykmelding {
     return EnkelSykmelding(
-        id = sykmelding.id,
-        tiltakArbeidsplassen = sykmelding.tiltakArbeidsplassen,
-        syketilfelleStartDato = sykmelding.syketilfelleStartDato,
-        prognose = sykmelding.prognose.toPrognoseDTO(),
-        navnFastlege = sykmelding.navnFastlege,
-        meldingTilArbeidsgiver = sykmelding.meldingTilArbeidsgiver,
-        kontaktMedPasient = sykmelding.kontaktMedPasient.toKontaktMedPasientDto(),
-        arbeidsgiver = sykmelding.arbeidsgiver.toArbeidsgiverDto(),
-        behandler = sykmelding.behandler.toBehandlerDto(),
-        behandletTidspunkt = getUtcTime(sykmelding.behandletTidspunkt),
-        egenmeldt = sykmelding.avsenderSystem.navn == "Egenmeldt",
-        papirsykmelding = sykmelding.avsenderSystem.navn == "Papirsykmelding",
-        legekontorOrgnummer = legekontorOrgNr,
-        mottattTidspunkt = getUtcTime(mottattDato),
-        sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeDto() },
-        harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder),
-        merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
+            id = sykmelding.id,
+            tiltakArbeidsplassen = sykmelding.tiltakArbeidsplassen,
+            syketilfelleStartDato = sykmelding.syketilfelleStartDato,
+            prognose = sykmelding.prognose.toPrognoseDTO(),
+            navnFastlege = sykmelding.navnFastlege,
+            meldingTilArbeidsgiver = sykmelding.meldingTilArbeidsgiver,
+            kontaktMedPasient = sykmelding.kontaktMedPasient.toKontaktMedPasientDto(),
+            arbeidsgiver = sykmelding.arbeidsgiver.toArbeidsgiverDto(),
+            behandler = sykmelding.behandler.toBehandlerDto(),
+            behandletTidspunkt = getUtcTime(sykmelding.behandletTidspunkt),
+            egenmeldt = sykmelding.avsenderSystem.navn == "Egenmeldt",
+            papirsykmelding = sykmelding.avsenderSystem.navn == "Papirsykmelding",
+            legekontorOrgnummer = legekontorOrgNr,
+            mottattTidspunkt = getUtcTime(mottattDato),
+            sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeDto() },
+            harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder),
+            merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
     )
 }
 
 private fun Periode.toPeriodeDto(): SykmeldingsperiodeDTO {
     return SykmeldingsperiodeDTO(
-        fom = fom,
-        tom = tom,
-        behandlingsdager = behandlingsdager,
-        innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
-        type = finnPeriodetype(this).toDTO(),
-        reisetilskudd = reisetilskudd,
-        gradert = gradert.toGradertDto(),
-        aktivitetIkkeMulig = aktivitetIkkeMulig.toAktivitetIkkeMuligDto()
+            fom = fom,
+            tom = tom,
+            behandlingsdager = behandlingsdager,
+            innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
+            type = finnPeriodetype(this).toDTO(),
+            reisetilskudd = reisetilskudd,
+            gradert = gradert.toGradertDto(),
+            aktivitetIkkeMulig = aktivitetIkkeMulig.toAktivitetIkkeMuligDto()
     )
 }
 
@@ -82,8 +82,8 @@ private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligDto(): AktivitetIkkeMuligDTO
     return when (this) {
         null -> null
         else -> AktivitetIkkeMuligDTO(
-            medisinskArsak = medisinskArsak.toMedisinskArsakDto(),
-            arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDto()
+                medisinskArsak = medisinskArsak.toMedisinskArsakDto(),
+                arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDto()
         )
     }
 }
@@ -92,8 +92,8 @@ private fun ArbeidsrelatertArsak?.toArbeidsRelatertArsakDto(): ArbeidsrelatertAr
     return when (this) {
         null -> null
         else -> ArbeidsrelatertArsakDTO(
-            beskrivelse = beskrivelse,
-            arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
+                beskrivelse = beskrivelse,
+                arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
         )
     }
 }
@@ -109,8 +109,8 @@ private fun MedisinskArsak?.toMedisinskArsakDto(): MedisinskArsakDTO? {
     return when (this) {
         null -> null
         else -> MedisinskArsakDTO(
-            beskrivelse = beskrivelse,
-            arsak = arsak.map { toMedisinskArsakTypeDto(it) }
+                beskrivelse = beskrivelse,
+                arsak = arsak.map { toMedisinskArsakTypeDto(it) }
         )
     }
 }
@@ -128,37 +128,37 @@ private fun Gradert?.toGradertDto(): GradertDTO? {
     return when (this) {
         null -> null
         else -> GradertDTO(
-            grad = grad,
-            reisetilskudd = reisetilskudd
+                grad = grad,
+                reisetilskudd = reisetilskudd
         )
     }
 }
 
 private fun Behandler.toBehandlerDto(): BehandlerDTO {
     return BehandlerDTO(
-        fornavn = fornavn,
-        mellomnavn = mellomnavn,
-        hpr = hpr,
-        tlf = tlf,
-        her = her,
-        aktoerId = aktoerId,
-        etternavn = etternavn,
-        fnr = fnr,
-        adresse = AdresseDTO(adresse.gate, adresse.postnummer, adresse.kommune, adresse.postboks, adresse.land)
+            fornavn = fornavn,
+            mellomnavn = mellomnavn,
+            hpr = hpr,
+            tlf = tlf,
+            her = her,
+            aktoerId = aktoerId,
+            etternavn = etternavn,
+            fnr = fnr,
+            adresse = AdresseDTO(adresse.gate, adresse.postnummer, adresse.kommune, adresse.postboks, adresse.land)
     )
 }
 
 private fun Arbeidsgiver.toArbeidsgiverDto(): ArbeidsgiverDTO {
     return ArbeidsgiverDTO(
-        navn = navn,
-        stillingsprosent = stillingsprosent
+            navn = navn,
+            stillingsprosent = stillingsprosent
     )
 }
 
 private fun KontaktMedPasient.toKontaktMedPasientDto(): KontaktMedPasientDTO {
     return KontaktMedPasientDTO(
-        kontaktDato = kontaktDato,
-        begrunnelseIkkeKontakt = begrunnelseIkkeKontakt
+            kontaktDato = kontaktDato,
+            begrunnelseIkkeKontakt = begrunnelseIkkeKontakt
     )
 }
 
@@ -167,10 +167,10 @@ private fun Prognose?.toPrognoseDTO(): PrognoseDTO? {
         null -> null
         else -> {
             PrognoseDTO(
-                arbeidsforEtterPeriode = arbeidsforEtterPeriode,
-                erIArbeid = erIArbeid.toErIArbeidDTO(),
-                erIkkeIArbeid = erIkkeIArbeid.toErIkkeIArbeidDto(),
-                hensynArbeidsplassen = hensynArbeidsplassen
+                    arbeidsforEtterPeriode = arbeidsforEtterPeriode,
+                    erIArbeid = erIArbeid.toErIArbeidDTO(),
+                    erIkkeIArbeid = erIkkeIArbeid.toErIkkeIArbeidDto(),
+                    hensynArbeidsplassen = hensynArbeidsplassen
             )
         }
     }
@@ -180,9 +180,9 @@ private fun ErIkkeIArbeid?.toErIkkeIArbeidDto(): ErIkkeIArbeidDTO? {
     return when (this) {
         null -> null
         else -> ErIkkeIArbeidDTO(
-            arbeidsforPaSikt = arbeidsforPaSikt,
-            vurderingsdato = vurderingsdato,
-            arbeidsforFOM = arbeidsforFOM
+                arbeidsforPaSikt = arbeidsforPaSikt,
+                vurderingsdato = vurderingsdato,
+                arbeidsforFOM = arbeidsforFOM
         )
     }
 }
@@ -191,10 +191,10 @@ private fun ErIArbeid?.toErIArbeidDTO(): ErIArbeidDTO? {
     return when (this) {
         null -> null
         else -> ErIArbeidDTO(
-            egetArbeidPaSikt = egetArbeidPaSikt,
-            vurderingsdato = vurderingsdato,
-            annetArbeidPaSikt = annetArbeidPaSikt,
-            arbeidFOM = arbeidFOM
+                egetArbeidPaSikt = egetArbeidPaSikt,
+                vurderingsdato = vurderingsdato,
+                annetArbeidPaSikt = annetArbeidPaSikt,
+                arbeidFOM = arbeidFOM
         )
     }
 }

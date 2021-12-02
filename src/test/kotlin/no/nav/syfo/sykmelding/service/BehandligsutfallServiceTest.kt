@@ -3,6 +3,7 @@ package no.nav.syfo.sykmelding.service
 import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.spyk
+import java.time.Duration
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
@@ -16,14 +17,13 @@ import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.testutil.KafkaTest
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
-import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldEqual
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.Duration
 
 class BehandligsutfallServiceTest : Spek({
     val testDb = TestDB()
@@ -39,18 +39,18 @@ class BehandligsutfallServiceTest : Spek({
     val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(true, true)
     val consumerProperties = kafkaConfig.toConsumerConfig(
-        "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
+            "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
     val producerProperties = kafkaConfig.toProducerConfig(
-        "${environment.applicationName}-consumer", valueSerializer = JacksonKafkaSerializer::class
+            "${environment.applicationName}-consumer", valueSerializer = JacksonKafkaSerializer::class
     )
     val behandlingsutfallKafkaProducer = KafkaProducer<String, ValidationResult>(producerProperties)
     val behandlingsutfallKafkaConsumer = spyk(KafkaConsumer<String, String>(consumerProperties))
     val behandlingsutfallService = BehandlingsutfallService(
-        applicationState = applicationState,
-        database = testDb,
-        env = environment,
-        kafkaconsumer = behandlingsutfallKafkaConsumer
+            applicationState = applicationState,
+            database = testDb,
+            env = environment,
+            kafkaconsumer = behandlingsutfallKafkaConsumer
     )
 
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
@@ -75,13 +75,7 @@ class BehandligsutfallServiceTest : Spek({
     describe("Test BehandlingsuftallService") {
         it("Should read behandlingsutfall from topic and save in db") {
             val validationResult = ValidationResult(Status.OK, emptyList())
-            behandlingsutfallKafkaProducer.send(
-                ProducerRecord(
-                    environment.sm2013BehandlingsUtfallTopic,
-                    "1",
-                    validationResult
-                )
-            )
+            behandlingsutfallKafkaProducer.send(ProducerRecord(environment.sm2013BehandlingsUtfallTopic, "1", validationResult))
             every { behandlingsutfallKafkaConsumer.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
@@ -94,7 +88,7 @@ class BehandligsutfallServiceTest : Spek({
             }
 
             val behandlingsutfall = testDb.connection.erBehandlingsutfallLagret("1")
-            behandlingsutfall shouldBeEqualTo true
+            behandlingsutfall shouldEqual true
         }
 
         it("Should handle tombstone") {
@@ -111,7 +105,7 @@ class BehandligsutfallServiceTest : Spek({
             }
 
             val behandlingsutfall = testDb.connection.erBehandlingsutfallLagret("1")
-            behandlingsutfall shouldBeEqualTo false
+            behandlingsutfall shouldEqual false
         }
     }
 })

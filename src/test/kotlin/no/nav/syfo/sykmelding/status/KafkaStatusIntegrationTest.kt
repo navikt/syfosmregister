@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
+import io.ktor.util.KtorExperimentalAPI
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -17,6 +18,8 @@ import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -57,12 +60,11 @@ import no.nav.syfo.testutil.setUpTestApplication
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
-import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldEqual
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
+@KtorExperimentalAPI
 class KafkaStatusIntegrationTest : Spek({
 
     val database = TestDB()
@@ -96,7 +98,7 @@ class KafkaStatusIntegrationTest : Spek({
         clearAllMocks()
         setUpEnvironment(environment)
         mockkStatic("kotlinx.coroutines.DelayKt")
-        coEvery { delay(any<Long>()) } returns Unit
+        coEvery { delay(any()) } returns Unit
         database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
         every { mockPayload.subject } returns "pasientFnr"
@@ -115,10 +117,8 @@ class KafkaStatusIntegrationTest : Spek({
                 applicationState.ready = false
             }
 
-            kafkaProducer.send(
-                getApenEvent(sykmelding),
-                testSykmeldingsopplysninger.pasientFnr
-            )
+            kafkaProducer.send(getApenEvent(sykmelding),
+                    testSykmeldingsopplysninger.pasientFnr)
 
             runBlocking {
                 this.launch {
@@ -126,13 +126,13 @@ class KafkaStatusIntegrationTest : Spek({
                 }
             }
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
-            sykmeldinger.size shouldBeEqualTo 1
-            sykmeldinger[0].status shouldBeEqualTo StatusDbModel(
+            sykmeldinger.size shouldEqual 1
+            sykmeldinger[0].status shouldEqual StatusDbModel(
                 statusTimestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
-                statusEvent = "APEN",
-                arbeidsgiver = null
+                    statusEvent = "APEN",
+                    arbeidsgiver = null
             )
-            database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 1
+            database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 1
         }
 
         it("test tombstone") {
@@ -156,15 +156,15 @@ class KafkaStatusIntegrationTest : Spek({
                 }
             }
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
-            sykmeldinger.size shouldBeEqualTo 1
+            sykmeldinger.size shouldEqual 1
             val sykmeldingstatus = sykmeldinger[0].status
-            sykmeldingstatus shouldBeEqualTo StatusDbModel(
+            sykmeldingstatus shouldEqual StatusDbModel(
                 statusTimestamp = sendEvent.timestamp,
-                statusEvent = "SENDT",
-                arbeidsgiver = ArbeidsgiverDbModel("org", "jorg", "navn")
+                    statusEvent = "SENDT",
+                    arbeidsgiver = ArbeidsgiverDbModel("org", "jorg", "navn")
             )
 
-            database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 2
+            database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 2
         }
 
         it("Should test APEN and BEKREFTET") {
@@ -183,15 +183,15 @@ class KafkaStatusIntegrationTest : Spek({
                 }
             }
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
-            sykmeldinger.size shouldBeEqualTo 1
+            sykmeldinger.size shouldEqual 1
             val sykmeldingStatus = sykmeldinger[0].status
-            sykmeldingStatus shouldBeEqualTo StatusDbModel(
-                statusTimestamp = bekreftetEvent.timestamp,
-                statusEvent = "BEKREFTET",
-                arbeidsgiver = null
+            sykmeldingStatus shouldEqual StatusDbModel(
+                    statusTimestamp = bekreftetEvent.timestamp,
+                    statusEvent = "BEKREFTET",
+                    arbeidsgiver = null
             )
 
-            database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 2
+            database.hentSykmeldingStatuser(sykmelding.id).size shouldEqual 2
         }
 
         it("Should test APEN and SLETTET") {
@@ -208,7 +208,7 @@ class KafkaStatusIntegrationTest : Spek({
                 }
             }
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
-            sykmeldinger.size shouldBeEqualTo 0
+            sykmeldinger.size shouldEqual 0
             verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
         }
         it("should test APEN -> SENDT -> SLETTET") {
@@ -226,8 +226,8 @@ class KafkaStatusIntegrationTest : Spek({
                 }
             }
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
-            sykmeldinger.size shouldBeEqualTo 0
-            database.finnSvarForSykmelding(sykmelding.id).size shouldBeEqualTo 0
+            sykmeldinger.size shouldEqual 0
+            database.finnSvarForSykmelding(sykmelding.id).size shouldEqual 0
 
             verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
             verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -251,7 +251,7 @@ class KafkaStatusIntegrationTest : Spek({
                 }
             }
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
-            sykmeldinger.size shouldBeEqualTo 0
+            sykmeldinger.size shouldEqual 0
             verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
             verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
             verify(exactly = 0) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
@@ -267,47 +267,38 @@ class KafkaStatusIntegrationTest : Spek({
             application.routing { registrerSykmeldingApiV2(sykmeldingerService) }
             it("Test get stykmeldingstatus latest should be SENDT") {
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
-                with(
-                    handleRequest(HttpMethod.Get, "/sykmeldinger/uuid/status?filter=LATEST") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "/sykmeldinger/uuid/status?filter=LATEST") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                     val sykmeldingStatuser = objectMapper.readValue<List<SykmeldingStatusEventDTO>>(response.content!!)
-                    sykmeldingStatuser.size shouldBeEqualTo 1
+                    sykmeldingStatuser.size shouldEqual 1
                     val latestSykmeldingStatus = sykmeldingStatuser[0]
-                    latestSykmeldingStatus shouldBeEqualTo SykmeldingStatusEventDTO(
-                        StatusEventDTO.SENDT,
-                        sendtEvent.timestamp,
-                        erAvvist = false,
-                        erEgenmeldt = false
+                    latestSykmeldingStatus shouldEqual SykmeldingStatusEventDTO(
+                            StatusEventDTO.SENDT,
+                            sendtEvent.timestamp,
+                            erAvvist = false,
+                            erEgenmeldt = false
                     )
                 }
             }
             it("test get sykmelding with latest status SENDT") {
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
-                with(
-                    handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                with(handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
+                    call.authentication.principal = JWTPrincipal(mockPayload)
+                }) {
+                    response.status() shouldEqual HttpStatusCode.OK
                     val sykmeldingDTO = objectMapper.readValue<List<SykmeldingDTO>>(response.content!!)[0]
                     val latestSykmeldingStatus = sykmeldingDTO.sykmeldingStatus
-                    latestSykmeldingStatus shouldBeEqualTo no.nav.syfo.sykmelding.model.SykmeldingStatusDTO(
-                        timestamp = sendtEvent.timestamp,
-                        sporsmalOgSvarListe = listOf(
-                            SporsmalDTO(
-                                tekst = "din arbeidssituasjon?",
-                                svar = SvarDTO(
-                                    no.nav.syfo.sykmelding.model.SvartypeDTO.ARBEIDSSITUASJON,
-                                    "ARBEIDSTAKER"
-                                ),
-                                shortName = no.nav.syfo.sykmelding.model.ShortNameDTO.ARBEIDSSITUASJON
-                            )
-                        ),
-                        arbeidsgiver = no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO("org", "jorg", "navn"),
-                        statusEvent = "SENDT"
+                    latestSykmeldingStatus shouldEqual no.nav.syfo.sykmelding.model.SykmeldingStatusDTO(
+                            timestamp = sendtEvent.timestamp,
+                            sporsmalOgSvarListe = listOf(SporsmalDTO(
+                                    tekst = "din arbeidssituasjon?",
+                                    svar = SvarDTO(no.nav.syfo.sykmelding.model.SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                                    shortName = no.nav.syfo.sykmelding.model.ShortNameDTO.ARBEIDSSITUASJON)
+                            ),
+                            arbeidsgiver = no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO("org", "jorg", "navn"),
+                            statusEvent = "SENDT"
 
                     )
                 }
@@ -353,30 +344,26 @@ private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService,
 
 private fun getSykmeldingBekreftEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
-        sykmeldingId = sykmelding.id,
-        statusEvent = STATUS_BEKREFTET,
-        timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
-        arbeidsgiver = null,
-        sporsmals = listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI"))
-    )
+            sykmeldingId = sykmelding.id,
+            statusEvent = STATUS_BEKREFTET,
+            timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
+            arbeidsgiver = null,
+            sporsmals = listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI")))
 }
 
 private fun getSendtEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
-        sykmeldingId = sykmelding.id,
-        timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
-        arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
-        statusEvent = STATUS_SENDT,
-        sporsmals = listOf(
-            SporsmalOgSvarDTO("din arbeidssituasjon?", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER")
-        )
-    )
+            sykmeldingId = sykmelding.id,
+            timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
+            arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
+            statusEvent = STATUS_SENDT,
+            sporsmals = listOf(SporsmalOgSvarDTO("din arbeidssituasjon?", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER")
+            ))
 }
 
 private fun getApenEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
-        sykmeldingId = sykmelding.id,
-        timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
-        statusEvent = STATUS_APEN
-    )
+            sykmeldingId = sykmelding.id,
+            timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
+            statusEvent = STATUS_APEN)
 }
