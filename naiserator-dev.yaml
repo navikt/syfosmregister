@@ -49,6 +49,8 @@ spec:
           namespace: team-esyfo
         - application: sparenaproxy
         - application: syfosmregler
+        - application: smoppslag
+          namespace: risk
   vault:
     enabled: true
     paths:
@@ -74,7 +76,7 @@ spec:
     - name: CLIENT_ID
       value: 543ceb1e-eb69-4089-9458-bdec61160afa
     - name: ALLOWED_APP_IDS
-      value: 281ba984-745f-48b8-a79c-9444b8688361,1f74844d-759f-4d1f-8f32-243f9c52ef5d,8e294ba4-f37c-4cb9-871b-cce06f63e0b9
+      value: 1f74844d-759f-4d1f-8f32-243f9c52ef5d
     - name: SYFOTILGANGSKONTROLL_URL
       value: https://syfo-tilgangskontroll.nais.preprod.local
     - name: SYFOTILGANGSKONTROLL_CLIENT_ID

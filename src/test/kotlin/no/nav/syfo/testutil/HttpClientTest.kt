@@ -26,6 +26,7 @@ class HttpClientTest {
         install(JsonFeature) {
             getSerializer()
         }
+        expectSuccess = false
         engine {
             addHandler { request ->
                 respond(responseData!!.content, responseData!!.httpStatusCode, responseData!!.headers)

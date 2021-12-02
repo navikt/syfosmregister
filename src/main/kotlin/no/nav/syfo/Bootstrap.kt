@@ -7,11 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.ktor.util.KtorExperimentalAPI
 import io.prometheus.client.hotspot.DefaultExports
-import java.net.URL
-import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -43,6 +39,9 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.URL
+import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 
 val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerKotlinModule()
@@ -53,22 +52,21 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
-@KtorExperimentalAPI
 fun main() {
     val environment = Environment()
     val vaultServiceUser = VaultServiceUser()
     val vaultSecrets =
-            objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
+        objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
-            .cached(10, 24, TimeUnit.HOURS)
-            .rateLimited(10, 1, TimeUnit.MINUTES)
-            .build()
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
 
     val jwkProviderInternal = JwkProviderBuilder(URL(vaultSecrets.internalJwtWellKnownUri))
-            .cached(10, 24, TimeUnit.HOURS)
-            .rateLimited(10, 1, TimeUnit.MINUTES)
-            .build()
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
 
     val jwkProviderAadV2 = JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
         .cached(10, 24, TimeUnit.HOURS)
@@ -89,7 +87,7 @@ fun main() {
         .envOverrides()
 
     val consumerProperties = kafkaBaseConfig.toConsumerConfig(
-            "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
+        "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
 
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfig, environment)
@@ -103,20 +101,22 @@ fun main() {
     val mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfig, environment)
 
     val receivedSykmeldingKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
-    val mottattSykmeldingService = MottattSykmeldingService(applicationState = applicationState,
-            env = environment,
-            kafkaconsumer = receivedSykmeldingKafkaConsumer,
-            database = database,
-            sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
-            mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
-            mottattSykmeldingStatusService = mottattSykmeldingStatusService)
+    val mottattSykmeldingService = MottattSykmeldingService(
+        applicationState = applicationState,
+        env = environment,
+        kafkaconsumer = receivedSykmeldingKafkaConsumer,
+        database = database,
+        sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
+        mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+    )
 
     val behandlingsutfallKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
     val behandligsutfallService = BehandlingsutfallService(
-            applicationState = applicationState,
-            kafkaconsumer = behandlingsutfallKafkaConsumer,
-            env = environment,
-            database = database
+        applicationState = applicationState,
+        kafkaconsumer = behandlingsutfallKafkaConsumer,
+        env = environment,
+        database = database
     )
 
     val applicationEngine = createApplicationEngine(
@@ -140,28 +140,27 @@ fun main() {
     applicationState.ready = true
     RenewVaultService(vaultCredentialService, applicationState).startRenewTasks()
     launchListeners(
-            applicationState = applicationState,
-            sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
-            mottattSykmeldingService = mottattSykmeldingService,
-            behandligsutfallService = behandligsutfallService
+        applicationState = applicationState,
+        sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
+        mottattSykmeldingService = mottattSykmeldingService,
+        behandligsutfallService = behandligsutfallService
     )
 }
 
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
-        GlobalScope.launch(Dispatchers.Unbounded) {
-            try {
-                action()
-            } catch (e: TrackableException) {
-                log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
-            } catch (ex: Exception) {
-                log.error("Noe gikk galt", ex.cause)
-            } finally {
-                applicationState.alive = false
-                applicationState.ready = false
-            }
+    GlobalScope.launch(Dispatchers.Unbounded) {
+        try {
+            action()
+        } catch (e: TrackableException) {
+            log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
+        } catch (ex: Exception) {
+            log.error("Noe gikk galt", ex.cause)
+        } finally {
+            applicationState.alive = false
+            applicationState.ready = false
         }
+    }
 
-@KtorExperimentalAPI
 fun launchListeners(
     applicationState: ApplicationState,
     sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,

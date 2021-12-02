@@ -16,4 +16,5 @@ data class SvarDTO(
 )
 
 enum class SvartypeDTO {
-    ARBEIDSSITUASJON, PERIODER, JA_NEI }
+    ARBEIDSSITUASJON, PERIODER, JA_NEI
+}

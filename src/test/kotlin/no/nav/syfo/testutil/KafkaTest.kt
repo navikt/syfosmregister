@@ -1,6 +1,5 @@
 package no.nav.syfo.testutil
 
-import java.util.Properties
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonNullableKafkaSerializer
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -10,6 +9,7 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.testcontainers.containers.KafkaContainer
 import org.testcontainers.containers.Network
 import org.testcontainers.utility.DockerImageName
+import java.util.Properties
 
 fun configureAndStartKafka(): KafkaContainer {
     val kafka = KafkaContainer(DockerImageName.parse(KAFKA_IMAGE_NAME).withTag(KAFKA_IMAGE_VERSION)).withNetwork(Network.newNetwork())

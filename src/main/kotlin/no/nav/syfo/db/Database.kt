@@ -2,15 +2,16 @@ package no.nav.syfo.db
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import java.sql.Connection
-import java.sql.ResultSet
 import no.nav.syfo.Environment
 import org.flywaydb.core.Flyway
+import java.sql.Connection
+import java.sql.ResultSet
+import java.util.Locale
 
 enum class Role {
     ADMIN, USER, READONLY;
 
-    override fun toString() = name.toLowerCase()
+    override fun toString() = name.lowercase(Locale.getDefault())
 }
 
 class Database(private val env: Environment, private val vaultCredentialService: VaultCredentialService) : DatabaseInterface {
@@ -27,18 +28,20 @@ class Database(private val env: Environment, private val vaultCredentialService:
             databaseName = env.databaseName,
             role = Role.USER
         )
-        dataSource = HikariDataSource(HikariConfig().apply {
-            jdbcUrl = env.syfosmregisterDBURL
-            username = initialCredentials.username
-            password = initialCredentials.password
-            maximumPoolSize = 3
-            minimumIdle = 1
-            idleTimeout = 10001
-            maxLifetime = 300000
-            isAutoCommit = false
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-            validate()
-        })
+        dataSource = HikariDataSource(
+            HikariConfig().apply {
+                jdbcUrl = env.syfosmregisterDBURL
+                username = initialCredentials.username
+                password = initialCredentials.password
+                maximumPoolSize = 3
+                minimumIdle = 1
+                idleTimeout = 10001
+                maxLifetime = 300000
+                isAutoCommit = false
+                transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+                validate()
+            }
+        )
 
         vaultCredentialService.renewCredentialsTaskData = RenewCredentialsTaskData(
             dataSource = dataSource,
