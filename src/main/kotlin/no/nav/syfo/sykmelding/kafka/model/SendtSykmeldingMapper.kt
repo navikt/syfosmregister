@@ -11,22 +11,22 @@ import no.nav.syfo.sykmelding.model.toSykmeldingsperiodeDTO
 
 fun SykmeldingDbModelUtenBehandlingsutfall.toEnkelSykmelding(): EnkelSykmelding {
     return EnkelSykmelding(
-            id = id,
-            mottattTidspunkt = mottattTidspunkt,
-            legekontorOrgnummer = legekontorOrgNr,
-            behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
-            meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
-            navnFastlege = sykmeldingsDokument.navnFastlege,
-            tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
-            syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
-            behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
-            sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO(id) },
-            arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
-            kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
-            prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
-            egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
-            papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
-            harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
-            merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
+        id = id,
+        mottattTidspunkt = mottattTidspunkt,
+        legekontorOrgnummer = legekontorOrgNr,
+        behandletTidspunkt = getUtcTime(sykmeldingsDokument.behandletTidspunkt),
+        meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
+        navnFastlege = sykmeldingsDokument.navnFastlege,
+        tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
+        syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
+        behandler = sykmeldingsDokument.behandler.toBehandlerDTO(),
+        sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeDTO(id) },
+        arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverDTO(),
+        kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientDTO(),
+        prognose = sykmeldingsDokument.prognose?.toPrognoseDTO(),
+        egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
+        papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
+        harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
+        merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
     )
 }

@@ -1,7 +1,5 @@
 package no.nav.syfo.sykmelding.kafka.model
 
-import java.time.LocalDate
-import java.time.Month
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.AnnenFraverGrunn
 import no.nav.syfo.model.AnnenFraversArsak
@@ -12,6 +10,8 @@ import no.nav.syfo.model.Periode
 import org.amshove.kluent.shouldBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
+import java.time.LocalDate
+import java.time.Month
 
 typealias MedisinskVurderingDB = no.nav.syfo.sykmelding.db.MedisinskVurdering
 typealias DiagnoseDB = no.nav.syfo.sykmelding.db.Diagnose
@@ -125,12 +125,12 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
         }
         it("Should not get redusert arbeidsgiverperiode when not smittefare") {
             getMedisinskVurdering(annenFraversArsak = AnnenFraversArsak("beskrivelse", listOf(AnnenFraverGrunn.ARBEIDSRETTET_TILTAK)))
-                    .getHarRedusertArbeidsgiverperiode(periodeInnenforKoronaregler) shouldBe false
+                .getHarRedusertArbeidsgiverperiode(periodeInnenforKoronaregler) shouldBe false
         }
 
         it("Should get redusert arbeidsgiverperiode ved smittefare") {
             getMedisinskVurdering(annenFraversArsak = AnnenFraversArsak("beskrivelse", listOf(AnnenFraverGrunn.SMITTEFARE)))
-                    .getHarRedusertArbeidsgiverperiode(periodeInnenforKoronaregler) shouldBe true
+                .getHarRedusertArbeidsgiverperiode(periodeInnenforKoronaregler) shouldBe true
         }
         it("skal ikke gi redusert arbeidsgiverperiode hvis periode er før koronareglene gjelder") {
             getMedisinskVurdering(diagnoseKode = "R991").getHarRedusertArbeidsgiverperiode(periodeUtenforKoronaregler) shouldBe false
@@ -162,12 +162,12 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
         }
         it("Should not get redusert arbeidsgiverperiode when not smittefare") {
             getMedisinskVurderingDB(annenFraversArsak = AnnenFraversArsakDB("beskrivelse", listOf(AnnenFraversGrunnDB.ARBEIDSRETTET_TILTAK)))
-                    .getHarRedusertArbeidsgiverperiode(dbPeriodeInnenforKoronaregler) shouldBe false
+                .getHarRedusertArbeidsgiverperiode(dbPeriodeInnenforKoronaregler) shouldBe false
         }
 
         it("Should get redusert arbeidsgiverperiode ved smittefare") {
             getMedisinskVurderingDB(annenFraversArsak = AnnenFraversArsakDB("beskrivelse", listOf(AnnenFraversGrunnDB.SMITTEFARE)))
-                    .getHarRedusertArbeidsgiverperiode(dbPeriodeInnenforKoronaregler) shouldBe true
+                .getHarRedusertArbeidsgiverperiode(dbPeriodeInnenforKoronaregler) shouldBe true
         }
         it("skal ikke gi redusert arbeidsgiverperiode hvis periode er før koronareglene gjelder") {
             getMedisinskVurderingDB(diagnoseKode = "R991").getHarRedusertArbeidsgiverperiode(dbPeriodeUtenforKoronaregler) shouldBe false
@@ -232,12 +232,12 @@ private fun getMedisinskVurdering(diagnoseKode: String? = null, bidiagnoseKode: 
     }
 
     return MedisinskVurdering(
-            diagnose,
-            bidiagnose,
-            false,
-            false,
-            null,
-            annenFraversArsak
+        diagnose,
+        bidiagnose,
+        false,
+        false,
+        null,
+        annenFraversArsak
     )
 }
 
@@ -250,11 +250,11 @@ private fun getMedisinskVurderingDB(diagnoseKode: String? = null, bidiagnoseKode
     }
 
     return MedisinskVurderingDB(
-            diagnose,
-            bidiagnose,
-            false,
-            false,
-            null,
-            annenFraversArsak
+        diagnose,
+        bidiagnose,
+        false,
+        false,
+        null,
+        annenFraversArsak
     )
 }

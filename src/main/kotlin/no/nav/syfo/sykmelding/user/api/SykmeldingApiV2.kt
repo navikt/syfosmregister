@@ -10,9 +10,9 @@ import io.ktor.routing.Route
 import io.ktor.routing.accept
 import io.ktor.routing.get
 import io.ktor.routing.route
-import java.time.LocalDate
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.StatusEventDTO
+import java.time.LocalDate
 
 fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
     route("api/v2/sykmeldinger") {
@@ -57,4 +57,4 @@ private fun checkExcludeInclude(exclude: List<String>?, include: List<String>?):
 }
 
 private fun checkFomAndTomDate(fom: LocalDate?, tom: LocalDate?) =
-        fom != null && tom != null && tom.isBefore(fom)
+    fom != null && tom != null && tom.isBefore(fom)
