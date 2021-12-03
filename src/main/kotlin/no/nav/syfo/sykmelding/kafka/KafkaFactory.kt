@@ -91,6 +91,7 @@ class KafkaFactory private constructor() {
             val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
                 .also {
                     it["auto.offset.reset"] = "latest"
+                    it["specific.avro.reader"] = false
                 }
                 .envOverrides()
             val properties = kafkaBaseConfig.toConsumerConfig("${environment.applicationName}-consumer", KafkaAvroDeserializer::class)
