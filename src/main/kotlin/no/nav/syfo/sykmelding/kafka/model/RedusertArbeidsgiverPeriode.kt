@@ -11,8 +11,9 @@ typealias DiagnoseDB = no.nav.syfo.sykmelding.db.Diagnose
 typealias AnnenFraversArsakDB = no.nav.syfo.sykmelding.db.AnnenFraversArsak
 typealias AnnenFraversGrunnDB = no.nav.syfo.sykmelding.db.AnnenFraverGrunn
 private val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071", "U072", "A23", "R992")
-val koronaFraDato = LocalDate.of(2020, Month.MARCH, 15)
-val koronaTilDato = LocalDate.of(2021, Month.OCTOBER, 1)
+val koronaForsteFraDato = LocalDate.of(2020, Month.MARCH, 15)
+val koronaForsteTilDato = LocalDate.of(2021, Month.OCTOBER, 1)
+val koronaAndreFraDato = LocalDate.of(2021, Month.DECEMBER, 5) // Må bekreftes at reglene gjelder fra og med 6/12!
 
 fun MedisinskVurderingDB.getHarRedusertArbeidsgiverperiode(sykmeldingsperioder: List<Periode>): Boolean {
     val sykmeldingsperioderInnenforKoronaregler = sykmeldingsperioder.filter { periodeErInnenforKoronaregler(it.fom, it.tom) }
@@ -47,8 +48,10 @@ private fun MedisinskVurdering.checkSmittefare() =
     annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == AnnenFraverGrunn.SMITTEFARE } == true
 
 fun periodeErInnenforKoronaregler(fom: LocalDate, tom: LocalDate): Boolean {
-    if (fom.isAfter(koronaFraDato) || (fom.isBefore(koronaFraDato) && tom.isAfter(koronaFraDato))) {
-        return fom.isBefore(koronaTilDato)
+    if (fom.isAfter(koronaAndreFraDato) || (fom.isBefore(koronaAndreFraDato) && tom.isAfter(koronaAndreFraDato))) {
+        return true
+    } else if (fom.isAfter(koronaForsteFraDato) || (fom.isBefore(koronaForsteFraDato) && tom.isAfter(koronaForsteFraDato))) {
+        return fom.isBefore(koronaForsteTilDato)
     }
     return false
 }
