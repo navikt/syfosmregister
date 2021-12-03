@@ -20,10 +20,13 @@ import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.application.getWellKnown
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.VaultCredentialService
+import no.nav.syfo.identendring.IdentendringService
+import no.nav.syfo.identendring.PdlAktorConsumer
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getBekreftetSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSendtSykmeldingKafkaProducer
@@ -42,6 +45,7 @@ import org.slf4j.LoggerFactory
 import java.net.URL
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
+import kotlin.time.ExperimentalTime
 
 val objectMapper: ObjectMapper = ObjectMapper().apply {
     registerKotlinModule()
@@ -52,6 +56,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
+@ExperimentalTime
 fun main() {
     val environment = Environment()
     val vaultServiceUser = VaultServiceUser()
@@ -119,6 +124,9 @@ fun main() {
         database = database
     )
 
+    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer)
+    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
+
     val applicationEngine = createApplicationEngine(
         env = environment,
         applicationState = applicationState,
@@ -139,6 +147,7 @@ fun main() {
     applicationServer.start()
     applicationState.ready = true
     RenewVaultService(vaultCredentialService, applicationState).startRenewTasks()
+    pdlAktorConsumer.startConsumer()
     launchListeners(
         applicationState = applicationState,
         sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,

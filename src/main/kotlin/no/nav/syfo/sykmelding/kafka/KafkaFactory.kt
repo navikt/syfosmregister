@@ -1,6 +1,10 @@
 package no.nav.syfo.sykmelding.kafka
 
+import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import no.nav.syfo.Environment
+import no.nav.syfo.VaultServiceUser
+import no.nav.syfo.kafka.envOverrides
+import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
@@ -15,6 +19,7 @@ import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonNullableKafkaSerializer
+import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -80,6 +85,19 @@ class KafkaFactory private constructor() {
                     environment.sm2013BehandlingsUtfallTopic
                 )
             )
+        }
+
+        fun getKafkaConsumerPdlAktor(vaultServiceUser: VaultServiceUser, environment: Environment): KafkaConsumer<String, GenericRecord> {
+            val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
+                .also {
+                    it["auto.offset.reset"] = "latest"
+                    it["specific.avro.reader"] = false
+                }
+                .envOverrides()
+            val properties = kafkaBaseConfig.toConsumerConfig("${environment.applicationName}-consumer", KafkaAvroDeserializer::class)
+            properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
+
+            return KafkaConsumer<String, GenericRecord>(properties)
         }
     }
 }
