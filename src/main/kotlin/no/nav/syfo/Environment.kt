@@ -50,7 +50,6 @@ data class VaultSecrets(
     val syfomockUsername: String,
     val syfomockPassword: String,
     val internalJwtIssuer: String,
-    val internalJwtWellKnownUri: String,
     val internalLoginServiceClientId: String
 )
 
