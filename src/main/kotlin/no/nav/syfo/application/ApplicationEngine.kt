@@ -39,7 +39,6 @@ import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
-import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV1
 import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV2
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
@@ -54,11 +53,7 @@ fun createApplicationEngine(
     jwkProvider: JwkProvider,
     issuer: String,
     cluster: String,
-    jwkProviderInternal: JwkProvider,
     sykmeldingStatusService: SykmeldingStatusService,
-    issuerServiceuser: String,
-    clientId: String,
-    appIds: List<String>,
     jwkProviderAadV2: JwkProvider
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
@@ -76,10 +71,6 @@ fun createApplicationEngine(
             vaultSecrets = vaultSecrets,
             jwkProvider = jwkProvider,
             issuer = issuer,
-            jwkProviderInternal = jwkProviderInternal,
-            issuerServiceuser = issuerServiceuser,
-            clientId = clientId,
-            appIds = appIds,
             jwkProviderAadV2 = jwkProviderAadV2,
             environment = env
         )
@@ -126,9 +117,6 @@ fun createApplicationEngine(
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
                 registrerSykmeldingApiV2(sykmeldingerService)
-            }
-            authenticate("jwtserviceuser") {
-                registrerSykmeldingServiceuserApiV1(sykmeldingerService)
             }
             authenticate("azureadv2") {
                 registrerSykmeldingServiceuserApiV2(sykmeldingerService)

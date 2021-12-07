@@ -68,10 +68,6 @@ object AuthenticateSpek : Spek({
                 jwkProvider,
                 "https://sts.issuer.net/myid",
                 jwkProvider,
-                "",
-                "",
-                emptyList(),
-                jwkProvider,
                 getEnvironment()
             )
             application.routing {

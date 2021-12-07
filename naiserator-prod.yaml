@@ -71,12 +71,6 @@ spec:
       value: jdbc:postgresql://fsspgdb.adeo.no:5432/syfosmregister
     - name: MOUNT_PATH_VAULT
       value: /postgresql/prod-fss
-    - name: JWT_ISSUER
-      value: https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b/v2.0
-    - name: CLIENT_ID
-      value: 96a10e4e-4437-47a2-ae9c-2f1c1634340e
-    - name: ALLOWED_APP_IDS
-      value: de494f0f-fc49-4420-89d6-16d8198ed211
     - name: SYFOTILGANGSKONTROLL_URL
       value: https://syfo-tilgangskontroll.nais.adeo.no
     - name: SYFOTILGANGSKONTROLL_CLIENT_ID
