@@ -20,10 +20,6 @@ fun Application.setupAuth(
     vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
     issuer: String,
-    jwkProviderInternal: JwkProvider,
-    issuerServiceuser: String,
-    clientId: String,
-    appIds: List<String>,
     jwkProviderAadV2: JwkProvider,
     environment: Environment
 ) {
@@ -34,17 +30,6 @@ fun Application.setupAuth(
                 when {
                     hasLoginserviceIdportenClientIdAudience(credentials, loginserviceIdportenAudience) && erNiva4(credentials) -> JWTPrincipal(credentials.payload)
                     else -> unauthorized(credentials)
-                }
-            }
-        }
-        jwt(name = "jwtserviceuser") {
-            verifier(jwkProviderInternal, issuerServiceuser)
-            validate { credentials ->
-                val appId: String = credentials.payload.getClaim("azp").asString()
-                if (appId in appIds && clientId in credentials.payload.audience) {
-                    JWTPrincipal(credentials.payload)
-                } else {
-                    unauthorized(credentials)
                 }
             }
         }

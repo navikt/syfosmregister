@@ -60,10 +60,6 @@ class SykmeldingApiV2IntegrationTest : Spek({
                 jwkProvider,
                 "",
                 jwkProvider,
-                "https://sts.issuer.net/myid",
-                "clientId",
-                listOf("syfosoknad"),
-                jwkProvider,
                 getEnvironment()
             )
             application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
