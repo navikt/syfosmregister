@@ -1,9 +1,15 @@
 package no.nav.syfo.testutil
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.opentable.db.postgres.embedded.EmbeddedPostgres
+import io.mockk.every
+import io.mockk.mockk
+import no.nav.syfo.Environment
+import no.nav.syfo.db.Database
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.db.VaultCredentialService
+import no.nav.syfo.db.VaultCredentials
 import no.nav.syfo.db.toList
+import no.nav.syfo.log
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.AnnenFraversArsak
@@ -32,7 +38,7 @@ import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.sykmelding.db.Merknad
-import org.flywaydb.core.Flyway
+import org.testcontainers.containers.PostgreSQLContainer
 import java.net.ServerSocket
 import java.sql.Connection
 import java.sql.ResultSet
@@ -41,19 +47,43 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
+class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:12")
+
 class TestDB : DatabaseInterface {
+
     companion object {
-        private var staticPG: EmbeddedPostgres = EmbeddedPostgres.start()
+        var database: DatabaseInterface
+        val vaultCredentialService = mockk<VaultCredentialService>()
+        private val psqlContainer: PsqlContainer = PsqlContainer()
+            .withExposedPorts(5432)
+            .withUsername("username")
+            .withPassword("password")
+            .withDatabaseName("database")
+            .withInitScript("db/testdb-init.sql")
+
         init {
-            Flyway.configure().run {
-                dataSource(staticPG.postgresDatabase).load().migrate()
+            psqlContainer.start()
+            val mockEnv = mockk<Environment>(relaxed = true)
+            every { mockEnv.mountPathVault } returns ""
+            every { mockEnv.databaseName } returns "database"
+            every { mockEnv.syfosmregisterDBURL } returns psqlContainer.jdbcUrl
+            every { vaultCredentialService.renewCredentialsTaskData = any() } returns Unit
+            every { vaultCredentialService.getNewCredentials(any(), any(), any()) } returns VaultCredentials(
+                "1",
+                "username",
+                "password"
+            )
+            try {
+                database = Database(mockEnv, vaultCredentialService)
+            } catch (ex: Exception) {
+                log.error("error", ex)
+                database = Database(mockEnv, vaultCredentialService)
             }
         }
     }
-    private var pg: EmbeddedPostgres = staticPG
 
     override val connection: Connection
-        get() = pg.postgresDatabase.connection.apply { autoCommit = false }
+        get() = database.connection
 
     fun stop() {
         this.connection.dropData()

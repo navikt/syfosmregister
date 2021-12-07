@@ -29,13 +29,13 @@ val flywayVersion = "7.15.0"
 val hikariVersion = "5.0.0"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "1.e6f10d8"
-val postgresEmbeddedVersion = "0.13.4"
 val mockkVersion = "1.12.0"
 val nimbusdsVersion = "9.2"
 val testContainerKafkaVersion = "1.16.2"
 val caffeineVersion = "3.0.4"
 val kotlinVersion = "1.5.30"
 val swaggerUiVersion = "3.10.0"
+val testContainerVersion = "1.16.2"
 
 plugins {
     id("org.jmailen.kotlinter") version "3.6.0"
@@ -124,8 +124,7 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty") // conflicts with WireMock
     }
-    testImplementation("no.nav:kafka-embedded-env:$kafkaEmbeddedVersion")
-    testImplementation("com.opentable.components:otj-pg-embedded:$postgresEmbeddedVersion")
+    testImplementation("org.testcontainers:postgresql:$testContainerVersion")
     testImplementation("com.nimbusds:nimbus-jose-jwt:$nimbusdsVersion")
     testImplementation("org.testcontainers:kafka:$testContainerKafkaVersion")
     testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
