@@ -14,6 +14,7 @@ private val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071", "U07
 val koronaForsteFraDato = LocalDate.of(2020, Month.MARCH, 15)
 val koronaForsteTilDato = LocalDate.of(2021, Month.OCTOBER, 1)
 val koronaAndreFraDato = LocalDate.of(2021, Month.NOVEMBER, 30)
+val koronaAndreTilDato = LocalDate.of(2022, Month.JUNE, 30)
 
 fun MedisinskVurderingDB.getHarRedusertArbeidsgiverperiode(sykmeldingsperioder: List<Periode>): Boolean {
     val sykmeldingsperioderInnenforKoronaregler = sykmeldingsperioder.filter { periodeErInnenforKoronaregler(it.fom, it.tom) }
@@ -48,10 +49,5 @@ private fun MedisinskVurdering.checkSmittefare() =
     annenFraversArsak?.grunn?.any { annenFraverGrunn -> annenFraverGrunn == AnnenFraverGrunn.SMITTEFARE } == true
 
 fun periodeErInnenforKoronaregler(fom: LocalDate, tom: LocalDate): Boolean {
-    if (fom.isAfter(koronaAndreFraDato) || (fom.isBefore(koronaAndreFraDato) && tom.isAfter(koronaAndreFraDato))) {
-        return true
-    } else if (fom.isAfter(koronaForsteFraDato) || (fom.isBefore(koronaForsteFraDato) && tom.isAfter(koronaForsteFraDato))) {
-        return fom.isBefore(koronaForsteTilDato)
-    }
-    return false
+    return (tom.isAfter(koronaAndreFraDato) && fom.isBefore(koronaAndreTilDato)) || (fom.isBefore(koronaForsteTilDato) && tom.isAfter(koronaForsteFraDato))
 }
