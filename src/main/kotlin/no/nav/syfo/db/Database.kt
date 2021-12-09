@@ -21,7 +21,6 @@ class Database(private val env: Environment, private val vaultCredentialService:
         get() = dataSource.connection
 
     init {
-        runFlywayMigrations()
 
         val initialCredentials = vaultCredentialService.getNewCredentials(
             mountPath = env.mountPathVault,
@@ -42,6 +41,7 @@ class Database(private val env: Environment, private val vaultCredentialService:
                 validate()
             }
         )
+        runFlywayMigrations()
 
         vaultCredentialService.renewCredentialsTaskData = RenewCredentialsTaskData(
             dataSource = dataSource,

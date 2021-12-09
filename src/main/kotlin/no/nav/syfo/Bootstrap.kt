@@ -68,11 +68,6 @@ fun main() {
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
 
-    val jwkProviderInternal = JwkProviderBuilder(URL(vaultSecrets.internalJwtWellKnownUri))
-        .cached(10, 24, TimeUnit.HOURS)
-        .rateLimited(10, 1, TimeUnit.MINUTES)
-        .build()
-
     val jwkProviderAadV2 = JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
         .cached(10, 24, TimeUnit.HOURS)
         .rateLimited(10, 1, TimeUnit.MINUTES)
@@ -135,11 +130,7 @@ fun main() {
         jwkProvider = jwkProvider,
         issuer = wellKnown.issuer,
         cluster = environment.cluster,
-        jwkProviderInternal = jwkProviderInternal,
         sykmeldingStatusService = sykmeldingStatusService,
-        issuerServiceuser = environment.jwtIssuer,
-        clientId = environment.clientId,
-        appIds = environment.appIds,
         jwkProviderAadV2 = jwkProviderAadV2
     )
 

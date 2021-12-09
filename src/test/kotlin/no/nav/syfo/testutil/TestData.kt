@@ -43,7 +43,6 @@ fun getVaultSecrets(): VaultSecrets {
         "",
         "",
         "",
-        "",
         ""
     )
 }
@@ -56,9 +55,6 @@ fun getEnvironment(): Environment {
         cluster = "",
         truststore = "",
         truststorePassword = "",
-        jwtIssuer = "",
-        appIds = emptyList(),
-        clientId = "",
         syfoTilgangskontrollUrl = "",
         loginserviceIdportenAudience = emptyList(),
         loginserviceIdportenDiscoveryUrl = "",

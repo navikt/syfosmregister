@@ -62,15 +62,10 @@ object AuthenticateSpek : Spek({
                     syfomockUsername = "syfomock",
                     syfomockPassword = "test",
                     internalJwtIssuer = "",
-                    internalJwtWellKnownUri = "",
                     internalLoginServiceClientId = ""
                 ),
                 jwkProvider,
                 "https://sts.issuer.net/myid",
-                jwkProvider,
-                "",
-                "",
-                emptyList(),
                 jwkProvider,
                 getEnvironment()
             )

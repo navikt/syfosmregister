@@ -29,7 +29,13 @@ class SykmeldingStatusServiceSpek : Spek({
     beforeEachTest {
         database.connection.dropData()
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
-        database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC), StatusEvent.APEN))
+        database.registerStatus(
+            SykmeldingStatusEvent(
+                testSykmeldingsopplysninger.id,
+                testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC),
+                StatusEvent.APEN
+            )
+        )
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
 
@@ -174,7 +180,9 @@ class SykmeldingStatusServiceSpek : Spek({
                     sporsmal
                 )
             )
-            val savedSporsmals = database.connection.hentSporsmalOgSvar("uuid")
+            val savedSporsmals = database.connection.use {
+                it.hentSporsmalOgSvar("uuid")
+            }
             savedSporsmals.size shouldBeEqualTo 0
         }
 
@@ -187,7 +195,9 @@ class SykmeldingStatusServiceSpek : Spek({
                     sporsmal
                 )
             )
-            val savedSporsmals = database.connection.hentSporsmalOgSvar("uuid")
+            val savedSporsmals = database.connection.use {
+                it.hentSporsmalOgSvar("uuid")
+            }
             savedSporsmals shouldBeEqualTo sporsmal
         }
 
@@ -207,14 +217,22 @@ class SykmeldingStatusServiceSpek : Spek({
                     StatusEvent.APEN
                 )
             )
-            val savedSporsmal2 = database.connection.hentSporsmalOgSvar("uuid")
+            val savedSporsmal2 = database.connection.use {
+                it.hentSporsmalOgSvar("uuid")
+            }
             savedSporsmal2.size shouldBeEqualTo 0
         }
 
         it("Skal kunne hente SendtSykmeldingUtenDiagnose selv om behandlingsutfall mangler") {
             database.connection.dropData()
             database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
-            database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC), StatusEvent.APEN))
+            database.registerStatus(
+                SykmeldingStatusEvent(
+                    testSykmeldingsopplysninger.id,
+                    testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC),
+                    StatusEvent.APEN
+                )
+            )
             database.registrerSendt(
                 SykmeldingSendEvent(
                     testSykmeldingsopplysninger.id,
@@ -225,7 +243,11 @@ class SykmeldingStatusServiceSpek : Spek({
                         Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
                     )
                 ),
-                SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5).atOffset(ZoneOffset.UTC), StatusEvent.SENDT)
+                SykmeldingStatusEvent(
+                    testSykmeldingsopplysninger.id,
+                    testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5).atOffset(ZoneOffset.UTC),
+                    StatusEvent.SENDT
+                )
             )
             val sendtSykmelding = sykmeldingStatusService.getEnkelSykmelding(testSykmeldingsopplysninger.id)
             sendtSykmelding shouldNotBeEqualTo null

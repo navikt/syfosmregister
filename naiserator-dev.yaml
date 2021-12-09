@@ -71,12 +71,6 @@ spec:
       value: jdbc:postgresql://B27DBVL003.preprod.local:5432/syfosmregister
     - name: MOUNT_PATH_VAULT
       value: /postgresql/preprod-fss
-    - name: JWT_ISSUER
-      value: https://login.microsoftonline.com/966ac572-f5b7-4bbe-aa88-c76419c0f851/v2.0
-    - name: CLIENT_ID
-      value: 543ceb1e-eb69-4089-9458-bdec61160afa
-    - name: ALLOWED_APP_IDS
-      value: 1f74844d-759f-4d1f-8f32-243f9c52ef5d
     - name: SYFOTILGANGSKONTROLL_URL
       value: https://syfo-tilgangskontroll.nais.preprod.local
     - name: SYFOTILGANGSKONTROLL_CLIENT_ID
