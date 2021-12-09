@@ -247,6 +247,24 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
 
             innenforKoronaPeriode shouldBe true
         }
+
+        it("FOM = 25. juni 2022 og TOM = 2. juli skal gi true") {
+            val fom = LocalDate.of(2022, Month.JUNE, 25)
+            val tom = LocalDate.of(2022, Month.JULY, 2)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe true
+        }
+
+        it("FOM = 1. juli 2022 og TOM = 8. juli skal gi false") {
+            val fom = LocalDate.of(2022, Month.JULY, 1)
+            val tom = LocalDate.of(2022, Month.JULY, 8)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe false
+        }
     }
 })
 

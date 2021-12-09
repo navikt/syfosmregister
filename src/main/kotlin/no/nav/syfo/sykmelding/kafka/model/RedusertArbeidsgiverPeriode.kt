@@ -14,7 +14,7 @@ private val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071", "U07
 val koronaForsteFraDato = LocalDate.of(2020, Month.MARCH, 15)
 val koronaForsteTilDato = LocalDate.of(2021, Month.OCTOBER, 1)
 val koronaAndreFraDato = LocalDate.of(2021, Month.NOVEMBER, 30)
-val koronaAndreTilDato = LocalDate.of(2022, Month.JUNE, 30)
+val koronaAndreTilDato = LocalDate.of(2022, Month.JULY, 1)
 
 fun MedisinskVurderingDB.getHarRedusertArbeidsgiverperiode(sykmeldingsperioder: List<Periode>): Boolean {
     val sykmeldingsperioderInnenforKoronaregler = sykmeldingsperioder.filter { periodeErInnenforKoronaregler(it.fom, it.tom) }
