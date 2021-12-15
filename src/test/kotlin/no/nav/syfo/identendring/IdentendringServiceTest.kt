@@ -26,6 +26,7 @@ import no.nav.syfo.sykmelding.status.registerStatus
 import no.nav.syfo.sykmelding.status.registrerSendt
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
@@ -33,7 +34,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -109,16 +109,16 @@ fun forberedTestsykmeldinger(database: TestDB, gammeltFnr: String, idNySykmeldin
     database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = idSendtSykmelding, pasientFnr = gammeltFnr), testSykmeldingsdokument.copy(id = idSendtSykmelding))
     database.registerStatus(
         SykmeldingStatusEvent(
-            idSendtSykmelding, OffsetDateTime.now(ZoneOffset.UTC).minusDays(10), StatusEvent.APEN
+            idSendtSykmelding, getNowTickMillisOffsetDateTime().minusDays(10), StatusEvent.APEN
         )
     )
     database.registrerSendt(
         SykmeldingSendEvent(
-            idSendtSykmelding, OffsetDateTime.now(ZoneOffset.UTC),
+            idSendtSykmelding, getNowTickMillisOffsetDateTime(),
             ArbeidsgiverStatus(idSendtSykmelding, "orgnummer", null, "Bedrift"),
             Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))
         ),
-        SykmeldingStatusEvent(idSendtSykmelding, OffsetDateTime.now(ZoneOffset.UTC), StatusEvent.SENDT)
+        SykmeldingStatusEvent(idSendtSykmelding, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT)
     )
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idSendtSykmelding))
 
@@ -146,16 +146,16 @@ fun forberedTestsykmeldinger(database: TestDB, gammeltFnr: String, idNySykmeldin
     )
     database.registerStatus(
         SykmeldingStatusEvent(
-            idGammelSendtSykmelding, OffsetDateTime.now(ZoneOffset.UTC).minusMonths(8), StatusEvent.APEN
+            idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(8), StatusEvent.APEN
         )
     )
     database.registrerSendt(
         SykmeldingSendEvent(
-            idGammelSendtSykmelding, OffsetDateTime.now(ZoneOffset.UTC).minusMonths(6),
+            idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(6),
             ArbeidsgiverStatus(idGammelSendtSykmelding, "orgnummer", null, "Bedrift"),
             Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))
         ),
-        SykmeldingStatusEvent(idGammelSendtSykmelding, OffsetDateTime.now(ZoneOffset.UTC).minusMonths(6), StatusEvent.SENDT)
+        SykmeldingStatusEvent(idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(6), StatusEvent.SENDT)
     )
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idGammelSendtSykmelding))
 }

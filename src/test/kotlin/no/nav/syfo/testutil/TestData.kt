@@ -34,9 +34,6 @@ import no.nav.syfo.sykmelding.model.RegelStatusDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 fun getVaultSecrets(): VaultSecrets {
     return VaultSecrets(
@@ -73,7 +70,7 @@ fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<Sykmeldingsperiod
         utdypendeOpplysninger = emptyMap(),
         kontaktMedPasient = KontaktMedPasientDTO(null, null),
         sykmeldingsperioder = perioder,
-        sykmeldingStatus = no.nav.syfo.sykmelding.model.SykmeldingStatusDTO("APEN", OffsetDateTime.now(ZoneOffset.UTC), null, emptyList()),
+        sykmeldingStatus = no.nav.syfo.sykmelding.model.SykmeldingStatusDTO("APEN", getNowTickMillisOffsetDateTime(), null, emptyList()),
         behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
         medisinskVurdering = getMedisinskVurdering(),
         behandler = BehandlerDTO(
@@ -81,8 +78,8 @@ fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<Sykmeldingsperiod
             "123", "01234567891", null, null,
             AdresseDTO(null, null, null, null, null), null
         ),
-        behandletTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
-        mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
+        behandletTidspunkt = getNowTickMillisOffsetDateTime(),
+        mottattTidspunkt = getNowTickMillisOffsetDateTime(),
         skjermesForPasient = false,
         meldingTilNAV = null,
         prognose = null,
@@ -124,11 +121,11 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
     return SykmeldingDbModel(
         id = "123",
         behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-        mottattTidspunkt = OffsetDateTime.now(),
+        mottattTidspunkt = getNowTickMillisOffsetDateTime(),
         status = StatusDbModel(
             statusEvent = "APEN",
             arbeidsgiver = null,
-            statusTimestamp = OffsetDateTime.now()
+            statusTimestamp = getNowTickMillisOffsetDateTime()
         ),
         legekontorOrgNr = "123456789",
         sykmeldingsDokument = Sykmelding(
@@ -156,7 +153,7 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
             prognose = null,
             meldingTilNAV = MeldingTilNAV(true, "Masse bistand"),
             skjermesForPasient = skjermet,
-            behandletTidspunkt = LocalDateTime.now(),
+            behandletTidspunkt = getNowTickMillisLocalDateTime(),
             behandler = Behandler(
                 "fornavn",
                 null,
@@ -177,7 +174,7 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
             pasientAktoerId = "aktorId",
             avsenderSystem = AvsenderSystem("Navn", "verjosn"),
             perioder = perioder,
-            signaturDato = LocalDateTime.now()
+            signaturDato = getNowTickMillisLocalDateTime()
         ),
         merknader = null
     )
@@ -199,11 +196,11 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
     return SykmeldingDbModel(
         id = "123",
         behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-        mottattTidspunkt = OffsetDateTime.now(),
+        mottattTidspunkt = getNowTickMillisOffsetDateTime(),
         status = StatusDbModel(
             statusEvent = "APEN",
             arbeidsgiver = null,
-            statusTimestamp = OffsetDateTime.now()
+            statusTimestamp = getNowTickMillisOffsetDateTime()
         ),
         legekontorOrgNr = "123456789",
         sykmeldingsDokument = Sykmelding(
@@ -231,7 +228,7 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
             prognose = null,
             meldingTilNAV = null,
             skjermesForPasient = false,
-            behandletTidspunkt = LocalDateTime.now(),
+            behandletTidspunkt = getNowTickMillisLocalDateTime(),
             behandler = Behandler(
                 "fornavn",
                 null,
@@ -252,7 +249,7 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
             pasientAktoerId = "aktorId",
             avsenderSystem = avsenderSystem,
             perioder = perioder,
-            signaturDato = LocalDateTime.now()
+            signaturDato = getNowTickMillisLocalDateTime()
         ),
         merknader = null
     )

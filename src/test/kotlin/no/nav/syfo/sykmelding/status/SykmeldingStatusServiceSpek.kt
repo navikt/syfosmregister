@@ -10,6 +10,7 @@ import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
@@ -17,7 +18,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 class SykmeldingStatusServiceSpek : Spek({
@@ -49,7 +49,7 @@ class SykmeldingStatusServiceSpek : Spek({
 
     describe("Test registrerStatus") {
         it("Skal ikke kaste feil hvis man oppdaterer med eksisterende status på nytt") {
-            val confirmedDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+            val confirmedDateTime = getNowTickMillisOffsetDateTime()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET)
             sykmeldingStatusService.registrerStatus(status)
             sykmeldingStatusService.registrerStatus(status)
@@ -59,7 +59,7 @@ class SykmeldingStatusServiceSpek : Spek({
         }
 
         it("Skal ikke hente sykmeldinger med status SLETTET") {
-            val confirmedDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+            val confirmedDateTime = getNowTickMillisOffsetDateTime()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
             sykmeldingStatusService.registrerStatus(status)
@@ -86,7 +86,7 @@ class SykmeldingStatusServiceSpek : Spek({
             )
             database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
-            val confirmedDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+            val confirmedDateTime = getNowTickMillisOffsetDateTime()
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
             database.registerStatus(deletedStatus)
 
@@ -100,7 +100,7 @@ class SykmeldingStatusServiceSpek : Spek({
             database.registerStatus(
                 SykmeldingStatusEvent(
                     "uuid",
-                    OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(10),
+                    getNowTickMillisOffsetDateTime().plusSeconds(10),
                     StatusEvent.SENDT
                 )
             )
@@ -112,7 +112,7 @@ class SykmeldingStatusServiceSpek : Spek({
             database.registerStatus(
                 SykmeldingStatusEvent(
                     "uuid",
-                    OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(10),
+                    getNowTickMillisOffsetDateTime().plusSeconds(10),
                     StatusEvent.SENDT
                 )
             )

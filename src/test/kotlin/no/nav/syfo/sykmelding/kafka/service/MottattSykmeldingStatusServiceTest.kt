@@ -30,10 +30,9 @@ import no.nav.syfo.sykmelding.status.Svar
 import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.test.assertFailsWith
 
@@ -53,7 +52,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
     describe("Test status event for resendt sykmelding") {
         it("Test resending to sendt topic") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(), StatusEvent.SENDT)
+                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT)
             )
             every { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
             every { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(
@@ -72,7 +71,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
         }
         it("Test resending to bekreft topic") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(), StatusEvent.BEKREFTET)
+                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.BEKREFTET)
             )
             every { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
             every { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(
@@ -91,7 +90,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
         }
         it("Skal ikke resende når status ikke er sendt/bekreftet") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(sykmeldingId, OffsetDateTime.now(), StatusEvent.APEN)
+                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.APEN)
             )
             every { databaseInterface.getArbeidsgiverStatus(any()) } returns null
             every { databaseInterface.hentSporsmalOgSvar(any()) } returns emptyList()
@@ -108,7 +107,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
         it("SENDT") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
-                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
                 )
             )
             every { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } throws RuntimeException("Noe gikk galt")
@@ -121,7 +120,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
         it("BEKREFTET") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
-                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
                 )
             )
             every { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) } throws RuntimeException("Noe gikk galt")
@@ -134,7 +133,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
         it("SLETTET") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
-                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
                 )
             )
             every { tombstoneProducer.tombstoneSykmelding(any()) } throws RuntimeException("Noe gikk galt")
@@ -150,7 +149,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
         it("Bekreft oppdaterer kafka og database") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
-                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
                 )
             )
 
@@ -162,7 +161,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
         it("Bekreft avvist sykmelding oppdaterer kun database") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
-                    sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC).minusHours(5), StatusEvent.APEN
+                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
                 )
             )
 
@@ -180,13 +179,13 @@ private fun opprettSendtStatusmelding() =
     SykmeldingStatusKafkaMessageDTO(
         KafkaMetadataDTO(
             sykmeldingId,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             "fnr",
             "user"
         ),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             "SENDT",
             ArbeidsgiverStatusDTO("9999", null, "Arbeidsplassen AS"),
             listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar"))
@@ -197,13 +196,13 @@ private fun opprettBekreftStatusmelding() =
     SykmeldingStatusKafkaMessageDTO(
         KafkaMetadataDTO(
             sykmeldingId,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             "fnr",
             "user"
         ),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             "BEKREFTET",
             null,
             emptyList()
@@ -214,13 +213,13 @@ private fun opprettBekreftStatusmeldingAvvistSykmelding() =
     SykmeldingStatusKafkaMessageDTO(
         KafkaMetadataDTO(
             sykmeldingId,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             "fnr",
             "user"
         ),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             "BEKREFTET",
             null,
             null
@@ -231,13 +230,13 @@ private fun opprettSlettetStatusmelding() =
     SykmeldingStatusKafkaMessageDTO(
         KafkaMetadataDTO(
             sykmeldingId,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             "fnr",
             "user"
         ),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             "SLETTET",
             null,
             emptyList()
@@ -247,9 +246,9 @@ private fun opprettSlettetStatusmelding() =
 private fun opprettEnkelSykmelding(): EnkelSykmelding =
     EnkelSykmelding(
         id = sykmeldingId,
-        mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1),
+        mottattTidspunkt = getNowTickMillisOffsetDateTime().minusDays(1),
         legekontorOrgnummer = null,
-        behandletTidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(1),
+        behandletTidspunkt = getNowTickMillisOffsetDateTime().minusDays(1),
         meldingTilArbeidsgiver = null,
         navnFastlege = null,
         tiltakArbeidsplassen = null,
