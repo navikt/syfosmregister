@@ -6,50 +6,37 @@ group = "no.nav.syfo"
 version = "1.0.0"
 
 val coroutinesVersion = "1.5.1"
-val javaxActivationVersion = "1.1.1"
 val jacksonVersion = "2.13.0"
-val jaxbApiVersion = "2.4.0-b180830.0359"
-val jaxbVersion = "2.3.0.1"
-val kafkaVersion = "2.4.0"
-val confluentVersion = "5.3.0"
-val kafkaEmbeddedVersion = "2.4.0"
+val confluentVersion = "7.0.1"
 val kluentVersion = "1.68"
-val ktorVersion = "1.6.5"
+val ktorVersion = "1.6.7"
 val logbackVersion = "1.2.7"
-val logstashEncoderVersion = "6.6"
+val logstashEncoderVersion = "7.0.1"
 val prometheusVersion = "0.12.0"
 val spekVersion = "2.0.17"
-val sykmeldingVersion = "2019.07.29-02-53-86b22e73f7843e422ee500b486dac387a582f2d1"
-val jaxwsApiVersion = "2.3.1"
-val javaxAnnotationApiVersion = "1.3.2"
-val jaxbRuntimeVersion = "2.4.0-b180830.0438"
-val postgresVersion = "42.2.24"
-val h2Version = "1.4.197"
-val flywayVersion = "7.15.0"
+val postgresVersion = "42.3.1"
+val flywayVersion = "8.1.0"
 val hikariVersion = "5.0.0"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.e6f10d8"
-val mockkVersion = "1.12.0"
-val nimbusdsVersion = "9.2"
+val smCommonVersion = "1.a92720c"
+val mockkVersion = "1.12.1"
+val nimbusdsVersion = "9.15.2"
 val testContainerKafkaVersion = "1.16.2"
 val caffeineVersion = "3.0.4"
-val kotlinVersion = "1.5.30"
-val swaggerUiVersion = "3.10.0"
+val kotlinVersion = "1.6.0"
+val swaggerUiVersion = "4.1.2"
 val testContainerVersion = "1.16.2"
 
 plugins {
     id("org.jmailen.kotlinter") version "3.6.0"
-    kotlin("jvm") version "1.5.30"
+    kotlin("jvm") version "1.6.0"
     id("com.diffplug.spotless") version "5.16.0"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
     id("org.hidetake.swagger.generator") version "2.18.2" apply true
 }
 
 buildscript {
     dependencies {
-        classpath("javax.xml.bind:jaxb-api:2.4.0-b180830.0359")
-        classpath("org.glassfish.jaxb:jaxb-runtime:2.4.0-b180830.0438")
-        classpath("com.sun.activation:javax.activation:1.2.0")
     }
 
 }
@@ -71,7 +58,7 @@ repositories {
 
 
 dependencies {
-    implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
     implementation("io.prometheus:simpleclient_hotspot:$prometheusVersion")
@@ -88,7 +75,6 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
 
-    implementation("org.apache.kafka:kafka_2.12:$kafkaVersion")
     implementation("io.confluent:kafka-avro-serializer:$confluentVersion")
 
     implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
@@ -102,18 +88,10 @@ dependencies {
 
     //Database
     implementation("org.postgresql:postgresql:$postgresVersion")
-    implementation("com.h2database:h2:$h2Version")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     implementation("org.flywaydb:flyway-core:$flywayVersion")
     implementation("com.bettercloud:vault-java-driver:$vaultJavaDriveVersion")
 
-    implementation("no.nav.helse.xml:sm2013:$sykmeldingVersion")
-
-    implementation("javax.xml.ws:jaxws-api:$jaxwsApiVersion")
-    implementation("javax.annotation:javax.annotation-api:$javaxAnnotationApiVersion")
-    implementation("javax.xml.bind:jaxb-api:$jaxbApiVersion")
-    implementation("org.glassfish.jaxb:jaxb-runtime:$jaxbRuntimeVersion")
-    implementation("javax.activation:activation:$javaxActivationVersion")
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
@@ -156,7 +134,7 @@ tasks {
     }
 
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "14"
+        kotlinOptions.jvmTarget = "17"
     }
 
     withType<ShadowJar> {
