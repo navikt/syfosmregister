@@ -43,9 +43,6 @@ import java.net.ServerSocket
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:12")
 
@@ -190,7 +187,7 @@ val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
     legekontorReshId = "legekontorReshId",
     epjSystemNavn = "epjSystemNavn",
     epjSystemVersjon = "epjSystemVersjon",
-    mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC).toLocalDateTime(),
+    mottattTidspunkt = getNowTickMillisLocalDateTime(),
     tssid = "13455",
     merknader = emptyList(),
     partnerreferanse = null
@@ -227,7 +224,7 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
             her = "her",
             tlf = "tlf"
         ),
-        behandletTidspunkt = LocalDateTime.now(),
+        behandletTidspunkt = getNowTickMillisLocalDateTime(),
         id = "id",
         kontaktMedPasient = KontaktMedPasient(
             kontaktDato = null,
@@ -265,7 +262,7 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
             ErIArbeid(false, false, null, null),
             ErIkkeIArbeid(false, null, null)
         ),
-        signaturDato = LocalDateTime.now(),
+        signaturDato = getNowTickMillisLocalDateTime(),
         skjermesForPasient = false,
         syketilfelleStartDato = LocalDate.now(),
         tiltakArbeidsplassen = "tiltakArbeidsplassen",

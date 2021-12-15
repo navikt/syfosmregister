@@ -10,14 +10,14 @@ import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.testutil.getNowTickMillisLocalDateTime
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 fun getReceivedSykmelding(merknader: List<Merknad>? = null): ReceivedSykmelding {
     return ReceivedSykmelding(
         sykmelding = Sykmelding(
             id = "1",
-            behandletTidspunkt = LocalDateTime.now(),
+            behandletTidspunkt = getNowTickMillisLocalDateTime(),
             behandler = Behandler(
                 fornavn = "fornavn",
                 adresse = Adresse(null, null, null, null, null),
@@ -41,7 +41,7 @@ fun getReceivedSykmelding(merknader: List<Merknad>? = null): ReceivedSykmelding 
             pasientAktoerId = "1234",
             perioder = emptyList(),
             prognose = null,
-            signaturDato = LocalDateTime.now(),
+            signaturDato = getNowTickMillisLocalDateTime(),
             skjermesForPasient = false,
             syketilfelleStartDato = LocalDate.now(),
             tiltakArbeidsplassen = null,
@@ -54,7 +54,7 @@ fun getReceivedSykmelding(merknader: List<Merknad>? = null): ReceivedSykmelding 
         legekontorOrgName = "navn",
         legekontorOrgNr = null,
         legekontorReshId = null,
-        mottattDato = LocalDateTime.now(),
+        mottattDato = getNowTickMillisLocalDateTime(),
         navLogId = "1",
         personNrLege = "12345678901",
         legeHprNr = "123774",
