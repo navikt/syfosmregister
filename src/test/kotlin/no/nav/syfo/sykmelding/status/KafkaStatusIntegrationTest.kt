@@ -53,6 +53,7 @@ import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.testutil.KafkaTest
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import no.nav.syfo.testutil.setUpTestApplication
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
@@ -60,7 +61,6 @@ import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 class KafkaStatusIntegrationTest : Spek({
@@ -317,7 +317,7 @@ class KafkaStatusIntegrationTest : Spek({
 })
 
 fun getSlettetEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
-    return SykmeldingStatusKafkaEventDTO(sykmelding.id, OffsetDateTime.now(), STATUS_SLETTET, null, null)
+    return SykmeldingStatusKafkaEventDTO(sykmelding.id, getNowTickMillisOffsetDateTime(), STATUS_SLETTET, null, null)
 }
 
 private fun setUpEnvironment(environment: Environment) {

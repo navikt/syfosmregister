@@ -39,10 +39,10 @@ import no.nav.syfo.sykmelding.status.registerStatus
 import no.nav.syfo.sykmelding.status.registrerSendt
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.testutil.TestDB
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import no.nav.syfo.testutil.getSykmeldingOpplysninger
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 fun main() {
@@ -55,11 +55,11 @@ fun main() {
     db.registrerSendt(
         SykmeldingSendEvent(
             sykmeldingsopplysning.id,
-            OffsetDateTime.now(ZoneOffset.UTC),
+            getNowTickMillisOffsetDateTime(),
             ArbeidsgiverStatus(sykmeldingsopplysning.id, "123", "123", "navn"),
             Sporsmal("Arbeidssituajson", ShortName.ARBEIDSSITUASJON, Svar(sykmeldingsopplysning.id, null, Svartype.ARBEIDSSITUASJON, "EN_ARBEIDSGIVER"))
         ),
-        SykmeldingStatusEvent(sykmeldingsopplysning.id, OffsetDateTime.now(ZoneOffset.UTC), StatusEvent.SENDT)
+        SykmeldingStatusEvent(sykmeldingsopplysning.id, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT)
     )
 
     val tilgangskontrollService = mockkClass(TilgangskontrollService::class)

@@ -8,22 +8,21 @@ import no.nav.syfo.sykmelding.model.AdresseDTO
 import no.nav.syfo.sykmelding.model.ArbeidsgiverDTO
 import no.nav.syfo.sykmelding.model.BehandlerDTO
 import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 
 fun getEnkelSykmelding(id: String): EnkelSykmelding {
     return EnkelSykmelding(
         id = id,
         kontaktMedPasient = KontaktMedPasientDTO(null, null),
         behandler = BehandlerDTO("fornavn", null, "etternavn", "aktorId", "fnr", null, null, AdresseDTO(null, null, null, null, null), null),
-        behandletTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
+        behandletTidspunkt = getNowTickMillisOffsetDateTime(),
         prognose = null,
         syketilfelleStartDato = null,
         tiltakArbeidsplassen = null,
         navnFastlege = null,
         meldingTilArbeidsgiver = null,
         arbeidsgiver = ArbeidsgiverDTO(null, null),
-        mottattTidspunkt = OffsetDateTime.now(ZoneOffset.UTC),
+        mottattTidspunkt = getNowTickMillisOffsetDateTime(),
         sykmeldingsperioder = emptyList(),
         legekontorOrgnummer = null,
         egenmeldt = false,
@@ -36,7 +35,7 @@ fun getEnkelSykmelding(id: String): EnkelSykmelding {
 fun getKafkaMetadata(id: String): KafkaMetadataDTO {
     return KafkaMetadataDTO(
         sykmeldingId = id,
-        timestamp = OffsetDateTime.now(ZoneOffset.UTC),
+        timestamp = getNowTickMillisOffsetDateTime(),
         fnr = "fnr",
         source = "source"
     )
@@ -45,7 +44,7 @@ fun getKafkaMetadata(id: String): KafkaMetadataDTO {
 fun getSykmeldingStatusEvent(id: String): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = id,
-        timestamp = OffsetDateTime.now(ZoneOffset.UTC),
+        timestamp = getNowTickMillisOffsetDateTime(),
         arbeidsgiver = null,
         sporsmals = null,
         statusEvent = STATUS_BEKREFTET

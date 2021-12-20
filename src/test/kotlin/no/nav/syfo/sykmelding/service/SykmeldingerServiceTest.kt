@@ -15,6 +15,7 @@ import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 import no.nav.syfo.sykmelding.serviceuser.api.model.SykmeldtStatus
 import no.nav.syfo.testutil.getGradertePerioder
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import no.nav.syfo.testutil.getPeriode
 import no.nav.syfo.testutil.getPerioder
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
@@ -25,7 +26,6 @@ import org.amshove.kluent.shouldNotBe
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
-import java.time.OffsetDateTime
 
 class SykmeldingerServiceTest : Spek({
     val sykmeldingId = "123"
@@ -49,8 +49,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("should filter include statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
 
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, listOf("AVBRUTT"), null)
@@ -60,8 +60,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("getUserSykmelding should filter behandler fnr if fullBehandler = false") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
 
             val sykmeldinger =
@@ -73,8 +73,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("getUserSykmelding should not filter behandler fnr if fullBehandler = true") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
 
             val sykmeldinger =
@@ -86,8 +86,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("should filter multiple include statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
 
             val sykmeldinger =
@@ -99,8 +99,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("should filter exclude statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
 
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, null, listOf("AVBRUTT"))
@@ -110,8 +110,8 @@ class SykmeldingerServiceTest : Spek({
 
         it("should filter multiple exclude statuses") {
             every { database.getSykmeldinger(any()) } returns listOf(
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", OffsetDateTime.now(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", OffsetDateTime.now(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
 
             val sykmeldinger =
