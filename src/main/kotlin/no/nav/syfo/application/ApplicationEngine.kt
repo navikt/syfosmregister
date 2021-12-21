@@ -14,6 +14,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.features.HttpResponseValidator
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.features.CallId
@@ -22,6 +23,7 @@ import io.ktor.features.StatusPages
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
+import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.response.respond
 import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
@@ -30,6 +32,7 @@ import io.ktor.server.netty.Netty
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.api.registerNaisApi
+import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
@@ -98,6 +101,13 @@ fun createApplicationEngine(
                 }
             }
             expectSuccess = false
+            HttpResponseValidator {
+                handleResponseException { exception ->
+                    when (exception) {
+                        is SocketTimeoutException -> throw ServiceUnavailableException(exception.message)
+                    }
+                }
+            }
         }
 
         val httpClient = HttpClient(Apache, config)
