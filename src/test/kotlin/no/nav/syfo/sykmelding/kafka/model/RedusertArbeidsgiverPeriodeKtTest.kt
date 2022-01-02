@@ -21,8 +21,8 @@ typealias AnnenFraversGrunnDB = no.nav.syfo.sykmelding.db.AnnenFraverGrunn
 class RedusertArbeidsgiverPeriodeKtTest : Spek({
     val periodeInnenforKoronaregler = listOf<Periode>(
         Periode(
-            fom = koronaFraDato.plusDays(1),
-            tom = koronaFraDato.plusDays(15),
+            fom = koronaForsteFraDato.plusDays(1),
+            tom = koronaForsteFraDato.plusDays(15),
             aktivitetIkkeMulig = AktivitetIkkeMulig(medisinskArsak = MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
             gradert = null,
             behandlingsdager = null,
@@ -32,8 +32,8 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
     )
     val periodeUtenforKoronaregler = listOf<Periode>(
         Periode(
-            fom = koronaFraDato.minusDays(50),
-            tom = koronaFraDato.minusDays(30),
+            fom = koronaForsteFraDato.minusDays(50),
+            tom = koronaForsteFraDato.minusDays(30),
             aktivitetIkkeMulig = AktivitetIkkeMulig(medisinskArsak = MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
             gradert = null,
             behandlingsdager = null,
@@ -43,8 +43,8 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
     )
     val perioderUtenforOgInnenforKoronaregler = listOf<Periode>(
         Periode(
-            fom = koronaFraDato.minusDays(50),
-            tom = koronaFraDato.minusDays(30),
+            fom = koronaForsteFraDato.minusDays(50),
+            tom = koronaForsteFraDato.minusDays(30),
             aktivitetIkkeMulig = AktivitetIkkeMulig(medisinskArsak = MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
             gradert = null,
             behandlingsdager = null,
@@ -52,8 +52,8 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
             avventendeInnspillTilArbeidsgiver = null
         ),
         Periode(
-            fom = koronaFraDato.plusDays(1),
-            tom = koronaFraDato.plusDays(15),
+            fom = koronaForsteFraDato.plusDays(1),
+            tom = koronaForsteFraDato.plusDays(15),
             aktivitetIkkeMulig = AktivitetIkkeMulig(medisinskArsak = MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
             gradert = null,
             behandlingsdager = null,
@@ -63,8 +63,8 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
     )
     val dbPeriodeInnenforKoronaregler = listOf<no.nav.syfo.sykmelding.db.Periode>(
         no.nav.syfo.sykmelding.db.Periode(
-            fom = koronaFraDato.plusDays(1),
-            tom = koronaFraDato.plusDays(15),
+            fom = koronaForsteFraDato.plusDays(1),
+            tom = koronaForsteFraDato.plusDays(15),
             aktivitetIkkeMulig = no.nav.syfo.sykmelding.db.AktivitetIkkeMulig(medisinskArsak = no.nav.syfo.sykmelding.db.MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
             gradert = null,
             behandlingsdager = null,
@@ -74,8 +74,8 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
     )
     val dbPeriodeUtenforKoronaregler = listOf<no.nav.syfo.sykmelding.db.Periode>(
         no.nav.syfo.sykmelding.db.Periode(
-            fom = koronaFraDato.minusDays(50),
-            tom = koronaFraDato.minusDays(30),
+            fom = koronaForsteFraDato.minusDays(50),
+            tom = koronaForsteFraDato.minusDays(30),
             aktivitetIkkeMulig = no.nav.syfo.sykmelding.db.AktivitetIkkeMulig(medisinskArsak = no.nav.syfo.sykmelding.db.MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
             gradert = null,
             behandlingsdager = null,
@@ -85,8 +85,8 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
     )
     val dbPerioderUtenforOgInnenforKoronaregler = listOf<no.nav.syfo.sykmelding.db.Periode>(
         no.nav.syfo.sykmelding.db.Periode(
-            fom = koronaFraDato.minusDays(50),
-            tom = koronaFraDato.minusDays(30),
+            fom = koronaForsteFraDato.minusDays(50),
+            tom = koronaForsteFraDato.minusDays(30),
             aktivitetIkkeMulig = no.nav.syfo.sykmelding.db.AktivitetIkkeMulig(medisinskArsak = no.nav.syfo.sykmelding.db.MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
             gradert = null,
             behandlingsdager = null,
@@ -94,8 +94,8 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
             avventendeInnspillTilArbeidsgiver = null
         ),
         no.nav.syfo.sykmelding.db.Periode(
-            fom = koronaFraDato.plusDays(1),
-            tom = koronaFraDato.plusDays(15),
+            fom = koronaForsteFraDato.plusDays(1),
+            tom = koronaForsteFraDato.plusDays(15),
             aktivitetIkkeMulig = no.nav.syfo.sykmelding.db.AktivitetIkkeMulig(medisinskArsak = no.nav.syfo.sykmelding.db.MedisinskArsak("beskrivelse", emptyList()), arbeidsrelatertArsak = null),
             gradert = null,
             behandlingsdager = null,
@@ -219,6 +219,51 @@ class RedusertArbeidsgiverPeriodeKtTest : Spek({
             val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
 
             innenforKoronaPeriode shouldBe true
+        }
+
+        it("FOM = 1. desember 2021 og TOM = 15. desember skal gi true") {
+            val fom = LocalDate.of(2021, Month.DECEMBER, 1)
+            val tom = LocalDate.of(2021, Month.DECEMBER, 15)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe true
+        }
+
+        it("FOM = 26. november 2021 og TOM = 5. desember skal gi false") {
+            val fom = LocalDate.of(2021, Month.NOVEMBER, 26)
+            val tom = LocalDate.of(2021, Month.DECEMBER, 5)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe false
+        }
+
+        it("FOM = 25. november 2021 og TOM = 30. november skal gi false") {
+            val fom = LocalDate.of(2021, Month.NOVEMBER, 25)
+            val tom = LocalDate.of(2021, Month.NOVEMBER, 30)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe false
+        }
+
+        it("FOM = 25. juni 2022 og TOM = 2. juli skal gi true") {
+            val fom = LocalDate.of(2022, Month.JUNE, 25)
+            val tom = LocalDate.of(2022, Month.JULY, 2)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe true
+        }
+
+        it("FOM = 1. juli 2022 og TOM = 8. juli skal gi false") {
+            val fom = LocalDate.of(2022, Month.JULY, 1)
+            val tom = LocalDate.of(2022, Month.JULY, 8)
+
+            val innenforKoronaPeriode = periodeErInnenforKoronaregler(fom, tom)
+
+            innenforKoronaPeriode shouldBe false
         }
     }
 })
