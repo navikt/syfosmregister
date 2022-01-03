@@ -36,8 +36,8 @@ fun SykmeldingDbModelUtenBehandlingsutfall.toArbeidsgiverSykmelding(): Arbeidsgi
         syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
         behandler = sykmeldingsDokument.behandler.toBehandlerAGDTO(),
         sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeAGDTO(id) },
-        arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverAGDto(),
-        kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientAGDto(),
+        arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverAGDTO(),
+        kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientAGDTO(),
         prognose = sykmeldingsDokument.prognose?.toPrognoseAGDTO(),
         egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
         papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
@@ -72,15 +72,15 @@ fun Periode.toSykmeldingsperiodeAGDTO(sykmeldingId: String): SykmeldingsperiodeA
         fom = fom,
         tom = tom,
         behandlingsdager = behandlingsdager,
-        gradert = gradert?.toGradertDto(),
+        gradert = gradert?.toGradertDTO(),
         innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
         type = finnPeriodetype(this, sykmeldingId),
-        aktivitetIkkeMulig = aktivitetIkkeMulig?.toAktivitetIkkeMuligAGDto(),
+        aktivitetIkkeMulig = aktivitetIkkeMulig?.toAktivitetIkkeMuligAGDTO(),
         reisetilskudd = reisetilskudd
     )
 }
 
-private fun Gradert?.toGradertDto(): GradertDTO? {
+private fun Gradert?.toGradertDTO(): GradertDTO? {
     return when (this) {
         null -> null
         else -> GradertDTO(
@@ -100,40 +100,40 @@ private fun finnPeriodetype(periode: Periode, sykmeldingId: String): Periodetype
         else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode for sykmeldingId $sykmeldingId")
     }
 
-private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligAGDto(): AktivitetIkkeMuligAGDTO? {
+private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligAGDTO(): AktivitetIkkeMuligAGDTO? {
     return when (this) {
         null -> null
         else -> AktivitetIkkeMuligAGDTO(
-            arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDto()
+            arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDTO()
         )
     }
 }
 
-private fun ArbeidsrelatertArsak?.toArbeidsRelatertArsakDto(): ArbeidsrelatertArsakDTO? {
+private fun ArbeidsrelatertArsak?.toArbeidsRelatertArsakDTO(): ArbeidsrelatertArsakDTO? {
     return when (this) {
         null -> null
         else -> ArbeidsrelatertArsakDTO(
             beskrivelse = beskrivelse,
-            arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
+            arsak = arsak.map { toArbeidsrelatertArsakTypeDTO(it) }
         )
     }
 }
 
-private fun toArbeidsrelatertArsakTypeDto(arbeidsrelatertArsakType: ArbeidsrelatertArsakType): ArbeidsrelatertArsakTypeDTO {
+private fun toArbeidsrelatertArsakTypeDTO(arbeidsrelatertArsakType: ArbeidsrelatertArsakType): ArbeidsrelatertArsakTypeDTO {
     return when (arbeidsrelatertArsakType) {
         ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakTypeDTO.MANGLENDE_TILRETTELEGGING
         ArbeidsrelatertArsakType.ANNET -> ArbeidsrelatertArsakTypeDTO.ANNET
     }
 }
 
-private fun Arbeidsgiver.toArbeidsgiverAGDto(): ArbeidsgiverAGDTO {
+private fun Arbeidsgiver.toArbeidsgiverAGDTO(): ArbeidsgiverAGDTO {
     return ArbeidsgiverAGDTO(
         navn = navn,
         yrkesbetegnelse = yrkesbetegnelse
     )
 }
 
-private fun KontaktMedPasient.toKontaktMedPasientAGDto(): KontaktMedPasientAGDTO {
+private fun KontaktMedPasient.toKontaktMedPasientAGDTO(): KontaktMedPasientAGDTO {
     return KontaktMedPasientAGDTO(
         kontaktDato = kontaktDato
     )
