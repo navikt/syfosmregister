@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
 import no.nav.syfo.model.sykmeldingstatus.STATUS_AVBRUTT
@@ -23,8 +24,8 @@ import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
-import no.nav.syfo.sykmelding.kafka.model.EnkelSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
@@ -55,9 +56,10 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
     val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)
+    val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
     val tombstoneKafkaProducer = mockkClass(type = SykmeldingTombstoneProducer::class, relaxed = true)
     val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneKafkaProducer, databaseInterface)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, mottattSykmeldingKafkaProducer, tombstoneKafkaProducer, databaseInterface)
     val consumer = spyk(KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment))
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
 
@@ -187,7 +189,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                 )
                 val sykmeldingApenEvent2 =
                     SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp.plusSeconds(2), STATUS_APEN, null, null)
-                every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
+                every { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
                 every { sykmeldingStatusService.registrerBekreftet(any(), any()) } returns Unit
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(
                     SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.BEKREFTET)
@@ -239,7 +241,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                         )
                     )
                 )
-                every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
+                every { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
                 every {
                     sykmeldingStatusService.getSykmeldingStatus(
                         any(),
@@ -300,7 +302,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                     cr
                 }
 
-                every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
+                every { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
                 every { sykmeldingStatusService.registrerSendt(any(), any()) } returns Unit
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT))
 
@@ -356,7 +358,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
                     null,
                     emptyList()
                 )
-                every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns mockkClass(EnkelSykmelding::class)
+                every { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
                 every { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
                     sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
                     sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent

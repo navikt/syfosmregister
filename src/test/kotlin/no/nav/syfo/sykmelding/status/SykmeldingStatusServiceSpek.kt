@@ -249,7 +249,7 @@ class SykmeldingStatusServiceSpek : Spek({
                     StatusEvent.SENDT
                 )
             )
-            val sendtSykmelding = sykmeldingStatusService.getEnkelSykmelding(testSykmeldingsopplysninger.id)
+            val sendtSykmelding = sykmeldingStatusService.getArbeidsgiverSykmelding(testSykmeldingsopplysninger.id)
             sendtSykmelding shouldNotBeEqualTo null
         }
     }

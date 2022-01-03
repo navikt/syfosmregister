@@ -5,126 +5,96 @@ import no.nav.syfo.model.Arbeidsgiver
 import no.nav.syfo.model.ArbeidsrelatertArsak
 import no.nav.syfo.model.ArbeidsrelatertArsakType
 import no.nav.syfo.model.Behandler
-import no.nav.syfo.model.ErIArbeid
-import no.nav.syfo.model.ErIkkeIArbeid
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.KontaktMedPasient
-import no.nav.syfo.model.MedisinskArsak
-import no.nav.syfo.model.MedisinskArsakType
+import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Periode
 import no.nav.syfo.model.Prognose
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.sykmelding.db.Periodetype
-import no.nav.syfo.sykmelding.model.AdresseDTO
-import no.nav.syfo.sykmelding.model.AktivitetIkkeMuligDTO
-import no.nav.syfo.sykmelding.model.ArbeidsgiverDTO
-import no.nav.syfo.sykmelding.model.ArbeidsrelatertArsakDTO
-import no.nav.syfo.sykmelding.model.ArbeidsrelatertArsakTypeDTO
-import no.nav.syfo.sykmelding.model.BehandlerDTO
-import no.nav.syfo.sykmelding.model.ErIArbeidDTO
-import no.nav.syfo.sykmelding.model.ErIkkeIArbeidDTO
-import no.nav.syfo.sykmelding.model.GradertDTO
-import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
-import no.nav.syfo.sykmelding.model.MedisinskArsakDTO
-import no.nav.syfo.sykmelding.model.MedisinskArsakTypeDTO
-import no.nav.syfo.sykmelding.model.MerknadDTO
-import no.nav.syfo.sykmelding.model.PrognoseDTO
-import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.AktivitetIkkeMuligAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
+import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.PrognoseAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.SykmeldingsperiodeAGDTO
+import no.nav.syfo.model.sykmelding.model.AdresseDTO
+import no.nav.syfo.model.sykmelding.model.ArbeidsrelatertArsakDTO
+import no.nav.syfo.model.sykmelding.model.ArbeidsrelatertArsakTypeDTO
+import no.nav.syfo.model.sykmelding.model.GradertDTO
+import no.nav.syfo.model.sykmelding.model.PeriodetypeDTO
 import no.nav.syfo.sykmelding.model.getUtcTime
-import no.nav.syfo.sykmelding.model.toDTO
 
-fun ReceivedSykmelding.toEnkelSykmelding(): EnkelSykmelding {
-    return EnkelSykmelding(
+fun ReceivedSykmelding.toArbeidsgiverSykmelding(): ArbeidsgiverSykmelding {
+    return ArbeidsgiverSykmelding(
         id = sykmelding.id,
         tiltakArbeidsplassen = sykmelding.tiltakArbeidsplassen,
         syketilfelleStartDato = sykmelding.syketilfelleStartDato,
-        prognose = sykmelding.prognose.toPrognoseDTO(),
-        navnFastlege = sykmelding.navnFastlege,
+        prognose = sykmelding.prognose.toPrognoseAGDTO(),
         meldingTilArbeidsgiver = sykmelding.meldingTilArbeidsgiver,
-        kontaktMedPasient = sykmelding.kontaktMedPasient.toKontaktMedPasientDto(),
-        arbeidsgiver = sykmelding.arbeidsgiver.toArbeidsgiverDto(),
-        behandler = sykmelding.behandler.toBehandlerDto(),
+        kontaktMedPasient = sykmelding.kontaktMedPasient.toKontaktMedPasientAGDTO(),
+        arbeidsgiver = sykmelding.arbeidsgiver.toArbeidsgiverAGDTO(),
+        behandler = sykmelding.behandler.toBehandlerAGDTO(),
         behandletTidspunkt = getUtcTime(sykmelding.behandletTidspunkt),
         egenmeldt = sykmelding.avsenderSystem.navn == "Egenmeldt",
         papirsykmelding = sykmelding.avsenderSystem.navn == "Papirsykmelding",
-        legekontorOrgnummer = legekontorOrgNr,
         mottattTidspunkt = getUtcTime(mottattDato),
-        sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeDto() },
+        sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeAGDTO() },
         harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder),
-        merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
+        merknader = merknader?.map { Merknad(type = it.type, beskrivelse = it.beskrivelse) }
     )
 }
 
-private fun Periode.toPeriodeDto(): SykmeldingsperiodeDTO {
-    return SykmeldingsperiodeDTO(
+private fun Periode.toPeriodeAGDTO(): SykmeldingsperiodeAGDTO {
+    return SykmeldingsperiodeAGDTO(
         fom = fom,
         tom = tom,
         behandlingsdager = behandlingsdager,
         innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
-        type = finnPeriodetype(this).toDTO(),
+        type = finnPeriodetype(this),
         reisetilskudd = reisetilskudd,
-        gradert = gradert.toGradertDto(),
-        aktivitetIkkeMulig = aktivitetIkkeMulig.toAktivitetIkkeMuligDto()
+        gradert = gradert.toGradertDTO(),
+        aktivitetIkkeMulig = aktivitetIkkeMulig.toAktivitetIkkeMuligAGDTO()
     )
 }
 
-private fun finnPeriodetype(periode: Periode): Periodetype =
+private fun finnPeriodetype(periode: Periode): PeriodetypeDTO =
     when {
-        periode.aktivitetIkkeMulig != null -> Periodetype.AKTIVITET_IKKE_MULIG
-        periode.avventendeInnspillTilArbeidsgiver != null -> Periodetype.AVVENTENDE
-        periode.behandlingsdager != null -> Periodetype.BEHANDLINGSDAGER
-        periode.gradert != null -> Periodetype.GRADERT
-        periode.reisetilskudd -> Periodetype.REISETILSKUDD
+        periode.aktivitetIkkeMulig != null -> PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+        periode.avventendeInnspillTilArbeidsgiver != null -> PeriodetypeDTO.AVVENTENDE
+        periode.behandlingsdager != null -> PeriodetypeDTO.BEHANDLINGSDAGER
+        periode.gradert != null -> PeriodetypeDTO.GRADERT
+        periode.reisetilskudd -> PeriodetypeDTO.REISETILSKUDD
         else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode")
     }
 
-private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligDto(): AktivitetIkkeMuligDTO? {
+private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligAGDTO(): AktivitetIkkeMuligAGDTO? {
     return when (this) {
         null -> null
-        else -> AktivitetIkkeMuligDTO(
-            medisinskArsak = medisinskArsak.toMedisinskArsakDto(),
-            arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDto()
+        else -> AktivitetIkkeMuligAGDTO(
+            arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDTO()
         )
     }
 }
 
-private fun ArbeidsrelatertArsak?.toArbeidsRelatertArsakDto(): ArbeidsrelatertArsakDTO? {
+private fun ArbeidsrelatertArsak?.toArbeidsRelatertArsakDTO(): ArbeidsrelatertArsakDTO? {
     return when (this) {
         null -> null
         else -> ArbeidsrelatertArsakDTO(
             beskrivelse = beskrivelse,
-            arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
+            arsak = arsak.map { toArbeidsrelatertArsakTypeDTO(it) }
         )
     }
 }
 
-private fun toArbeidsrelatertArsakTypeDto(arbeidsrelatertArsakType: ArbeidsrelatertArsakType): ArbeidsrelatertArsakTypeDTO {
+private fun toArbeidsrelatertArsakTypeDTO(arbeidsrelatertArsakType: ArbeidsrelatertArsakType): ArbeidsrelatertArsakTypeDTO {
     return when (arbeidsrelatertArsakType) {
         ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakTypeDTO.MANGLENDE_TILRETTELEGGING
         ArbeidsrelatertArsakType.ANNET -> ArbeidsrelatertArsakTypeDTO.ANNET
     }
 }
 
-private fun MedisinskArsak?.toMedisinskArsakDto(): MedisinskArsakDTO? {
-    return when (this) {
-        null -> null
-        else -> MedisinskArsakDTO(
-            beskrivelse = beskrivelse,
-            arsak = arsak.map { toMedisinskArsakTypeDto(it) }
-        )
-    }
-}
-
-private fun toMedisinskArsakTypeDto(medisinskArsakType: MedisinskArsakType): MedisinskArsakTypeDTO {
-    return when (medisinskArsakType) {
-        MedisinskArsakType.TILSTAND_HINDRER_AKTIVITET -> MedisinskArsakTypeDTO.TILSTAND_HINDRER_AKTIVITET
-        MedisinskArsakType.AKTIVITET_FORVERRER_TILSTAND -> MedisinskArsakTypeDTO.AKTIVITET_FORVERRER_TILSTAND
-        MedisinskArsakType.AKTIVITET_FORHINDRER_BEDRING -> MedisinskArsakTypeDTO.AKTIVITET_FORHINDRER_BEDRING
-        MedisinskArsakType.ANNET -> MedisinskArsakTypeDTO.ANNET
-    }
-}
-
-private fun Gradert?.toGradertDto(): GradertDTO? {
+private fun Gradert?.toGradertDTO(): GradertDTO? {
     return when (this) {
         null -> null
         else -> GradertDTO(
@@ -134,67 +104,38 @@ private fun Gradert?.toGradertDto(): GradertDTO? {
     }
 }
 
-private fun Behandler.toBehandlerDto(): BehandlerDTO {
-    return BehandlerDTO(
+private fun Behandler.toBehandlerAGDTO(): BehandlerAGDTO {
+    return BehandlerAGDTO(
         fornavn = fornavn,
         mellomnavn = mellomnavn,
         hpr = hpr,
         tlf = tlf,
-        her = her,
-        aktoerId = aktoerId,
         etternavn = etternavn,
-        fnr = fnr,
         adresse = AdresseDTO(adresse.gate, adresse.postnummer, adresse.kommune, adresse.postboks, adresse.land)
     )
 }
 
-private fun Arbeidsgiver.toArbeidsgiverDto(): ArbeidsgiverDTO {
-    return ArbeidsgiverDTO(
+private fun Arbeidsgiver.toArbeidsgiverAGDTO(): ArbeidsgiverAGDTO {
+    return ArbeidsgiverAGDTO(
         navn = navn,
-        stillingsprosent = stillingsprosent
+        yrkesbetegnelse = yrkesbetegnelse
     )
 }
 
-private fun KontaktMedPasient.toKontaktMedPasientDto(): KontaktMedPasientDTO {
-    return KontaktMedPasientDTO(
-        kontaktDato = kontaktDato,
-        begrunnelseIkkeKontakt = begrunnelseIkkeKontakt
+private fun KontaktMedPasient.toKontaktMedPasientAGDTO(): KontaktMedPasientAGDTO {
+    return KontaktMedPasientAGDTO(
+        kontaktDato = kontaktDato
     )
 }
 
-private fun Prognose?.toPrognoseDTO(): PrognoseDTO? {
+private fun Prognose?.toPrognoseAGDTO(): PrognoseAGDTO? {
     return when (this) {
         null -> null
         else -> {
-            PrognoseDTO(
+            PrognoseAGDTO(
                 arbeidsforEtterPeriode = arbeidsforEtterPeriode,
-                erIArbeid = erIArbeid.toErIArbeidDTO(),
-                erIkkeIArbeid = erIkkeIArbeid.toErIkkeIArbeidDto(),
                 hensynArbeidsplassen = hensynArbeidsplassen
             )
         }
-    }
-}
-
-private fun ErIkkeIArbeid?.toErIkkeIArbeidDto(): ErIkkeIArbeidDTO? {
-    return when (this) {
-        null -> null
-        else -> ErIkkeIArbeidDTO(
-            arbeidsforPaSikt = arbeidsforPaSikt,
-            vurderingsdato = vurderingsdato,
-            arbeidsforFOM = arbeidsforFOM
-        )
-    }
-}
-
-private fun ErIArbeid?.toErIArbeidDTO(): ErIArbeidDTO? {
-    return when (this) {
-        null -> null
-        else -> ErIArbeidDTO(
-            egetArbeidPaSikt = egetArbeidPaSikt,
-            vurderingsdato = vurderingsdato,
-            annetArbeidPaSikt = annetArbeidPaSikt,
-            arbeidFOM = arbeidFOM
-        )
     }
 }

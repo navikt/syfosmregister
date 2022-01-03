@@ -1,30 +1,28 @@
 package no.nav.syfo.sykmelding.kafka.producer
 
+import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
+import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
+import no.nav.syfo.model.sykmelding.model.AdresseDTO
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
-import no.nav.syfo.sykmelding.kafka.model.EnkelSykmelding
-import no.nav.syfo.sykmelding.model.AdresseDTO
-import no.nav.syfo.sykmelding.model.ArbeidsgiverDTO
-import no.nav.syfo.sykmelding.model.BehandlerDTO
-import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 
-fun getEnkelSykmelding(id: String): EnkelSykmelding {
-    return EnkelSykmelding(
+fun getArbeidsgiverSykmelding(id: String): ArbeidsgiverSykmelding {
+    return ArbeidsgiverSykmelding(
         id = id,
-        kontaktMedPasient = KontaktMedPasientDTO(null, null),
-        behandler = BehandlerDTO("fornavn", null, "etternavn", "aktorId", "fnr", null, null, AdresseDTO(null, null, null, null, null), null),
+        kontaktMedPasient = KontaktMedPasientAGDTO(null),
+        behandler = BehandlerAGDTO("fornavn", null, "etternavn", "hpr", AdresseDTO(null, null, null, null, null), null),
         behandletTidspunkt = getNowTickMillisOffsetDateTime(),
         prognose = null,
         syketilfelleStartDato = null,
         tiltakArbeidsplassen = null,
-        navnFastlege = null,
         meldingTilArbeidsgiver = null,
-        arbeidsgiver = ArbeidsgiverDTO(null, null),
+        arbeidsgiver = ArbeidsgiverAGDTO(null, null),
         mottattTidspunkt = getNowTickMillisOffsetDateTime(),
         sykmeldingsperioder = emptyList(),
-        legekontorOrgnummer = null,
         egenmeldt = false,
         harRedusertArbeidsgiverperiode = false,
         papirsykmelding = false,

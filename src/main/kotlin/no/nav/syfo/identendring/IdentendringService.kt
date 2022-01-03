@@ -17,7 +17,7 @@ import no.nav.syfo.sykmelding.db.SykmeldingDbModelUtenBehandlingsutfall
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfallForFnr
 import no.nav.syfo.sykmelding.db.updateFnr
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
-import no.nav.syfo.sykmelding.kafka.model.toEnkelSykmelding
+import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import java.time.LocalDate
 
@@ -63,7 +63,7 @@ class IdentendringService(
     }
 
     private fun getKafkaMessage(sykmelding: SykmeldingDbModelUtenBehandlingsutfall, nyttFnr: String): SykmeldingKafkaMessage {
-        val sendtSykmelding = sykmelding.toEnkelSykmelding()
+        val sendtSykmelding = sykmelding.toArbeidsgiverSykmelding()
         val metadata = KafkaMetadataDTO(
             sykmeldingId = sykmelding.id,
             timestamp = sykmelding.status.statusTimestamp,
