@@ -20,7 +20,7 @@ import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.updateMottattSykmelding
 import no.nav.syfo.sykmelding.kafka.model.MottattSykmeldingKafkaMessage
-import no.nav.syfo.sykmelding.kafka.model.toEnkelSykmelding
+import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
@@ -68,7 +68,7 @@ class MottattSykmeldingService(
     }
 
     private fun sendtToMottattSykmeldingTopic(receivedSykmelding: ReceivedSykmelding) {
-        val sykmelding = receivedSykmelding.toEnkelSykmelding()
+        val sykmelding = receivedSykmelding.toArbeidsgiverSykmelding()
         val message = MottattSykmeldingKafkaMessage(
             sykmelding = sykmelding,
             kafkaMetadata = KafkaMetadataDTO(

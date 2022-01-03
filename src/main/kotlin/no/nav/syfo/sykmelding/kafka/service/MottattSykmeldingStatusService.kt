@@ -16,6 +16,7 @@ import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper.Companion.toSykmeldingStatusKafkaEventDTO
@@ -31,6 +32,7 @@ class MottattSykmeldingStatusService(
     private val sykmeldingStatusService: SykmeldingStatusService,
     private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer,
     private val bekreftetSykmeldingKafkaProducer: BekreftSykmeldingKafkaProducer,
+    private val mottattSykmeldingKafkaProducer: MottattSykmeldingKafkaProducer,
     private val tombstoneProducer: SykmeldingTombstoneProducer,
     private val databaseInterface: DatabaseInterface
 ) {
@@ -89,6 +91,7 @@ class MottattSykmeldingStatusService(
             }
         }
         tombstoneProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
+        mottattSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
         sykmeldingStatusService.slettSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
     }
 
@@ -119,11 +122,11 @@ class MottattSykmeldingStatusService(
     }
 
     private fun getKafkaMessage(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO): SykmeldingKafkaMessage {
-        val sendtSykmelding = sykmeldingStatusService.getEnkelSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
+        val arbeidsgiverSykmelding = sykmeldingStatusService.getArbeidsgiverSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
         val sendEvent = sykmeldingStatusKafkaMessage.event
         val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
 
-        return SykmeldingKafkaMessage(sendtSykmelding!!, metadata, sendEvent)
+        return SykmeldingKafkaMessage(arbeidsgiverSykmelding!!, metadata, sendEvent)
     }
 
     private fun registrerBekreftet(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {

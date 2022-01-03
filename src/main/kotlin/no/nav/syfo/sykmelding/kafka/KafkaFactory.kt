@@ -81,7 +81,6 @@ class KafkaFactory private constructor() {
                     environment.kafkaSm2013AutomaticDigitalHandlingTopic,
                     environment.sm2013ManualHandlingTopic,
                     environment.sm2013InvalidHandlingTopic,
-                    environment.mottattSykmeldingKafkaTopic,
                     environment.sm2013BehandlingsUtfallTopic
                 )
             )

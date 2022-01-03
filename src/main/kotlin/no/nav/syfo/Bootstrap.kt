@@ -22,6 +22,7 @@ import no.nav.syfo.db.Database
 import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.identendring.IdentendringService
 import no.nav.syfo.identendring.PdlAktorConsumer
+import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -90,15 +91,17 @@ fun main() {
         "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
 
+    val kafkaBaseConfigAiven = KafkaUtils.getAivenKafkaConfig()
+
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfig, environment)
     val sykmeldingStatusService = SykmeldingStatusService(database)
-    val sendtSykmeldingKafkaProducer = getSendtSykmeldingKafkaProducer(kafkaBaseConfig, environment)
-    val bekreftSykmeldingKafkaProducer = getBekreftetSykmeldingKafkaProducer(kafkaBaseConfig, environment)
+    val sendtSykmeldingKafkaProducer = getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
+    val bekreftSykmeldingKafkaProducer = getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
     val tombstoneProducer = getTombstoneProducer(kafkaBaseConfig, environment)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
+    val mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, mottattSykmeldingKafkaProducer, tombstoneProducer, database)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusKafkaConsumer, applicationState, mottattSykmeldingStatusService)
-    val mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfig, environment)
 
     val receivedSykmeldingKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
     val mottattSykmeldingService = MottattSykmeldingService(

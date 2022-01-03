@@ -5,6 +5,11 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
+import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
+import no.nav.syfo.model.sykmelding.model.AdresseDTO
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
@@ -15,14 +20,10 @@ import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
-import no.nav.syfo.sykmelding.kafka.model.EnkelSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
-import no.nav.syfo.sykmelding.model.AdresseDTO
-import no.nav.syfo.sykmelding.model.ArbeidsgiverDTO
-import no.nav.syfo.sykmelding.model.BehandlerDTO
-import no.nav.syfo.sykmelding.model.KontaktMedPasientDTO
 import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
 import no.nav.syfo.sykmelding.status.StatusEvent
@@ -40,13 +41,14 @@ object MottattSykmeldingStatusServiceTest : Spek({
     val sykmeldingStatusService = mockk<SykmeldingStatusService>(relaxed = true)
     val sendtSykmeldingKafkaProducer = mockk<SendtSykmeldingKafkaProducer>(relaxed = true)
     val bekreftetSykmeldingKafkaProducer = mockk<BekreftSykmeldingKafkaProducer>(relaxed = true)
+    val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
     val tombstoneProducer = mockk<SykmeldingTombstoneProducer>()
     val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, tombstoneProducer, databaseInterface)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, mottattSykmeldingKafkaProducer, tombstoneProducer, databaseInterface)
 
     beforeEachTest {
         clearAllMocks()
-        every { sykmeldingStatusService.getEnkelSykmelding(any()) } returns opprettEnkelSykmelding()
+        every { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns opprettArbeidsgiverSykmelding()
     }
 
     describe("Test status event for resendt sykmelding") {
@@ -243,20 +245,18 @@ private fun opprettSlettetStatusmelding() =
         )
     )
 
-private fun opprettEnkelSykmelding(): EnkelSykmelding =
-    EnkelSykmelding(
+private fun opprettArbeidsgiverSykmelding(): ArbeidsgiverSykmelding =
+    ArbeidsgiverSykmelding(
         id = sykmeldingId,
         mottattTidspunkt = getNowTickMillisOffsetDateTime().minusDays(1),
-        legekontorOrgnummer = null,
         behandletTidspunkt = getNowTickMillisOffsetDateTime().minusDays(1),
         meldingTilArbeidsgiver = null,
-        navnFastlege = null,
         tiltakArbeidsplassen = null,
         syketilfelleStartDato = null,
-        behandler = BehandlerDTO("fornavn", null, "etternavn", "aktorid", "fnrlege", null, null, AdresseDTO(null, null, null, null, null), null),
+        behandler = BehandlerAGDTO("fornavn", null, "etternavn", null, AdresseDTO(null, null, null, null, null), null),
         sykmeldingsperioder = emptyList(),
-        arbeidsgiver = ArbeidsgiverDTO(null, null),
-        kontaktMedPasient = KontaktMedPasientDTO(null, null),
+        arbeidsgiver = ArbeidsgiverAGDTO(null, null),
+        kontaktMedPasient = KontaktMedPasientAGDTO(null),
         prognose = null,
         egenmeldt = false,
         papirsykmelding = false,

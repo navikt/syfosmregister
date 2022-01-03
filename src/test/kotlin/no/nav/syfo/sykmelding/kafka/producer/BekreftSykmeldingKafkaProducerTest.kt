@@ -34,7 +34,7 @@ class BekreftSykmeldingKafkaProducerTest : Spek({
 
     describe("Test kafka") {
         it("Should bekreft value to topic") {
-            kafkaProducer.sendSykmelding(SykmeldingKafkaMessage(getEnkelSykmelding("1"), getKafkaMetadata("1"), getSykmeldingStatusEvent("1")))
+            kafkaProducer.sendSykmelding(SykmeldingKafkaMessage(getArbeidsgiverSykmelding("1"), getKafkaMetadata("1"), getSykmeldingStatusEvent("1")))
             var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
             messages.get("1") shouldNotBe null
         }
@@ -48,7 +48,7 @@ class BekreftSykmeldingKafkaProducerTest : Spek({
         }
 
         it("should send Bekreft then tombstone") {
-            kafkaProducer.sendSykmelding(SykmeldingKafkaMessage(getEnkelSykmelding("2"), getKafkaMetadata("2"), getSykmeldingStatusEvent("2")))
+            kafkaProducer.sendSykmelding(SykmeldingKafkaMessage(getArbeidsgiverSykmelding("2"), getKafkaMetadata("2"), getSykmeldingStatusEvent("2")))
             kafkaProducer.tombstoneSykmelding("2")
             var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 2)
             messages.containsKey("2") shouldBe true
