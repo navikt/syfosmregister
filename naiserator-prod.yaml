@@ -79,3 +79,7 @@ spec:
       value: prod-fss.teamsykefravr.syfo-tilgangskontroll
     - name: KAFKA_CLIENT_ID
       value: syfosmregister
+    - name: PDL_GRAPHQL_PATH
+      value: https://pdl-api.nais.adeo.no/graphql
+    - name: PDL_SCOPE
+      value: api://prod-fss.pdl.pdl-api/.default

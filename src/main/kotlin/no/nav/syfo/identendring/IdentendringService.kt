@@ -12,6 +12,7 @@ import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.SykmeldingDbModelUtenBehandlingsutfall
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfallForFnr
@@ -23,12 +24,20 @@ import java.time.LocalDate
 
 class IdentendringService(
     private val database: DatabaseInterface,
-    private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer
+    private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer,
+    private val pdlService: PdlPersonService
 ) {
-    fun oppdaterIdent(identListe: List<Ident>): Int {
+    suspend fun oppdaterIdent(identListe: List<Ident>): Int {
         if (harEndretFnr(identListe)) {
             val nyttFnr = identListe.find { it.type == IdentType.FOLKEREGISTERIDENT && it.gjeldende }?.idnummer
                 ?: throw IllegalStateException("Mangler gyldig fnr!")
+
+            val pdlPerson = pdlService.getPdlPerson(nyttFnr)
+
+            if (pdlPerson.fnr != nyttFnr) {
+                throw IllegalStateException("Nytt FNR er ulikt aktivt FNR i PDL API")
+            }
+
             val tidligereFnr = identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
 
             val sykmeldinger = tidligereFnr.flatMap { database.getSykmeldingerMedIdUtenBehandlingsutfallForFnr(it.idnummer) }

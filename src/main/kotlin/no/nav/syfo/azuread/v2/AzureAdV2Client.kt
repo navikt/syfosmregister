@@ -20,21 +20,50 @@ class AzureAdV2Client(
     private val httpClient: HttpClient,
     private val azureAdV2Cache: AzureAdV2Cache = AzureAdV2Cache()
 ) {
+
+    /**
+     * Returns a non-obo access token authenticated using app specific client credentials
+     */
+    suspend fun getAccessToken(
+        scope: String
+    ): AzureAdV2Token? {
+        return azureAdV2Cache.getOboToken(scope)
+            ?: getClientSecretAccessToken(scope)?.let {
+                azureAdV2Cache.putValue(scope, it)
+            }
+    }
+
+    private suspend fun getClientSecretAccessToken(
+        scope: String
+    ): AzureAdV2Token? {
+        return getOboAccessToken(
+            Parameters.build {
+                append("client_id", azureAppClientId)
+                append("client_secret", azureAppClientSecret)
+                append("scope", scope)
+                append("grant_type", "client_credentials")
+            }
+        )?.toAzureAdV2Token()
+    }
+
+    /**
+     * Returns a obo-token for a given user
+     */
     suspend fun getOnBehalfOfToken(
         scopeClientId: String,
         token: String
     ): AzureAdV2Token? {
         return azureAdV2Cache.getOboToken(token)
-            ?: getAccessToken(token, scopeClientId)?.let {
+            ?: getOboAccessToken(token, scopeClientId)?.let {
                 azureAdV2Cache.putValue(token, it)
             }
     }
 
-    private suspend fun getAccessToken(
+    private suspend fun getOboAccessToken(
         token: String,
         scopeClientId: String
     ): AzureAdV2Token? {
-        return getAccessToken(
+        return getOboAccessToken(
             Parameters.build {
                 append("client_id", azureAppClientId)
                 append("client_secret", azureAppClientSecret)
@@ -47,7 +76,7 @@ class AzureAdV2Client(
         )?.toAzureAdV2Token()
     }
 
-    private suspend fun getAccessToken(
+    private suspend fun getOboAccessToken(
         formParameters: Parameters
     ): AzureAdV2TokenResponse? {
         return try {

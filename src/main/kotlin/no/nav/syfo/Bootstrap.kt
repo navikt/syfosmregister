@@ -37,6 +37,8 @@ import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
+import no.nav.syfo.pdl.client.PdlClient
+import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getBekreftetSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
@@ -135,9 +137,6 @@ fun main() {
         database = database
     )
 
-    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer)
-    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
-
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
         install(JsonFeature) {
             serializer = JacksonSerializer {
@@ -159,11 +158,21 @@ fun main() {
 
     val httpClient = HttpClient(Apache, config)
 
-    val sykmeldingerService = SykmeldingerService(database)
-
     val httpProxyClient = HttpClient(Apache, proxyConfig)
     val azureAdV2Client = AzureAdV2Client(environment.clientIdV2, environment.clientSecretV2, environment.azureTokenEndpoint, httpProxyClient)
     val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, environment.syfoTilgangskontrollUrl, environment.syfotilgangskontrollClientId)
+
+    val pdlClient = PdlClient(
+        httpClient,
+        environment.pdlGraphqlPath,
+        PdlClient::class.java.getResource("/graphql/getPerson.graphql").readText().replace(Regex("[\n\t]"), "")
+    )
+    val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
+
+    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
+    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
+
+    val sykmeldingerService = SykmeldingerService(database)
 
     val applicationEngine = createApplicationEngine(
         env = environment,

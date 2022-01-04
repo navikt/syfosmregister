@@ -2,8 +2,12 @@ package no.nav.syfo.testutil
 
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
+import no.nav.syfo.graphql.model.GraphQLResponse
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.pdl.client.model.IdentInformasjon
+import no.nav.syfo.pdl.client.model.Identliste
+import no.nav.syfo.pdl.client.model.PdlResponse
 import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.db.Adresse
 import no.nav.syfo.sykmelding.db.AktivitetIkkeMulig
@@ -60,7 +64,9 @@ fun getEnvironment(): Environment {
         jwkKeysUrlV2 = "",
         jwtIssuerV2 = "",
         syfotilgangskontrollClientId = "",
-        azureTokenEndpoint = ""
+        azureTokenEndpoint = "",
+        pdlGraphqlPath = "",
+        pdlScope = "scope"
     )
 }
 
@@ -252,5 +258,14 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
             signaturDato = getNowTickMillisLocalDateTime()
         ),
         merknader = null
+    )
+}
+
+fun getPdlResponse(): GraphQLResponse<PdlResponse> {
+    return GraphQLResponse<PdlResponse>(
+        PdlResponse(
+            hentIdenter = Identliste(listOf(IdentInformasjon(ident = "987654321", gruppe = "AKTORID", historisk = false)))
+        ),
+        errors = null
     )
 }

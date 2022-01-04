@@ -1,8 +1,10 @@
 package no.nav.syfo.identendring
 
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.syfo.identendring.model.Ident
 import no.nav.syfo.identendring.model.IdentType
 import no.nav.syfo.model.AktivitetIkkeMulig
@@ -10,6 +12,9 @@ import no.nav.syfo.model.ArbeidsrelatertArsak
 import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.MedisinskArsak
 import no.nav.syfo.model.Periode
+import no.nav.syfo.pdl.client.model.IdentInformasjon
+import no.nav.syfo.pdl.model.PdlPerson
+import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.db.getSykmeldinger
@@ -36,11 +41,13 @@ import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
+import kotlin.test.assertFailsWith
 
 class IdentendringServiceTest : Spek({
     val sendtSykmeldingKafkaProducer = mockk<SendtSykmeldingKafkaProducer>(relaxed = true)
     val database = TestDB()
-    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer)
+    val pdlService = mockk<PdlPersonService>(relaxed = true)
+    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
 
     afterEachTest {
         database.connection.dropData()
@@ -57,9 +64,10 @@ class IdentendringServiceTest : Spek({
                 Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
                 Ident(idnummer = "2222", gjeldende = false, type = IdentType.AKTORID)
             )
-
-            identendringService.oppdaterIdent(identListeUtenEndringIFnr) shouldBeEqualTo 0
-            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            runBlocking {
+                identendringService.oppdaterIdent(identListeUtenEndringIFnr) shouldBeEqualTo 0
+                verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            }
         }
         it("Endrer ingenting hvis det ikke finnes sykmeldinger på gammelt fnr") {
             val identListeMedEndringIFnr = listOf(
@@ -68,9 +76,31 @@ class IdentendringServiceTest : Spek({
                 Ident(idnummer = "2222", gjeldende = false, type = IdentType.FOLKEREGISTERIDENT)
             )
 
-            identendringService.oppdaterIdent(identListeMedEndringIFnr) shouldBeEqualTo 0
-            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("1234", false, "FOLKEREGISTERIDENT")))
+
+            runBlocking {
+                identendringService.oppdaterIdent(identListeMedEndringIFnr) shouldBeEqualTo 0
+                verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            }
         }
+
+        it("Kaster feil hvis nytt fnr ikke stemmer med fnr fra PDL") {
+            val identListeMedEndringIFnr = listOf(
+                Ident(idnummer = "1234", gjeldende = true, type = IdentType.FOLKEREGISTERIDENT),
+                Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
+                Ident(idnummer = "2222", gjeldende = false, type = IdentType.FOLKEREGISTERIDENT)
+            )
+
+            coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("2222", false, "FOLKEREGISTERIDENT")))
+
+            runBlocking {
+                assertFailsWith<RuntimeException> {
+                    identendringService.oppdaterIdent(identListeMedEndringIFnr)
+                }
+                verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            }
+        }
+
         it("Oppdaterer i databasen og resender sendte sykmeldinger fra de siste 4 mnd ved nytt fnr") {
             val gammeltFnr = "12345678910"
             val nyttFnr = "10987654321"
@@ -84,11 +114,14 @@ class IdentendringServiceTest : Spek({
                 Ident(idnummer = gammeltFnr, gjeldende = false, type = IdentType.FOLKEREGISTERIDENT)
             )
 
-            identendringService.oppdaterIdent(identListe) shouldBeEqualTo 3
-            verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(match { it.kafkaMetadata.sykmeldingId == idSendtSykmelding && it.kafkaMetadata.fnr == nyttFnr }) }
-            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(match { it.kafkaMetadata.sykmeldingId != idSendtSykmelding }) }
-            database.getSykmeldinger(gammeltFnr).size shouldBeEqualTo 0
-            database.getSykmeldinger(nyttFnr).size shouldBeEqualTo 3
+            runBlocking {
+                coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("10987654321", false, "FOLKEREGISTERIDENT")))
+                identendringService.oppdaterIdent(identListe) shouldBeEqualTo 3
+                verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(match { it.kafkaMetadata.sykmeldingId == idSendtSykmelding && it.kafkaMetadata.fnr == nyttFnr }) }
+                verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(match { it.kafkaMetadata.sykmeldingId != idSendtSykmelding }) }
+                database.getSykmeldinger(gammeltFnr).size shouldBeEqualTo 0
+                database.getSykmeldinger(nyttFnr).size shouldBeEqualTo 3
+            }
         }
     }
 })

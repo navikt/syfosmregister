@@ -35,7 +35,9 @@ data class Environment(
     val jwtIssuerV2: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
     val syfotilgangskontrollClientId: String = getEnvVar("SYFOTILGANGSKONTROLL_CLIENT_ID"),
     val azureTokenEndpoint: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
-    val pdlAktorTopic: String = "aapen-person-pdl-aktor-v1"
+    val pdlAktorTopic: String = "aapen-person-pdl-aktor-v1",
+    val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
+    val pdlScope: String = getEnvVar("PDL_SCOPE"),
 ) : KafkaConfig
 
 data class VaultServiceUser(
