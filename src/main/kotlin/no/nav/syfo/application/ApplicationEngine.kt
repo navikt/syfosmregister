@@ -10,20 +10,12 @@ import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.call
 import io.ktor.application.install
 import io.ktor.auth.authenticate
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.features.HttpResponseValidator
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
 import io.ktor.features.CallId
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
-import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.response.respond
 import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
@@ -32,8 +24,6 @@ import io.ktor.server.netty.Netty
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.api.registerNaisApi
-import no.nav.syfo.application.exception.ServiceUnavailableException
-import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.monitorHttpRequests
@@ -57,7 +47,9 @@ fun createApplicationEngine(
     issuer: String,
     cluster: String,
     sykmeldingStatusService: SykmeldingStatusService,
-    jwkProviderAadV2: JwkProvider
+    jwkProviderAadV2: JwkProvider,
+    sykmeldingerService: SykmeldingerService,
+    tilgangskontrollService: TilgangskontrollService
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -90,33 +82,6 @@ fun createApplicationEngine(
                 throw cause
             }
         }
-
-        val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-            install(JsonFeature) {
-                serializer = JacksonSerializer {
-                    registerKotlinModule()
-                    registerModule(JavaTimeModule())
-                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                }
-            }
-            expectSuccess = false
-            HttpResponseValidator {
-                handleResponseException { exception ->
-                    when (exception) {
-                        is SocketTimeoutException -> throw ServiceUnavailableException(exception.message)
-                    }
-                }
-            }
-        }
-
-        val httpClient = HttpClient(Apache, config)
-
-        val sykmeldingerService = SykmeldingerService(database)
-
-        val httpProxyClient = HttpClient(Apache, proxyConfig)
-        val azureAdV2Client = AzureAdV2Client(env.clientIdV2, env.clientSecretV2, env.azureTokenEndpoint, httpProxyClient)
-        val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, env.syfoTilgangskontrollUrl, env.syfotilgangskontrollClientId)
 
         routing {
 
