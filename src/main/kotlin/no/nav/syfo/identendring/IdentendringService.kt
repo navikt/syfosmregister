@@ -12,6 +12,7 @@ import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.pdl.error.InactiveIdentException
 import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.SykmeldingDbModelUtenBehandlingsutfall
@@ -34,8 +35,8 @@ class IdentendringService(
 
             val pdlPerson = pdlService.getPdlPerson(nyttFnr)
 
-            if (pdlPerson.fnr != nyttFnr) {
-                throw IllegalStateException("Nytt FNR er ulikt aktivt FNR i PDL API")
+            if (pdlPerson.fnr != nyttFnr || pdlPerson.identer.any { it.ident == nyttFnr && it.historisk }) {
+                throw InactiveIdentException("Nytt FNR er ikke aktivt FNR i PDL API")
             }
 
             val tidligereFnr = identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }

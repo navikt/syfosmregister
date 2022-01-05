@@ -2,7 +2,7 @@ package no.nav.syfo.pdl.service
 
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.pdl.client.PdlClient
-import no.nav.syfo.pdl.error.AktoerNotFoundException
+import no.nav.syfo.pdl.error.PersonNotFoundException
 import no.nav.syfo.pdl.model.PdlPerson
 import org.slf4j.LoggerFactory
 import java.lang.RuntimeException
@@ -28,7 +28,7 @@ class PdlPersonService(
         }
         if (pdlResponse.data.hentIdenter == null || pdlResponse.data.hentIdenter.identer.isNullOrEmpty()) {
             log.warn("Fant ikke person i PDL {}")
-            throw AktoerNotFoundException("Fant ikke person i PDL")
+            throw PersonNotFoundException("Fant ikke person i PDL")
         }
         return PdlPerson(pdlResponse.data.hentIdenter.identer)
     }

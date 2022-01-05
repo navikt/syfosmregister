@@ -13,6 +13,7 @@ import no.nav.syfo.model.Gradert
 import no.nav.syfo.model.MedisinskArsak
 import no.nav.syfo.model.Periode
 import no.nav.syfo.pdl.client.model.IdentInformasjon
+import no.nav.syfo.pdl.error.InactiveIdentException
 import no.nav.syfo.pdl.model.PdlPerson
 import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.persistering.lagreMottattSykmelding
@@ -94,7 +95,7 @@ class IdentendringServiceTest : Spek({
             coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("2222", false, "FOLKEREGISTERIDENT")))
 
             runBlocking {
-                assertFailsWith<RuntimeException> {
+                assertFailsWith<InactiveIdentException> {
                     identendringService.oppdaterIdent(identListeMedEndringIFnr)
                 }
                 verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }

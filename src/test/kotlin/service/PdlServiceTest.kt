@@ -10,119 +10,64 @@ import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.client.model.IdentInformasjon
 import no.nav.syfo.pdl.client.model.Identliste
 import no.nav.syfo.pdl.client.model.PdlResponse
-import no.nav.syfo.pdl.error.AktoerNotFoundException
-import no.nav.syfo.pdl.error.PersonNotFoundInPdl
+import no.nav.syfo.pdl.error.PersonNotFoundException
 import no.nav.syfo.pdl.service.PdlPersonService
-import no.nav.syfo.testutil.getPdlResponse
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.Test
+import org.spekframework.spek2.Spek
+import org.spekframework.spek2.style.specification.describe
 import java.time.OffsetDateTime
 import kotlin.test.assertFailsWith
 
-internal class PdlServiceTest {
+internal class PdlServiceTest : Spek({
 
-    private val pdlClient = mockkClass(PdlClient::class)
-    private val accessTokenClientV2 = mockkClass(AzureAdV2Client::class)
-    private val pdlService = PdlPersonService(pdlClient, accessTokenClientV2, "scope")
+    val pdlClient = mockkClass(PdlClient::class)
+    val accessTokenClientV2 = mockkClass(AzureAdV2Client::class)
+    val pdlService = PdlPersonService(pdlClient, accessTokenClientV2, "scope")
 
-    @Test
-    internal fun `Hent person fra pdl`() {
-        coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
-            "token",
-            OffsetDateTime.now().plusHours(1)
-        )
-        coEvery { pdlClient.getPerson(any(), any()) } returns getPdlResponse()
-
-        runBlocking {
-            val person = pdlService.getPdlPerson("01245678901")
-            person.fnr shouldBeEqualTo "01245678901"
-        }
+    afterEachTest {
     }
 
-    @Test
-    internal fun `Skal feile når person ikke finnes`() {
-        coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
-            "token",
-            OffsetDateTime.now().plusHours(1)
-        )
-        coEvery { pdlClient.getPerson(any(), any()) } returns GraphQLResponse<PdlResponse>(
-            PdlResponse(null),
-            errors = null
-        )
+    describe("Test PdlPersonService") {
 
-        val exception = assertFailsWith<PersonNotFoundInPdl> {
-            runBlocking {
-                pdlService.getPdlPerson("123")
-            }
-        }
-        exception.message shouldBeEqualTo "Klarte ikke hente ut person fra PDL"
-    }
-
-    @Test
-    internal fun `Skal feile når navn er tom liste`() {
-        coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
-            "token",
-            OffsetDateTime.now().plusHours(1)
-        )
-        coEvery { pdlClient.getPerson(any(), any()) } returns GraphQLResponse<PdlResponse>(
-            PdlResponse(
-                hentIdenter = Identliste(emptyList())
-            ),
-            errors = null
-        )
-        val exception = assertFailsWith<PersonNotFoundInPdl> {
-            runBlocking {
-                pdlService.getPdlPerson("123")
-            }
-        }
-        exception.message shouldBeEqualTo "Fant ikke navn på person i PDL"
-    }
-
-    @Test
-    internal fun `Skal feile når navn ikke finnes`() {
-        coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
-            "token",
-            OffsetDateTime.now().plusHours(1)
-        )
-        coEvery { pdlClient.getPerson(any(), any()) } returns GraphQLResponse<PdlResponse>(
-            PdlResponse(
-                hentIdenter = Identliste(
-                    listOf(
-                        IdentInformasjon(
-                            ident = "987654321",
-                            gruppe = "foo",
-                            historisk = false
+        it("Skal kunne hent person fra pdl") {
+            coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
+                "token",
+                OffsetDateTime.now().plusHours(1)
+            )
+            coEvery { pdlClient.getPerson(any(), any()) } returns GraphQLResponse(
+                data = PdlResponse(
+                    hentIdenter = Identliste(
+                        listOf(
+                            IdentInformasjon(ident = "01245678901", gruppe = "FOLKEREGISTERIDENT", historisk = false)
                         )
                     )
-                )
-            ),
-            errors = null
-        )
-        val exception = assertFailsWith<PersonNotFoundInPdl> {
-            runBlocking {
-                pdlService.getPdlPerson("123")
-            }
-        }
-        exception.message shouldBeEqualTo "Fant ikke navn på person i PDL"
-    }
+                ),
+                errors = null
+            )
 
-    @Test
-    internal fun `Skal feile når aktørid ikke finnes`() {
-        coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
-            "token",
-            OffsetDateTime.now().plusHours(1)
-        )
-        coEvery { pdlClient.getPerson(any(), any()) } returns GraphQLResponse<PdlResponse>(
-            PdlResponse(
-                hentIdenter = Identliste(emptyList())
-            ),
-            errors = null
-        )
-        val exception = assertFailsWith<AktoerNotFoundException> {
             runBlocking {
-                pdlService.getPdlPerson("123")
+                val person = pdlService.getPdlPerson("01245678901")
+                person.fnr shouldBeEqualTo "01245678901"
             }
         }
-        exception.message shouldBeEqualTo "Fant ikke aktørId i PDL"
+
+        it("Skal feile når person ikke finnes") {
+            coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
+                "token",
+                OffsetDateTime.now().plusHours(1)
+            )
+            coEvery { pdlClient.getPerson(any(), any()) } returns GraphQLResponse(
+                PdlResponse(
+                    hentIdenter = Identliste(emptyList())
+                ),
+                errors = null
+            )
+            val exception = assertFailsWith<PersonNotFoundException> {
+                runBlocking {
+                    pdlService.getPdlPerson("123")
+                }
+            }
+            exception.message shouldBeEqualTo "Fant ikke person i PDL"
+        }
     }
-}
+})
