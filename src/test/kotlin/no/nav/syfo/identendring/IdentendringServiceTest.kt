@@ -86,13 +86,18 @@ class IdentendringServiceTest : Spek({
         }
 
         it("Kaster feil hvis nytt fnr ikke stemmer med fnr fra PDL") {
+            val gammeltFnr = "2222"
             val identListeMedEndringIFnr = listOf(
                 Ident(idnummer = "1234", gjeldende = true, type = IdentType.FOLKEREGISTERIDENT),
-                Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
-                Ident(idnummer = "2222", gjeldende = false, type = IdentType.FOLKEREGISTERIDENT)
+                Ident(idnummer = gammeltFnr, gjeldende = false, type = IdentType.FOLKEREGISTERIDENT)
             )
 
-            coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("2222", false, "FOLKEREGISTERIDENT")))
+            val idNySykmelding = UUID.randomUUID().toString()
+            val idSendtSykmelding = UUID.randomUUID().toString()
+            val idGammelSendtSykmelding = UUID.randomUUID().toString()
+            forberedTestsykmeldinger(database = database, gammeltFnr = gammeltFnr, idNySykmelding = idNySykmelding, idSendtSykmelding = idSendtSykmelding, idGammelSendtSykmelding = idGammelSendtSykmelding)
+
+            coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon(gammeltFnr, false, "FOLKEREGISTERIDENT")))
 
             runBlocking {
                 assertFailsWith<InactiveIdentException> {

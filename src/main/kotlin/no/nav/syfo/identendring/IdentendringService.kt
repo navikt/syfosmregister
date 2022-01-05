@@ -33,17 +33,12 @@ class IdentendringService(
             val nyttFnr = identListe.find { it.type == IdentType.FOLKEREGISTERIDENT && it.gjeldende }?.idnummer
                 ?: throw IllegalStateException("Mangler gyldig fnr!")
 
-            val pdlPerson = pdlService.getPdlPerson(nyttFnr)
-
-            if (pdlPerson.fnr != nyttFnr || pdlPerson.identer.any { it.ident == nyttFnr && it.historisk }) {
-                throw InactiveIdentException("Nytt FNR er ikke aktivt FNR i PDL API")
-            }
-
             val tidligereFnr = identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
-
             val sykmeldinger = tidligereFnr.flatMap { database.getSykmeldingerMedIdUtenBehandlingsutfallForFnr(it.idnummer) }
 
             if (sykmeldinger.isNotEmpty()) {
+                sjekkPDL(nyttFnr)
+
                 val sendteSykmeldingerSisteFireMnd = sykmeldinger.filter {
                     it.status.statusEvent == STATUS_SENDT && finnSisteTom(it.sykmeldingsDokument.perioder).isAfter(
                         LocalDate.now().minusMonths(4)
@@ -62,6 +57,13 @@ class IdentendringService(
             }
         }
         return 0
+    }
+
+    private suspend fun sjekkPDL(nyttFnr: String) {
+        val pdlPerson = pdlService.getPdlPerson(nyttFnr)
+        if (pdlPerson.fnr != nyttFnr || pdlPerson.identer.any { it.ident == nyttFnr && it.historisk }) {
+            throw InactiveIdentException("Nytt FNR er ikke aktivt FNR i PDL API")
+        }
     }
 
     private fun harEndretFnr(identListe: List<Ident>): Boolean {
