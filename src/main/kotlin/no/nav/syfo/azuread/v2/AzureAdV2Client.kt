@@ -27,7 +27,7 @@ class AzureAdV2Client(
     suspend fun getAccessToken(
         scope: String
     ): AzureAdV2Token? {
-        return azureAdV2Cache.getOboToken(scope)
+        return azureAdV2Cache.getToken(scope)
             ?: getClientSecretAccessToken(scope)?.let {
                 azureAdV2Cache.putValue(scope, it)
             }
@@ -53,7 +53,7 @@ class AzureAdV2Client(
         scopeClientId: String,
         token: String
     ): AzureAdV2Token? {
-        return azureAdV2Cache.getOboToken(token)
+        return azureAdV2Cache.getToken(token)
             ?: getOboAccessToken(token, scopeClientId)?.let {
                 azureAdV2Cache.putValue(token, it)
             }
