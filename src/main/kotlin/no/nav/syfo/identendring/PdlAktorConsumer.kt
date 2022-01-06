@@ -61,20 +61,8 @@ class PdlAktorConsumer(
         log.info("Starting consuming topic $topic")
         while (applicationState.ready) {
             kafkaConsumer.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
-                try {
-                    if (it.value() != null) {
-                        identendringService.oppdaterIdent(it.value().toIdentListe())
-                    }
-                } catch (e: Exception) {
-                    when (e) {
-                        is InactiveIdentException, is PersonNotFoundException -> {
-                            throw e
-                        }
-                        else -> {
-                            log.error("Noe gikk galt ved mottak av pdl-aktor-melding med offset ${it.offset()}: ${e.message}")
-                            throw e
-                        }
-                    }
+                if (it.value() != null) {
+                    identendringService.oppdaterIdent(it.value().toIdentListe())
                 }
             }
         }
