@@ -27,7 +27,7 @@ class PdlPersonService(
             }
         }
         if (pdlResponse.data.hentIdenter == null || pdlResponse.data.hentIdenter.identer.isNullOrEmpty()) {
-            log.warn("Fant ikke person i PDL {}")
+            log.warn("Fant ikke person i PDL")
             throw PersonNotFoundException("Fant ikke person i PDL")
         }
         return PdlPerson(pdlResponse.data.hentIdenter.identer)
