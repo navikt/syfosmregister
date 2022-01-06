@@ -12,6 +12,8 @@ import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.pdl.error.InactiveIdentException
+import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.SykmeldingDbModelUtenBehandlingsutfall
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfallForFnr
@@ -23,17 +25,20 @@ import java.time.LocalDate
 
 class IdentendringService(
     private val database: DatabaseInterface,
-    private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer
+    private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer,
+    private val pdlService: PdlPersonService
 ) {
-    fun oppdaterIdent(identListe: List<Ident>): Int {
+    suspend fun oppdaterIdent(identListe: List<Ident>): Int {
         if (harEndretFnr(identListe)) {
             val nyttFnr = identListe.find { it.type == IdentType.FOLKEREGISTERIDENT && it.gjeldende }?.idnummer
                 ?: throw IllegalStateException("Mangler gyldig fnr!")
-            val tidligereFnr = identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
 
+            val tidligereFnr = identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
             val sykmeldinger = tidligereFnr.flatMap { database.getSykmeldingerMedIdUtenBehandlingsutfallForFnr(it.idnummer) }
 
             if (sykmeldinger.isNotEmpty()) {
+                sjekkPDL(nyttFnr)
+
                 val sendteSykmeldingerSisteFireMnd = sykmeldinger.filter {
                     it.status.statusEvent == STATUS_SENDT && finnSisteTom(it.sykmeldingsDokument.perioder).isAfter(
                         LocalDate.now().minusMonths(4)
@@ -52,6 +57,13 @@ class IdentendringService(
             }
         }
         return 0
+    }
+
+    private suspend fun sjekkPDL(nyttFnr: String) {
+        val pdlPerson = pdlService.getPdlPerson(nyttFnr)
+        if (pdlPerson.fnr != nyttFnr || pdlPerson.identer.any { it.ident == nyttFnr && it.historisk }) {
+            throw InactiveIdentException("Nytt FNR er ikke aktivt FNR i PDL API")
+        }
     }
 
     private fun harEndretFnr(identListe: List<Ident>): Boolean {

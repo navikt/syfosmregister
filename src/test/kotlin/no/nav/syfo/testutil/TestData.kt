@@ -60,7 +60,9 @@ fun getEnvironment(): Environment {
         jwkKeysUrlV2 = "",
         jwtIssuerV2 = "",
         syfotilgangskontrollClientId = "",
-        azureTokenEndpoint = ""
+        azureTokenEndpoint = "",
+        pdlGraphqlPath = "",
+        pdlScope = "scope"
     )
 }
 

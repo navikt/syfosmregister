@@ -7,6 +7,14 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.features.HttpResponseValidator
+import io.ktor.client.features.json.JacksonSerializer
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.network.sockets.SocketTimeoutException
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +25,10 @@ import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
+import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.application.getWellKnown
+import no.nav.syfo.application.proxyConfig
+import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.identendring.IdentendringService
@@ -26,6 +37,9 @@ import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
+import no.nav.syfo.pdl.client.PdlClient
+import no.nav.syfo.pdl.service.PdlPersonService
+import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getBekreftetSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumer
@@ -37,6 +51,7 @@ import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmelding.service.BehandlingsutfallService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingService
+import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.util.util.Unbounded
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -122,8 +137,42 @@ fun main() {
         database = database
     )
 
-    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer)
+    val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+        install(JsonFeature) {
+            serializer = JacksonSerializer {
+                registerKotlinModule()
+                registerModule(JavaTimeModule())
+                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            }
+        }
+        expectSuccess = false
+        HttpResponseValidator {
+            handleResponseException { exception ->
+                when (exception) {
+                    is SocketTimeoutException -> throw ServiceUnavailableException(exception.message)
+                }
+            }
+        }
+    }
+
+    val httpClient = HttpClient(Apache, config)
+
+    val httpProxyClient = HttpClient(Apache, proxyConfig)
+    val azureAdV2Client = AzureAdV2Client(environment.clientIdV2, environment.clientSecretV2, environment.azureTokenEndpoint, httpProxyClient)
+    val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, environment.syfoTilgangskontrollUrl, environment.syfotilgangskontrollClientId)
+
+    val pdlClient = PdlClient(
+        httpClient,
+        environment.pdlGraphqlPath,
+        PdlClient::class.java.getResource("/graphql/getPerson.graphql").readText().replace(Regex("[\n\t]"), "")
+    )
+    val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
+
+    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
     val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
+
+    val sykmeldingerService = SykmeldingerService(database)
 
     val applicationEngine = createApplicationEngine(
         env = environment,
@@ -134,7 +183,9 @@ fun main() {
         issuer = wellKnown.issuer,
         cluster = environment.cluster,
         sykmeldingStatusService = sykmeldingStatusService,
-        jwkProviderAadV2 = jwkProviderAadV2
+        jwkProviderAadV2 = jwkProviderAadV2,
+        sykmeldingerService = sykmeldingerService,
+        tilgangskontrollService = tilgangskontrollService
     )
 
     val applicationServer = ApplicationServer(applicationEngine, applicationState)

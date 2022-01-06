@@ -17,7 +17,7 @@ class AzureAdV2Cache {
         .maximumSize(500)
         .build<String, AzureAdV2Token>()
 
-    fun getOboToken(token: String): AzureAdV2Token? {
+    fun getToken(token: String): AzureAdV2Token? {
         val key = getSha256Key(token)
         return cache.getIfPresent(key)?.let {
             when (it.expires.isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
