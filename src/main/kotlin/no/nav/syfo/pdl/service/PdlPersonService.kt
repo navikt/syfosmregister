@@ -23,7 +23,7 @@ class PdlPersonService(
 
         if (pdlResponse.errors != null) {
             pdlResponse.errors.forEach {
-                log.error("PDL kastet error: {} ", it)
+                log.warn("PDL kastet error: {} ", it)
             }
         }
         if (pdlResponse.data.hentIdenter == null || pdlResponse.data.hentIdenter.identer.isNullOrEmpty()) {
