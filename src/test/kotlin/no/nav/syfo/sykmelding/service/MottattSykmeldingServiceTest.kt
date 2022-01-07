@@ -205,7 +205,6 @@ private fun mockEnvironment(environment: Environment) {
     every { environment.sm2013ManualHandlingTopic } returns "${environment.applicationName}-manualTopic"
     every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "${environment.applicationName}-automaticTopic"
     every { environment.mottattSykmeldingKafkaTopic } returns "${environment.applicationName}-mottatttopic"
-    every { environment.sykmeldingStatusTopic } returns "${environment.applicationName}-statustopic"
     every { environment.sykmeldingStatusAivenTopic } returns "${environment.applicationName}-statustopic"
     every { environment.sm2013BehandlingsUtfallTopic } returns "${environment.applicationName}-behandlingsutfall"
     every { environment.cluster } returns "localhost"
