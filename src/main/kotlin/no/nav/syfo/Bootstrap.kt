@@ -109,7 +109,7 @@ fun main() {
 
     val kafkaBaseConfigAiven = KafkaUtils.getAivenKafkaConfig()
 
-    val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfig, environment)
+    val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment)
     val sykmeldingStatusService = SykmeldingStatusService(database)
     val sendtSykmeldingKafkaProducer = getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val bekreftSykmeldingKafkaProducer = getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
