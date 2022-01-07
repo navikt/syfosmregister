@@ -40,6 +40,7 @@ import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
+import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
@@ -76,12 +77,13 @@ class KafkaStatusIntegrationTest : Spek({
     val applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
     val consumer = KafkaFactory.getKafkaStatusConsumer(kafkaConfig, environment)
+    val sykmeldingStatusKafkaConsumerAiven = mockk<SykmeldingStatusKafkaConsumer>(relaxed = true)
     val sendtSykmeldingKafkaProducer = spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment))
     val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
     val mottattSykmeldingKafkaProducer = spyk(KafkaFactory.getMottattSykmeldingKafkaProducer(kafkaConfig, environment))
     val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, mottattSykmeldingKafkaProducer, tombstoneProducer, database)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, sykmeldingStatusKafkaConsumerAiven, applicationState, mottattSykmeldingStatusService)
     val sykmeldingerService = SykmeldingerService(database)
     val mockPayload = mockk<Payload>()
 

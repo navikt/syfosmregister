@@ -43,6 +43,7 @@ import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getBekreftetSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumer
+import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumerAiven
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
@@ -113,10 +114,16 @@ fun main() {
     val sendtSykmeldingKafkaProducer = getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val bekreftSykmeldingKafkaProducer = getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
+    val sykmeldingStatusKafkaConsumerAiven = getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
     val tombstoneProducer = getTombstoneProducer(kafkaBaseConfig, environment)
     val mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, mottattSykmeldingKafkaProducer, tombstoneProducer, database)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusKafkaConsumer, applicationState, mottattSykmeldingStatusService)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(
+        sykmeldingStatusKafkaConsumer = sykmeldingStatusKafkaConsumer,
+        sykmeldingStatusKafkaConsumerAiven = sykmeldingStatusKafkaConsumerAiven,
+        applicationState = applicationState,
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+    )
 
     val receivedSykmeldingKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
     val mottattSykmeldingService = MottattSykmeldingService(
@@ -229,5 +236,8 @@ fun launchListeners(
     }
     createListener(applicationState) {
         sykmeldingStatusConsumerService.start()
+    }
+    createListener(applicationState) {
+        sykmeldingStatusConsumerService.startAivenConsumer()
     }
 }
