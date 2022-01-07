@@ -326,6 +326,7 @@ fun getSlettetEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaE
 private fun setUpEnvironment(environment: Environment) {
     every { environment.applicationName } returns "KafkaStatusIntegrationTest-application"
     every { environment.sykmeldingStatusTopic } returns "KafkaStatusIntegrationTest-topic"
+    every { environment.sykmeldingStatusAivenTopic } returns "KafkaStatusIntegrationTest-topic"
     every { environment.sendSykmeldingKafkaTopic } returns "KafkaStatusIntegrationTest-sendt-sykmelding-topic"
     every { environment.bekreftSykmeldingKafkaTopic } returns "KafkaStatusIntegrationTest-syfo-bekreftet-sykmelding"
     every { environment.sm2013InvalidHandlingTopic } returns "KafkaStatusIntegrationTest-invalid-topic"

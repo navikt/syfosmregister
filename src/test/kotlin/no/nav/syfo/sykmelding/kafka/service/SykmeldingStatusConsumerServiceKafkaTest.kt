@@ -50,6 +50,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "${SykmeldingStatusConsumerServiceKafkaTest::class.simpleName}"
     every { environment.sykmeldingStatusTopic } returns "${environment.applicationName}-topic"
+    every { environment.sykmeldingStatusAivenTopic } returns "${environment.applicationName}-topic"
     every { environment.cluster } returns "localhost"
     val fnr = "12345678901"
     val kafkaConfig = KafkaTest.setupKafkaConfig()
@@ -74,6 +75,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
         applicationState.ready = true
         every { environment.applicationName } returns "${SykmeldingStatusConsumerServiceKafkaTest::class.simpleName}"
         every { environment.sykmeldingStatusTopic } returns "${environment.applicationName}-topic"
+        every { environment.sykmeldingStatusAivenTopic } returns "${environment.applicationName}-topic"
         every { environment.cluster } returns "localhost"
         every { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
         every { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
