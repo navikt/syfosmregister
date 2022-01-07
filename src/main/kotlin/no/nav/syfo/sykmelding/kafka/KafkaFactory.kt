@@ -43,6 +43,16 @@ class KafkaFactory private constructor() {
             return SykmeldingStatusKafkaConsumer(kafkaConsumer, listOf(environment.sykmeldingStatusTopic))
         }
 
+        fun getKafkaStatusConsumerAiven(kafkaConfig: Properties, environment: Environment): SykmeldingStatusKafkaConsumer {
+            val properties = kafkaConfig.toConsumerConfig("${environment.applicationName}-consumer", JacksonKafkaDeserializer::class)
+            properties.let {
+                it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+                it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "latest"
+            }
+            val kafkaConsumer = KafkaConsumer<String, SykmeldingStatusKafkaMessageDTO>(properties, StringDeserializer(), JacksonKafkaDeserializer(SykmeldingStatusKafkaMessageDTO::class))
+            return SykmeldingStatusKafkaConsumer(kafkaConsumer, listOf(environment.sykmeldingStatusAivenTopic))
+        }
+
         fun getSendtSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): SendtSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
                 "${environment.applicationName}-producer",

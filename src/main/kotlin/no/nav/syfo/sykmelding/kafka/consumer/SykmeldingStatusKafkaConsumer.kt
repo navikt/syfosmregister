@@ -13,6 +13,12 @@ class SykmeldingStatusKafkaConsumer(private val kafkaConsumer: KafkaConsumer<Str
         return kafkaConsumer.poll(Duration.ofMillis(0)).mapNotNull { it.value() }
     }
 
+    fun pollAndIgnoreOnPremRecords(): List<SykmeldingStatusKafkaMessageDTO> {
+        return kafkaConsumer.poll(Duration.ofMillis(0))
+            .filterNot { (it.headers().any { header -> header.value().contentEquals("on-prem".toByteArray()) }) }
+            .mapNotNull { it.value() }
+    }
+
     fun commitSync() {
         kafkaConsumer.commitSync()
     }

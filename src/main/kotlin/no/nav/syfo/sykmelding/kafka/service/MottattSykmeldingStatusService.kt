@@ -57,8 +57,8 @@ class MottattSykmeldingStatusService(
         }
     }
 
-    fun handleStatusEvent(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        log.info("Got status update from kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent)
+    fun handleStatusEvent(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO, source: String = "on-prem") {
+        log.info("Got status update from $source kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent)
         try {
             when (sykmeldingStatusKafkaMessage.event.statusEvent) {
                 STATUS_SENDT -> {
