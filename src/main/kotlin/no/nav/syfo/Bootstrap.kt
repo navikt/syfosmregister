@@ -42,7 +42,6 @@ import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getBekreftetSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
-import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumerAiven
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSendtSykmeldingKafkaProducer
@@ -55,6 +54,7 @@ import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.util.util.Unbounded
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
@@ -107,19 +107,22 @@ fun main() {
         "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
     )
 
-    val kafkaBaseConfigAiven = KafkaUtils.getAivenKafkaConfig()
+    val kafkaBaseConfigAiven = KafkaUtils.getAivenKafkaConfig().also {
+        it.let {
+            it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+            it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+        }
+    }
 
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment)
     val sykmeldingStatusService = SykmeldingStatusService(database)
     val sendtSykmeldingKafkaProducer = getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val bekreftSykmeldingKafkaProducer = getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
-    val sykmeldingStatusKafkaConsumer = getKafkaStatusConsumer(kafkaBaseConfig, environment)
     val sykmeldingStatusKafkaConsumerAiven = getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
     val tombstoneProducer = getTombstoneProducer(kafkaBaseConfig, environment)
     val mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, mottattSykmeldingKafkaProducer, tombstoneProducer, database)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(
-        sykmeldingStatusKafkaConsumer = sykmeldingStatusKafkaConsumer,
         sykmeldingStatusKafkaConsumerAiven = sykmeldingStatusKafkaConsumerAiven,
         applicationState = applicationState,
         mottattSykmeldingStatusService = mottattSykmeldingStatusService
@@ -236,8 +239,5 @@ fun launchListeners(
     }
     createListener(applicationState) {
         sykmeldingStatusConsumerService.start()
-    }
-    createListener(applicationState) {
-        sykmeldingStatusConsumerService.startAivenConsumer()
     }
 }

@@ -21,7 +21,6 @@ data class Environment(
     override val truststore: String? = getEnvVar("NAV_TRUSTSTORE_PATH"),
     override val truststorePassword: String? = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
     val syfoTilgangskontrollUrl: String = getEnvVar("SYFOTILGANGSKONTROLL_URL"),
-    val sykmeldingStatusTopic: String = "aapen-syfo-sykmeldingstatus-leesah-v1",
     val sykmeldingStatusAivenTopic: String = "teamsykmelding.sykmeldingstatus-leesah",
     val sendSykmeldingKafkaTopic: String = "teamsykmelding.syfo-sendt-sykmelding",
     val bekreftSykmeldingKafkaTopic: String = "teamsykmelding.syfo-bekreftet-sykmelding",
