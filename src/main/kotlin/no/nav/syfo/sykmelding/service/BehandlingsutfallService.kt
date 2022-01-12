@@ -21,6 +21,7 @@ import java.time.Duration
 class BehandlingsutfallService(
     private val applicationState: ApplicationState,
     private val kafkaconsumer: KafkaConsumer<String, String>,
+    private val kafkaAivenConsumer: KafkaConsumer<String, String>,
     private val database: DatabaseInterface,
     private val env: Environment
 ) {
@@ -41,7 +42,29 @@ class BehandlingsutfallService(
                     msgId = "",
                     sykmeldingId = sykmeldingsid
                 )
-                handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta)
+                handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta, "on-prem")
+            }
+            delay(100)
+        }
+    }
+
+    suspend fun startAivenConsumer() {
+        kafkaAivenConsumer.subscribe(
+            listOf(
+                env.behandlingsUtfallTopic
+            )
+        )
+        while (applicationState.ready) {
+            kafkaAivenConsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
+                val sykmeldingsid = it.key()
+                val validationResult: ValidationResult = objectMapper.readValue(it.value())
+                val loggingMeta = LoggingMeta(
+                    mottakId = "",
+                    orgNr = "",
+                    msgId = "",
+                    sykmeldingId = sykmeldingsid
+                )
+                handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta, "aiven")
             }
             delay(100)
         }
@@ -51,10 +74,11 @@ class BehandlingsutfallService(
         validationResult: ValidationResult,
         sykmeldingsid: String,
         database: DatabaseInterface,
-        loggingMeta: LoggingMeta
+        loggingMeta: LoggingMeta,
+        source: String
     ) {
         wrapExceptions(loggingMeta) {
-            log.info("Mottatt behandlingsutfall, {}", StructuredArguments.fields(loggingMeta))
+            log.info("Mottatt behandlingsutfall fra $source, {}", StructuredArguments.fields(loggingMeta))
 
             if (database.connection.erBehandlingsutfallLagret(sykmeldingsid)) {
                 log.warn(

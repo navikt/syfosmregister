@@ -36,6 +36,10 @@ data class Environment(
     val pdlAktorTopic: String = "aapen-person-pdl-aktor-v1",
     val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
     val pdlScope: String = getEnvVar("PDL_SCOPE"),
+    val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
+    val avvistSykmeldingTopic: String = "teamsykmelding.avvist-sykmelding",
+    val manuellSykmeldingTopic: String = "teamsykmelding.manuell-behandling-sykmelding",
+    val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall"
 ) : KafkaConfig
 
 data class VaultServiceUser(

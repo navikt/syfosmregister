@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.service
 
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
@@ -45,11 +46,13 @@ class BehandligsutfallServiceTest : Spek({
     )
     val behandlingsutfallKafkaProducer = KafkaProducer<String, ValidationResult>(producerProperties)
     val behandlingsutfallKafkaConsumer = spyk(KafkaConsumer<String, String>(consumerProperties))
+    val behandlingsutfallKafkaConsumerAiven = mockk<KafkaConsumer<String, String>>()
     val behandlingsutfallService = BehandlingsutfallService(
         applicationState = applicationState,
         database = testDb,
         env = environment,
-        kafkaconsumer = behandlingsutfallKafkaConsumer
+        kafkaconsumer = behandlingsutfallKafkaConsumer,
+        kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven
     )
 
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
