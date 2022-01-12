@@ -35,6 +35,7 @@ class MottattSykmeldingService(
     private val applicationState: ApplicationState,
     private val env: Environment,
     private val kafkaconsumer: KafkaConsumer<String, String>,
+    private val kafkaAivenConsumer: KafkaConsumer<String, String>,
     private val database: DatabaseInterface,
     private val sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     private val mottattSykmeldingKafkaProducer: MottattSykmeldingKafkaProducer,
@@ -58,8 +59,34 @@ class MottattSykmeldingService(
                     msgId = receivedSykmelding.msgId,
                     sykmeldingId = receivedSykmelding.sykmelding.id
                 )
-                handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer)
+                handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer, "on-prem")
                 if (it.topic() != env.sm2013InvalidHandlingTopic) {
+                    sendtToMottattSykmeldingTopic(receivedSykmelding)
+                }
+            }
+            delay(100)
+        }
+    }
+
+    suspend fun startAivenConsumer() {
+        kafkaAivenConsumer.subscribe(
+            listOf(
+                env.okSykmeldingTopic,
+                env.manuellSykmeldingTopic,
+                env.avvistSykmeldingTopic
+            )
+        )
+        while (applicationState.ready) {
+            kafkaAivenConsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
+                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
+                val loggingMeta = LoggingMeta(
+                    mottakId = receivedSykmelding.navLogId,
+                    orgNr = receivedSykmelding.legekontorOrgNr,
+                    msgId = receivedSykmelding.msgId,
+                    sykmeldingId = receivedSykmelding.sykmelding.id
+                )
+                handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer, "aiven")
+                if (it.topic() != env.avvistSykmeldingTopic) {
                     sendtToMottattSykmeldingTopic(receivedSykmelding)
                 }
             }
@@ -82,10 +109,11 @@ class MottattSykmeldingService(
         receivedSykmelding: ReceivedSykmelding,
         database: DatabaseInterface,
         loggingMeta: LoggingMeta,
-        sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer
+        sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
+        source: String
     ) {
         wrapExceptions(loggingMeta) {
-            log.info("Mottatt sykmelding SM2013, {}", StructuredArguments.fields(loggingMeta))
+            log.info("Mottatt sykmelding SM2013 fra $source, {}", StructuredArguments.fields(loggingMeta))
             val sykmeldingsopplysninger = mapToSykmeldingsopplysninger(receivedSykmelding)
             val sykmeldingsdokument = Sykmeldingsdokument(
                 id = receivedSykmelding.sykmelding.id,

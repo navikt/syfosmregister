@@ -49,6 +49,7 @@ class MottattSykmeldingServiceTest : Spek({
 
     val receivedSykmeldingKafkaProducer = KafkaProducer<String, ReceivedSykmelding>(producerProperties)
     val receivedSykmeldingKafkaConsumer = spyk(KafkaConsumer<String, String>(consumerProperties))
+    val receivedSykmeldingKafkaConsumerAiven = mockk<KafkaConsumer<String, String>>(relaxed = true)
     val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaConfig, environment)
@@ -56,6 +57,7 @@ class MottattSykmeldingServiceTest : Spek({
     val mottattSykmeldingService = MottattSykmeldingService(
         applicationState = applicationState,
         kafkaconsumer = receivedSykmeldingKafkaConsumer,
+        kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
         env = environment,
         database = testDb,
         mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,

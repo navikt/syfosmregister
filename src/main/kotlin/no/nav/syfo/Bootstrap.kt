@@ -129,10 +129,16 @@ fun main() {
     )
 
     val receivedSykmeldingKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
+    val receivedSykmeldingKafkaConsumerAiven = KafkaConsumer<String, String>(
+        kafkaBaseConfigAiven
+            .toConsumerConfig("${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest" }
+    )
     val mottattSykmeldingService = MottattSykmeldingService(
         applicationState = applicationState,
         env = environment,
         kafkaconsumer = receivedSykmeldingKafkaConsumer,
+        kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
         database = database,
         sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
         mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
@@ -140,9 +146,15 @@ fun main() {
     )
 
     val behandlingsutfallKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
+    val behandlingsutfallKafkaConsumerAiven = KafkaConsumer<String, String>(
+        kafkaBaseConfigAiven
+            .toConsumerConfig("${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest" }
+    )
     val behandligsutfallService = BehandlingsutfallService(
         applicationState = applicationState,
         kafkaconsumer = behandlingsutfallKafkaConsumer,
+        kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven,
         env = environment,
         database = database
     )
@@ -235,7 +247,13 @@ fun launchListeners(
         mottattSykmeldingService.start()
     }
     createListener(applicationState) {
+        mottattSykmeldingService.startAivenConsumer()
+    }
+    createListener(applicationState) {
         behandligsutfallService.start()
+    }
+    createListener(applicationState) {
+        behandligsutfallService.startAivenConsumer()
     }
     createListener(applicationState) {
         sykmeldingStatusConsumerService.start()
