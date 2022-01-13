@@ -119,7 +119,7 @@ fun main() {
     val sendtSykmeldingKafkaProducer = getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val bekreftSykmeldingKafkaProducer = getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val sykmeldingStatusKafkaConsumerAiven = getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
-    val tombstoneProducer = getTombstoneProducer(kafkaBaseConfig, environment)
+    val tombstoneProducer = getTombstoneProducer(kafkaBaseConfigAiven, environment)
     val mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, mottattSykmeldingKafkaProducer, tombstoneProducer, database)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(
