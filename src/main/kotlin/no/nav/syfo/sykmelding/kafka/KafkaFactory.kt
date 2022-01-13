@@ -77,10 +77,11 @@ class KafkaFactory private constructor() {
             return SykmeldingTombstoneProducer(
                 kafkaProducer,
                 listOf(
-                    environment.kafkaSm2013AutomaticDigitalHandlingTopic,
-                    environment.sm2013ManualHandlingTopic,
-                    environment.sm2013InvalidHandlingTopic,
-                    environment.sm2013BehandlingsUtfallTopic
+                    environment.okSykmeldingTopic,
+                    environment.manuellSykmeldingTopic,
+                    environment.avvistSykmeldingTopic,
+                    environment.behandlingsUtfallTopic,
+                    environment.mottattSykmeldingKafkaTopic
                 )
             )
         }

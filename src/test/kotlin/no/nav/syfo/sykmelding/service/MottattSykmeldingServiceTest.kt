@@ -11,6 +11,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
+import no.nav.syfo.log
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
@@ -46,10 +47,12 @@ class MottattSykmeldingServiceTest : Spek({
     val producerProperties = kafkaConfig.toProducerConfig(
         "${environment.applicationName}-consumer", valueSerializer = JacksonKafkaSerializer::class
     )
-
+    val consumerPropertiesAiven = kafkaConfig.toConsumerConfig(
+        "${environment.applicationName}-aiven-consumer", valueDeserializer = StringDeserializer::class
+    )
     val receivedSykmeldingKafkaProducer = KafkaProducer<String, ReceivedSykmelding>(producerProperties)
     val receivedSykmeldingKafkaConsumer = spyk(KafkaConsumer<String, String>(consumerProperties))
-    val receivedSykmeldingKafkaConsumerAiven = mockk<KafkaConsumer<String, String>>(relaxed = true)
+    val receivedSykmeldingKafkaConsumerAiven = spyk(KafkaConsumer<String, String>(consumerPropertiesAiven))
     val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaConfig, environment)
@@ -184,15 +187,17 @@ class MottattSykmeldingServiceTest : Spek({
         }
         it("Should handle tombstone") {
             tombstoneProducer.tombstoneSykmelding(getReceivedSykmelding().sykmelding.id)
-            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+            every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
+                log.info("polling")
                 if (!cr.isEmpty) {
+                    log.info("not-empty")
                     applicationState.ready = false
                 }
                 cr
             }
             runBlocking {
-                mottattSykmeldingService.start()
+                mottattSykmeldingService.startAivenConsumer()
             }
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe false
@@ -209,5 +214,9 @@ private fun mockEnvironment(environment: Environment) {
     every { environment.mottattSykmeldingKafkaTopic } returns "${environment.applicationName}-mottatttopic"
     every { environment.sykmeldingStatusAivenTopic } returns "${environment.applicationName}-statustopic"
     every { environment.sm2013BehandlingsUtfallTopic } returns "${environment.applicationName}-behandlingsutfall"
+    every { environment.okSykmeldingTopic } returns "${environment.applicationName}-oksykmeldingtopic"
+    every { environment.behandlingsUtfallTopic } returns "${environment.applicationName}-behandlingsutfallAiven"
+    every { environment.avvistSykmeldingTopic } returns "${environment.applicationName}-avvisttopiclAiven"
+    every { environment.manuellSykmeldingTopic } returns "${environment.applicationName}-manuelltopic"
     every { environment.cluster } returns "localhost"
 }

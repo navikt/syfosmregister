@@ -332,6 +332,11 @@ private fun setUpEnvironment(environment: Environment) {
     every { environment.mottattSykmeldingKafkaTopic } returns "KafkaStatusIntegrationTest-syfo-mottatt-sykmelding"
     every { environment.sm2013BehandlingsUtfallTopic } returns "KafkaStatusIntegrationTest-behandlingsutfall-topic"
     every { environment.cluster } returns "localhost"
+    every { environment.okSykmeldingTopic } returns "KafkaStatusIntegrationTestoksykmeldingtopic"
+    every { environment.behandlingsUtfallTopic } returns "KafkaStatusIntegrationTestbehandlingsutfallAiven"
+    every { environment.avvistSykmeldingTopic } returns "KafkaStatusIntegrationTestavvisttopiclAiven"
+    every { environment.manuellSykmeldingTopic } returns "KafkaStatusIntegrationTestmanuelltopic"
+    every { environment.mottattSykmeldingKafkaTopic } returns "KafkaStatusIntegrationTestmanuelltopic"
 }
 
 private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService, applicationState: ApplicationState, kafkaProducer: SykmeldingStatusKafkaProducer, sykmelding: Sykmeldingsopplysninger, sykmeldingStatusConsumerService: SykmeldingStatusConsumerService): SykmeldingStatusKafkaEventDTO {
