@@ -29,12 +29,16 @@ import java.time.Duration
 class BehandligsutfallServiceTest : Spek({
     val testDb = TestDB()
     val environment = mockkClass(Environment::class)
-    every { environment.applicationName } returns "${BehandligsutfallServiceTest::class.simpleName}"
-    every { environment.sm2013InvalidHandlingTopic } returns "${environment.applicationName}-invalidTopic"
-    every { environment.sm2013ManualHandlingTopic } returns "${environment.applicationName}-manualTopic"
-    every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "${environment.applicationName}-automaticTopic"
-    every { environment.mottattSykmeldingKafkaTopic } returns "${environment.applicationName}-mottatttopic"
-    every { environment.sm2013BehandlingsUtfallTopic } returns "${environment.applicationName}-behandlingsutfall"
+    every { environment.applicationName } returns "application"
+    every { environment.sm2013InvalidHandlingTopic } returns "invalidTopic"
+    every { environment.sm2013ManualHandlingTopic } returns "manualTopic"
+    every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automaticTopic"
+    every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
+    every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
+    every { environment.okSykmeldingTopic } returns "oksykmeldingtopic"
+    every { environment.behandlingsUtfallTopic } returns "behandlingsutfallAiven"
+    every { environment.avvistSykmeldingTopic } returns "avvisttopiclAiven"
+    every { environment.manuellSykmeldingTopic } returns "manuelltopic"
     every { environment.cluster } returns "localhost"
     val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(true, true)
@@ -54,8 +58,6 @@ class BehandligsutfallServiceTest : Spek({
         kafkaconsumer = behandlingsutfallKafkaConsumer,
         kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven
     )
-
-    val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
     beforeEachTest {
         every { environment.applicationName } returns "application"
         every { environment.sm2013InvalidHandlingTopic } returns "invalidTopic"
@@ -63,7 +65,12 @@ class BehandligsutfallServiceTest : Spek({
         every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automaticTopic"
         every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
         every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
+        every { environment.okSykmeldingTopic } returns "oksykmeldingtopic"
+        every { environment.behandlingsUtfallTopic } returns "behandlingsutfallAiven"
+        every { environment.avvistSykmeldingTopic } returns "avvisttopiclAiven"
+        every { environment.manuellSykmeldingTopic } returns "manuelltopic"
     }
+    val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
 
     afterEachTest {
         testDb.connection.dropData()
@@ -82,6 +89,7 @@ class BehandligsutfallServiceTest : Spek({
                     "1",
                     validationResult
                 )
+
             )
             every { behandlingsutfallKafkaConsumer.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
