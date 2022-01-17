@@ -17,6 +17,7 @@ import io.ktor.client.features.json.JsonFeature
 import io.ktor.network.sockets.SocketTimeoutException
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -73,6 +74,7 @@ val objectMapper: ObjectMapper = ObjectMapper().apply {
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
+@DelicateCoroutinesApi
 @ExperimentalTime
 fun main() {
     val environment = Environment()
@@ -128,16 +130,14 @@ fun main() {
         mottattSykmeldingStatusService = mottattSykmeldingStatusService
     )
 
-    val receivedSykmeldingKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
     val receivedSykmeldingKafkaConsumerAiven = KafkaConsumer<String, String>(
         kafkaBaseConfigAiven
             .toConsumerConfig("${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
-            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest" }
+            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
     )
     val mottattSykmeldingService = MottattSykmeldingService(
         applicationState = applicationState,
         env = environment,
-        kafkaconsumer = receivedSykmeldingKafkaConsumer,
         kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
         database = database,
         sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
@@ -145,15 +145,13 @@ fun main() {
         mottattSykmeldingStatusService = mottattSykmeldingStatusService
     )
 
-    val behandlingsutfallKafkaConsumer = KafkaConsumer<String, String>(consumerProperties)
     val behandlingsutfallKafkaConsumerAiven = KafkaConsumer<String, String>(
         kafkaBaseConfigAiven
             .toConsumerConfig("${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
-            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest" }
+            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
     )
-    val behandligsutfallService = BehandlingsutfallService(
+    val behandlingsutfallService = BehandlingsutfallService(
         applicationState = applicationState,
-        kafkaconsumer = behandlingsutfallKafkaConsumer,
         kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven,
         env = environment,
         database = database
@@ -219,10 +217,11 @@ fun main() {
         applicationState = applicationState,
         sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
         mottattSykmeldingService = mottattSykmeldingService,
-        behandligsutfallService = behandligsutfallService
+        behandlingsutfallService = behandlingsutfallService
     )
 }
 
+@DelicateCoroutinesApi
 fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
     GlobalScope.launch(Dispatchers.Unbounded) {
         try {
@@ -237,23 +236,18 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
         }
     }
 
+@DelicateCoroutinesApi
 fun launchListeners(
     applicationState: ApplicationState,
     sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
     mottattSykmeldingService: MottattSykmeldingService,
-    behandligsutfallService: BehandlingsutfallService
+    behandlingsutfallService: BehandlingsutfallService
 ) {
     createListener(applicationState) {
         mottattSykmeldingService.start()
     }
     createListener(applicationState) {
-        mottattSykmeldingService.startAivenConsumer()
-    }
-    createListener(applicationState) {
-        behandligsutfallService.start()
-    }
-    createListener(applicationState) {
-        behandligsutfallService.startAivenConsumer()
+        behandlingsutfallService.start()
     }
     createListener(applicationState) {
         sykmeldingStatusConsumerService.start()

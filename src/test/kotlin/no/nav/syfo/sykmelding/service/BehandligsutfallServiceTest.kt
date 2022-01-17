@@ -1,7 +1,6 @@
 package no.nav.syfo.sykmelding.service
 
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
@@ -30,14 +29,10 @@ class BehandligsutfallServiceTest : Spek({
     val testDb = TestDB()
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "application"
-    every { environment.sm2013InvalidHandlingTopic } returns "invalidTopic"
-    every { environment.sm2013ManualHandlingTopic } returns "manualTopic"
-    every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automaticTopic"
     every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
-    every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
     every { environment.okSykmeldingTopic } returns "oksykmeldingtopic"
     every { environment.behandlingsUtfallTopic } returns "behandlingsutfallAiven"
-    every { environment.avvistSykmeldingTopic } returns "avvisttopiclAiven"
+    every { environment.avvistSykmeldingTopic } returns "avvisttopicAiven"
     every { environment.manuellSykmeldingTopic } returns "manuelltopic"
     every { environment.cluster } returns "localhost"
     val kafkaConfig = KafkaTest.setupKafkaConfig()
@@ -49,25 +44,19 @@ class BehandligsutfallServiceTest : Spek({
         "${environment.applicationName}-consumer", valueSerializer = JacksonKafkaSerializer::class
     )
     val behandlingsutfallKafkaProducer = KafkaProducer<String, ValidationResult>(producerProperties)
-    val behandlingsutfallKafkaConsumer = spyk(KafkaConsumer<String, String>(consumerProperties))
-    val behandlingsutfallKafkaConsumerAiven = mockk<KafkaConsumer<String, String>>()
+    val behandlingsutfallKafkaConsumerAiven = spyk(KafkaConsumer<String, String>(consumerProperties))
     val behandlingsutfallService = BehandlingsutfallService(
         applicationState = applicationState,
         database = testDb,
         env = environment,
-        kafkaconsumer = behandlingsutfallKafkaConsumer,
         kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven
     )
     beforeEachTest {
         every { environment.applicationName } returns "application"
-        every { environment.sm2013InvalidHandlingTopic } returns "invalidTopic"
-        every { environment.sm2013ManualHandlingTopic } returns "manualTopic"
-        every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "automaticTopic"
         every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
-        every { environment.sm2013BehandlingsUtfallTopic } returns "behandlingsutfall"
         every { environment.okSykmeldingTopic } returns "oksykmeldingtopic"
         every { environment.behandlingsUtfallTopic } returns "behandlingsutfallAiven"
-        every { environment.avvistSykmeldingTopic } returns "avvisttopiclAiven"
+        every { environment.avvistSykmeldingTopic } returns "avvisttopicAiven"
         every { environment.manuellSykmeldingTopic } returns "manuelltopic"
     }
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
@@ -85,13 +74,13 @@ class BehandligsutfallServiceTest : Spek({
             val validationResult = ValidationResult(Status.OK, emptyList())
             behandlingsutfallKafkaProducer.send(
                 ProducerRecord(
-                    environment.sm2013BehandlingsUtfallTopic,
+                    environment.behandlingsUtfallTopic,
                     "1",
                     validationResult
                 )
 
             )
-            every { behandlingsutfallKafkaConsumer.poll(any<Duration>()) } answers {
+            every { behandlingsutfallKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
                     applicationState.ready = false
@@ -108,7 +97,7 @@ class BehandligsutfallServiceTest : Spek({
 
         it("Should handle tombstone") {
             tombstoneProducer.tombstoneSykmelding("1")
-            every { behandlingsutfallKafkaConsumer.poll(any<Duration>()) } answers {
+            every { behandlingsutfallKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
                     applicationState.ready = false

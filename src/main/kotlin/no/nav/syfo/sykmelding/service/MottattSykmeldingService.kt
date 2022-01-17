@@ -34,41 +34,13 @@ import java.time.ZoneOffset
 class MottattSykmeldingService(
     private val applicationState: ApplicationState,
     private val env: Environment,
-    private val kafkaconsumer: KafkaConsumer<String, String>,
     private val kafkaAivenConsumer: KafkaConsumer<String, String>,
     private val database: DatabaseInterface,
     private val sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     private val mottattSykmeldingKafkaProducer: MottattSykmeldingKafkaProducer,
     private val mottattSykmeldingStatusService: MottattSykmeldingStatusService
 ) {
-
     suspend fun start() {
-        kafkaconsumer.subscribe(
-            listOf(
-                env.sm2013ManualHandlingTopic,
-                env.kafkaSm2013AutomaticDigitalHandlingTopic,
-                env.sm2013InvalidHandlingTopic
-            )
-        )
-        while (applicationState.ready) {
-            kafkaconsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
-                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
-                val loggingMeta = LoggingMeta(
-                    mottakId = receivedSykmelding.navLogId,
-                    orgNr = receivedSykmelding.legekontorOrgNr,
-                    msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id
-                )
-                handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer, "on-prem")
-                if (it.topic() != env.sm2013InvalidHandlingTopic) {
-                    sendtToMottattSykmeldingTopic(receivedSykmelding)
-                }
-            }
-            delay(100)
-        }
-    }
-
-    suspend fun startAivenConsumer() {
         kafkaAivenConsumer.subscribe(
             listOf(
                 env.okSykmeldingTopic,
