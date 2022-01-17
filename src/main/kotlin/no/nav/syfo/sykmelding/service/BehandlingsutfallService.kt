@@ -20,35 +20,12 @@ import java.time.Duration
 
 class BehandlingsutfallService(
     private val applicationState: ApplicationState,
-    private val kafkaconsumer: KafkaConsumer<String, String>,
     private val kafkaAivenConsumer: KafkaConsumer<String, String>,
     private val database: DatabaseInterface,
     private val env: Environment
 ) {
 
     suspend fun start() {
-        kafkaconsumer.subscribe(
-            listOf(
-                env.sm2013BehandlingsUtfallTopic
-            )
-        )
-        while (applicationState.ready) {
-            kafkaconsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
-                val sykmeldingsid = it.key()
-                val validationResult: ValidationResult = objectMapper.readValue(it.value())
-                val loggingMeta = LoggingMeta(
-                    mottakId = "",
-                    orgNr = "",
-                    msgId = "",
-                    sykmeldingId = sykmeldingsid
-                )
-                handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta, "on-prem")
-            }
-            delay(100)
-        }
-    }
-
-    suspend fun startAivenConsumer() {
         kafkaAivenConsumer.subscribe(
             listOf(
                 env.behandlingsUtfallTopic

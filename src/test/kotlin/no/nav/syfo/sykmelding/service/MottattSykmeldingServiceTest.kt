@@ -41,17 +41,13 @@ class MottattSykmeldingServiceTest : Spek({
     mockEnvironment(environment)
     val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(true, true)
-    val consumerProperties = kafkaConfig.toConsumerConfig(
-        "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
-    )
     val producerProperties = kafkaConfig.toProducerConfig(
-        "${environment.applicationName}-consumer", valueSerializer = JacksonKafkaSerializer::class
+        "${environment.applicationName}-producer", valueSerializer = JacksonKafkaSerializer::class
     )
     val consumerPropertiesAiven = kafkaConfig.toConsumerConfig(
         "${environment.applicationName}-aiven-consumer", valueDeserializer = StringDeserializer::class
     )
     val receivedSykmeldingKafkaProducer = KafkaProducer<String, ReceivedSykmelding>(producerProperties)
-    val receivedSykmeldingKafkaConsumer = spyk(KafkaConsumer<String, String>(consumerProperties))
     val receivedSykmeldingKafkaConsumerAiven = spyk(KafkaConsumer<String, String>(consumerPropertiesAiven))
     val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
     val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
@@ -59,7 +55,6 @@ class MottattSykmeldingServiceTest : Spek({
     val mottattSykmeldingStatusService = mockk<MottattSykmeldingStatusService>(relaxed = true)
     val mottattSykmeldingService = MottattSykmeldingService(
         applicationState = applicationState,
-        kafkaconsumer = receivedSykmeldingKafkaConsumer,
         kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
         env = environment,
         database = testDb,
@@ -86,10 +81,10 @@ class MottattSykmeldingServiceTest : Spek({
 
         it("Handle resending to automatic topic") {
             val receivedSykmelding = getReceivedSykmelding()
-            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
-            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.okSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.okSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
             var first = true
-            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+            every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
                     if (!first) {
@@ -109,8 +104,8 @@ class MottattSykmeldingServiceTest : Spek({
 
         it("should receive sykmelding from automatic topic and publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
-            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
-            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.okSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
                     applicationState.ready = false
@@ -130,12 +125,12 @@ class MottattSykmeldingServiceTest : Spek({
                 getReceivedSykmelding(merknader = listOf(Merknad("UGYLDIG_TILBAKEDATERING", "ikke godkjent")))
             receivedSykmeldingKafkaProducer.send(
                 ProducerRecord(
-                    environment.kafkaSm2013AutomaticDigitalHandlingTopic,
+                    environment.okSykmeldingTopic,
                     receivedSykmelding.sykmelding.id,
                     receivedSykmelding
                 )
             )
-            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+            every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
                     applicationState.ready = false
@@ -153,8 +148,8 @@ class MottattSykmeldingServiceTest : Spek({
 
         it("should receive sykmelding from manuell topic and publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
-            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.kafkaSm2013AutomaticDigitalHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
-            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.okSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
                     applicationState.ready = false
@@ -170,8 +165,8 @@ class MottattSykmeldingServiceTest : Spek({
         }
         it("should receive sykmelding from avvist topic and not publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
-            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.sm2013InvalidHandlingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
-            every { receivedSykmeldingKafkaConsumer.poll(any<Duration>()) } answers {
+            receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.avvistSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
+            every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
                 if (!cr.isEmpty) {
                     applicationState.ready = false
@@ -197,7 +192,7 @@ class MottattSykmeldingServiceTest : Spek({
                 cr
             }
             runBlocking {
-                mottattSykmeldingService.startAivenConsumer()
+                mottattSykmeldingService.start()
             }
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe false
@@ -208,12 +203,8 @@ class MottattSykmeldingServiceTest : Spek({
 
 private fun mockEnvironment(environment: Environment) {
     every { environment.applicationName } returns "${MottattSykmeldingServiceTest::class.simpleName}-application"
-    every { environment.sm2013InvalidHandlingTopic } returns "${environment.applicationName}-invalidTopic"
-    every { environment.sm2013ManualHandlingTopic } returns "${environment.applicationName}-manualTopic"
-    every { environment.kafkaSm2013AutomaticDigitalHandlingTopic } returns "${environment.applicationName}-automaticTopic"
     every { environment.mottattSykmeldingKafkaTopic } returns "${environment.applicationName}-mottatttopic"
     every { environment.sykmeldingStatusAivenTopic } returns "${environment.applicationName}-statustopic"
-    every { environment.sm2013BehandlingsUtfallTopic } returns "${environment.applicationName}-behandlingsutfall"
     every { environment.okSykmeldingTopic } returns "${environment.applicationName}-oksykmeldingtopic"
     every { environment.behandlingsUtfallTopic } returns "${environment.applicationName}-behandlingsutfallAiven"
     every { environment.avvistSykmeldingTopic } returns "${environment.applicationName}-avvisttopiclAiven"
