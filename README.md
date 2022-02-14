@@ -2,7 +2,7 @@
 
 # SYFO Sykmeldingregister
 
-Application for persisting sykmelding 2013 i database
+Application for persisting sykmelding 2013 in database
 
 ## Technologies used
 * Kotlin
@@ -13,6 +13,10 @@ Application for persisting sykmelding 2013 i database
 * Mq
 * Vault
 * Postgres
+
+#### Requirements
+
+* JDK 17
 
 ### Building the application
 #### Compile and package application
@@ -67,7 +71,7 @@ or the command line:
 
 ### Access to the Postgres database
 
-For utfyllende dokumentasjon se [Postgres i NAV](https://github.com/navikt/utvikling/blob/master/PostgreSQL.md)
+For utfyllende dokumentasjon se [Postgres i NAV](https://github.com/navikt/utvikling/blob/main/docs/teknisk/PostgreSQL.md)
 
 #### Tldr
 
