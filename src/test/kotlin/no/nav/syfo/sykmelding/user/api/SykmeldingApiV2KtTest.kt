@@ -16,6 +16,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
+import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
@@ -50,10 +51,9 @@ class SykmeldingApiV2KtTest : Spek({
 
             it("Should get sykmeldinger for user with exclude filter") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -61,10 +61,9 @@ class SykmeldingApiV2KtTest : Spek({
             }
             it("Should get sykmeldinger for user with include filter") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=APEN") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -72,10 +71,9 @@ class SykmeldingApiV2KtTest : Spek({
             }
             it("Should get sykmeldinger for user with multiple exclude filters") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -84,10 +82,9 @@ class SykmeldingApiV2KtTest : Spek({
 
             it("Should get bad request when exclude and include filters are in request") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT&include=AVBRUTT") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
@@ -95,10 +92,9 @@ class SykmeldingApiV2KtTest : Spek({
             }
             it("Should get bad request when exclude filter is invalid") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=ÅPEN") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
@@ -107,10 +103,9 @@ class SykmeldingApiV2KtTest : Spek({
 
             it("Should get bad request when include filter is invalid") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=ALL") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
@@ -119,10 +114,9 @@ class SykmeldingApiV2KtTest : Spek({
 
             it("Should get sykmeldinger for user") {
                 every { sykmeldingerService.getUserSykmelding(any(), null, null, any(), any(), any()) } returns listOf(getSykmeldingDto())
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -143,11 +137,9 @@ class SykmeldingApiV2KtTest : Spek({
                         perioder = listOf(periode)
                     )
                 )
-                every { mockPayload.subject } returns "123"
-
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-01-20&tom=2020-02-10") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -166,10 +158,9 @@ class SykmeldingApiV2KtTest : Spek({
                         perioder = listOf(periode)
                     )
                 )
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-02-20") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -188,10 +179,9 @@ class SykmeldingApiV2KtTest : Spek({
                         perioder = listOf(periode)
                     )
                 )
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?tom=2020-02-20") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -200,10 +190,9 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
             it("Skal få Bad Requeset om TOM dato er før FOM dato") {
-                every { mockPayload.subject } returns "123"
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-05-20&tom=2020-02-10") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest

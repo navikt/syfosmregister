@@ -2,7 +2,6 @@ package no.nav.syfo.sykmelding.user.api
 
 import io.ktor.application.call
 import io.ktor.auth.authentication
-import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
@@ -10,6 +9,7 @@ import io.ktor.routing.Route
 import io.ktor.routing.accept
 import io.ktor.routing.get
 import io.ktor.routing.route
+import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.StatusEventDTO
 import java.time.LocalDate
@@ -18,8 +18,8 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
     route("api/v2/sykmeldinger") {
         accept(ContentType.Application.Json) {
             get {
-                val principal: JWTPrincipal = call.authentication.principal()!!
-                val fnr = principal.payload.subject
+                val principal: BrukerPrincipal = call.authentication.principal()!!
+                val fnr = principal.fnr
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
                 val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
                 val exclude = call.parameters.getAll("exclude")
@@ -33,8 +33,8 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                 }
             }
             get("/{sykmeldingId}") {
-                val principal: JWTPrincipal = call.authentication.principal()!!
-                val fnr = principal.payload.subject
+                val principal: BrukerPrincipal = call.authentication.principal()!!
+                val fnr = principal.fnr
                 val sykmeldingId = call.parameters["sykmeldingId"]!!
 
                 val sykmelding = sykmeldingerService.getSykmelding(sykmeldingId, fnr, fullBehandler = false)

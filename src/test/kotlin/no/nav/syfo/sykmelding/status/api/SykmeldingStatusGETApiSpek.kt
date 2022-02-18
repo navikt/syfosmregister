@@ -16,6 +16,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
+import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.StatusEventDTO
@@ -55,7 +56,7 @@ class SykmeldingStatusGETApiSpek : Spek({
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=ALL") {
                         addHeader("Content-Type", ContentType.Application.Json.toString())
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("pasient_fnr", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -74,7 +75,7 @@ class SykmeldingStatusGETApiSpek : Spek({
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/123/status") {
                         addHeader("Content-Type", ContentType.Application.Json.toString())
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("pasient_fnr", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -90,7 +91,7 @@ class SykmeldingStatusGETApiSpek : Spek({
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
                         addHeader("Content-Type", ContentType.Application.Json.toString())
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("pasient_fnr", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -107,7 +108,7 @@ class SykmeldingStatusGETApiSpek : Spek({
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
                         addHeader("Content-Type", ContentType.Application.Json.toString())
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("pasient_fnr", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.Forbidden

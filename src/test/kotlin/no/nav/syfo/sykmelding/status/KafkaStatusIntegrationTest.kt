@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.createListener
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
@@ -100,7 +101,6 @@ class KafkaStatusIntegrationTest : Spek({
         coEvery { delay(any<Long>()) } returns Unit
         database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-        every { mockPayload.subject } returns "pasientFnr"
     }
 
     afterEachTest {
@@ -270,7 +270,7 @@ class KafkaStatusIntegrationTest : Spek({
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/uuid/status?filter=LATEST") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("pasientFnr", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -289,7 +289,7 @@ class KafkaStatusIntegrationTest : Spek({
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(
                     handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
-                        call.authentication.principal = JWTPrincipal(mockPayload)
+                        call.authentication.principal = BrukerPrincipal("pasientFnr", JWTPrincipal(mockPayload))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
