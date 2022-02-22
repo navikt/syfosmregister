@@ -35,8 +35,6 @@ import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.identendring.IdentendringService
 import no.nav.syfo.identendring.PdlAktorConsumer
 import no.nav.syfo.kafka.aiven.KafkaUtils
-import no.nav.syfo.kafka.envOverrides
-import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.service.PdlPersonService
@@ -98,16 +96,6 @@ fun main() {
     val applicationState = ApplicationState()
 
     DefaultExports.initialize()
-
-    val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
-        .also {
-            it["auto.offset.reset"] = "none"
-        }
-        .envOverrides()
-
-    val consumerProperties = kafkaBaseConfig.toConsumerConfig(
-        "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
-    )
 
     val kafkaBaseConfigAiven = KafkaUtils.getAivenKafkaConfig().also {
         it.let {
