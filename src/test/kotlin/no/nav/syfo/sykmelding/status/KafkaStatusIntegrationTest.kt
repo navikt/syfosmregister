@@ -17,6 +17,7 @@ import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -64,6 +65,7 @@ import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
 
+@DelicateCoroutinesApi
 class KafkaStatusIntegrationTest : Spek({
 
     val database = TestDB()
@@ -335,6 +337,7 @@ private fun setUpEnvironment(environment: Environment) {
     every { environment.mottattSykmeldingKafkaTopic } returns "KafkaStatusIntegrationTestmanuelltopic"
 }
 
+@DelicateCoroutinesApi
 private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService, applicationState: ApplicationState, kafkaProducer: SykmeldingStatusKafkaProducer, sykmelding: Sykmeldingsopplysninger, sykmeldingStatusConsumerService: SykmeldingStatusConsumerService): SykmeldingStatusKafkaEventDTO {
     every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
         callOriginal()

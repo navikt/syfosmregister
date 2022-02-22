@@ -142,7 +142,7 @@ class MottattSykmeldingServiceTest : Spek({
             }
             val merknader = testDb.connection.getMerknaderForId("1")
             merknader!![0].type shouldBeEqualTo "UGYLDIG_TILBAKEDATERING"
-            merknader!![0].beskrivelse shouldBeEqualTo "ikke godkjent"
+            merknader[0].beskrivelse shouldBeEqualTo "ikke godkjent"
             verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 

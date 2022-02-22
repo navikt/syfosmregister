@@ -1,5 +1,6 @@
 package no.nav.syfo
 
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -8,6 +9,7 @@ import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.util.util.Unbounded
 import no.nav.syfo.vault.Vault
 
+@DelicateCoroutinesApi
 class RenewVaultService(private val vaultCredentialService: VaultCredentialService, private val applicationState: ApplicationState) {
     fun startRenewTasks() {
         GlobalScope.launch(Dispatchers.Unbounded) {
