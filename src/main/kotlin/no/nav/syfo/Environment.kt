@@ -35,7 +35,10 @@ data class Environment(
     val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
     val avvistSykmeldingTopic: String = "teamsykmelding.avvist-sykmelding",
     val manuellSykmeldingTopic: String = "teamsykmelding.manuell-behandling-sykmelding",
-    val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall"
+    val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",
+    val tokenXWellKnownUrl: String = getEnvVar("TOKEN_X_WELL_KNOWN_URL"),
+    val clientIdTokenX: String = getEnvVar("TOKEN_X_CLIENT_ID")
+
 ) : KafkaConfig
 
 data class VaultServiceUser(

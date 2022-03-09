@@ -14,6 +14,7 @@ import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.features.HttpResponseValidator
 import io.ktor.client.features.json.JacksonSerializer
 import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.request.get
 import io.ktor.network.sockets.SocketTimeoutException
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,7 @@ import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.application.getWellKnown
+import no.nav.syfo.application.getWellKnownTokenX
 import no.nav.syfo.application.proxyConfig
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.Database
@@ -86,6 +88,12 @@ fun main() {
         .build()
 
     val jwkProviderAadV2 = JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
+
+    val wellKnownTokenX = getWellKnownTokenX(environment.tokenXWellKnownUrl)
+    val jwkProviderTokenX = JwkProviderBuilder(URL(wellKnownTokenX.jwks_uri))
         .cached(10, 24, TimeUnit.HOURS)
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
@@ -188,6 +196,7 @@ fun main() {
         database = database,
         vaultSecrets = vaultSecrets,
         jwkProvider = jwkProvider,
+        jwkProviderTokenX = jwkProviderTokenX,
         issuer = wellKnown.issuer,
         cluster = environment.cluster,
         sykmeldingStatusService = sykmeldingStatusService,

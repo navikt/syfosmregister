@@ -44,6 +44,7 @@ fun createApplicationEngine(
     database: DatabaseInterface,
     vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
+    jwkProviderTokenX: JwkProvider,
     issuer: String,
     cluster: String,
     sykmeldingStatusService: SykmeldingStatusService,
@@ -99,6 +100,11 @@ fun createApplicationEngine(
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)
+            }
+            authenticate("tokenx") {
+                // TOOD: Er dette riktig api for å eksponere med tokenx?
+                registerSykmeldingStatusGETApi(sykmeldingStatusService)
+                registrerSykmeldingApiV2(sykmeldingerService)
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())

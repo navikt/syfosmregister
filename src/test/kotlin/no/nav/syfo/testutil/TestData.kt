@@ -62,7 +62,9 @@ fun getEnvironment(): Environment {
         syfotilgangskontrollClientId = "",
         azureTokenEndpoint = "",
         pdlGraphqlPath = "",
-        pdlScope = "scope"
+        pdlScope = "scope",
+        tokenXWellKnownUrl = "",
+        clientIdTokenX = "clientid"
     )
 }
 
