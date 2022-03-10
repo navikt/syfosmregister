@@ -16,7 +16,7 @@ fun Route.registrerInternalSykmeldingApiV2(
     sykmeldingService: SykmeldingerService,
     tilgangskontrollService: TilgangskontrollService
 ) {
-    route("/api/v2/internal") {
+    route("/internal") {
         get("/sykmeldinger") {
             val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
             log.info("Got request to V2 endpoint")

@@ -94,19 +94,25 @@ fun createApplicationEngine(
                 setupSwaggerDocApi()
             }
             registerNaisApi(applicationState)
+            routing {
+                route("/api/v2") {
+                    authenticate("jwt") {
+                        registrerSykmeldingApiV2(sykmeldingerService)
+                    }
+                    authenticate("azureadv2") {
+                        registrerSykmeldingServiceuserApiV2(sykmeldingerService)
+                        registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
+                    }
+                }
+            }
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
-                registrerSykmeldingApiV2(sykmeldingerService)
-            }
-            authenticate("azureadv2") {
-                registrerSykmeldingServiceuserApiV2(sykmeldingerService)
-                registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)
             }
             routing {
-                route("/api/v2") {
+                route("/api/v3") {
                     authenticate("tokenx") {
                         registerSykmeldingStatusGETApi(sykmeldingStatusService)
                         registrerSykmeldingApiV2(sykmeldingerService)

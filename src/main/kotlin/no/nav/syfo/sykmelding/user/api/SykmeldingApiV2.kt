@@ -15,7 +15,7 @@ import no.nav.syfo.sykmelding.status.StatusEventDTO
 import java.time.LocalDate
 
 fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
-    route("api/v2/sykmeldinger") {
+    route("/sykmeldinger") {
         accept(ContentType.Application.Json) {
             get {
                 val principal: BrukerPrincipal = call.authentication.principal()!!
