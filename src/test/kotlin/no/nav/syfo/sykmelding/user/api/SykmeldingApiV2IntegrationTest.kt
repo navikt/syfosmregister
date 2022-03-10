@@ -58,11 +58,17 @@ class SykmeldingApiV2IntegrationTest : Spek({
                 listOf("clientId"),
                 getVaultSecrets(),
                 jwkProvider,
-                "",
+                jwkProvider,
+                "me",
+                "me",
                 jwkProvider,
                 getEnvironment()
             )
-            application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
+            application.routing {
+                authenticate("jwt") {
+                    registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                }
+            }
 
             it("Skal få unauthorized når credentials mangler") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {}) {

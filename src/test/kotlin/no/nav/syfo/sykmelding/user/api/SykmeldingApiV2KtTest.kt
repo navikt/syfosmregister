@@ -212,7 +212,9 @@ class SykmeldingApiV2KtTest : Spek({
                 loginserviceIdportenAudience = listOf("loginservice-client-id"),
                 vaultSecrets = getVaultSecrets(),
                 jwkProvider = jwkProvider,
+                jwkProviderTokenX = jwkProvider,
                 issuer = "https://sts.issuer.net/myid",
+                tokenXIssuer = "",
                 jwkProviderAadV2 = jwkProvider,
                 environment = getEnvironment()
             )

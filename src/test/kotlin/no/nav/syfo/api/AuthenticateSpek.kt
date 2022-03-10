@@ -39,7 +39,6 @@ object AuthenticateSpek : Spek({
     val path = "src/test/resources/jwkset.json"
     val uri = Paths.get(path).toUri().toURL()
     val jwkProvider = JwkProviderBuilder(uri).build()
-
     val database = TestDB()
     val sykmeldingerService = SykmeldingerService(database)
 
@@ -65,7 +64,9 @@ object AuthenticateSpek : Spek({
                     internalLoginServiceClientId = ""
                 ),
                 jwkProvider,
+                jwkProvider,
                 "https://sts.issuer.net/myid",
+                "tokenXissuer",
                 jwkProvider,
                 getEnvironment()
             )

@@ -198,6 +198,7 @@ fun main() {
         jwkProvider = jwkProvider,
         jwkProviderTokenX = jwkProviderTokenX,
         issuer = wellKnown.issuer,
+        tokenXIssuer = wellKnownTokenX.issuer,
         cluster = environment.cluster,
         sykmeldingStatusService = sykmeldingStatusService,
         jwkProviderAadV2 = jwkProviderAadV2,
