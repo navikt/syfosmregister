@@ -55,6 +55,9 @@ spec:
         - application: syfosmregler
         - application: smoppslag
           namespace: risk
+        - application: debug-dings
+          namespace: plattformsikkerhet
+          cluster: dev-gcp
   vault:
     enabled: true
     paths:
