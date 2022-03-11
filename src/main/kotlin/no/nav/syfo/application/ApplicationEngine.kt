@@ -17,6 +17,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
 import io.ktor.response.respond
+import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
@@ -44,7 +45,9 @@ fun createApplicationEngine(
     database: DatabaseInterface,
     vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
+    jwkProviderTokenX: JwkProvider,
     issuer: String,
+    tokenXIssuer: String,
     cluster: String,
     sykmeldingStatusService: SykmeldingStatusService,
     jwkProviderAadV2: JwkProvider,
@@ -66,7 +69,9 @@ fun createApplicationEngine(
             vaultSecrets = vaultSecrets,
             jwkProvider = jwkProvider,
             issuer = issuer,
+            tokenXIssuer = tokenXIssuer,
             jwkProviderAadV2 = jwkProviderAadV2,
+            jwkProviderTokenX = jwkProviderTokenX,
             environment = env
         )
         install(CallId) {
@@ -89,16 +94,30 @@ fun createApplicationEngine(
                 setupSwaggerDocApi()
             }
             registerNaisApi(applicationState)
+            routing {
+                route("/api/v2") {
+                    authenticate("jwt") {
+                        registrerSykmeldingApiV2(sykmeldingerService)
+                    }
+                    authenticate("azureadv2") {
+                        registrerSykmeldingServiceuserApiV2(sykmeldingerService)
+                        registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
+                    }
+                }
+            }
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
-                registrerSykmeldingApiV2(sykmeldingerService)
-            }
-            authenticate("azureadv2") {
-                registrerSykmeldingServiceuserApiV2(sykmeldingerService)
-                registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
             }
             authenticate("basic") {
                 registerNullstillApi(database, cluster)
+            }
+            routing {
+                route("/api/v3") {
+                    authenticate("tokenx") {
+                        registerSykmeldingStatusGETApi(sykmeldingStatusService)
+                        registrerSykmeldingApiV2(sykmeldingerService)
+                    }
+                }
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())

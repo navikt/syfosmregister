@@ -17,7 +17,7 @@ import no.nav.syfo.util.getFnrFromHeader
 import java.time.LocalDate
 
 fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerService) {
-    route("api/v2/sykmelding") {
+    route("/sykmelding") {
         accept(ContentType.Application.Json) {
             get("/{sykmeldingId}") {
                 val sykmeldingId = call.parameters["sykmeldingId"]!!

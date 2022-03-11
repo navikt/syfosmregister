@@ -41,3 +41,13 @@ data class WellKnown(
     val jwks_uri: String,
     val issuer: String
 )
+
+fun getWellKnownTokenX(wellKnownUrl: String) =
+    runBlocking { HttpClient(Apache, proxyConfig).get<WellKnownTokenX>(wellKnownUrl) }
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class WellKnownTokenX(
+    val token_endpoint: String,
+    val jwks_uri: String,
+    val issuer: String
+)

@@ -2,6 +2,7 @@ package no.nav.syfo.application
 
 import com.auth0.jwk.JwkProvider
 import io.ktor.application.Application
+import io.ktor.application.ApplicationCall
 import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.Principal
@@ -10,6 +11,8 @@ import io.ktor.auth.basic
 import io.ktor.auth.jwt.JWTCredential
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
+import io.ktor.http.auth.HttpAuthHeader
+import io.ktor.request.header
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
 import no.nav.syfo.VaultSecrets
@@ -19,7 +22,9 @@ fun Application.setupAuth(
     loginserviceIdportenAudience: List<String>,
     vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
+    jwkProviderTokenX: JwkProvider,
     issuer: String,
+    tokenXIssuer: String,
     jwkProviderAadV2: JwkProvider,
     environment: Environment
 ) {
@@ -48,6 +53,28 @@ fun Application.setupAuth(
                 }
             }
         }
+        jwt(name = "tokenx") {
+            authHeader {
+                if (it.getToken() == null) {
+                    return@authHeader null
+                }
+                return@authHeader HttpAuthHeader.Single("Bearer", it.getToken()!!)
+            }
+            verifier(jwkProviderTokenX, tokenXIssuer)
+            validate { credentials ->
+                when {
+                    hasClientIdAudience(credentials, environment.clientIdTokenX) && erNiva4(credentials) ->
+                        {
+                            val principal = JWTPrincipal(credentials.payload)
+                            BrukerPrincipal(
+                                fnr = finnFnrFraToken(principal),
+                                principal = principal
+                            )
+                        }
+                    else -> unauthorized(credentials)
+                }
+            }
+        }
         basic(name = "basic") {
             validate { credentials ->
                 if (credentials.name == vaultSecrets.syfomockUsername && credentials.password == vaultSecrets.syfomockPassword) {
@@ -56,6 +83,13 @@ fun Application.setupAuth(
             }
         }
     }
+}
+
+fun ApplicationCall.getToken(): String? {
+    if (request.header("Authorization") != null) {
+        return request.header("Authorization")!!.removePrefix("Bearer ")
+    }
+    return request.cookies.get(name = "selvbetjening-idtoken")
 }
 
 fun harTilgang(credentials: JWTCredential, clientId: String): Boolean {
@@ -71,6 +105,10 @@ fun unauthorized(credentials: JWTCredential): Principal? {
         StructuredArguments.keyValue("audience", credentials.payload.audience)
     )
     return null
+}
+
+fun hasClientIdAudience(credentials: JWTCredential, clientId: String): Boolean {
+    return credentials.payload.audience.contains(clientId)
 }
 
 fun hasLoginserviceIdportenClientIdAudience(credentials: JWTCredential, loginserviceIdportenClientId: List<String>): Boolean {

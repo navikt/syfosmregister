@@ -6,6 +6,7 @@ import io.ktor.auth.authentication
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
@@ -266,8 +267,12 @@ class KafkaStatusIntegrationTest : Spek({
     describe("Test Kafka -> DB -> status API") {
         with(TestApplicationEngine()) {
             setUpTestApplication()
-            application.routing { registerSykmeldingStatusGETApi(sykmeldingStatusService) }
-            application.routing { registrerSykmeldingApiV2(sykmeldingerService) }
+            application.routing {
+                registerSykmeldingStatusGETApi(sykmeldingStatusService)
+                route("/api/v2") {
+                    registrerSykmeldingApiV2(sykmeldingerService)
+                }
+            }
             it("Test get stykmeldingstatus latest should be SENDT") {
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(

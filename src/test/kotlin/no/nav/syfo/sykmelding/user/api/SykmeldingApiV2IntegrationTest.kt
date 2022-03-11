@@ -5,6 +5,7 @@ import io.ktor.auth.authenticate
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
@@ -58,11 +59,19 @@ class SykmeldingApiV2IntegrationTest : Spek({
                 listOf("clientId"),
                 getVaultSecrets(),
                 jwkProvider,
-                "",
+                jwkProvider,
+                "me",
+                "me",
                 jwkProvider,
                 getEnvironment()
             )
-            application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
+            application.routing {
+                route("/api/v2") {
+                    authenticate("jwt") {
+                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                    }
+                }
+            }
 
             it("Skal få unauthorized når credentials mangler") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {}) {

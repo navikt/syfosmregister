@@ -9,6 +9,7 @@ import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
@@ -47,7 +48,11 @@ class SykmeldingApiV2KtTest : Spek({
 
         with(TestApplicationEngine()) {
             setUpTestApplication()
-            application.routing { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) }
+            application.routing {
+                route("/api/v2") {
+                    registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                }
+            }
 
             it("Should get sykmeldinger for user with exclude filter") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
@@ -212,11 +217,19 @@ class SykmeldingApiV2KtTest : Spek({
                 loginserviceIdportenAudience = listOf("loginservice-client-id"),
                 vaultSecrets = getVaultSecrets(),
                 jwkProvider = jwkProvider,
+                jwkProviderTokenX = jwkProvider,
                 issuer = "https://sts.issuer.net/myid",
+                tokenXIssuer = "",
                 jwkProviderAadV2 = jwkProvider,
                 environment = getEnvironment()
             )
-            application.routing { authenticate("jwt") { registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService) } }
+            application.routing {
+                route("/api/v2") {
+                    authenticate("jwt") {
+                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                    }
+                }
+            }
             it("get sykmeldinger OK") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
