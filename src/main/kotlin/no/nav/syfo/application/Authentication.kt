@@ -28,7 +28,6 @@ fun Application.setupAuth(
     jwkProviderAadV2: JwkProvider,
     environment: Environment
 ) {
-    6
     install(Authentication) {
         jwt(name = "jwt") {
             verifier(jwkProvider, issuer)
