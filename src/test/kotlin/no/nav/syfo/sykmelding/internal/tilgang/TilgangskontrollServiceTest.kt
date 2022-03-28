@@ -31,7 +31,7 @@ class TilgangskontrollServiceTest : Spek({
         it("Should get false when user not have access") {
             runBlocking {
                 httpClientTest.responseData =
-                    ResponseData(HttpStatusCode.OK, objectMapper.writeValueAsString(Tilgang(false, "har ikke tilgang")))
+                    ResponseData(HttpStatusCode.OK, objectMapper.writeValueAsString(Tilgang(false)))
                 val tilgang = tilgangskontrollService.hasAccessToUserOboToken("123", "Bearer 123")
                 tilgang shouldBeEqualTo false
             }
@@ -39,7 +39,7 @@ class TilgangskontrollServiceTest : Spek({
         it("Should get true when user have access") {
             runBlocking {
                 httpClientTest.responseData =
-                    ResponseData(HttpStatusCode.OK, objectMapper.writeValueAsString(Tilgang(true, "")))
+                    ResponseData(HttpStatusCode.OK, objectMapper.writeValueAsString(Tilgang(true)))
                 val tilgang = tilgangskontrollService.hasAccessToUserOboToken("123", "bearer 123")
                 tilgang shouldBeEqualTo true
             }

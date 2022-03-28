@@ -10,6 +10,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import org.apache.http.HttpHeaders
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class TilgangskontrollService(
@@ -19,7 +20,7 @@ class TilgangskontrollService(
     private val syfotilgangskontrollClientId: String
 ) {
     companion object {
-        val log = LoggerFactory.getLogger(TilgangskontrollService::class.java)
+        val log: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
         const val TILGANGSKONTROLL_PERSON_PATH = "/syfo-tilgangskontroll/api/tilgang/navident/person"
     }
 
@@ -33,11 +34,11 @@ class TilgangskontrollService(
         val oboToken = azureAdV2Client.getOnBehalfOfToken(scopeClientId = syfotilgangskontrollClientId, token = accessToken)
             ?.accessToken
 
-        if (oboToken != null) {
-            return hasAccess(oboToken, tilgangskontrollPersonUrl, fnr)
+        return if (oboToken != null) {
+            hasAccess(oboToken, tilgangskontrollPersonUrl, fnr)
         } else {
             log.info("did not get obo-token")
-            return false
+            false
         }
     }
 
