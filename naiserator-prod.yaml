@@ -53,6 +53,7 @@ spec:
           namespace: team-esyfo
         - application: sparenaproxy
         - application: syfosmregler
+        - application: smregistrering-backend
         - application: smoppslag
           namespace: risk
   vault:
