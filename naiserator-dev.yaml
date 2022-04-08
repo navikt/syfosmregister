@@ -59,6 +59,7 @@ spec:
         - application: debug-dings
           namespace: plattformsikkerhet
           cluster: dev-gcp
+        - application: sykmeldinger-backend
   vault:
     enabled: true
     paths:
