@@ -22,7 +22,6 @@ import no.nav.syfo.sykmelding.db.MedisinskArsak
 import no.nav.syfo.sykmelding.db.MedisinskArsakType
 import no.nav.syfo.sykmelding.db.MedisinskVurdering
 import no.nav.syfo.sykmelding.db.MeldingTilNAV
-import no.nav.syfo.sykmelding.db.PapirsykmeldingDbModel
 import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.Periodetype
 import no.nav.syfo.sykmelding.db.Prognose
@@ -69,15 +68,6 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
         papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
         harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
         merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
-    )
-}
-
-fun PapirsykmeldingDbModel.toPapirsykmeldingDTO(): PapirsykmeldingDTO {
-    return PapirsykmeldingDTO(
-        pasientFnr = this.pasientFnr,
-        pasientAktoerId = this.pasientAktoerId,
-        mottattTidspunkt = this.mottattTidspunkt,
-        sykmelding = this.sykmelding
     )
 }
 

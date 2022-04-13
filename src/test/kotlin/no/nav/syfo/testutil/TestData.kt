@@ -17,7 +17,6 @@ import no.nav.syfo.sykmelding.db.KontaktMedPasient
 import no.nav.syfo.sykmelding.db.MedisinskArsak
 import no.nav.syfo.sykmelding.db.MedisinskVurdering
 import no.nav.syfo.sykmelding.db.MeldingTilNAV
-import no.nav.syfo.sykmelding.db.PapirsykmeldingDbModel
 import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.Sykmelding
@@ -34,6 +33,7 @@ import no.nav.syfo.sykmelding.model.PeriodetypeDTO
 import no.nav.syfo.sykmelding.model.RegelStatusDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
+import no.nav.syfo.sykmelding.papir.db.PapirsykmeldingDbModel
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -57,10 +57,10 @@ fun getEnvironment(): Environment {
         syfoTilgangskontrollUrl = "",
         loginserviceIdportenAudience = emptyList(),
         loginserviceIdportenDiscoveryUrl = "",
-        clientIdV2 = "",
+        clientIdV2 = "clientid",
         clientSecretV2 = "",
         jwkKeysUrlV2 = "",
-        jwtIssuerV2 = "",
+        jwtIssuerV2 = "assureissuer",
         syfotilgangskontrollClientId = "",
         azureTokenEndpoint = "",
         pdlGraphqlPath = "",

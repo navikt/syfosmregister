@@ -37,13 +37,6 @@ data class SykmeldingDbModelUtenBehandlingsutfall(
     val merknader: List<Merknad>?
 )
 
-data class PapirsykmeldingDbModel(
-    val pasientFnr: String,
-    val pasientAktoerId: String,
-    val mottattTidspunkt: OffsetDateTime,
-    val sykmelding: Sykmelding,
-)
-
 data class Sykmelding(
     val id: String,
     val msgId: String,

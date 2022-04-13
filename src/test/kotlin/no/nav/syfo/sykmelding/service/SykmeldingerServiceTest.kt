@@ -10,14 +10,12 @@ import no.nav.syfo.sykmelding.db.Diagnose
 import no.nav.syfo.sykmelding.db.Gradert
 import no.nav.syfo.sykmelding.db.Merknad
 import no.nav.syfo.sykmelding.db.StatusDbModel
-import no.nav.syfo.sykmelding.db.getPapirsykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 import no.nav.syfo.sykmelding.serviceuser.api.model.SykmeldtStatus
 import no.nav.syfo.testutil.getGradertePerioder
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
-import no.nav.syfo.testutil.getPapirsykmeldingDbModel
 import no.nav.syfo.testutil.getPeriode
 import no.nav.syfo.testutil.getPerioder
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
@@ -679,17 +677,6 @@ class SykmeldingerServiceTest : Spek({
                 fom = LocalDate.of(2020, 2, 8),
                 tom = LocalDate.of(2020, 2, 25)
             )
-        }
-    }
-
-    describe("Test Papirsykmelding API") {
-
-        it("Should return a papirsykmelding") {
-
-            every { database.getPapirsykmelding(any()) } returns getPapirsykmeldingDbModel()
-
-            val papirsykmelding = sykmeldingerService.getPapirsykmelding("1234")
-            papirsykmelding shouldNotBe null
         }
     }
 })

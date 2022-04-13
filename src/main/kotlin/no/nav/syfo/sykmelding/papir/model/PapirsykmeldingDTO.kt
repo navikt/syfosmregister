@@ -1,4 +1,4 @@
-package no.nav.syfo.sykmelding.model
+package no.nav.syfo.sykmelding.papir.model
 
 import no.nav.syfo.sykmelding.db.Sykmelding
 import java.time.OffsetDateTime

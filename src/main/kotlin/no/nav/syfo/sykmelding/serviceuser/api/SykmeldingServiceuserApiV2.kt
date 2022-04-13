@@ -46,18 +46,4 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
             }
         }
     }
-    route("/papirsykmelding") {
-        accept(ContentType.Application.Json) {
-            get("/{sykmeldingId}") {
-                val sykmeldingId = call.parameters["sykmeldingId"]!!
-                val sykmelding = sykmeldingerService.getPapirsykmelding(sykmeldingId)
-                if (sykmelding == null) {
-                    log.info("Fant ikke sykmelding med id {}", sykmeldingId)
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    call.respond(sykmelding)
-                }
-            }
-        }
-    }
 }
