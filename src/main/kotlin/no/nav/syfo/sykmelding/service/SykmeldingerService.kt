@@ -2,12 +2,15 @@ package no.nav.syfo.sykmelding.service
 
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
+import no.nav.syfo.sykmelding.db.getPapirsykmelding
 import no.nav.syfo.sykmelding.db.getSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
+import no.nav.syfo.sykmelding.model.PapirsykmeldingDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
+import no.nav.syfo.sykmelding.model.toPapirsykmeldingDTO
 import no.nav.syfo.sykmelding.model.toSykmeldingDTO
 import no.nav.syfo.sykmelding.serviceuser.api.model.SykmeldtStatus
 import no.nav.syfo.sykmelding.status.Sporsmal
@@ -58,6 +61,10 @@ class SykmeldingerService(private val database: DatabaseInterface) {
                 true
             }
         }
+    }
+
+    fun getPapirsykmelding(sykmeldingId: String): PapirsykmeldingDTO? {
+        return database.getPapirsykmelding(sykmeldingId)?.toPapirsykmeldingDTO()
     }
 
     fun getSykmeldingMedId(sykmeldingId: String): SykmeldingDTO? =

@@ -52,6 +52,11 @@ fun DatabaseInterface.getSykmelding(sykmeldingId: String, fnr: String): Sykmeldi
         return connection.getSykmelding(sykmeldingId, fnr)
     }
 
+fun DatabaseInterface.getPapirsykmelding(sykmeldingId: String): PapirsykmeldingDbModel? =
+    connection.use { connection ->
+        return connection.getPapirsykmelding(sykmeldingId)
+    }
+
 fun DatabaseInterface.getSykmeldingerMedIdUtenBehandlingsutfall(id: String): SykmeldingDbModelUtenBehandlingsutfall? =
     connection.use { connection ->
         return connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id)
@@ -243,6 +248,28 @@ private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfallForF
         it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }
     }
 
+fun Connection.getPapirsykmelding(sykmeldingId: String): PapirsykmeldingDbModel? =
+    this.prepareStatement(
+        """
+                    SELECT mottatt_tidspunkt,
+                    sykmelding,
+                    arbeidsgiver.orgnummer,
+                    arbeidsgiver.juridisk_orgnummer,
+                    arbeidsgiver.navn,
+                    opplysninger.pasient_aktoer_id,
+                    opplysninger.pasient_fnr
+                    FROM sykmeldingsopplysninger AS opplysninger
+                        INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
+                        LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
+                    where opplysninger.id = ?
+                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    """
+    ).use {
+        it.setString(1, sykmeldingId)
+        it.executeQuery().toList { toPapirsykmeldingDbModel() }.firstOrNull { result ->
+            result.sykmelding.avsenderSystem.navn == "Papirsykmelding"
+        }
+    }
 fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
     this.prepareStatement(
         """
@@ -272,6 +299,15 @@ fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
         behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java),
         status = getStatus(mottattTidspunkt),
         merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
+    )
+}
+
+fun ResultSet.toPapirsykmeldingDbModel(): PapirsykmeldingDbModel {
+    return PapirsykmeldingDbModel(
+        sykmelding = objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java),
+        mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
+        pasientAktoerId = getString("pasient_aktoer_id"),
+        pasientFnr = getString("pasient_fnr")
     )
 }
 
