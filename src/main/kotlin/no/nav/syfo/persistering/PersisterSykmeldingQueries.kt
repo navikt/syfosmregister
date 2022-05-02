@@ -73,7 +73,7 @@ private fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysninger: Sy
         it.setString(i++, sykmeldingsopplysninger.tssid)
         it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
         it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
-        it.setString(i++, sykmeldingsopplysninger.id)
+        it.setString(i, sykmeldingsopplysninger.id)
         it.executeUpdate()
     }
 }
@@ -119,7 +119,7 @@ private fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger: S
         it.setTimestamp(i++, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
         it.setString(i++, sykmeldingsopplysninger.tssid)
         it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
-        it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
+        it.setString(i, sykmeldingsopplysninger.partnerreferanse)
         it.executeUpdate()
     }
 }

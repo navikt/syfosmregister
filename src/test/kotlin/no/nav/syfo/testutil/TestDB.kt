@@ -225,7 +225,7 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
             tlf = "tlf"
         ),
         behandletTidspunkt = getNowTickMillisLocalDateTime(),
-        id = "id",
+        id = "uuid",
         kontaktMedPasient = KontaktMedPasient(
             kontaktDato = null,
             begrunnelseIkkeKontakt = null

@@ -32,6 +32,8 @@ import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
+import no.nav.syfo.sykmelding.papir.PapirsykmeldingService
+import no.nav.syfo.sykmelding.papir.api.registrerServiceuserPapirsykmeldingApi
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV2
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
@@ -102,6 +104,7 @@ fun createApplicationEngine(
                     authenticate("azureadv2") {
                         registrerSykmeldingServiceuserApiV2(sykmeldingerService)
                         registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
+                        registrerServiceuserPapirsykmeldingApi(papirsykmeldingService = PapirsykmeldingService(database))
                     }
                 }
             }
