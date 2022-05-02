@@ -267,7 +267,6 @@ fun getPapirsykmeldingDbModel(
 ): PapirsykmeldingDbModel {
     return PapirsykmeldingDbModel(
         pasientFnr = pasientFnr,
-        pasientAktoerId = "1234",
         mottattTidspunkt = mottattTidspunkt,
         sykmelding = Sykmelding(
             id = "1",

@@ -6,7 +6,6 @@ import java.time.OffsetDateTime
 
 data class PapirsykmeldingDbModel(
     val pasientFnr: String,
-    val pasientAktoerId: String,
     val mottattTidspunkt: OffsetDateTime,
     val sykmelding: Sykmelding,
 )
@@ -14,7 +13,6 @@ data class PapirsykmeldingDbModel(
 fun PapirsykmeldingDbModel.toPapirsykmeldingDTO(): PapirsykmeldingDTO {
     return PapirsykmeldingDTO(
         pasientFnr = this.pasientFnr,
-        pasientAktoerId = this.pasientAktoerId,
         mottattTidspunkt = this.mottattTidspunkt,
         sykmelding = this.sykmelding
     )
