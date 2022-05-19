@@ -32,6 +32,7 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     else -> call.respond(sykmeldingerService.getUserSykmelding(fnr, fom, tom, include, exclude, fullBehandler = false))
                 }
             }
+            // Kun i bruk med TokenX (V3)
             get("/{sykmeldingId}") {
                 val principal: BrukerPrincipal = call.authentication.principal()!!
                 val fnr = principal.fnr

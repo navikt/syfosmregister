@@ -20,7 +20,6 @@ import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
 import no.nav.syfo.testutil.getEnvironment
-import no.nav.syfo.testutil.getVaultSecrets
 import no.nav.syfo.testutil.setUpTestApplication
 import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
@@ -57,7 +56,6 @@ class SykmeldingApiV2IntegrationTest : Spek({
             setUpTestApplication()
             application.setupAuth(
                 listOf("clientId"),
-                getVaultSecrets(),
                 jwkProvider,
                 jwkProvider,
                 "me",

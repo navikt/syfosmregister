@@ -6,8 +6,6 @@ import io.ktor.application.ApplicationCall
 import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.Principal
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.basic
 import io.ktor.auth.jwt.JWTCredential
 import io.ktor.auth.jwt.JWTPrincipal
 import io.ktor.auth.jwt.jwt
@@ -15,12 +13,10 @@ import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.request.header
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
-import no.nav.syfo.VaultSecrets
 import no.nav.syfo.log
 
 fun Application.setupAuth(
     loginserviceIdportenAudience: List<String>,
-    vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
     jwkProviderTokenX: JwkProvider,
     issuer: String,
@@ -73,13 +69,6 @@ fun Application.setupAuth(
                         }
                     else -> unauthorized(credentials)
                 }
-            }
-        }
-        basic(name = "basic") {
-            validate { credentials ->
-                if (credentials.name == vaultSecrets.syfomockUsername && credentials.password == vaultSecrets.syfomockPassword) {
-                    UserIdPrincipal(credentials.name)
-                } else null
             }
         }
     }
