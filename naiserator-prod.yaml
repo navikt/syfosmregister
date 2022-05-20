@@ -47,8 +47,6 @@ spec:
         - application: syfomodiaperson
           namespace: teamsykefravr
           cluster: prod-fss
-        - application: syfosoknad
-          namespace: flex
         - application: esyfovarsel
           namespace: team-esyfo
         - application: sparenaproxy
