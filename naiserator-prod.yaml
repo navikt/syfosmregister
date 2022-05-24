@@ -67,6 +67,7 @@ spec:
   ingresses:
     - "https://syfosmregister.intern.nav.no"
     - "https://syfosmregister.nais.adeo.no"
+    - "https://syfosmregister.prod-fss-pub.nais.io"
   webproxy: true
   envFrom:
     - configmap: loginservice-idporten
