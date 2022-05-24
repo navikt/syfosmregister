@@ -19,7 +19,6 @@ import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.generateJWT
 import no.nav.syfo.testutil.getEnvironment
-import no.nav.syfo.testutil.getVaultSecrets
 import no.nav.syfo.testutil.setUpTestApplication
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
@@ -54,7 +53,6 @@ class PapirsykmeldingApiKtTest : Spek({
             setUpTestApplication()
             application.setupAuth(
                 listOf("clientId"),
-                getVaultSecrets(),
                 jwkProvider,
                 jwkProvider,
                 "me",

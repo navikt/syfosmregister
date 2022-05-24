@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -61,7 +60,6 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.net.URL
-import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import kotlin.time.ExperimentalTime
 
@@ -79,8 +77,6 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 fun main() {
     val environment = Environment()
     val vaultServiceUser = VaultServiceUser()
-    val vaultSecrets =
-        objectMapper.readValue<VaultSecrets>(Paths.get("/var/run/secrets/nais.io/vault/credentials.json").toFile())
     val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
         .cached(10, 24, TimeUnit.HOURS)
@@ -194,12 +190,10 @@ fun main() {
         env = environment,
         applicationState = applicationState,
         database = database,
-        vaultSecrets = vaultSecrets,
         jwkProvider = jwkProvider,
         jwkProviderTokenX = jwkProviderTokenX,
         issuer = wellKnown.issuer,
         tokenXIssuer = wellKnownTokenX.issuer,
-        cluster = environment.cluster,
         sykmeldingStatusService = sykmeldingStatusService,
         jwkProviderAadV2 = jwkProviderAadV2,
         sykmeldingerService = sykmeldingerService,

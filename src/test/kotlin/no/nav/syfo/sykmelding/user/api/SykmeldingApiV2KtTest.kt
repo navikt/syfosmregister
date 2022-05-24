@@ -25,7 +25,6 @@ import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.testutil.generateJWT
 import no.nav.syfo.testutil.getEnvironment
 import no.nav.syfo.testutil.getSykmeldingDto
-import no.nav.syfo.testutil.getVaultSecrets
 import no.nav.syfo.testutil.setUpTestApplication
 import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
@@ -215,7 +214,6 @@ class SykmeldingApiV2KtTest : Spek({
             setUpTestApplication()
             application.setupAuth(
                 loginserviceIdportenAudience = listOf("loginservice-client-id"),
-                vaultSecrets = getVaultSecrets(),
                 jwkProvider = jwkProvider,
                 jwkProviderTokenX = jwkProvider,
                 issuer = "https://sts.issuer.net/myid",

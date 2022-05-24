@@ -15,9 +15,7 @@ import io.ktor.routing.route
 import io.ktor.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
-import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.setupAuth
-import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.service.SykmeldingerService
@@ -33,7 +31,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.spekframework.spek2.Spek
 import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
-import java.util.Base64
 
 object AuthenticateSpek : Spek({
 
@@ -58,12 +55,6 @@ object AuthenticateSpek : Spek({
             start()
             application.setupAuth(
                 listOf("clientId"),
-                VaultSecrets(
-                    syfomockUsername = "syfomock",
-                    syfomockPassword = "test",
-                    internalJwtIssuer = "",
-                    internalLoginServiceClientId = ""
-                ),
                 jwkProvider,
                 jwkProvider,
                 "https://sts.issuer.net/myid",
@@ -77,47 +68,12 @@ object AuthenticateSpek : Spek({
                         registrerSykmeldingApiV2(sykmeldingerService)
                     }
                 }
-                authenticate("basic") {
-                    registerNullstillApi(database, "dev-fss")
-                }
             }
             application.install(ContentNegotiation) {
                 jackson {
                     registerKotlinModule()
                     registerModule(JavaTimeModule())
                     configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                }
-            }
-
-            it("Validerer syfomock servicebruker") {
-                with(
-                    handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId") {
-                        addHeader(
-                            HttpHeaders.Authorization,
-                            "Basic ${Base64.getEncoder().encodeToString("syfomock:test".toByteArray())}"
-                        )
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
-                }
-            }
-
-            it("Validerer ikke ugyldig servicebruker") {
-                with(
-                    handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId") {
-                        addHeader(
-                            HttpHeaders.Authorization,
-                            "Basic ${Base64.getEncoder().encodeToString("feil:passord".toByteArray())}"
-                        ) // feil:passord
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
-                }
-            }
-
-            it("Feiler om det mangler auth-header") {
-                with(handleRequest(HttpMethod.Delete, "/internal/nullstillSykmeldinger/aktorId")) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }
             }
 

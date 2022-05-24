@@ -23,12 +23,10 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import no.nav.syfo.Environment
-import no.nav.syfo.VaultSecrets
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.monitorHttpRequests
-import no.nav.syfo.nullstilling.registerNullstillApi
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
@@ -45,12 +43,10 @@ fun createApplicationEngine(
     env: Environment,
     applicationState: ApplicationState,
     database: DatabaseInterface,
-    vaultSecrets: VaultSecrets,
     jwkProvider: JwkProvider,
     jwkProviderTokenX: JwkProvider,
     issuer: String,
     tokenXIssuer: String,
-    cluster: String,
     sykmeldingStatusService: SykmeldingStatusService,
     jwkProviderAadV2: JwkProvider,
     sykmeldingerService: SykmeldingerService,
@@ -68,7 +64,6 @@ fun createApplicationEngine(
         }
         setupAuth(
             loginserviceIdportenAudience = env.loginserviceIdportenAudience,
-            vaultSecrets = vaultSecrets,
             jwkProvider = jwkProvider,
             issuer = issuer,
             tokenXIssuer = tokenXIssuer,
@@ -110,9 +105,6 @@ fun createApplicationEngine(
             }
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
-            }
-            authenticate("basic") {
-                registerNullstillApi(database, cluster)
             }
             routing {
                 route("/api/v3") {

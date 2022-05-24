@@ -1,7 +1,6 @@
 package no.nav.syfo.testutil
 
 import no.nav.syfo.Environment
-import no.nav.syfo.VaultSecrets
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.sm.Diagnosekoder
@@ -36,15 +35,6 @@ import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 import no.nav.syfo.sykmelding.papir.db.PapirsykmeldingDbModel
 import java.time.LocalDate
 import java.time.OffsetDateTime
-
-fun getVaultSecrets(): VaultSecrets {
-    return VaultSecrets(
-        "",
-        "",
-        "",
-        ""
-    )
-}
 
 fun getEnvironment(): Environment {
     return Environment(
