@@ -7,18 +7,19 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.call.body
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.features.json.JacksonSerializer
-import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import java.net.ProxySelector
 
 val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-    install(JsonFeature) {
-        serializer = JacksonSerializer {
+    install(ContentNegotiation) {
+        jackson {
             registerKotlinModule()
             registerModule(JavaTimeModule())
             configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
@@ -30,9 +31,10 @@ val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
             setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
         }
     }
+    expectSuccess = true
 }
 
-fun getWellKnown(wellKnownUrl: String) = runBlocking { HttpClient(Apache, proxyConfig).get<WellKnown>(wellKnownUrl) }
+fun getWellKnown(wellKnownUrl: String) = runBlocking { HttpClient(Apache, proxyConfig).get(wellKnownUrl).body<WellKnown>() }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class WellKnown(
@@ -43,7 +45,7 @@ data class WellKnown(
 )
 
 fun getWellKnownTokenX(wellKnownUrl: String) =
-    runBlocking { HttpClient(Apache, proxyConfig).get<WellKnownTokenX>(wellKnownUrl) }
+    runBlocking { HttpClient(Apache, proxyConfig).get(wellKnownUrl).body<WellKnownTokenX>() }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class WellKnownTokenX(

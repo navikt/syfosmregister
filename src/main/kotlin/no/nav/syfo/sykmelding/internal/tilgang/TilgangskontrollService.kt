@@ -1,7 +1,7 @@
 package no.nav.syfo.sykmelding.internal.tilgang
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.receive
+import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
@@ -50,7 +50,7 @@ class TilgangskontrollService(
         }
 
         return when (response.status) {
-            HttpStatusCode.OK -> response.receive<Tilgang>().harTilgang
+            HttpStatusCode.OK -> response.body<Tilgang>().harTilgang
             else -> {
                 log.info("Ingen tilgang, Tilgangskontroll returnerte Status : {}", response.status)
                 false

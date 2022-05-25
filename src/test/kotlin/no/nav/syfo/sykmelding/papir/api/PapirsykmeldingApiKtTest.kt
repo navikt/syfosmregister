@@ -1,12 +1,12 @@
 package no.nav.syfo.sykmelding.papir.api
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.ktor.auth.authenticate
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.routing.route
-import io.ktor.routing.routing
+import io.ktor.server.auth.authenticate
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import no.nav.syfo.application.setupAuth

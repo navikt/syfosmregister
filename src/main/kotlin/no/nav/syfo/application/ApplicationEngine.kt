@@ -6,22 +6,21 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.ktor.application.ApplicationCallPipeline
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.auth.authenticate
-import io.ktor.features.CallId
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.StatusPages
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.jackson.jackson
-import io.ktor.response.respond
-import io.ktor.routing.route
-import io.ktor.routing.routing
+import io.ktor.serialization.jackson.jackson
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.install
+import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.callid.CallId
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respond
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
 import no.nav.syfo.Environment
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
@@ -77,7 +76,7 @@ fun createApplicationEngine(
             header(HttpHeaders.XCorrelationId)
         }
         install(StatusPages) {
-            exception<Throwable> { cause ->
+            exception<Throwable> { call, cause ->
                 call.respond(HttpStatusCode.InternalServerError, cause.message ?: "Unknown error")
 
                 log.error("Caught exception", cause)
@@ -86,32 +85,28 @@ fun createApplicationEngine(
         }
 
         routing {
-
             if (env.cluster == "dev-fss") {
                 setupSwaggerDocApi()
             }
             registerNaisApi(applicationState)
-            routing {
-                route("/api/v2") {
-                    authenticate("jwt") {
-                        registrerSykmeldingApiV2(sykmeldingerService)
-                    }
-                    authenticate("azureadv2") {
-                        registrerSykmeldingServiceuserApiV2(sykmeldingerService)
-                        registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
-                        registrerServiceuserPapirsykmeldingApi(papirsykmeldingService = PapirsykmeldingService(database))
-                    }
+
+            route("/api/v2") {
+                authenticate("jwt") {
+                    registrerSykmeldingApiV2(sykmeldingerService)
+                }
+                authenticate("azureadv2") {
+                    registrerSykmeldingServiceuserApiV2(sykmeldingerService)
+                    registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
+                    registrerServiceuserPapirsykmeldingApi(papirsykmeldingService = PapirsykmeldingService(database))
                 }
             }
             authenticate("jwt") {
                 registerSykmeldingStatusGETApi(sykmeldingStatusService)
             }
-            routing {
-                route("/api/v3") {
-                    authenticate("tokenx") {
-                        registerSykmeldingStatusGETApi(sykmeldingStatusService)
-                        registrerSykmeldingApiV2(sykmeldingerService)
-                    }
+            route("/api/v3") {
+                authenticate("tokenx") {
+                    registerSykmeldingStatusGETApi(sykmeldingStatusService)
+                    registrerSykmeldingApiV2(sykmeldingerService)
                 }
             }
         }
