@@ -57,6 +57,9 @@ spec:
         - application: smoppslag
           namespace: risk
         - application: sykmeldinger-backend
+        - application: sykmeldinger-backend
+          namespace: teamsykmelding
+          cluster: prod-gcp
   vault:
     enabled: true
     paths:

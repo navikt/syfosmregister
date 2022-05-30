@@ -60,6 +60,9 @@ spec:
           namespace: plattformsikkerhet
           cluster: dev-gcp
         - application: sykmeldinger-backend
+        - application: sykmeldinger-backend
+          namespace: teamsykmelding
+          cluster: dev-gcp
   vault:
     enabled: true
     paths:
