@@ -83,7 +83,7 @@ class KafkaStatusIntegrationTest : Spek({
     val sendtSykmeldingKafkaProducer = spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment))
     val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
     val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database, "prod-fss")
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
     val sykmeldingerService = SykmeldingerService(database)
     val mockPayload = mockk<Payload>()

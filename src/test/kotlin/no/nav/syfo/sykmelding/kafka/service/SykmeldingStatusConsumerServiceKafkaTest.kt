@@ -57,7 +57,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : Spek({
     val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)
     val tombstoneKafkaProducer = mockkClass(type = SykmeldingTombstoneProducer::class, relaxed = true)
     val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneKafkaProducer, databaseInterface, "prod-fss")
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneKafkaProducer, databaseInterface)
     val consumer = spyk(KafkaFactory.getKafkaStatusConsumerAiven(kafkaConfig, environment))
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
 

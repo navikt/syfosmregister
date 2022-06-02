@@ -42,7 +42,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
     val bekreftetSykmeldingKafkaProducer = mockk<BekreftSykmeldingKafkaProducer>(relaxed = true)
     val tombstoneProducer = mockk<SykmeldingTombstoneProducer>()
     val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, tombstoneProducer, databaseInterface, "prod-fss")
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, tombstoneProducer, databaseInterface)
 
     beforeEachTest {
         clearAllMocks()

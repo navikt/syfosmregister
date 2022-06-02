@@ -32,8 +32,7 @@ class MottattSykmeldingStatusService(
     private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer,
     private val bekreftetSykmeldingKafkaProducer: BekreftSykmeldingKafkaProducer,
     private val tombstoneProducer: SykmeldingTombstoneProducer,
-    private val databaseInterface: DatabaseInterface,
-    private val cluster: String
+    private val databaseInterface: DatabaseInterface
 ) {
     fun handleStatusEventForResentSykmelding(sykmeldingId: String, fnr: String) {
         val statuses = sykmeldingStatusService.getSykmeldingStatus(sykmeldingId, "LATEST")
@@ -82,7 +81,7 @@ class MottattSykmeldingStatusService(
 
     private fun slettSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val latestStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId, "LATEST")
-        if (latestStatus.isEmpty() && cluster == "dev-fss") {
+        if (latestStatus.isEmpty()) {
             log.warn("Sykmelding med id ${sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId} er allerede slettet")
         } else {
             val status = latestStatus[0]
