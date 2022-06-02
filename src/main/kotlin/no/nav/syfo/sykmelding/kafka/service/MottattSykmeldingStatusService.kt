@@ -16,7 +16,6 @@ import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper.Companion.toSykmeldingStatusKafkaEventDTO
@@ -32,7 +31,6 @@ class MottattSykmeldingStatusService(
     private val sykmeldingStatusService: SykmeldingStatusService,
     private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer,
     private val bekreftetSykmeldingKafkaProducer: BekreftSykmeldingKafkaProducer,
-    private val mottattSykmeldingKafkaProducer: MottattSykmeldingKafkaProducer,
     private val tombstoneProducer: SykmeldingTombstoneProducer,
     private val databaseInterface: DatabaseInterface
 ) {
@@ -83,15 +81,21 @@ class MottattSykmeldingStatusService(
 
     private fun slettSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val latestStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId, "LATEST")
-        val status = latestStatus[0]
-        when (status.event) {
-            StatusEvent.SENDT -> sendtSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
-            StatusEvent.BEKREFTET -> bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
-            else -> {
+        if (latestStatus.isEmpty()) {
+            log.warn("Sykmelding med id ${sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId} er allerede slettet")
+        } else {
+            val status = latestStatus[0]
+            when (status.event) {
+                StatusEvent.SENDT -> sendtSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
+                StatusEvent.BEKREFTET -> bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(
+                    sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId
+                )
+                else -> {
+                }
             }
+            tombstoneProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
+            sykmeldingStatusService.slettSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
         }
-        tombstoneProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
-        sykmeldingStatusService.slettSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
     }
 
     private fun handleSendtSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
