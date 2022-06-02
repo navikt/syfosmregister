@@ -63,6 +63,9 @@ spec:
         - application: sykmeldinger-backend
           namespace: teamsykmelding
           cluster: dev-gcp
+        - application: teamsykmelding-mock-backend
+          namespace: teamsykmelding
+          cluster: dev-gcp
   vault:
     enabled: true
     paths:
