@@ -21,7 +21,6 @@ import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.status.ShortName
@@ -41,10 +40,9 @@ object MottattSykmeldingStatusServiceTest : Spek({
     val sykmeldingStatusService = mockk<SykmeldingStatusService>(relaxed = true)
     val sendtSykmeldingKafkaProducer = mockk<SendtSykmeldingKafkaProducer>(relaxed = true)
     val bekreftetSykmeldingKafkaProducer = mockk<BekreftSykmeldingKafkaProducer>(relaxed = true)
-    val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
     val tombstoneProducer = mockk<SykmeldingTombstoneProducer>()
     val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, mottattSykmeldingKafkaProducer, tombstoneProducer, databaseInterface)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, tombstoneProducer, databaseInterface, "prod-fss")
 
     beforeEachTest {
         clearAllMocks()
