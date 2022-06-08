@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.model
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
@@ -13,28 +14,26 @@ import no.nav.syfo.sykmelding.db.SporsmalSvar
 import no.nav.syfo.testutil.getPeriode
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.LocalDate
 
-class SykmeldingMapperKtTest : Spek({
+class SykmeldingMapperKtTest : FunSpec({
 
     val utdypendeopplysningerJson = "{\"6.2\":{\"6.2.1\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_ARBEIDSGIVER\"]},\"6.2.2\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_ARBEIDSGIVER\"]},\"6.2.3\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_NAV\"]},\"6.2.4\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_PASIENT\"]}}}"
     val mappedOpplysningerJson = "{\"6.2\":{\"6.2.1\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_ARBEIDSGIVER\"]},\"6.2.2\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_ARBEIDSGIVER\"]},\"6.2.4\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_PASIENT\"]}}}"
     val mappedeOpplysningerJsonPasient = "{\"6.2\":{\"6.2.1\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_ARBEIDSGIVER\"]},\"6.2.2\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_ARBEIDSGIVER\"]},\"6.2.3\":{\"sporsmal\":\"spm\",\"svar\":\"svar\",\"restriksjoner\":[\"SKJERMET_FOR_NAV\"]}}}"
 
-    describe("Test SykmeldingMapper") {
-        it("Test map utdypendeOpplysninger - ikke pasient") {
+    context("Test SykmeldingMapper") {
+        test("Test map utdypendeOpplysninger - ikke pasient") {
             val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>> = objectMapper.readValue(utdypendeopplysningerJson)
             val mappedMap = toUtdypendeOpplysninger(utdypendeOpplysninger, false)
             mappedOpplysningerJson shouldBeEqualTo objectMapper.writeValueAsString(mappedMap)
         }
-        it("Test map utdypendeOpplysninger - pasient") {
+        test("Test map utdypendeOpplysninger - pasient") {
             val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>> = objectMapper.readValue(utdypendeopplysningerJson)
             val mappedMap = toUtdypendeOpplysninger(utdypendeOpplysninger, true)
             mappedeOpplysningerJsonPasient shouldBeEqualTo objectMapper.writeValueAsString(mappedMap)
         }
-        it("test map har ikke redusert arbeidsgiverperiode") {
+        test("test map har ikke redusert arbeidsgiverperiode") {
             val sykmeldingDto = getSykmeldingerDBmodel(
                 perioder = listOf(
                     getPeriode(
@@ -45,7 +44,7 @@ class SykmeldingMapperKtTest : Spek({
             ).toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
             sykmeldingDto.harRedusertArbeidsgiverperiode shouldBeEqualTo false
         }
-        it("test map har redusert arbeidsgiverperiode ved smittefare") {
+        test("test map har redusert arbeidsgiverperiode ved smittefare") {
             val sykmeldingDbModel = getSykmeldingerDBmodel(
                 perioder = listOf(
                     getPeriode(
@@ -71,7 +70,7 @@ class SykmeldingMapperKtTest : Spek({
                 sykmeldingMedSmittefare.toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
             sykmeldingDto.harRedusertArbeidsgiverperiode shouldBeEqualTo true
         }
-        it("test map har ikke redusert arbeidsgiverperiode ved annen fravarsgrunn ikke smittefare") {
+        test("test map har ikke redusert arbeidsgiverperiode ved annen fravarsgrunn ikke smittefare") {
             val sykmeldingDbModel = getSykmeldingerDBmodel(
                 perioder = listOf(
                     getPeriode(
@@ -97,7 +96,7 @@ class SykmeldingMapperKtTest : Spek({
                 sykmeldingMedSmittefare.toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
             sykmeldingDto.harRedusertArbeidsgiverperiode shouldBeEqualTo false
         }
-        it("tilBehandlingsutfall fjerner regelinfo for manuell hvis pasient") {
+        test("tilBehandlingsutfall fjerner regelinfo for manuell hvis pasient") {
             val validationResult = ValidationResult(
                 Status.INVALID,
                 listOf(
@@ -113,7 +112,7 @@ class SykmeldingMapperKtTest : Spek({
                 listOf(RegelinfoDTO("sender2", "user2", "rulename2", RegelStatusDTO.INVALID))
             )
         }
-        it("tilBehandlingsutfall fjerner ikke regelinfo for manuell hvis ikke pasient") {
+        test("tilBehandlingsutfall fjerner ikke regelinfo for manuell hvis ikke pasient") {
             val validationResult = ValidationResult(
                 Status.INVALID,
                 listOf(
@@ -134,8 +133,8 @@ class SykmeldingMapperKtTest : Spek({
         }
     }
 
-    describe("Test av skjerming") {
-        it("Skal fjerne info hvis ikkeTilgangTilDiagnose er true") {
+    context("Test av skjerming") {
+        test("Skal fjerne info hvis ikkeTilgangTilDiagnose er true") {
             val sykmeldingDbModel = getSykmeldingerDBmodel(
                 perioder = listOf(
                     getPeriode(
@@ -165,7 +164,7 @@ class SykmeldingMapperKtTest : Spek({
             mappetSykmelding.meldingTilNAV shouldBeEqualTo null
             mappetSykmelding.utdypendeOpplysninger shouldBeEqualTo emptyMap()
         }
-        it("Skal fjerne info hvis ikkeTilgangTilDiagnose er true og pasient er skjermet") {
+        test("Skal fjerne info hvis ikkeTilgangTilDiagnose er true og pasient er skjermet") {
             val sykmeldingDbModel = getSykmeldingerDBmodel(
                 skjermet = true,
                 perioder = listOf(
@@ -196,7 +195,7 @@ class SykmeldingMapperKtTest : Spek({
             mappetSykmelding.meldingTilNAV shouldBeEqualTo null
             mappetSykmelding.utdypendeOpplysninger shouldBeEqualTo emptyMap()
         }
-        it("Skal fjerne info hvis pasient er skjermet og isPasient er true") {
+        test("Skal fjerne info hvis pasient er skjermet og isPasient er true") {
             val sykmeldingDbModel = getSykmeldingerDBmodel(
                 skjermet = true,
                 perioder = listOf(
@@ -227,7 +226,7 @@ class SykmeldingMapperKtTest : Spek({
             mappetSykmelding.meldingTilNAV shouldBeEqualTo null
             mappetSykmelding.utdypendeOpplysninger shouldBeEqualTo emptyMap()
         }
-        it("Skal ikke fjerne info hvis pasient er skjermet og isPasient er false") {
+        test("Skal ikke fjerne info hvis pasient er skjermet og isPasient er false") {
             val sykmeldingDbModel = getSykmeldingerDBmodel(
                 skjermet = true,
                 perioder = listOf(
@@ -269,7 +268,7 @@ class SykmeldingMapperKtTest : Spek({
             mappetSykmelding.meldingTilNAV shouldBeEqualTo MeldingTilNavDTO(true, "Masse bistand")
             objectMapper.writeValueAsString(mappetSykmelding.utdypendeOpplysninger) shouldBeEqualTo mappedOpplysningerJson
         }
-        it("Bruker legens diagnosetekst hvis den er satt") {
+        test("Bruker legens diagnosetekst hvis den er satt") {
             val diagnoseFraDb =
                 Diagnose(system = Diagnosekoder.ICPC2_CODE, kode = "Y80", tekst = "KNUSNINGSSKADE BEKKEN (M)")
 

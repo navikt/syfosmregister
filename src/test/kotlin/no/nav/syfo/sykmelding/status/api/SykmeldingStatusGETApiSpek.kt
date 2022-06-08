@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.status.api
 
 import com.auth0.jwt.interfaces.Payload
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.kotest.core.spec.style.FunSpec
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -25,28 +26,26 @@ import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.sykmelding.status.api.model.SykmeldingStatusEventDTO
 import no.nav.syfo.testutil.setUpContentNegotiation
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-class SykmeldingStatusGETApiSpek : Spek({
+class SykmeldingStatusGETApiSpek : FunSpec({
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
     val mockPayload = mockk<Payload>()
 
-    beforeEachTest {
+    beforeTest {
         clearAllMocks()
         every { mockPayload.subject } returns "pasient_fnr"
         every { sykmeldingStatusService.erEier(any(), any()) } returns true
     }
 
-    describe("Get SykmeldingStatus") {
+    context("Get SykmeldingStatus") {
         with(TestApplicationEngine()) {
             start(true)
             application.install(ContentNegotiation, setUpContentNegotiation())
             application.routing { registerSykmeldingStatusGETApi(sykmeldingStatusService) }
 
-            it("Should get all statuses sykmeldingstatus") {
+            test("Should get all statuses sykmeldingstatus") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                     SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
@@ -65,7 +64,7 @@ class SykmeldingStatusGETApiSpek : Spek({
                 }
             }
 
-            it("Should get all statuses without filter") {
+            test("Should get all statuses without filter") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                     SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
@@ -84,7 +83,7 @@ class SykmeldingStatusGETApiSpek : Spek({
                 }
             }
 
-            it("Should get latest status") {
+            test("Should get latest status") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
                 every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT, erAvvist = false, erEgenmeldt = false))
 
@@ -103,7 +102,7 @@ class SykmeldingStatusGETApiSpek : Spek({
                 }
             }
 
-            it("Should get forbidden when not owner") {
+            test("Should get forbidden when not owner") {
                 every { sykmeldingStatusService.erEier(any(), any()) } returns false
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {

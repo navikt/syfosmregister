@@ -1,9 +1,9 @@
 package no.nav.syfo.sykmelding.service
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.spyk
-import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.kafka.toConsumerConfig
@@ -21,11 +21,9 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 
-class BehandligsutfallServiceTest : Spek({
+class BehandligsutfallServiceTest : FunSpec({
     val testDb = TestDB()
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "application"
@@ -51,7 +49,7 @@ class BehandligsutfallServiceTest : Spek({
         env = environment,
         kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven
     )
-    beforeEachTest {
+    beforeTest {
         every { environment.applicationName } returns "application"
         every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
         every { environment.okSykmeldingTopic } returns "oksykmeldingtopic"
@@ -61,16 +59,16 @@ class BehandligsutfallServiceTest : Spek({
     }
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
 
-    afterEachTest {
+    afterTest {
         testDb.connection.dropData()
     }
 
-    afterGroup {
+    afterSpec {
         testDb.stop()
     }
 
-    describe("Test BehandlingsuftallService") {
-        it("Should read behandlingsutfall from topic and save in db") {
+    context("Test BehandlingsuftallService") {
+        test("Should read behandlingsutfall from topic and save in db") {
             val validationResult = ValidationResult(Status.OK, emptyList())
             behandlingsutfallKafkaProducer.send(
                 ProducerRecord(
@@ -87,15 +85,14 @@ class BehandligsutfallServiceTest : Spek({
                 }
                 cr
             }
-            runBlocking {
-                behandlingsutfallService.start()
-            }
+
+            behandlingsutfallService.start()
 
             val behandlingsutfall = testDb.connection.erBehandlingsutfallLagret("1")
             behandlingsutfall shouldBeEqualTo true
         }
 
-        it("Should handle tombstone") {
+        test("Should handle tombstone") {
             tombstoneProducer.tombstoneSykmelding("1")
             every { behandlingsutfallKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
@@ -104,9 +101,8 @@ class BehandligsutfallServiceTest : Spek({
                 }
                 cr
             }
-            runBlocking {
-                behandlingsutfallService.start()
-            }
+
+            behandlingsutfallService.start()
 
             val behandlingsutfall = testDb.connection.erBehandlingsutfallLagret("1")
             behandlingsutfall shouldBeEqualTo false

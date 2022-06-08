@@ -5,27 +5,27 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val coroutinesVersion = "1.6.0"
+val coroutinesVersion = "1.6.1"
 val jacksonVersion = "2.13.3"
 val confluentVersion = "7.0.1"
 val kluentVersion = "1.68"
 val ktorVersion = "2.0.1"
 val logbackVersion = "1.2.11"
-val logstashEncoderVersion = "7.0.1"
+val logstashEncoderVersion = "7.1.1"
 val prometheusVersion = "0.15.0"
-val spekVersion = "2.0.17"
-val postgresVersion = "42.3.3"
-val flywayVersion = "8.5.4"
+val kotestVersion = "5.3.0"
+val postgresVersion = "42.3.4"
+val flywayVersion = "8.5.11"
 val hikariVersion = "5.0.1"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "1.f132f2b"
-val mockkVersion = "1.12.3"
-val nimbusdsVersion = "9.21"
-val testContainerKafkaVersion = "1.16.3"
-val caffeineVersion = "3.0.6"
+val mockkVersion = "1.12.4"
+val nimbusdsVersion = "9.22"
+val testContainerKafkaVersion = "1.17.1"
+val caffeineVersion = "3.1.0"
 val kotlinVersion = "1.6.21"
-val swaggerUiVersion = "4.1.2"
-val testContainerVersion = "1.16.3"
+val swaggerUiVersion = "4.10.3"
+val testContainerVersion = "1.17.1"
 
 plugins {
     id("org.jmailen.kotlinter") version "3.10.0"
@@ -103,22 +103,16 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion")
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
-        exclude(group = "org.eclipse.jetty") // conflicts with WireMock
+        exclude(group = "org.eclipse.jetty")
     }
     testImplementation("org.testcontainers:postgresql:$testContainerVersion")
     testImplementation("com.nimbusds:nimbus-jose-jwt:$nimbusdsVersion")
     testImplementation("org.testcontainers:kafka:$testContainerKafkaVersion")
-    testImplementation("org.spekframework.spek2:spek-dsl-jvm:$spekVersion") {
-        exclude(group = "org.jetbrains.kotlin")
-    }
-    testRuntimeOnly("org.spekframework.spek2:spek-runner-junit5:$spekVersion") {
-        exclude(group = "org.jetbrains.kotlin")
-    }
-    swaggerUI("org.webjars:swagger-ui:$swaggerUiVersion")
 
+    swaggerUI("org.webjars:swagger-ui:$swaggerUiVersion")
 }
 swaggerSources {
     create("sykmelding").apply {
@@ -153,7 +147,6 @@ tasks {
 
     withType<Test> {
         useJUnitPlatform {
-            includeEngines("spek2")
         }
         testLogging.showStandardStreams = true
     }

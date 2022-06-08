@@ -3,6 +3,7 @@ package no.nav.syfo.sykmelding.user.api
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.interfaces.Payload
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.kotest.core.spec.style.FunSpec
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -27,24 +28,22 @@ import no.nav.syfo.testutil.getEnvironment
 import no.nav.syfo.testutil.getSykmeldingDto
 import no.nav.syfo.testutil.setUpTestApplication
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
 import java.time.LocalDate
 
-class SykmeldingApiV2KtTest : Spek({
+class SykmeldingApiV2KtTest : FunSpec({
 
     val sykmeldingerV2Uri = "api/v2/sykmeldinger"
 
     val sykmeldingerService = mockkClass(SykmeldingerService::class)
 
     val mockPayload = mockk<Payload>()
-    afterEachTest {
+
+    afterTest {
         clearAllMocks()
     }
 
-    describe("Test sykmeldingApiV2") {
-
+    context("Test sykmeldingApiV2") {
         with(TestApplicationEngine()) {
             setUpTestApplication()
             application.routing {
@@ -53,7 +52,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("Should get sykmeldinger for user with exclude filter") {
+            test("Should get sykmeldinger for user with exclude filter") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN") {
@@ -63,7 +62,7 @@ class SykmeldingApiV2KtTest : Spek({
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
             }
-            it("Should get sykmeldinger for user with include filter") {
+            test("Should get sykmeldinger for user with include filter") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=APEN") {
@@ -73,7 +72,7 @@ class SykmeldingApiV2KtTest : Spek({
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
             }
-            it("Should get sykmeldinger for user with multiple exclude filters") {
+            test("Should get sykmeldinger for user with multiple exclude filters") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT") {
@@ -84,7 +83,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("Should get bad request when exclude and include filters are in request") {
+            test("Should get bad request when exclude and include filters are in request") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT&include=AVBRUTT") {
@@ -94,7 +93,7 @@ class SykmeldingApiV2KtTest : Spek({
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                 }
             }
-            it("Should get bad request when exclude filter is invalid") {
+            test("Should get bad request when exclude filter is invalid") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=ÅPEN") {
@@ -105,7 +104,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("Should get bad request when include filter is invalid") {
+            test("Should get bad request when include filter is invalid") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=ALL") {
@@ -116,7 +115,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("Should get sykmeldinger for user") {
+            test("Should get sykmeldinger for user") {
                 every { sykmeldingerService.getUserSykmelding(any(), null, null, any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
@@ -127,7 +126,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("should get sykmeldinger for user with FOM and TOM queryparams") {
+            test("should get sykmeldinger for user with FOM and TOM queryparams") {
                 val periode = getSykmeldingperiodeDto(
                     fom = LocalDate.of(2020, 1, 20),
                     tom = LocalDate.of(2020, 2, 10)
@@ -152,7 +151,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("should not get sykmeldinger with only FOM") {
+            test("should not get sykmeldinger with only FOM") {
                 val periode = getSykmeldingperiodeDto(
                     fom = LocalDate.of(2020, 2, 11),
                     tom = LocalDate.of(2020, 2, 20)
@@ -173,7 +172,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("should not get sykmeldinger with only TOM") {
+            test("should not get sykmeldinger with only TOM") {
                 val periode = getSykmeldingperiodeDto(
                     fom = LocalDate.of(2020, 2, 11),
                     tom = LocalDate.of(2020, 2, 20)
@@ -193,7 +192,7 @@ class SykmeldingApiV2KtTest : Spek({
                     sykmeldinger.size shouldBeEqualTo 1
                 }
             }
-            it("Skal få Bad Requeset om TOM dato er før FOM dato") {
+            test("Skal få Bad Requeset om TOM dato er før FOM dato") {
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-05-20&tom=2020-02-10") {
                         call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
@@ -206,7 +205,7 @@ class SykmeldingApiV2KtTest : Spek({
         }
     }
 
-    describe("Test with autentication") {
+    context("Test with autentication") {
         with(TestApplicationEngine()) {
             val path = "src/test/resources/jwkset.json"
             val uri = Paths.get(path).toUri().toURL()
@@ -228,7 +227,7 @@ class SykmeldingApiV2KtTest : Spek({
                     }
                 }
             }
-            it("get sykmeldinger OK") {
+            test("get sykmeldinger OK") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
@@ -242,7 +241,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("get sykmeldinger Unauthorized for nivå 3") {
+            test("get sykmeldinger Unauthorized for nivå 3") {
                 every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
@@ -256,13 +255,13 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("Get sykmeldinger Unauthorized without JWT") {
+            test("Get sykmeldinger Unauthorized without JWT") {
                 with(handleRequest(HttpMethod.Get, sykmeldingerV2Uri)) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }
             }
 
-            it("Get sykmeldinger Unauthorized with incorrect audience") {
+            test("Get sykmeldinger Unauthorized with incorrect audience") {
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader("Authorization", "Bearer ${generateJWT("", "error", subject = "123")}")
@@ -272,7 +271,7 @@ class SykmeldingApiV2KtTest : Spek({
                 }
             }
 
-            it("Get sykmeldinger Unauthorized with incorrect issuer") {
+            test("Get sykmeldinger Unauthorized with incorrect issuer") {
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader("Authorization", "Bearer ${generateJWT("", "loginservice-client-id", subject = "123", issuer = "microsoft")}")

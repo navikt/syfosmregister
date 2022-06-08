@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.user.api
 
 import com.auth0.jwk.JwkProviderBuilder
+import io.kotest.core.spec.style.FunSpec
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -25,30 +26,26 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
 import java.time.ZoneOffset
 
-class SykmeldingApiV2IntegrationTest : Spek({
+class SykmeldingApiV2IntegrationTest : FunSpec({
     val sykmeldingerV2Uri = "api/v2/sykmeldinger"
 
     val database = TestDB()
     val sykmeldingerService = SykmeldingerService(database)
 
-    beforeEachTest {
+    beforeTest {
+        database.connection.dropData()
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.registerStatus(SykmeldingStatusEvent(testSykmeldingsopplysninger.id, testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC), StatusEvent.APEN))
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
-    afterEachTest {
-        database.connection.dropData()
-    }
-    afterGroup {
+    afterSpec {
         database.stop()
     }
 
-    describe("SykmeldingApiV2 integration test") {
+    context("SykmeldingApiV2 integration test") {
         with(TestApplicationEngine()) {
             val path = "src/test/resources/jwkset.json"
             val uri = Paths.get(path).toUri().toURL()
@@ -71,13 +68,13 @@ class SykmeldingApiV2IntegrationTest : Spek({
                 }
             }
 
-            it("Skal få unauthorized når credentials mangler") {
+            test("Skal få unauthorized når credentials mangler") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {}) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }
             }
 
-            it("Henter sykmelding når fnr stemmer med sykmeldingen") {
+            test("Henter sykmelding når fnr stemmer med sykmeldingen") {
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
@@ -90,7 +87,7 @@ class SykmeldingApiV2IntegrationTest : Spek({
                 }
             }
 
-            it("Får NotFound med feil fnr, hvor sykmelding finnes i db") {
+            test("Får NotFound med feil fnr, hvor sykmelding finnes i db") {
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
@@ -103,7 +100,7 @@ class SykmeldingApiV2IntegrationTest : Spek({
                 }
             }
 
-            it("Får NotFound med id som ikke finnes i databasen") {
+            test("Får NotFound med id som ikke finnes i databasen") {
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/annenId") {
                         addHeader(
