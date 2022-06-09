@@ -1,27 +1,26 @@
 package no.nav.syfo.persistering
 
+import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getSykmeldingsopplysninger
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.util.UUID
 
-class PersisterSykmeldingQueriesKtTest : Spek({
+class PersisterSykmeldingQueriesKtTest : FunSpec({
     val db = TestDB()
 
-    afterEachTest {
+    afterTest {
         db.connection.dropData()
     }
 
-    afterGroup {
+    afterSpec {
         db.stop()
     }
 
-    describe("Test at Sykmeldingsopplysninger persisteres og hentes ut riktig") {
+    context("Test at Sykmeldingsopplysninger persisteres og hentes ut riktig") {
 
         val sykmeldingsId = UUID.randomUUID().toString()
         val sykmeldingsOpplysninger = testSykmeldingsopplysninger

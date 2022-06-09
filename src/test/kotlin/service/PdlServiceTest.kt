@@ -1,5 +1,6 @@
 package service
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
 import io.mockk.mockkClass
 import kotlinx.coroutines.runBlocking
@@ -13,23 +14,17 @@ import no.nav.syfo.pdl.client.model.PdlResponse
 import no.nav.syfo.pdl.error.PersonNotFoundException
 import no.nav.syfo.pdl.service.PdlPersonService
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.OffsetDateTime
 import kotlin.test.assertFailsWith
 
-internal class PdlServiceTest : Spek({
+class PdlServiceTest : FunSpec({
 
     val pdlClient = mockkClass(PdlClient::class)
     val accessTokenClientV2 = mockkClass(AzureAdV2Client::class)
     val pdlService = PdlPersonService(pdlClient, accessTokenClientV2, "scope")
 
-    afterEachTest {
-    }
-
-    describe("Test PdlPersonService") {
-
-        it("Skal kunne hent person fra pdl") {
+    context("Test PdlPersonService") {
+        test("Skal kunne hent person fra pdl") {
             coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
                 "token",
                 OffsetDateTime.now().plusHours(1)
@@ -45,13 +40,11 @@ internal class PdlServiceTest : Spek({
                 errors = null
             )
 
-            runBlocking {
-                val person = pdlService.getPdlPerson("01245678901")
-                person.fnr shouldBeEqualTo "01245678901"
-            }
+            val person = pdlService.getPdlPerson("01245678901")
+            person.fnr shouldBeEqualTo "01245678901"
         }
 
-        it("Skal feile når person ikke finnes") {
+        test("Skal feile når person ikke finnes") {
             coEvery { accessTokenClientV2.getAccessToken(any()) } returns AzureAdV2Token(
                 "token",
                 OffsetDateTime.now().plusHours(1)

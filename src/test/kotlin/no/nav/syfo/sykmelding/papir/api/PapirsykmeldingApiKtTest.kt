@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.papir.api
 
 import com.auth0.jwk.JwkProviderBuilder
+import io.kotest.core.spec.style.FunSpec
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -24,27 +25,23 @@ import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBe
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
 
-class PapirsykmeldingApiKtTest : Spek({
+class PapirsykmeldingApiKtTest : FunSpec({
 
     val database = TestDB()
     val sykmeldingerService = PapirsykmeldingService(database)
 
-    beforeEachTest {
+    beforeTest {
+        database.connection.dropData()
         val sykmelding = testSykmeldingsdokument.sykmelding
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument.copy(sykmelding = sykmelding.copy(avsenderSystem = AvsenderSystem("Papirsykmelding", "1.0"))))
     }
-    afterEachTest {
-        database.connection.dropData()
-    }
-    afterGroup {
+    afterSpec {
         database.stop()
     }
 
-    describe("SykmeldingApiV2 papirsykmelding integration test") {
+    context("SykmeldingApiV2 papirsykmelding integration test") {
         val sykmeldingerV2Uri = "api/v2/papirsykmelding"
         with(TestApplicationEngine()) {
             val path = "src/test/resources/jwkset.json"
@@ -68,14 +65,13 @@ class PapirsykmeldingApiKtTest : Spek({
                 }
             }
 
-            it("Skal få unauthorized når credentials mangler") {
+            test("Skal få unauthorized når credentials mangler") {
                 with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {}) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }
             }
 
-            it("Skal returnere papirsykmelding") {
-
+            test("Skal returnere papirsykmelding") {
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(

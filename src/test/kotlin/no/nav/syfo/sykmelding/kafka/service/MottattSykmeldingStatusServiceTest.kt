@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.kafka.service
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -31,12 +32,10 @@ import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.util.UUID
 import kotlin.test.assertFailsWith
 
-object MottattSykmeldingStatusServiceTest : Spek({
+class MottattSykmeldingStatusServiceTest : FunSpec({
     val sykmeldingStatusService = mockk<SykmeldingStatusService>(relaxed = true)
     val sendtSykmeldingKafkaProducer = mockk<SendtSykmeldingKafkaProducer>(relaxed = true)
     val bekreftetSykmeldingKafkaProducer = mockk<BekreftSykmeldingKafkaProducer>(relaxed = true)
@@ -44,13 +43,13 @@ object MottattSykmeldingStatusServiceTest : Spek({
     val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, tombstoneProducer, databaseInterface)
 
-    beforeEachTest {
+    beforeTest {
         clearAllMocks()
         every { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns opprettArbeidsgiverSykmelding()
     }
 
-    describe("Test status event for resendt sykmelding") {
-        it("Test resending to sendt topic") {
+    context("Test status event for resendt sykmelding") {
+        test("Test resending to sendt topic") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT)
             )
@@ -69,7 +68,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
             verify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
             verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
-        it("Test resending to bekreft topic") {
+        test("Test resending to bekreft topic") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.BEKREFTET)
             )
@@ -88,7 +87,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
             verify(exactly = 1) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
             verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
-        it("Skal ikke resende når status ikke er sendt/bekreftet") {
+        test("Skal ikke resende når status ikke er sendt/bekreftet") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.APEN)
             )
@@ -102,9 +101,9 @@ object MottattSykmeldingStatusServiceTest : Spek({
         }
     }
 
-    describe("Skal ikke oppdatere database hvis skriv til kafka feiler") {
+    context("Skal ikke oppdatere database hvis skriv til kafka feiler") {
 
-        it("SENDT") {
+        test("SENDT") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
                     sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
@@ -117,7 +116,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
             }
             verify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
         }
-        it("BEKREFTET") {
+        test("BEKREFTET") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
                     sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
@@ -130,7 +129,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
             }
             verify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
         }
-        it("SLETTET") {
+        test("SLETTET") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
                     sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
@@ -145,8 +144,8 @@ object MottattSykmeldingStatusServiceTest : Spek({
         }
     }
 
-    describe("Test av bekreft") {
-        it("Bekreft oppdaterer kafka og database") {
+    context("Test av bekreft") {
+        test("Bekreft oppdaterer kafka og database") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
                     sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
@@ -158,7 +157,7 @@ object MottattSykmeldingStatusServiceTest : Spek({
             verify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
             verify { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
-        it("Bekreft avvist sykmelding oppdaterer kun database") {
+        test("Bekreft avvist sykmelding oppdaterer kun database") {
             every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                 SykmeldingStatusEvent(
                     sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN

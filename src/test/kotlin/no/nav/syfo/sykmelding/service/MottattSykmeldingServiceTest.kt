@@ -1,12 +1,12 @@
 package no.nav.syfo.sykmelding.service
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.spyk
 import io.mockk.verify
-import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.kafka.toConsumerConfig
@@ -30,11 +30,9 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.Duration
 
-class MottattSykmeldingServiceTest : Spek({
+class MottattSykmeldingServiceTest : FunSpec({
     val testDb = TestDB()
 
     val environment = mockkClass(Environment::class)
@@ -63,23 +61,22 @@ class MottattSykmeldingServiceTest : Spek({
         mottattSykmeldingStatusService = mottattSykmeldingStatusService
     )
 
-    afterEachTest {
+    afterTest {
         clearAllMocks()
         testDb.connection.dropData()
     }
 
-    beforeEachTest {
+    beforeTest {
         applicationState.ready = true
         mockEnvironment(environment)
     }
 
-    afterGroup {
+    afterSpec {
         testDb.stop()
     }
 
-    describe("Test receive sykmelding") {
-
-        it("Handle resending to automatic topic") {
+    context("Test receive sykmelding") {
+        test("Handle resending to automatic topic") {
             val receivedSykmelding = getReceivedSykmelding()
             receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.okSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
             receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.okSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
@@ -94,15 +91,14 @@ class MottattSykmeldingServiceTest : Spek({
                 }
                 cr
             }
-            runBlocking {
-                mottattSykmeldingService.start()
-            }
+
+            mottattSykmeldingService.start()
 
             verify(exactly = 2) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
             verify(exactly = 1) { mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(receivedSykmelding.sykmelding.id, receivedSykmelding.personNrPasient) }
         }
 
-        it("should receive sykmelding from automatic topic and publish to mottatt sykmelding topic") {
+        test("should receive sykmelding from automatic topic and publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
             receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.okSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
             every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
@@ -112,15 +108,15 @@ class MottattSykmeldingServiceTest : Spek({
                 }
                 cr
             }
-            runBlocking {
-                mottattSykmeldingService.start()
-            }
+
+            mottattSykmeldingService.start()
+
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
             verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 
-        it("should receive sykmelding med merknad from automatic topic and publish to mottatt sykmelding topic") {
+        test("should receive sykmelding med merknad from automatic topic and publish to mottatt sykmelding topic") {
             val receivedSykmelding =
                 getReceivedSykmelding(merknader = listOf(Merknad("UGYLDIG_TILBAKEDATERING", "ikke godkjent")))
             receivedSykmeldingKafkaProducer.send(
@@ -137,16 +133,16 @@ class MottattSykmeldingServiceTest : Spek({
                 }
                 cr
             }
-            runBlocking {
-                mottattSykmeldingService.start()
-            }
+
+            mottattSykmeldingService.start()
+
             val merknader = testDb.connection.getMerknaderForId("1")
             merknader!![0].type shouldBeEqualTo "UGYLDIG_TILBAKEDATERING"
             merknader[0].beskrivelse shouldBeEqualTo "ikke godkjent"
             verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 
-        it("should receive sykmelding from manuell topic and publish to mottatt sykmelding topic") {
+        test("should receive sykmelding from manuell topic and publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
             receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.okSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
             every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
@@ -156,14 +152,14 @@ class MottattSykmeldingServiceTest : Spek({
                 }
                 cr
             }
-            runBlocking {
-                mottattSykmeldingService.start()
-            }
+
+            mottattSykmeldingService.start()
+
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
             verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
-        it("should receive sykmelding from avvist topic and not publish to mottatt sykmelding topic") {
+        test("should receive sykmelding from avvist topic and not publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
             receivedSykmeldingKafkaProducer.send(ProducerRecord(environment.avvistSykmeldingTopic, receivedSykmelding.sykmelding.id, receivedSykmelding))
             every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
@@ -173,14 +169,14 @@ class MottattSykmeldingServiceTest : Spek({
                 }
                 cr
             }
-            runBlocking {
-                mottattSykmeldingService.start()
-            }
+
+            mottattSykmeldingService.start()
+
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
             verify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
-        it("Should handle tombstone") {
+        test("Should handle tombstone") {
             tombstoneProducer.tombstoneSykmelding(getReceivedSykmelding().sykmelding.id)
             every { receivedSykmeldingKafkaConsumerAiven.poll(any<Duration>()) } answers {
                 val cr = callOriginal()
@@ -191,9 +187,9 @@ class MottattSykmeldingServiceTest : Spek({
                 }
                 cr
             }
-            runBlocking {
-                mottattSykmeldingService.start()
-            }
+
+            mottattSykmeldingService.start()
+
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe false
             verify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }

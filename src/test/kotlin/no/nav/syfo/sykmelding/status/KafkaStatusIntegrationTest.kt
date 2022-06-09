@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.status
 
 import com.auth0.jwt.interfaces.Payload
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.kotest.core.spec.style.FunSpec
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authentication
@@ -62,12 +63,10 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
 
 @DelicateCoroutinesApi
-class KafkaStatusIntegrationTest : Spek({
+class KafkaStatusIntegrationTest : FunSpec({
 
     val database = TestDB()
 
@@ -88,30 +87,26 @@ class KafkaStatusIntegrationTest : Spek({
     val sykmeldingerService = SykmeldingerService(database)
     val mockPayload = mockk<Payload>()
 
-    afterGroup {
+    afterSpec {
         applicationState.ready = false
         applicationState.alive = false
         database.stop()
     }
 
-    beforeEachTest {
+    beforeTest {
         applicationState.alive = true
         applicationState.ready = true
         clearAllMocks()
         setUpEnvironment(environment)
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any<Long>()) } returns Unit
+        database.connection.dropData()
         database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
 
-    afterEachTest {
-        database.connection.dropData()
-    }
-
-    describe("Read from status topic and save in DB") {
-        it("Write and read APEN status") {
-
+    context("Read from status topic and save in DB") {
+        test("Write and read APEN status") {
             every { sykmeldingStatusService.registrerStatus(any()) } answers {
                 callOriginal()
                 applicationState.alive = false
@@ -128,6 +123,7 @@ class KafkaStatusIntegrationTest : Spek({
                     sykmeldingStatusConsumerService.start()
                 }
             }
+
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
             sykmeldinger[0].status shouldBeEqualTo StatusDbModel(
@@ -138,12 +134,11 @@ class KafkaStatusIntegrationTest : Spek({
             database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 1
         }
 
-        it("test tombstone") {
+        test("test tombstone") {
             bekreftSykmeldingKafkaProducer.tombstoneSykmelding("123")
         }
 
-        it("write and read APEN and SENDT") {
-
+        test("write and read APEN and SENDT") {
             every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                 callOriginal()
                 applicationState.alive = false
@@ -153,11 +148,13 @@ class KafkaStatusIntegrationTest : Spek({
             kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
             val sendEvent = getSendtEvent(sykmelding)
             kafkaProducer.send(sendEvent, sykmelding.pasientFnr)
+
             runBlocking {
                 this.launch {
                     sykmeldingStatusConsumerService.start()
                 }
             }
+
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
             val sykmeldingstatus = sykmeldinger[0].status
@@ -170,7 +167,7 @@ class KafkaStatusIntegrationTest : Spek({
             database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 2
         }
 
-        it("Should test APEN and BEKREFTET") {
+        test("Should test APEN and BEKREFTET") {
             every { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
                 callOriginal()
                 applicationState.alive = false
@@ -180,11 +177,13 @@ class KafkaStatusIntegrationTest : Spek({
             kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
             val bekreftetEvent = getSykmeldingBekreftEvent(sykmelding)
             kafkaProducer.send(bekreftetEvent, sykmelding.pasientFnr)
+
             runBlocking {
                 this.launch {
                     sykmeldingStatusConsumerService.start()
                 }
             }
+
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
             val sykmeldingStatus = sykmeldinger[0].status
@@ -197,7 +196,7 @@ class KafkaStatusIntegrationTest : Spek({
             database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 2
         }
 
-        it("Should test APEN and SLETTET") {
+        test("Should test APEN and SLETTET") {
             every { sykmeldingStatusService.slettSykmelding(any()) } answers {
                 callOriginal()
                 applicationState.alive = false
@@ -205,16 +204,18 @@ class KafkaStatusIntegrationTest : Spek({
             }
             kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
             kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
+
             runBlocking {
                 this.launch {
                     sykmeldingStatusConsumerService.start()
                 }
             }
+
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
             verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
         }
-        it("should test APEN -> SENDT -> SLETTET") {
+        test("should test APEN -> SENDT -> SLETTET") {
             every { sykmeldingStatusService.slettSykmelding(any()) } answers {
                 callOriginal()
                 applicationState.alive = false
@@ -223,11 +224,13 @@ class KafkaStatusIntegrationTest : Spek({
             kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
             kafkaProducer.send(getSendtEvent(sykmelding), sykmelding.pasientFnr)
             kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
+
             runBlocking {
                 this.launch {
                     sykmeldingStatusConsumerService.start()
                 }
             }
+
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
             database.finnSvarForSykmelding(sykmelding.id).size shouldBeEqualTo 0
@@ -239,7 +242,7 @@ class KafkaStatusIntegrationTest : Spek({
             verify(exactly = 0) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
         }
 
-        it("should test APEN -> BEKREFTET -> SLETTET") {
+        test("should test APEN -> BEKREFTET -> SLETTET") {
             every { sykmeldingStatusService.slettSykmelding(any()) } answers {
                 callOriginal()
                 applicationState.alive = false
@@ -248,11 +251,13 @@ class KafkaStatusIntegrationTest : Spek({
             kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
             kafkaProducer.send(getSykmeldingBekreftEvent(sykmelding), sykmelding.pasientFnr)
             kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
+
             runBlocking {
                 this.launch {
                     sykmeldingStatusConsumerService.start()
                 }
             }
+
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
             verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
@@ -263,7 +268,7 @@ class KafkaStatusIntegrationTest : Spek({
         }
     }
 
-    describe("Test Kafka -> DB -> status API") {
+    context("Test Kafka -> DB -> status API") {
         with(TestApplicationEngine()) {
             setUpTestApplication()
             application.routing {
@@ -272,7 +277,7 @@ class KafkaStatusIntegrationTest : Spek({
                     registrerSykmeldingApiV2(sykmeldingerService)
                 }
             }
-            it("Test get stykmeldingstatus latest should be SENDT") {
+            test("Test get stykmeldingstatus latest should be SENDT") {
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/uuid/status?filter=LATEST") {
@@ -291,7 +296,7 @@ class KafkaStatusIntegrationTest : Spek({
                     )
                 }
             }
-            it("test get sykmelding with latest status SENDT") {
+            test("test get sykmelding with latest status SENDT") {
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(
                     handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {

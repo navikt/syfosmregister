@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.kafka.producer
 
+import io.kotest.core.spec.style.FunSpec
 import io.mockk.every
 import io.mockk.mockkClass
 import no.nav.syfo.Environment
@@ -15,10 +16,8 @@ import org.amshove.kluent.shouldNotBe
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
-class BekreftSykmeldingKafkaProducerTest : Spek({
+class BekreftSykmeldingKafkaProducerTest : FunSpec({
 
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "${BehandligsutfallServiceTest::class.simpleName}-application"
@@ -32,14 +31,14 @@ class BekreftSykmeldingKafkaProducerTest : Spek({
     val kafkaConsumer = KafkaConsumer<String, SykmeldingKafkaMessage>(properties, StringDeserializer(), JacksonKafkaDeserializer(SykmeldingKafkaMessage::class))
     kafkaConsumer.subscribe(listOf("${environment.applicationName}-syfo-bekreft-sykmelding"))
 
-    describe("Test kafka") {
-        it("Should bekreft value to topic") {
+    context("Test kafka") {
+        test("Should bekreft value to topic") {
             kafkaProducer.sendSykmelding(SykmeldingKafkaMessage(getArbeidsgiverSykmelding("1"), getKafkaMetadata("1"), getSykmeldingStatusEvent("1")))
             var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
             messages.get("1") shouldNotBe null
         }
 
-        it("Should tombstone") {
+        test("Should tombstone") {
 
             kafkaProducer.tombstoneSykmelding("1")
             var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
@@ -47,7 +46,7 @@ class BekreftSykmeldingKafkaProducerTest : Spek({
             messages.get("1") shouldBe null
         }
 
-        it("should send Bekreft then tombstone") {
+        test("should send Bekreft then tombstone") {
             kafkaProducer.sendSykmelding(SykmeldingKafkaMessage(getArbeidsgiverSykmelding("2"), getKafkaMetadata("2"), getSykmeldingStatusEvent("2")))
             kafkaProducer.tombstoneSykmelding("2")
             var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 2)

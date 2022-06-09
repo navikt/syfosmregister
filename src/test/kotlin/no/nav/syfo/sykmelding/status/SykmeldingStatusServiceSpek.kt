@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.status
 
+import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
@@ -16,17 +17,15 @@ import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.ZoneOffset
 
-class SykmeldingStatusServiceSpek : Spek({
+class SykmeldingStatusServiceSpek : FunSpec({
 
     val database = TestDB()
     val sykmeldingerService = SykmeldingerService(database)
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
-    beforeEachTest {
+    beforeTest {
         database.connection.dropData()
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.registerStatus(
@@ -39,16 +38,16 @@ class SykmeldingStatusServiceSpek : Spek({
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
 
-    afterEachTest {
+    afterTest {
         database.connection.dropData()
     }
 
-    afterGroup {
+    afterSpec {
         database.stop()
     }
 
-    describe("Test registrerStatus") {
-        it("Skal ikke kaste feil hvis man oppdaterer med eksisterende status på nytt") {
+    context("Test registrerStatus") {
+        test("Skal ikke kaste feil hvis man oppdaterer med eksisterende status på nytt") {
             val confirmedDateTime = getNowTickMillisOffsetDateTime()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET)
             sykmeldingStatusService.registrerStatus(status)
@@ -58,7 +57,7 @@ class SykmeldingStatusServiceSpek : Spek({
             savedSykmelding.sykmeldingStatus.timestamp shouldBeEqualTo confirmedDateTime
         }
 
-        it("Skal ikke hente sykmeldinger med status SLETTET") {
+        test("Skal ikke hente sykmeldinger med status SLETTET") {
             val confirmedDateTime = getNowTickMillisOffsetDateTime()
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
@@ -70,7 +69,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldinger shouldBeEqualTo emptyList()
         }
 
-        it("Skal kun hente sykmeldinger der status ikke er SLETTET") {
+        test("Skal kun hente sykmeldinger der status ikke er SLETTET") {
             val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
             val copySykmeldingopplysning = testSykmeldingsopplysninger.copy(
                 id = "uuid2",
@@ -96,7 +95,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldinger.first().id shouldBeEqualTo "uuid2"
         }
 
-        it("Skal hente alle statuser") {
+        test("Skal hente alle statuser") {
             database.registerStatus(
                 SykmeldingStatusEvent(
                     "uuid",
@@ -108,7 +107,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldingStatuser.size shouldBeEqualTo 2
         }
 
-        it("Skal hente siste status") {
+        test("Skal hente siste status") {
             database.registerStatus(
                 SykmeldingStatusEvent(
                     "uuid",
@@ -123,7 +122,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldingstatuser[0].erEgenmeldt shouldBeEqualTo false
         }
 
-        it("Status skal vises som avvist hvis sykmelding er avvist") {
+        test("Status skal vises som avvist hvis sykmelding er avvist") {
             val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
             val copySykmeldingopplysning = testSykmeldingsopplysninger.copy(
                 id = "uuid2"
@@ -151,7 +150,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldingstatuser[0].erAvvist shouldBeEqualTo true
         }
 
-        it("Status skal vises som egenmeldt hvis sykmelding er egenmelding") {
+        test("Status skal vises som egenmeldt hvis sykmelding er egenmelding") {
             val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
             val copySykmeldingopplysning = testSykmeldingsopplysninger.copy(
                 id = "uuid2", epjSystemNavn = "Egenmeldt"
@@ -171,7 +170,7 @@ class SykmeldingStatusServiceSpek : Spek({
             sykmeldingstatuser[0].erEgenmeldt shouldBeEqualTo true
         }
 
-        it("registrer bekreftet skal ikke lagre spørsmål og svar om den ikke er nyest") {
+        test("registrer bekreftet skal ikke lagre spørsmål og svar om den ikke er nyest") {
             val sporsmal = listOf(Sporsmal("tekst", ShortName.FORSIKRING, Svar("uuid", 1, Svartype.JA_NEI, "NEI")))
             sykmeldingStatusService.registrerBekreftet(
                 SykmeldingBekreftEvent(
@@ -186,7 +185,7 @@ class SykmeldingStatusServiceSpek : Spek({
             savedSporsmals.size shouldBeEqualTo 0
         }
 
-        it("registrer bekreft skal lagre spørsmål") {
+        test("registrer bekreft skal lagre spørsmål") {
             val sporsmal = listOf(Sporsmal("tekst", ShortName.FORSIKRING, Svar("uuid", 1, Svartype.JA_NEI, "NEI")))
             sykmeldingStatusService.registrerBekreftet(
                 SykmeldingBekreftEvent(
@@ -201,7 +200,7 @@ class SykmeldingStatusServiceSpek : Spek({
             savedSporsmals shouldBeEqualTo sporsmal
         }
 
-        it("registrer APEN etter BEKREFTET skal slette sporsmal og svar") {
+        test("registrer APEN etter BEKREFTET skal slette sporsmal og svar") {
             val sporsmal = listOf(Sporsmal("tekst", ShortName.FORSIKRING, Svar("uuid", 1, Svartype.JA_NEI, "NEI")))
             sykmeldingStatusService.registrerBekreftet(
                 SykmeldingBekreftEvent(
@@ -223,7 +222,7 @@ class SykmeldingStatusServiceSpek : Spek({
             savedSporsmal2.size shouldBeEqualTo 0
         }
 
-        it("Skal kunne hente SendtSykmeldingUtenDiagnose selv om behandlingsutfall mangler") {
+        test("Skal kunne hente SendtSykmeldingUtenDiagnose selv om behandlingsutfall mangler") {
             database.connection.dropData()
             database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
             database.registerStatus(

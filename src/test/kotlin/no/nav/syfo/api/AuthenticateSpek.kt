@@ -4,6 +4,7 @@ import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.kotest.core.spec.style.FunSpec
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -28,11 +29,9 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.nio.file.Paths
 
-object AuthenticateSpek : Spek({
+class AuthenticateSpek : FunSpec({
 
     val path = "src/test/resources/jwkset.json"
     val uri = Paths.get(path).toUri().toURL()
@@ -40,17 +39,17 @@ object AuthenticateSpek : Spek({
     val database = TestDB()
     val sykmeldingerService = SykmeldingerService(database)
 
-    beforeEachTest {
+    beforeTest {
         database.connection.dropData()
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
 
-    afterGroup {
+    afterSpec {
         database.stop()
     }
 
-    describe("Authenticate basicauth") {
+    context("Authenticate basicauth") {
         with(TestApplicationEngine()) {
             start()
             application.setupAuth(
@@ -77,7 +76,7 @@ object AuthenticateSpek : Spek({
                 }
             }
 
-            it("Aksepterer gyldig JWT med riktig audience") {
+            test("Aksepterer gyldig JWT med riktig audience") {
                 with(
                     handleRequest(HttpMethod.Get, "api/v2/sykmeldinger") {
                         addHeader(
@@ -90,7 +89,7 @@ object AuthenticateSpek : Spek({
                 }
             }
 
-            it("Gyldig JWT med feil audience gir Unauthorized") {
+            test("Gyldig JWT med feil audience gir Unauthorized") {
                 with(
                     handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
                         addHeader(
@@ -103,7 +102,7 @@ object AuthenticateSpek : Spek({
                 }
             }
 
-            it("Gyldig JWT med feil issuer gir Unauthorized") {
+            test("Gyldig JWT med feil issuer gir Unauthorized") {
                 with(
                     handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
                         addHeader(

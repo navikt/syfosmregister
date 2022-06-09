@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.status
 
+import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.persistering.Behandlingsutfall
@@ -10,24 +11,22 @@ import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 import java.time.OffsetDateTime
 
-class DatebaseTimestampTest : Spek({
+class DatebaseTimestampTest : FunSpec({
 
     val db = TestDB()
 
-    afterEachTest {
+    afterTest {
         db.connection.dropData()
     }
 
-    afterGroup {
+    afterSpec {
         db.stop()
     }
 
-    describe("Test db") {
-        it("Should save timestamp as utc") {
+    context("Test db") {
+        test("Should save timestamp as utc") {
             val timestamp = OffsetDateTime.parse("2019-06-02T12:00:01.123Z")
             val sykmeldingStatusEvent = SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN)
             db.lagreMottattSykmelding(
@@ -41,7 +40,7 @@ class DatebaseTimestampTest : Spek({
             statuser[0].timestamp shouldBeEqualTo timestamp
         }
 
-        it("Should convert and save timestampZ if not provided") {
+        test("Should convert and save timestampZ if not provided") {
             val timestamp = OffsetDateTime.parse("2019-01-01T12:00:01.1234Z")
             val sykmeldingStatusEvent = SykmeldingStatusEvent("1234", timestamp, StatusEvent.APEN)
             db.lagreMottattSykmelding(

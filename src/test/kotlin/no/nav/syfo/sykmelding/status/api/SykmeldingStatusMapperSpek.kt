@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.status.api
 
+import io.kotest.core.spec.style.FunSpec
 import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
 import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
@@ -10,14 +11,12 @@ import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.SykmeldingStatus
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import org.amshove.kluent.shouldBeEqualTo
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.style.specification.describe
 
-class SykmeldingStatusMapperSpek : Spek({
+class SykmeldingStatusMapperSpek : FunSpec({
     val sykmeldingId = "id"
 
-    describe("Test av tilSykmeldingSendEvent") {
-        it("Mapper sykmeldingSendEventDTO riktig") {
+    context("Test av tilSykmeldingSendEvent") {
+        test("Mapper sykmeldingSendEventDTO riktig") {
             val timestamp = getNowTickMillisOffsetDateTime()
             val sykmeldingSendEventDTO = SykmeldingSendEventDTO(
                 timestamp,
@@ -46,8 +45,8 @@ class SykmeldingStatusMapperSpek : Spek({
         }
     }
 
-    describe("Test av tilSykmeldingBekreftEvent") {
-        it("Mapper sykmeldingBekreftEventDTO med spørsmål riktig") {
+    context("Test av tilSykmeldingBekreftEvent") {
+        test("Mapper sykmeldingBekreftEventDTO med spørsmål riktig") {
             val timestamp = getNowTickMillisOffsetDateTime()
             val sykmeldingBekreftEventDTO = SykmeldingBekreftEventDTO(timestamp, lagSporsmalOgSvarDTOListe())
 
@@ -83,7 +82,7 @@ class SykmeldingStatusMapperSpek : Spek({
             )
         }
 
-        it("Mapper sykmeldingBekreftEventDTO uten spørsmål riktig") {
+        test("Mapper sykmeldingBekreftEventDTO uten spørsmål riktig") {
             val timestamp = getNowTickMillisOffsetDateTime()
             val sykmeldingBekreftEventDTOUtenSpm = SykmeldingBekreftEventDTO(timestamp, null)
 
@@ -95,7 +94,7 @@ class SykmeldingStatusMapperSpek : Spek({
             sykmeldingBekreftEventUtenSpm.sporsmal shouldBeEqualTo null
         }
 
-        it("Mapper sykmeldingBekreftEventDTO med tom spørsmålsliste riktig") {
+        test("Mapper sykmeldingBekreftEventDTO med tom spørsmålsliste riktig") {
             val timestamp = getNowTickMillisOffsetDateTime()
             val sykmeldingBekreftEventDTOUtenSpm = SykmeldingBekreftEventDTO(timestamp, emptyList())
 
@@ -108,8 +107,8 @@ class SykmeldingStatusMapperSpek : Spek({
         }
     }
 
-    describe("Test av tilSykmeldingStatusDTO") {
-        it("Mapper SykmeldingStatus for SENDT riktig") {
+    context("Test av tilSykmeldingStatusDTO") {
+        test("Mapper SykmeldingStatus for SENDT riktig") {
             val timestamp = getNowTickMillisOffsetDateTime()
             val sykmeldingStatus = SykmeldingStatus(
                 timestamp,
@@ -143,7 +142,7 @@ class SykmeldingStatusMapperSpek : Spek({
             sykmeldingStatusDTO.arbeidsgiver shouldBeEqualTo ArbeidsgiverStatusDTO("orgnummer", null, "navn")
         }
 
-        it("Mapper SykmeldingStatus for BEKREFTET med spm/svar riktig") {
+        test("Mapper SykmeldingStatus for BEKREFTET med spm/svar riktig") {
             val timestamp = getNowTickMillisOffsetDateTime()
             val sykmeldingStatus = SykmeldingStatus(
                 timestamp,
@@ -184,7 +183,7 @@ class SykmeldingStatusMapperSpek : Spek({
             sykmeldingStatusDTO.arbeidsgiver shouldBeEqualTo null
         }
 
-        it("Mapper SykmeldingStatus for APEN riktig") {
+        test("Mapper SykmeldingStatus for APEN riktig") {
             val timestamp = getNowTickMillisOffsetDateTime()
             val sykmeldingStatus = SykmeldingStatus(
                 timestamp,
