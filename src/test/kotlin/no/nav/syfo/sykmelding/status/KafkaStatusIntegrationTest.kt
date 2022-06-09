@@ -118,8 +118,10 @@ class KafkaStatusIntegrationTest : FunSpec({
                 testSykmeldingsopplysninger.pasientFnr
             )
 
-            this.launch {
-                sykmeldingStatusConsumerService.start()
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
             }
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
@@ -147,8 +149,10 @@ class KafkaStatusIntegrationTest : FunSpec({
             val sendEvent = getSendtEvent(sykmelding)
             kafkaProducer.send(sendEvent, sykmelding.pasientFnr)
 
-            this.launch {
-                sykmeldingStatusConsumerService.start()
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
             }
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
@@ -174,8 +178,10 @@ class KafkaStatusIntegrationTest : FunSpec({
             val bekreftetEvent = getSykmeldingBekreftEvent(sykmelding)
             kafkaProducer.send(bekreftetEvent, sykmelding.pasientFnr)
 
-            this.launch {
-                sykmeldingStatusConsumerService.start()
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
             }
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
@@ -199,8 +205,10 @@ class KafkaStatusIntegrationTest : FunSpec({
             kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
             kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
 
-            this.launch {
-                sykmeldingStatusConsumerService.start()
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
             }
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
@@ -217,8 +225,10 @@ class KafkaStatusIntegrationTest : FunSpec({
             kafkaProducer.send(getSendtEvent(sykmelding), sykmelding.pasientFnr)
             kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
 
-            this.launch {
-                sykmeldingStatusConsumerService.start()
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
             }
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
@@ -242,8 +252,10 @@ class KafkaStatusIntegrationTest : FunSpec({
             kafkaProducer.send(getSykmeldingBekreftEvent(sykmelding), sykmelding.pasientFnr)
             kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
 
-            this.launch {
-                sykmeldingStatusConsumerService.start()
+            runBlocking {
+                this.launch {
+                    sykmeldingStatusConsumerService.start()
+                }
             }
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
