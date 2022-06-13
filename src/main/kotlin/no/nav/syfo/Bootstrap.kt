@@ -28,7 +28,6 @@ import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.application.getWellKnown
 import no.nav.syfo.application.getWellKnownTokenX
-import no.nav.syfo.application.proxyConfig
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.VaultCredentialService
@@ -53,11 +52,13 @@ import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.util.util.Unbounded
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.ProxySelector
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import kotlin.time.ExperimentalTime
@@ -163,6 +164,18 @@ fun main() {
                     is SocketTimeoutException -> throw ServiceUnavailableException(exception.message)
                 }
             }
+        }
+        expectSuccess = true
+    }
+    val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+        config()
+        engine {
+            customizeClient {
+                setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
+            }
+            socketTimeout = 3_000
+            connectTimeout = 3_000
+            connectionRequestTimeout = 10_000
         }
     }
 

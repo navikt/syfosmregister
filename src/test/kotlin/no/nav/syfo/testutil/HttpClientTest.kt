@@ -19,7 +19,7 @@ class HttpClientTest {
         install(ContentNegotiation) {
             jackson {}
         }
-        expectSuccess = false
+        expectSuccess = true
         engine {
             addHandler { request ->
                 respond(responseData!!.content, responseData!!.httpStatusCode, responseData!!.headers)
