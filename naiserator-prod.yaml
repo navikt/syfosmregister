@@ -10,7 +10,7 @@ spec:
   replicas:
     min: 3
     max: 6
-    cpuThresholdPercentage: 90
+    cpuThresholdPercentage: 80
   port: 8080
   liveness:
     path: /is_alive
@@ -20,7 +20,7 @@ spec:
     failureThreshold: 30
   readiness:
     path: /is_ready
-    initialDelay: 30
+    initialDelay: 40
     periodSeconds: 5
     timeout: 1
   prometheus:
