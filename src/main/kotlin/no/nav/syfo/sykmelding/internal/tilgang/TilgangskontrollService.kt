@@ -43,18 +43,23 @@ class TilgangskontrollService(
     }
 
     private suspend fun hasAccess(accessToken: String, requestUrl: String, fnr: String): Boolean {
-        val response: HttpResponse = httpClient.get(requestUrl) {
-            accept(ContentType.Application.Json)
-            headers.append(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
-            headers.append(NAV_PERSONIDENT_HEADER, fnr)
-        }
-
-        return when (response.status) {
-            HttpStatusCode.OK -> response.body<Tilgang>().harTilgang
-            else -> {
-                log.info("Ingen tilgang, Tilgangskontroll returnerte Status : {}", response.status)
-                false
+        try {
+            val response: HttpResponse = httpClient.get(requestUrl) {
+                accept(ContentType.Application.Json)
+                headers.append(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                headers.append(NAV_PERSONIDENT_HEADER, fnr)
             }
+
+            return when (response.status) {
+                HttpStatusCode.OK -> response.body<Tilgang>().harTilgang
+                else -> {
+                    log.info("Ingen tilgang, Tilgangskontroll returnerte Status : {}", response.status)
+                    false
+                }
+            }
+        } catch (e: Exception) {
+            log.error("Noe gikk galt ved sjekk mot syfotilgangskontroll", e)
+            throw e
         }
     }
 }
