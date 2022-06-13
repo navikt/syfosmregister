@@ -2,11 +2,10 @@ package no.nav.syfo.sykmelding.internal.tilgang
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
-import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
 import org.apache.http.HttpHeaders
@@ -43,20 +42,15 @@ class TilgangskontrollService(
     }
 
     private suspend fun hasAccess(accessToken: String, requestUrl: String, fnr: String): Boolean {
-        try {
-            val response: HttpResponse = httpClient.get(requestUrl) {
+        return try {
+            httpClient.get(requestUrl) {
                 accept(ContentType.Application.Json)
                 headers.append(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
                 headers.append(NAV_PERSONIDENT_HEADER, fnr)
-            }
-
-            return when (response.status) {
-                HttpStatusCode.OK -> response.body<Tilgang>().harTilgang
-                else -> {
-                    log.info("Ingen tilgang, Tilgangskontroll returnerte Status : {}", response.status)
-                    false
-                }
-            }
+            }.body<Tilgang>().harTilgang
+        } catch (e: ResponseException) {
+            log.info("Ingen tilgang, syfotilgangskontroll returnerte statuskode ${e.response.status.value}")
+            false
         } catch (e: Exception) {
             log.error("Noe gikk galt ved sjekk mot syfotilgangskontroll", e)
             throw e
