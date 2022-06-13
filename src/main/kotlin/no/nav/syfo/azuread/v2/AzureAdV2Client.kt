@@ -90,6 +90,9 @@ class AzureAdV2Client(
             handleUnexpectedResponseException(e)
         } catch (e: ServerResponseException) {
             handleUnexpectedResponseException(e)
+        } catch (e: Exception) {
+            log.error("Noe gikk galt ved henting av obo-accesstoken", e)
+            return null
         }
     }
 
