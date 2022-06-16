@@ -8,8 +8,8 @@ metadata:
 spec:
   image: {{ image }}
   replicas:
-    min: 3
-    max: 6
+    min: 4
+    max: 7
     cpuThresholdPercentage: 80
   port: 8080
   liveness:
