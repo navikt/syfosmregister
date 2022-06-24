@@ -3,8 +3,8 @@ package no.nav.syfo.identendring
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import no.nav.syfo.identendring.model.Ident
 import no.nav.syfo.identendring.model.IdentType
 import no.nav.syfo.model.AktivitetIkkeMulig
@@ -65,7 +65,7 @@ class IdentendringServiceTest : FunSpec({
             )
 
             identendringService.oppdaterIdent(identListeUtenEndringIFnr) shouldBeEqualTo 0
-            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
         test("Endrer ingenting hvis det ikke finnes sykmeldinger på gammelt fnr") {
             val identListeMedEndringIFnr = listOf(
@@ -77,7 +77,7 @@ class IdentendringServiceTest : FunSpec({
             coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("1234", false, "FOLKEREGISTERIDENT")))
 
             identendringService.oppdaterIdent(identListeMedEndringIFnr) shouldBeEqualTo 0
-            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
 
         test("Kaster feil hvis nytt fnr ikke stemmer med fnr fra PDL") {
@@ -97,7 +97,7 @@ class IdentendringServiceTest : FunSpec({
             assertFailsWith<InactiveIdentException> {
                 identendringService.oppdaterIdent(identListeMedEndringIFnr)
             }
-            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
 
         test("Oppdaterer i databasen og resender sendte sykmeldinger fra de siste 4 mnd ved nytt fnr") {
@@ -115,15 +115,15 @@ class IdentendringServiceTest : FunSpec({
 
             coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("10987654321", false, "FOLKEREGISTERIDENT")))
             identendringService.oppdaterIdent(identListe) shouldBeEqualTo 3
-            verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(match { it.kafkaMetadata.sykmeldingId == idSendtSykmelding && it.kafkaMetadata.fnr == nyttFnr }) }
-            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(match { it.kafkaMetadata.sykmeldingId != idSendtSykmelding }) }
+            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(match { it.kafkaMetadata.sykmeldingId == idSendtSykmelding && it.kafkaMetadata.fnr == nyttFnr }) }
+            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(match { it.kafkaMetadata.sykmeldingId != idSendtSykmelding }) }
             database.getSykmeldinger(gammeltFnr).size shouldBeEqualTo 0
             database.getSykmeldinger(nyttFnr).size shouldBeEqualTo 3
         }
     }
 })
 
-fun forberedTestsykmeldinger(database: TestDB, gammeltFnr: String, idNySykmelding: String, idSendtSykmelding: String, idGammelSendtSykmelding: String) {
+suspend fun forberedTestsykmeldinger(database: TestDB, gammeltFnr: String, idNySykmelding: String, idSendtSykmelding: String, idGammelSendtSykmelding: String) {
     database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = idNySykmelding, pasientFnr = gammeltFnr), testSykmeldingsdokument.copy(id = idNySykmelding))
     database.registerStatus(
         SykmeldingStatusEvent(
