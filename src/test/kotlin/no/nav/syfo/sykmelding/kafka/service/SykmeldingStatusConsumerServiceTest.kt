@@ -2,11 +2,10 @@ package no.nav.syfo.sykmelding.kafka.service
 
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
-import io.mockk.every
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
-import io.mockk.verify
 import kotlinx.coroutines.delay
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.db.DatabaseInterface
@@ -37,11 +36,11 @@ class SykmeldingStatusConsumerServiceTest : FunSpec({
         test("Should retry if error happens") {
             val errors = 3
             var invocationsCounter = 0
-            every { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
-            every { sykmeldingStatusKafkaConsumer.unsubscribe() } returns Unit
-            every { sykmeldingStatusKafkaConsumer.commitSync() } returns Unit
-            every { sykmeldingStatusKafkaConsumer.subscribe() } returns Unit
-            every { sykmeldingStatusKafkaConsumer.poll() } answers {
+            coEvery { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
+            coEvery { sykmeldingStatusKafkaConsumer.unsubscribe() } returns Unit
+            coEvery { sykmeldingStatusKafkaConsumer.commitSync() } returns Unit
+            coEvery { sykmeldingStatusKafkaConsumer.subscribe() } returns Unit
+            coEvery { sykmeldingStatusKafkaConsumer.poll() } answers {
                 invocationsCounter++
                 when {
                     invocationsCounter > errors -> {
@@ -53,9 +52,9 @@ class SykmeldingStatusConsumerServiceTest : FunSpec({
                 }
             }
             sykmeldingStatusConsumerService.start()
-            verify(exactly = 3) { sykmeldingStatusKafkaConsumer.unsubscribe() }
-            verify(exactly = 4) { sykmeldingStatusKafkaConsumer.subscribe() }
-            verify(exactly = 4) { sykmeldingStatusKafkaConsumer.poll() }
+            coVerify(exactly = 3) { sykmeldingStatusKafkaConsumer.unsubscribe() }
+            coVerify(exactly = 4) { sykmeldingStatusKafkaConsumer.subscribe() }
+            coVerify(exactly = 4) { sykmeldingStatusKafkaConsumer.poll() }
         }
     }
 })
