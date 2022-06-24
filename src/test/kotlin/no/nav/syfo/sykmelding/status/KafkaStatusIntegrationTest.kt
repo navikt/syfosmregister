@@ -13,12 +13,12 @@ import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.verify
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -107,7 +107,7 @@ class KafkaStatusIntegrationTest : FunSpec({
 
     context("Read from status topic and save in DB") {
         test("Write and read APEN status") {
-            coEvery { sykmeldingStatusService.registrerStatus(any()) } answers {
+            every { sykmeldingStatusService.registrerStatus(any()) } answers {
                 callOriginal()
                 applicationState.alive = false
                 applicationState.ready = false
@@ -139,7 +139,7 @@ class KafkaStatusIntegrationTest : FunSpec({
         }
 
         test("write and read APEN and SENDT") {
-            coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
+            every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                 callOriginal()
                 applicationState.alive = false
                 applicationState.ready = false
@@ -168,7 +168,7 @@ class KafkaStatusIntegrationTest : FunSpec({
         }
 
         test("Should test APEN and BEKREFTET") {
-            coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
+            every { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
                 callOriginal()
                 applicationState.alive = false
                 applicationState.ready = false
@@ -197,7 +197,7 @@ class KafkaStatusIntegrationTest : FunSpec({
         }
 
         test("Should test APEN and SLETTET") {
-            coEvery { sykmeldingStatusService.slettSykmelding(any()) } answers {
+            every { sykmeldingStatusService.slettSykmelding(any()) } answers {
                 callOriginal()
                 applicationState.alive = false
                 applicationState.ready = false
@@ -213,10 +213,10 @@ class KafkaStatusIntegrationTest : FunSpec({
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
         }
         test("should test APEN -> SENDT -> SLETTET") {
-            coEvery { sykmeldingStatusService.slettSykmelding(any()) } answers {
+            every { sykmeldingStatusService.slettSykmelding(any()) } answers {
                 callOriginal()
                 applicationState.alive = false
                 applicationState.ready = false
@@ -235,15 +235,15 @@ class KafkaStatusIntegrationTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 0
             database.finnSvarForSykmelding(sykmelding.id).size shouldBeEqualTo 0
 
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            verify(exactly = 1) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 0) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
+            verify(exactly = 0) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
         }
 
         test("should test APEN -> BEKREFTET -> SLETTET") {
-            coEvery { sykmeldingStatusService.slettSykmelding(any()) } answers {
+            every { sykmeldingStatusService.slettSykmelding(any()) } answers {
                 callOriginal()
                 applicationState.alive = false
                 applicationState.ready = false
@@ -260,11 +260,11 @@ class KafkaStatusIntegrationTest : FunSpec({
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            verify(exactly = 0) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+            verify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
+            verify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
         }
     }
 
@@ -348,7 +348,7 @@ private fun setUpEnvironment(environment: Environment) {
 
 @DelicateCoroutinesApi
 private fun publishSendAndWait(sykmeldingStatusService: SykmeldingStatusService, applicationState: ApplicationState, kafkaProducer: SykmeldingStatusKafkaProducer, sykmelding: Sykmeldingsopplysninger, sykmeldingStatusConsumerService: SykmeldingStatusConsumerService): SykmeldingStatusKafkaEventDTO {
-    coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
+    every { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
         callOriginal()
         applicationState.alive = false
         applicationState.ready = false

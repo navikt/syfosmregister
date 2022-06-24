@@ -1,12 +1,10 @@
 package no.nav.syfo.persistering
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
 import java.sql.Connection
 import java.sql.Timestamp
 
-suspend fun DatabaseInterface.lagreMottattSykmelding(sykmeldingsopplysninger: Sykmeldingsopplysninger, sykmeldingsdokument: Sykmeldingsdokument) {
+fun DatabaseInterface.lagreMottattSykmelding(sykmeldingsopplysninger: Sykmeldingsopplysninger, sykmeldingsdokument: Sykmeldingsdokument) {
     connection.use { connection ->
         connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger)
         connection.opprettSykmeldingsdokument(sykmeldingsdokument)
@@ -14,7 +12,7 @@ suspend fun DatabaseInterface.lagreMottattSykmelding(sykmeldingsopplysninger: Sy
     }
 }
 
-suspend fun DatabaseInterface.updateMottattSykmelding(sykmeldingsopplysninger: Sykmeldingsopplysninger, sykmeldingsdokument: Sykmeldingsdokument) = withContext(Dispatchers.IO) {
+fun DatabaseInterface.updateMottattSykmelding(sykmeldingsopplysninger: Sykmeldingsopplysninger, sykmeldingsdokument: Sykmeldingsdokument) {
     connection.use { connection ->
         connection.updateSykmeldingsopplysninger(sykmeldingsopplysninger)
         connection.updateSykmeldingsdokument(sykmeldingsdokument)
@@ -22,8 +20,8 @@ suspend fun DatabaseInterface.updateMottattSykmelding(sykmeldingsopplysninger: S
     }
 }
 
-private suspend fun Connection.updateSykmeldingsdokument(sykmeldingsdokument: Sykmeldingsdokument) = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.updateSykmeldingsdokument(sykmeldingsdokument: Sykmeldingsdokument) {
+    this.prepareStatement(
         """
             update SYKMELDINGSDOKUMENT set id = ?, sykmelding = ? where id = ?;
             """
@@ -35,8 +33,8 @@ private suspend fun Connection.updateSykmeldingsdokument(sykmeldingsdokument: Sy
     }
 }
 
-private suspend fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysninger: Sykmeldingsopplysninger) = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysninger: Sykmeldingsopplysninger) {
+    this.prepareStatement(
         """
         update sykmeldingsopplysninger set 
             pasient_fnr = ?,
@@ -80,8 +78,8 @@ private suspend fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysni
     }
 }
 
-private suspend fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger: Sykmeldingsopplysninger) = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger: Sykmeldingsopplysninger) {
+    this.prepareStatement(
         """
             INSERT INTO SYKMELDINGSOPPLYSNINGER(
                 id,
@@ -126,8 +124,8 @@ private suspend fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysn
     }
 }
 
-private suspend fun Connection.opprettSykmeldingsdokument(sykmeldingsdokument: Sykmeldingsdokument) = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.opprettSykmeldingsdokument(sykmeldingsdokument: Sykmeldingsdokument) {
+    this.prepareStatement(
         """
             INSERT INTO SYKMELDINGSDOKUMENT(id, sykmelding) VALUES  (?, ?)
             """
@@ -138,7 +136,7 @@ private suspend fun Connection.opprettSykmeldingsdokument(sykmeldingsdokument: S
     }
 }
 
-suspend fun Connection.updateBehandlingsutfall(behandlingsutfall: Behandlingsutfall) = withContext(Dispatchers.IO) {
+fun Connection.updateBehandlingsutfall(behandlingsutfall: Behandlingsutfall) {
     use { connection ->
         connection.prepareStatement(
             """
@@ -153,7 +151,7 @@ suspend fun Connection.updateBehandlingsutfall(behandlingsutfall: Behandlingsutf
     }
 }
 
-suspend fun Connection.opprettBehandlingsutfall(behandlingsutfall: Behandlingsutfall) = withContext(Dispatchers.IO) {
+fun Connection.opprettBehandlingsutfall(behandlingsutfall: Behandlingsutfall) =
     use { connection ->
         connection.prepareStatement(
             """
@@ -167,9 +165,8 @@ suspend fun Connection.opprettBehandlingsutfall(behandlingsutfall: Behandlingsut
 
         connection.commit()
     }
-}
 
-suspend fun Connection.erSykmeldingsopplysningerLagret(sykmeldingsid: String) = withContext(Dispatchers.IO) {
+fun Connection.erSykmeldingsopplysningerLagret(sykmeldingsid: String) =
     use { connection ->
         connection.prepareStatement(
             """
@@ -182,9 +179,8 @@ suspend fun Connection.erSykmeldingsopplysningerLagret(sykmeldingsid: String) = 
             it.executeQuery().next()
         }
     }
-}
 
-suspend fun Connection.erBehandlingsutfallLagret(sykmeldingsid: String) = withContext(Dispatchers.IO) {
+fun Connection.erBehandlingsutfallLagret(sykmeldingsid: String) =
     use { connection ->
         connection.prepareStatement(
             """
@@ -197,4 +193,3 @@ suspend fun Connection.erBehandlingsutfallLagret(sykmeldingsid: String) = withCo
             it.executeQuery().next()
         }
     }
-}

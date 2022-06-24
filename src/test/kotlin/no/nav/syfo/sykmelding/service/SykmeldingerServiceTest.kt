@@ -2,7 +2,7 @@ package no.nav.syfo.sykmelding.service
 
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearAllMocks
-import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import no.nav.syfo.db.DatabaseInterface
@@ -33,7 +33,7 @@ class SykmeldingerServiceTest : FunSpec({
 
     beforeTest {
         mockkStatic("no.nav.syfo.sykmelding.db.SykmeldingQueriesKt")
-        coEvery { database.getSykmeldinger(any()) } returns emptyList()
+        every { database.getSykmeldinger(any()) } returns emptyList()
     }
 
     afterTest {
@@ -47,7 +47,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("should filter include statuses") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
@@ -58,7 +58,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("getUserSykmelding should filter behandler fnr if fullBehandler = false") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
@@ -71,7 +71,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("getUserSykmelding should not filter behandler fnr if fullBehandler = true") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
@@ -84,7 +84,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("should filter multiple include statuses") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
@@ -97,7 +97,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("should filter exclude statuses") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
@@ -108,7 +108,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("should filter multiple exclude statuses") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
             )
@@ -119,7 +119,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("Should get list of sykmeldinger for user") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel())
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel())
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null)
             sykmeldinger.size shouldBeEqualTo 1
             sykmeldinger[0].medisinskVurdering shouldNotBe null
@@ -127,7 +127,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("Skal få med merknader") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(
                     merknader = listOf(
                         Merknad(type = "UGYLDIG_TILBAKEDATERING", beskrivelse = null)
@@ -142,14 +142,14 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("Should not get medisinsk vurderering når sykmeldingen skal skjermes for pasient") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(skjermet = true))
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(skjermet = true))
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null)
             sykmeldinger[0].medisinskVurdering shouldBe null
             sykmeldinger[0].harRedusertArbeidsgiverperiode shouldBeEqualTo false
         }
 
         test("should get internalSykmellding") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(skjermet = true))
+            every { database.getSykmeldinger(any()) } returns listOf(getSykmeldingerDBmodel(skjermet = true))
             val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
             sykmeldinger.size shouldBeEqualTo 1
             sykmeldinger[0].egenmeldt shouldBe false
@@ -159,7 +159,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("should get egenmeldt = true when avsenderSystem.name = 'Egenmeldt'") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodelEgenmeldt(
                     avsenderSystem = AvsenderSystem(
                         "Egenmeldt",
@@ -176,7 +176,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("should get paprisykmelding = true when avsenderSystem.name = 'Paprisykmelding'") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodelEgenmeldt(
                     avsenderSystem = AvsenderSystem(
                         "Papirsykmelding",
@@ -193,7 +193,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("skal ikke få med medisinsk vurdering ved henting med id") {
-            coEvery { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodel(skjermet = false)
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodel(skjermet = false)
             val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
             sykmelding shouldNotBe null
             sykmelding!!.medisinskVurdering shouldBeEqualTo null
@@ -201,7 +201,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har diagnosekode R991 som hoveddiagnose") {
-            coEvery { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(
                 hovediagnosekode = "R991",
                 perioder = listOf(
                     getPeriode(
@@ -217,7 +217,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har bidiganose med diagnosekode U071 som hoveddiagnose") {
-            coEvery { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(
                 bidiagnoser = listOf(Diagnose("system", "U071", "tekst")),
                 perioder = listOf(
                     getPeriode(
@@ -233,7 +233,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("harRedusertArbeidsgiverperiode skal være true hvis sykmeldingen har bidiganose med diagnosekode U072 som hoveddiagnose") {
-            coEvery { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(
+            every { database.getSykmeldingerMedId(any()) } returns getSykmeldingerDBmodelEgenmeldt(
                 bidiagnoser = listOf(Diagnose("system", "U072", "tekst")),
                 perioder = listOf(
                     getPeriode(
@@ -249,7 +249,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("Skal hente sykmeldinger som er er innenfor FOM og TOM") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -264,7 +264,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med bare fom som er før sykmeldingsperioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -278,7 +278,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med bare fom som er midt i perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -292,7 +292,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med bare fom som er i slutten av perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -306,7 +306,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal ikke hente sykmeldinger med bare fom som er i etter perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -321,7 +321,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("Skal ikke hente sykmeldinger med bare fom som er innenfor en av periodene") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -339,7 +339,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med bare TOM som er etter perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -353,7 +353,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med bare TOM som er i slutten av perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -367,7 +367,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med bare TOM som er i midten av perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -381,7 +381,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med bare TOM som er i starten av perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -395,7 +395,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal ikke hente sykmeldinger med bare TOM som er før perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -409,7 +409,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 0
         }
         test("Skal hente sykmeldinger med bare TOM som er innenfor en av periodene") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -428,7 +428,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("Skal hente sykmeldinger med FOM og TOM inni en periode") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -446,7 +446,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med FOM og TOM, der fom er før perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -464,7 +464,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 1
         }
         test("Skal hente sykmeldinger med FOM og TOM, der fom er etter perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -483,7 +483,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("Skal ikke hente sykmeldinger med FOM og TOM, der de er før perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -498,7 +498,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldinger.size shouldBeEqualTo 0
         }
         test("Skal ikke hente sykmeldinger med FOM og TOM, der de er etter perioden") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -517,7 +517,7 @@ class SykmeldingerServiceTest : FunSpec({
         }
 
         test("Skal hente sykmeldinger med FOM og TOM, der de passer minst en periode") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -542,7 +542,7 @@ class SykmeldingerServiceTest : FunSpec({
 
     context("Test av sykmeldtStatus") {
         test("Skal få sykmeldt = true hvis sykmeldt på gitt dato (fom)") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -564,7 +564,7 @@ class SykmeldingerServiceTest : FunSpec({
             )
         }
         test("Skal få sykmeldt = true hvis sykmeldt på gitt dato (tom)") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -594,7 +594,7 @@ class SykmeldingerServiceTest : FunSpec({
             )
         }
         test("Skal få sykmeldt = false hvis ikke sykmeldt på gitt dato (fom)") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -610,7 +610,7 @@ class SykmeldingerServiceTest : FunSpec({
             sykmeldtStatus shouldBeEqualTo SykmeldtStatus(erSykmeldt = false, gradert = null, fom = null, tom = null)
         }
         test("Skal få sykmeldt = false hvis ikke sykmeldt på gitt dato (tom)") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
@@ -643,7 +643,7 @@ class SykmeldingerServiceTest : FunSpec({
             inneholderGradertPeriode shouldBeEqualTo false
         }
         test("Skal få tidligste fom og seneste tom hvis sykmelding har flere perioder") {
-            coEvery { database.getSykmeldinger(any()) } returns listOf(
+            every { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(

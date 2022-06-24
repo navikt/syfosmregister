@@ -15,7 +15,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.mockk.clearAllMocks
-import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
 import no.nav.syfo.application.BrukerPrincipal
@@ -53,7 +53,7 @@ class SykmeldingApiV2KtTest : FunSpec({
             }
 
             test("Should get sykmeldinger for user with exclude filter") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN") {
                         call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
@@ -63,7 +63,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 }
             }
             test("Should get sykmeldinger for user with include filter") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=APEN") {
                         call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
@@ -73,7 +73,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 }
             }
             test("Should get sykmeldinger for user with multiple exclude filters") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT") {
                         call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
@@ -84,7 +84,7 @@ class SykmeldingApiV2KtTest : FunSpec({
             }
 
             test("Should get bad request when exclude and include filters are in request") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT&include=AVBRUTT") {
                         call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
@@ -94,7 +94,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 }
             }
             test("Should get bad request when exclude filter is invalid") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=ÅPEN") {
                         call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
@@ -105,7 +105,7 @@ class SykmeldingApiV2KtTest : FunSpec({
             }
 
             test("Should get bad request when include filter is invalid") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=ALL") {
                         call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
@@ -116,7 +116,7 @@ class SykmeldingApiV2KtTest : FunSpec({
             }
 
             test("Should get sykmeldinger for user") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), null, null, any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), null, null, any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
@@ -131,7 +131,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                     fom = LocalDate.of(2020, 1, 20),
                     tom = LocalDate.of(2020, 2, 10)
                 )
-                coEvery {
+                every {
                     sykmeldingerService.getUserSykmelding(
                         any(), periode.fom, periode.tom, any(), any(), any()
                     )
@@ -156,7 +156,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                     fom = LocalDate.of(2020, 2, 11),
                     tom = LocalDate.of(2020, 2, 20)
                 )
-                coEvery { sykmeldingerService.getUserSykmelding(any(), LocalDate.of(2020, 2, 20), null, any(), any(), any()) } returns listOf(
+                every { sykmeldingerService.getUserSykmelding(any(), LocalDate.of(2020, 2, 20), null, any(), any(), any()) } returns listOf(
                     getSykmeldingDto(
                         perioder = listOf(periode)
                     )
@@ -177,7 +177,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                     fom = LocalDate.of(2020, 2, 11),
                     tom = LocalDate.of(2020, 2, 20)
                 )
-                coEvery { sykmeldingerService.getUserSykmelding(any(), null, LocalDate.of(2020, 2, 20), any(), any(), any()) } returns listOf(
+                every { sykmeldingerService.getUserSykmelding(any(), null, LocalDate.of(2020, 2, 20), any(), any(), any()) } returns listOf(
                     getSykmeldingDto(
                         perioder = listOf(periode)
                     )
@@ -228,7 +228,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 }
             }
             test("get sykmeldinger OK") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader(
@@ -242,7 +242,7 @@ class SykmeldingApiV2KtTest : FunSpec({
             }
 
             test("get sykmeldinger Unauthorized for nivå 3") {
-                coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
+                every { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader(

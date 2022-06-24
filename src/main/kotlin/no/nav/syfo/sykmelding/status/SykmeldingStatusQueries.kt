@@ -1,7 +1,5 @@
 package no.nav.syfo.sykmelding.status
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
 import no.nav.syfo.log
@@ -15,13 +13,13 @@ import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-suspend fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<SykmeldingStatusEvent> = withContext(Dispatchers.Default) {
+fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
     connection.use { connection ->
-        connection.getSykmeldingstatuser(sykmeldingId)
+        return connection.getSykmeldingstatuser(sykmeldingId)
     }
 }
 
-suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) = withContext(Dispatchers.IO) {
+fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
     connection.use { connection ->
         if (!connection.hasNewerStatus(sykmeldingStatusEvent.sykmeldingId, sykmeldingStatusEvent.timestamp)) {
             connection.slettAlleSvar(sykmeldingStatusEvent.sykmeldingId)
@@ -31,7 +29,7 @@ suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingSt
     }
 }
 
-suspend fun DatabaseInterface.registrerSendt(sykmeldingSendEvent: SykmeldingSendEvent, sykmeldingStatusEvent: SykmeldingStatusEvent) = withContext(Dispatchers.IO) {
+fun DatabaseInterface.registrerSendt(sykmeldingSendEvent: SykmeldingSendEvent, sykmeldingStatusEvent: SykmeldingStatusEvent) {
     connection.use { connection ->
         connection.slettGamleSvarHvisFinnesFraFor(sykmeldingSendEvent.sykmeldingId)
         connection.lagreArbeidsgiverStatus(sykmeldingSendEvent)
@@ -41,7 +39,7 @@ suspend fun DatabaseInterface.registrerSendt(sykmeldingSendEvent: SykmeldingSend
     }
 }
 
-suspend fun DatabaseInterface.registrerBekreftet(sykmeldingBekreftEvent: SykmeldingBekreftEvent, sykmeldingStatusEvent: SykmeldingStatusEvent) = withContext(Dispatchers.IO) {
+fun DatabaseInterface.registrerBekreftet(sykmeldingBekreftEvent: SykmeldingBekreftEvent, sykmeldingStatusEvent: SykmeldingStatusEvent) {
     connection.use { connection ->
         if (!connection.hasNewerStatus(sykmeldingStatusEvent.sykmeldingId, sykmeldingStatusEvent.timestamp)) {
             connection.slettGamleSvarHvisFinnesFraFor(sykmeldingBekreftEvent.sykmeldingId)
@@ -54,7 +52,7 @@ suspend fun DatabaseInterface.registrerBekreftet(sykmeldingBekreftEvent: Sykmeld
     }
 }
 
-suspend fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean = withContext(Dispatchers.IO) {
+fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean =
     connection.use { connection ->
         connection.prepareStatement(
             """
@@ -66,22 +64,21 @@ suspend fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolea
             it.executeQuery().next()
         }
     }
-}
 
-private suspend fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: OffsetDateTime): Boolean = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: OffsetDateTime): Boolean {
+    this.prepareStatement(
         """
         SELECT 1 FROM sykmeldingstatus WHERE sykmelding_id = ? and timestamp > ?
         """
     ).use {
         it.setString(1, sykmeldingId)
         it.setTimestamp(2, Timestamp.from(timestamp.toInstant()))
-        it.executeQuery().next()
+        return it.executeQuery().next()
     }
 }
 
-private suspend fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<SykmeldingStatusEvent> = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<SykmeldingStatusEvent> {
+    this.prepareStatement(
         """
         SELECT status.sykmelding_id,
         status.timestamp,
@@ -95,7 +92,7 @@ private suspend fun Connection.getSykmeldingstatuser(sykmeldingId: String): List
     """
     ).use {
         it.setString(1, sykmeldingId)
-        it.executeQuery().toList { toSykmeldingStatusEvent() }
+        return it.executeQuery().toList { toSykmeldingStatusEvent() }
     }
 }
 
@@ -109,7 +106,7 @@ private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
     )
 }
 
-private suspend fun Connection.slettGamleSvarHvisFinnesFraFor(sykmeldingId: String) {
+private fun Connection.slettGamleSvarHvisFinnesFraFor(sykmeldingId: String) {
     val svarFinnesFraFor = this.svarFinnesFraFor(sykmeldingId)
     if (svarFinnesFraFor) {
         log.info("Sletter tidligere svar for sykmelding {}", sykmeldingId)
@@ -117,8 +114,8 @@ private suspend fun Connection.slettGamleSvarHvisFinnesFraFor(sykmeldingId: Stri
     }
 }
 
-private suspend fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
+    this.prepareStatement(
         """
                 SELECT 1 FROM svar WHERE sykmelding_id=?;
                 """
@@ -126,10 +123,9 @@ private suspend fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
         it.setString(1, sykmeldingId)
         it.executeQuery().next()
     }
-}
 
-suspend fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) = withContext(Dispatchers.IO) {
-    prepareStatement(
+fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
+    this.prepareStatement(
         """
                 INSERT INTO sykmeldingstatus(sykmelding_id, event, timestamp) VALUES (?, ?, ?) ON CONFLICT DO NOTHING
                 """
@@ -141,8 +137,8 @@ suspend fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEve
     }
 }
 
-private suspend fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: SykmeldingSendEvent) = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: SykmeldingSendEvent) {
+    this.prepareStatement(
         """
                 INSERT INTO arbeidsgiver(sykmelding_id, orgnummer, juridisk_orgnummer, navn) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING
                 """
@@ -155,12 +151,12 @@ private suspend fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: Sykm
     }
 }
 
-private suspend fun Connection.slettAlleSvar(sykmeldingId: String) {
+private fun Connection.slettAlleSvar(sykmeldingId: String) {
     this.slettArbeidsgiver(sykmeldingId)
     this.slettSvar(sykmeldingId)
 }
 
-private suspend fun Connection.lagreSporsmalOgSvar(sporsmal: Sporsmal) {
+private fun Connection.lagreSporsmalOgSvar(sporsmal: Sporsmal) {
     var spmId: Int?
     spmId = this.finnSporsmal(sporsmal)
     if (spmId == null) {
@@ -169,9 +165,9 @@ private suspend fun Connection.lagreSporsmalOgSvar(sporsmal: Sporsmal) {
     this.lagreSvar(spmId, sporsmal.svar)
 }
 
-private suspend fun Connection.lagreSporsmal(sporsmal: Sporsmal): Int = withContext(Dispatchers.IO) {
+private fun Connection.lagreSporsmal(sporsmal: Sporsmal): Int {
     var spmId: Int? = null
-    prepareStatement(
+    this.prepareStatement(
         """
                 INSERT INTO sporsmal(shortName, tekst) VALUES (?, ?)
                 """,
@@ -184,11 +180,11 @@ private suspend fun Connection.lagreSporsmal(sporsmal: Sporsmal): Int = withCont
             spmId = it.generatedKeys.getInt(1)
         }
     }
-    spmId ?: throw RuntimeException("Fant ikke id for spørsmål som nettopp ble lagret")
+    return spmId ?: throw RuntimeException("Fant ikke id for spørsmål som nettopp ble lagret")
 }
 
-private suspend fun Connection.finnSporsmal(sporsmal: Sporsmal): Int? = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.finnSporsmal(sporsmal: Sporsmal): Int? {
+    this.prepareStatement(
         """
                 SELECT sporsmal.id
                 FROM sporsmal
@@ -198,12 +194,12 @@ private suspend fun Connection.finnSporsmal(sporsmal: Sporsmal): Int? = withCont
         it.setString(1, sporsmal.shortName.name)
         it.setString(2, sporsmal.tekst)
         val rs = it.executeQuery()
-        if (rs.next()) rs.getInt(1) else null
+        return if (rs.next()) rs.getInt(1) else null
     }
 }
 
-private suspend fun Connection.lagreSvar(sporsmalId: Int, svar: Svar) = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.lagreSvar(sporsmalId: Int, svar: Svar) {
+    this.prepareStatement(
         """
                 INSERT INTO svar(sykmelding_id, sporsmal_id, svartype, svar) VALUES (?, ?, ?, ?)
                 """
@@ -216,8 +212,8 @@ private suspend fun Connection.lagreSvar(sporsmalId: Int, svar: Svar) = withCont
     }
 }
 
-private suspend fun Connection.slettArbeidsgiver(sykmeldingId: String) = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.slettArbeidsgiver(sykmeldingId: String) {
+    this.prepareStatement(
         """
                 DELETE FROM arbeidsgiver WHERE sykmelding_id=?;
                 """
@@ -227,8 +223,8 @@ private suspend fun Connection.slettArbeidsgiver(sykmeldingId: String) = withCon
     }
 }
 
-private suspend fun Connection.slettSvar(sykmeldingId: String) = withContext(Dispatchers.IO) {
-    prepareStatement(
+private fun Connection.slettSvar(sykmeldingId: String) {
+    this.prepareStatement(
         """
                 DELETE FROM svar WHERE sykmelding_id=?;
                 """

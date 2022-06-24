@@ -34,7 +34,7 @@ class MottattSykmeldingStatusService(
     private val tombstoneProducer: SykmeldingTombstoneProducer,
     private val databaseInterface: DatabaseInterface
 ) {
-    suspend fun handleStatusEventForResentSykmelding(sykmeldingId: String, fnr: String) {
+    fun handleStatusEventForResentSykmelding(sykmeldingId: String, fnr: String) {
         val statuses = sykmeldingStatusService.getSykmeldingStatus(sykmeldingId, "LATEST")
         val status = statuses[0]
         val sykmeldingStatusKafkaEventDTO = toSykmeldingStatusKafkaEventDTO(status, getArbeidsgiverStatus(sykmeldingId, status.event), getSporsmalOgSvar(sykmeldingId))
@@ -55,7 +55,7 @@ class MottattSykmeldingStatusService(
         }
     }
 
-    suspend fun handleStatusEvent(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO, source: String = "on-prem") {
+    fun handleStatusEvent(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO, source: String = "on-prem") {
         log.info("Got status update from $source kafka topic, sykmeldingId: {}, status: {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, sykmeldingStatusKafkaMessage.event.statusEvent)
         try {
             when (sykmeldingStatusKafkaMessage.event.statusEvent) {
@@ -79,7 +79,7 @@ class MottattSykmeldingStatusService(
         }
     }
 
-    private suspend fun slettSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+    private fun slettSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val latestStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId, "LATEST")
         if (latestStatus.isEmpty()) {
             log.warn("Sykmelding med id ${sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId} er allerede slettet")
@@ -98,7 +98,7 @@ class MottattSykmeldingStatusService(
         }
     }
 
-    private suspend fun handleSendtSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+    private fun handleSendtSykmelding(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val latestStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId, null)
         if (latestStatus.any {
             it.event == StatusEvent.SENDT
@@ -114,17 +114,17 @@ class MottattSykmeldingStatusService(
     private fun erAvvist(event: SykmeldingStatusKafkaEventDTO): Boolean =
         event.statusEvent == STATUS_BEKREFTET && event.sporsmals == null
 
-    private suspend fun publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+    private fun publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val sendtSykmeldingKafkaMessage = getKafkaMessage(sykmeldingStatusKafkaMessage)
         bekreftetSykmeldingKafkaProducer.sendSykmelding(sendtSykmeldingKafkaMessage)
     }
 
-    private suspend fun publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+    private fun publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val sendtSykmeldingKafkaMessage = getKafkaMessage(sykmeldingStatusKafkaMessage)
         sendtSykmeldingKafkaProducer.sendSykmelding(sendtSykmeldingKafkaMessage)
     }
 
-    private suspend fun getKafkaMessage(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO): SykmeldingKafkaMessage {
+    private fun getKafkaMessage(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO): SykmeldingKafkaMessage {
         val arbeidsgiverSykmelding = sykmeldingStatusService.getArbeidsgiverSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
         val sendEvent = sykmeldingStatusKafkaMessage.event
         val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
@@ -132,7 +132,7 @@ class MottattSykmeldingStatusService(
         return SykmeldingKafkaMessage(arbeidsgiverSykmelding!!, metadata, sendEvent)
     }
 
-    private suspend fun registrerBekreftet(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+    private fun registrerBekreftet(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val sykmeldingStatusEvent = KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
         val sykmeldingBekreftEvent = SykmeldingBekreftEvent(
             sykmeldingStatusKafkaMessage.event.sykmeldingId,
@@ -143,7 +143,7 @@ class MottattSykmeldingStatusService(
         sykmeldingStatusService.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
     }
 
-    private suspend fun registrerStatus(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+    private fun registrerStatus(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val lastStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingsid = sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, filter = "LATEST")
         if (lastStatus.any { it.event == StatusEvent.BEKREFTET }) {
             bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
@@ -152,7 +152,7 @@ class MottattSykmeldingStatusService(
         sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
     }
 
-    private suspend fun registrerSendt(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+    private fun registrerSendt(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val arbeidsgiver: ArbeidsgiverStatusDTO = sykmeldingStatusKafkaMessage.event.arbeidsgiver
             ?: throw IllegalArgumentException("Arbeidsgiver er ikke oppgitt")
         val arbeidsgiverSporsmal: SporsmalOgSvarDTO = sykmeldingStatusKafkaMessage.event.sporsmals?.first { sporsmal -> sporsmal.shortName == ShortNameDTO.ARBEIDSSITUASJON }
@@ -170,11 +170,11 @@ class MottattSykmeldingStatusService(
         sykmeldingStatusService.registrerSendt(sykmeldingSendEvent, sykmeldingStatusEvent)
     }
 
-    private suspend fun getSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> {
+    private fun getSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> {
         return databaseInterface.hentSporsmalOgSvar(sykmeldingId)
     }
 
-    private suspend fun getArbeidsgiverStatus(sykmeldingId: String, event: StatusEvent): ArbeidsgiverDbModel? {
+    private fun getArbeidsgiverStatus(sykmeldingId: String, event: StatusEvent): ArbeidsgiverDbModel? {
         return when (event) {
             StatusEvent.SENDT -> databaseInterface.getArbeidsgiverStatus(sykmeldingId)
             else -> null
