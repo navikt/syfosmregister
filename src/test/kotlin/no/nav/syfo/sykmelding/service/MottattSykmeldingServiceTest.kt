@@ -2,11 +2,11 @@ package no.nav.syfo.sykmelding.service
 
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearAllMocks
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.spyk
-import io.mockk.verify
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.kafka.toConsumerConfig
@@ -94,8 +94,8 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             mottattSykmeldingService.start()
 
-            verify(exactly = 2) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
-            verify(exactly = 1) { mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(receivedSykmelding.sykmelding.id, receivedSykmelding.personNrPasient) }
+            coVerify(exactly = 2) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            coVerify(exactly = 1) { mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(receivedSykmelding.sykmelding.id, receivedSykmelding.personNrPasient) }
         }
 
         test("should receive sykmelding from automatic topic and publish to mottatt sykmelding topic") {
@@ -113,7 +113,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
-            verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 
         test("should receive sykmelding med merknad from automatic topic and publish to mottatt sykmelding topic") {
@@ -139,7 +139,7 @@ class MottattSykmeldingServiceTest : FunSpec({
             val merknader = testDb.connection.getMerknaderForId("1")
             merknader!![0].type shouldBeEqualTo "UGYLDIG_TILBAKEDATERING"
             merknader[0].beskrivelse shouldBeEqualTo "ikke godkjent"
-            verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 
         test("should receive sykmelding from manuell topic and publish to mottatt sykmelding topic") {
@@ -157,7 +157,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
-            verify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
         test("should receive sykmelding from avvist topic and not publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
@@ -174,7 +174,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
-            verify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            coVerify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
         test("Should handle tombstone") {
             tombstoneProducer.tombstoneSykmelding(getReceivedSykmelding().sykmelding.id)
@@ -192,7 +192,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe false
-            verify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            coVerify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
     }
 })

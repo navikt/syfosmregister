@@ -1,9 +1,11 @@
 package no.nav.syfo.nullstilling
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
 import java.sql.Connection
 
-fun DatabaseInterface.slettSykmelding(sykmeldingId: String) {
+suspend fun DatabaseInterface.slettSykmelding(sykmeldingId: String) = withContext(Dispatchers.IO) {
     connection.use { connection ->
         deleteBehandlingsutfall(connection, sykmeldingId)
         deleteArbeidsgiver(connection, sykmeldingId)
@@ -15,8 +17,8 @@ fun DatabaseInterface.slettSykmelding(sykmeldingId: String) {
     }
 }
 
-private fun deleteSykmeldingsopplysninger(connection: Connection, sykmeldingId: String): Boolean {
-    return connection.prepareStatement(
+private suspend fun deleteSykmeldingsopplysninger(connection: Connection, sykmeldingId: String): Boolean = withContext(Dispatchers.IO) {
+    connection.prepareStatement(
         """
             delete from sykmeldingsopplysninger where id = ? 
         """
@@ -26,7 +28,7 @@ private fun deleteSykmeldingsopplysninger(connection: Connection, sykmeldingId: 
     }
 }
 
-private fun deleteSykmeldingsdokument(connection: Connection, sykmeldingId: String) {
+private suspend fun deleteSykmeldingsdokument(connection: Connection, sykmeldingId: String) = withContext(Dispatchers.IO) {
     connection.prepareStatement(
         """
             delete from sykmeldingsdokument where id = ? 
@@ -37,7 +39,7 @@ private fun deleteSykmeldingsdokument(connection: Connection, sykmeldingId: Stri
     }
 }
 
-private fun deleteSykmeldingstatus(connection: Connection, sykmeldingId: String) {
+private suspend fun deleteSykmeldingstatus(connection: Connection, sykmeldingId: String) = withContext(Dispatchers.IO) {
     connection.prepareStatement(
         """
             delete from sykmeldingstatus where sykmelding_id = ? 
@@ -48,7 +50,7 @@ private fun deleteSykmeldingstatus(connection: Connection, sykmeldingId: String)
     }
 }
 
-private fun deleteSvar(connection: Connection, sykmeldingId: String) {
+private suspend fun deleteSvar(connection: Connection, sykmeldingId: String) = withContext(Dispatchers.IO) {
     connection.prepareStatement(
         """
             delete from svar where sykmelding_id = ? 
@@ -59,7 +61,7 @@ private fun deleteSvar(connection: Connection, sykmeldingId: String) {
     }
 }
 
-private fun deleteArbeidsgiver(connection: Connection, sykmeldingId: String) {
+private suspend fun deleteArbeidsgiver(connection: Connection, sykmeldingId: String) = withContext(Dispatchers.IO) {
     connection.prepareStatement(
         """
             delete from arbeidsgiver where sykmelding_id = ?
@@ -70,7 +72,7 @@ private fun deleteArbeidsgiver(connection: Connection, sykmeldingId: String) {
     }
 }
 
-private fun deleteBehandlingsutfall(connection: Connection, sykmeldingId: String) {
+private suspend fun deleteBehandlingsutfall(connection: Connection, sykmeldingId: String) = withContext(Dispatchers.IO) {
     connection.prepareStatement(
         """delete from behandlingsutfall where id = ?"""
     ).use {

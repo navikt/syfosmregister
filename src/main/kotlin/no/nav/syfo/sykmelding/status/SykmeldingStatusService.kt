@@ -8,25 +8,25 @@ import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 
 class SykmeldingStatusService(private val database: DatabaseInterface) {
 
-    fun registrerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
+    suspend fun registrerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
         database.registerStatus(sykmeldingStatusEvent)
     }
 
-    fun registrerSendt(
+    suspend fun registrerSendt(
         sykmeldingSendEvent: SykmeldingSendEvent,
         sykmeldingStatusEvent: SykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingSendEvent.sykmeldingId, sykmeldingSendEvent.timestamp, StatusEvent.SENDT)
     ) {
         database.registrerSendt(sykmeldingSendEvent, sykmeldingStatusEvent)
     }
 
-    fun registrerBekreftet(
+    suspend fun registrerBekreftet(
         sykmeldingBekreftEvent: SykmeldingBekreftEvent,
         sykmeldingStatusEvent: SykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingBekreftEvent.sykmeldingId, sykmeldingBekreftEvent.timestamp, StatusEvent.BEKREFTET)
     ) {
         database.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
     }
 
-    fun getSykmeldingStatus(sykmeldingsid: String, filter: String?): List<SykmeldingStatusEvent> {
+    suspend fun getSykmeldingStatus(sykmeldingsid: String, filter: String?): List<SykmeldingStatusEvent> {
         val sykmeldingStatus = database.hentSykmeldingStatuser(sykmeldingsid)
         return when (filter) {
             "LATEST" -> getLatestSykmeldingStatus(sykmeldingStatus)
@@ -34,7 +34,7 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
         }
     }
 
-    fun getArbeidsgiverSykmelding(sykmeldingId: String): ArbeidsgiverSykmelding? =
+    suspend fun getArbeidsgiverSykmelding(sykmeldingId: String): ArbeidsgiverSykmelding? =
         database.getSykmeldingerMedIdUtenBehandlingsutfall(sykmeldingId)?.toArbeidsgiverSykmelding()
 
     private fun getLatestSykmeldingStatus(sykmeldingStatus: List<SykmeldingStatusEvent>): List<SykmeldingStatusEvent> {
@@ -45,9 +45,9 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
         }
     }
 
-    fun erEier(sykmeldingsid: String, fnr: String): Boolean = database.erEier(sykmeldingsid, fnr)
+    suspend fun erEier(sykmeldingsid: String, fnr: String): Boolean = database.erEier(sykmeldingsid, fnr)
 
-    fun slettSykmelding(sykmeldingId: String) {
+    suspend fun slettSykmelding(sykmeldingId: String) {
         database.slettSykmelding(sykmeldingId)
     }
 }

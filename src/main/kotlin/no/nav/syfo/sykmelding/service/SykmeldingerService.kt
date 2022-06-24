@@ -1,5 +1,7 @@
 package no.nav.syfo.sykmelding.service
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
 import no.nav.syfo.sykmelding.db.getSykmelding
@@ -14,19 +16,19 @@ import no.nav.syfo.sykmelding.status.Sporsmal
 import java.time.LocalDate
 
 class SykmeldingerService(private val database: DatabaseInterface) {
-    fun getInternalSykmeldinger(fnr: String, fom: LocalDate? = null, tom: LocalDate? = null): List<SykmeldingDTO> =
+    suspend fun getInternalSykmeldinger(fnr: String, fom: LocalDate? = null, tom: LocalDate? = null): List<SykmeldingDTO> =
         getSykmeldingerWithSporsmal(fnr)
             .filter(filterFomDate(fom))
             .filter(filterTomDate(tom))
 
-    fun getUserSykmelding(fnr: String, fom: LocalDate?, tom: LocalDate?, include: List<String>? = null, exclude: List<String>? = null, fullBehandler: Boolean = true): List<SykmeldingDTO> {
+    suspend fun getUserSykmelding(fnr: String, fom: LocalDate?, tom: LocalDate?, include: List<String>? = null, exclude: List<String>? = null, fullBehandler: Boolean = true): List<SykmeldingDTO> {
         return getSykmeldingerWithSporsmal(fnr, true, fullBehandler)
             .filter(filterIncludeAndExclude(include, exclude))
             .filter(filterFomDate(fom))
             .filter(filterTomDate(tom))
     }
 
-    fun getSykmeldtStatusForDato(fnr: String, dato: LocalDate): SykmeldtStatus {
+    suspend fun getSykmeldtStatusForDato(fnr: String, dato: LocalDate): SykmeldtStatus {
         val sykmeldinger = getInternalSykmeldinger(fnr, dato, dato)
         return if (sykmeldinger.isEmpty()) {
             SykmeldtStatus(erSykmeldt = false, gradert = null, fom = null, tom = null)
@@ -60,28 +62,35 @@ class SykmeldingerService(private val database: DatabaseInterface) {
         }
     }
 
-    fun getSykmeldingMedId(sykmeldingId: String): SykmeldingDTO? =
-        database.getSykmeldingerMedId(sykmeldingId)?.let {
-            it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = false, ikkeTilgangTilDiagnose = true)
+    suspend fun getSykmeldingMedId(sykmeldingId: String): SykmeldingDTO? =
+        withContext(Dispatchers.IO) {
+            database.getSykmeldingerMedId(sykmeldingId)?.let {
+                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = false, ikkeTilgangTilDiagnose = true)
+            }
+        }
+    suspend fun getSykmelding(sykmeldingId: String, fnr: String, fullBehandler: Boolean = false): SykmeldingDTO? =
+        withContext(Dispatchers.IO) {
+            database.getSykmelding(sykmeldingId, fnr)?.let {
+                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = true, ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient, fullBehandler = fullBehandler)
+            }
         }
 
-    fun getSykmelding(sykmeldingId: String, fnr: String, fullBehandler: Boolean = false): SykmeldingDTO? =
-        database.getSykmelding(sykmeldingId, fnr)?.let {
-            it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = true, ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient, fullBehandler = fullBehandler)
-        }
-
-    private fun getSykmeldingerWithSporsmal(fnr: String, isPasient: Boolean = false, fullBehandler: Boolean = true): List<SykmeldingDTO> {
-        return database.getSykmeldinger(fnr).map {
-            it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = isPasient, ikkeTilgangTilDiagnose = false, fullBehandler = fullBehandler)
+    private suspend fun getSykmeldingerWithSporsmal(fnr: String, isPasient: Boolean = false, fullBehandler: Boolean = true): List<SykmeldingDTO> {
+        return withContext(Dispatchers.IO) {
+            database.getSykmeldinger(fnr).map {
+                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = isPasient, ikkeTilgangTilDiagnose = false, fullBehandler = fullBehandler)
+            }
         }
     }
 
-    private fun getSporsmal(sykmelding: SykmeldingDbModel): List<Sporsmal> {
-        val sporsmal = when {
-            sykmelding.status.statusEvent == "SENDT" || sykmelding.status.statusEvent == "BEKREFTET" -> database.hentSporsmalOgSvar(sykmelding.id)
-            else -> emptyList()
+    private suspend fun getSporsmal(sykmelding: SykmeldingDbModel): List<Sporsmal> {
+        return withContext(Dispatchers.IO) {
+            val sporsmal = when {
+                sykmelding.status.statusEvent == "SENDT" || sykmelding.status.statusEvent == "BEKREFTET" -> database.hentSporsmalOgSvar(sykmelding.id)
+                else -> emptyList()
+            }
+            sporsmal
         }
-        return sporsmal
     }
 
     private fun filterTomDate(tom: LocalDate?): (SykmeldingDTO) -> Boolean {

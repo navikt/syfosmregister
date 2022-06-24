@@ -1,7 +1,9 @@
 package no.nav.syfo.sykmelding.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
 import no.nav.syfo.LoggingMeta
@@ -66,7 +68,7 @@ class MottattSykmeldingService(
         }
     }
 
-    private fun sendtToMottattSykmeldingTopic(receivedSykmelding: ReceivedSykmelding) {
+    private suspend fun sendtToMottattSykmeldingTopic(receivedSykmelding: ReceivedSykmelding) {
         val sykmelding = receivedSykmelding.toArbeidsgiverSykmelding()
         val message = MottattSykmeldingKafkaMessage(
             sykmelding = sykmelding,
@@ -83,7 +85,7 @@ class MottattSykmeldingService(
         loggingMeta: LoggingMeta,
         sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
         source: String
-    ) {
+    ) = withContext(Dispatchers.IO) {
         wrapExceptions(loggingMeta) {
             log.info("Mottatt sykmelding SM2013 fra $source, {}", StructuredArguments.fields(loggingMeta))
             val sykmeldingsopplysninger = mapToSykmeldingsopplysninger(receivedSykmelding)

@@ -14,6 +14,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.mockk.clearAllMocks
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
@@ -36,7 +37,7 @@ class SykmeldingStatusGETApiSpek : FunSpec({
     beforeTest {
         clearAllMocks()
         every { mockPayload.subject } returns "pasient_fnr"
-        every { sykmeldingStatusService.erEier(any(), any()) } returns true
+        coEvery { sykmeldingStatusService.erEier(any(), any()) } returns true
     }
 
     context("Get SykmeldingStatus") {
@@ -47,7 +48,7 @@ class SykmeldingStatusGETApiSpek : FunSpec({
 
             test("Should get all statuses sykmeldingstatus") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
-                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
+                coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                     SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
                     SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT)
                 )
@@ -66,7 +67,7 @@ class SykmeldingStatusGETApiSpek : FunSpec({
 
             test("Should get all statuses without filter") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
-                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
+                coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
                     SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN),
                     SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT)
                 )
@@ -85,7 +86,7 @@ class SykmeldingStatusGETApiSpek : FunSpec({
 
             test("Should get latest status") {
                 val timestamp = OffsetDateTime.now(ZoneOffset.UTC)
-                every { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT, erAvvist = false, erEgenmeldt = false))
+                coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent("123", timestamp.plusSeconds(10), StatusEvent.SENDT, erAvvist = false, erEgenmeldt = false))
 
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
@@ -103,7 +104,7 @@ class SykmeldingStatusGETApiSpek : FunSpec({
             }
 
             test("Should get forbidden when not owner") {
-                every { sykmeldingStatusService.erEier(any(), any()) } returns false
+                coEvery { sykmeldingStatusService.erEier(any(), any()) } returns false
                 with(
                     handleRequest(HttpMethod.Get, "/sykmeldinger/123/status?filter=LATEST") {
                         addHeader("Content-Type", ContentType.Application.Json.toString())
