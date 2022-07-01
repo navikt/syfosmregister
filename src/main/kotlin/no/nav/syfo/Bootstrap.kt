@@ -212,13 +212,13 @@ fun main() {
     )
 
     RenewVaultService(vaultCredentialService, applicationState).startRenewTasks()
-    pdlAktorConsumer.startConsumer()
-    launchListeners(
-        applicationState = applicationState,
-        sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
-        mottattSykmeldingService = mottattSykmeldingService,
-        behandlingsutfallService = behandlingsutfallService
-    )
+//    pdlAktorConsumer.startConsumer()
+//    launchListeners(
+//        applicationState = applicationState,
+//        sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
+//        mottattSykmeldingService = mottattSykmeldingService,
+//        behandlingsutfallService = behandlingsutfallService
+//    )
 
     ApplicationServer(applicationEngine, applicationState).start()
 }

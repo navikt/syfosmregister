@@ -85,10 +85,12 @@ fun createApplicationEngine(
         }
 
         routing {
-            if (env.cluster == "dev-fss") {
+            if (env.cluster == "dev-gcp") {
                 setupSwaggerDocApi()
             }
-            registerNaisApi(applicationState)
+            route("internal") {
+                registerNaisApi(applicationState)
+            }
 
             route("/api/v2") {
                 authenticate("jwt") {

@@ -6,6 +6,21 @@ metadata:
   labels:
     team: teamsykmelding
 spec:
+  gcp:
+    sqlInstances:
+      - name: syfosmregister-db-instance
+        type: POSTGRES_14
+        tier: db-custom-2-5120
+        diskSize: 100
+        databases:
+          - name: syfosmregister
+            envVarPrefix: NAIS_DATABASE
+        diskAutoresize: true
+        highAvailability: true
+        pointInTimeRecovery: true
+        diskType: SSD
+        insights:
+          enabled: true
   image: {{ image }}
   replicas:
     min: 4
@@ -47,8 +62,6 @@ spec:
         - application: syfomodiaperson
           namespace: teamsykefravr
           cluster: prod-fss
-        - application: syfosoknad
-          namespace: flex
         - application: esyfovarsel
           namespace: team-esyfo
         - application: sparenaproxy
@@ -68,9 +81,7 @@ spec:
       - kvPath: /kv/prod/fss/syfosmregister/teamsykmelding
         mountPath: /var/run/secrets/nais.io/vault
   ingresses:
-    - "https://syfosmregister.intern.nav.no"
-    - "https://syfosmregister.nais.adeo.no"
-    - "https://syfosmregister.prod-fss-pub.nais.io"
+    - "https://smregister.intern.nav.no"
   webproxy: true
   envFrom:
     - configmap: loginservice-idporten
