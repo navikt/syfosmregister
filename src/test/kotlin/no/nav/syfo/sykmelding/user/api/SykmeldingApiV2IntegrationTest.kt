@@ -32,7 +32,7 @@ import java.time.ZoneOffset
 class SykmeldingApiV2IntegrationTest : FunSpec({
     val sykmeldingerV2Uri = "api/v2/sykmeldinger"
 
-    val database = TestDB()
+    val database = TestDB.database
     val sykmeldingerService = SykmeldingerService(database)
 
     beforeTest {
@@ -42,7 +42,7 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
         database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
     }
     afterSpec {
-        database.stop()
+        TestDB.stop()
     }
 
     context("SykmeldingApiV2 integration test") {

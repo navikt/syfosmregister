@@ -21,7 +21,7 @@ import java.time.ZoneOffset
 
 class SykmeldingStatusServiceSpek : FunSpec({
 
-    val database = TestDB()
+    val database = TestDB.database
     val sykmeldingerService = SykmeldingerService(database)
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
@@ -43,7 +43,7 @@ class SykmeldingStatusServiceSpek : FunSpec({
     }
 
     afterSpec {
-        database.stop()
+        TestDB.stop()
     }
 
     context("Test registrerStatus") {

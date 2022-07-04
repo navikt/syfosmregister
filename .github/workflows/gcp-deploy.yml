@@ -1,4 +1,4 @@
-name: Deploy to dev and prod
+name: Deploy to dev and prod gcp
 on:
   push:
     branches:

@@ -5,6 +5,7 @@ import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.identendring.model.Ident
 import no.nav.syfo.identendring.model.IdentType
 import no.nav.syfo.model.AktivitetIkkeMulig
@@ -44,7 +45,7 @@ import kotlin.test.assertFailsWith
 
 class IdentendringServiceTest : FunSpec({
     val sendtSykmeldingKafkaProducer = mockk<SendtSykmeldingKafkaProducer>(relaxed = true)
-    val database = TestDB()
+    val database = TestDB.database
     val pdlService = mockk<PdlPersonService>(relaxed = true)
     val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
 
@@ -53,7 +54,7 @@ class IdentendringServiceTest : FunSpec({
         clearMocks(sendtSykmeldingKafkaProducer)
     }
     afterSpec {
-        database.stop()
+        TestDB.stop()
     }
 
     context("IdentendringService") {
@@ -123,7 +124,7 @@ class IdentendringServiceTest : FunSpec({
     }
 })
 
-suspend fun forberedTestsykmeldinger(database: TestDB, gammeltFnr: String, idNySykmelding: String, idSendtSykmelding: String, idGammelSendtSykmelding: String) {
+suspend fun forberedTestsykmeldinger(database: DatabaseInterface, gammeltFnr: String, idNySykmelding: String, idSendtSykmelding: String, idGammelSendtSykmelding: String) {
     database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = idNySykmelding, pasientFnr = gammeltFnr), testSykmeldingsdokument.copy(id = idNySykmelding))
     database.registerStatus(
         SykmeldingStatusEvent(

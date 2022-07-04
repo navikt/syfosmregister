@@ -15,14 +15,10 @@ import java.time.OffsetDateTime
 
 class DatebaseTimestampTest : FunSpec({
 
-    val db = TestDB()
+    val db = TestDB.database
 
     afterTest {
         db.connection.dropData()
-    }
-
-    afterSpec {
-        db.stop()
     }
 
     context("Test db") {

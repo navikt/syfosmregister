@@ -2,7 +2,7 @@ package no.nav.syfo.sykmelding.kafka
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import no.nav.syfo.Environment
-import no.nav.syfo.VaultServiceUser
+import no.nav.syfo.Serviceuser
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -86,7 +86,7 @@ class KafkaFactory private constructor() {
             )
         }
 
-        fun getKafkaConsumerPdlAktor(vaultServiceUser: VaultServiceUser, environment: Environment): KafkaConsumer<String, GenericRecord> {
+        fun getKafkaConsumerPdlAktor(vaultServiceUser: Serviceuser, environment: Environment): KafkaConsumer<String, GenericRecord> {
             val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
                 .also {
                     it["auto.offset.reset"] = "latest"

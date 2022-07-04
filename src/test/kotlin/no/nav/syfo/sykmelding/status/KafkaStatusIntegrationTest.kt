@@ -68,7 +68,7 @@ import java.time.ZoneOffset
 @DelicateCoroutinesApi
 class KafkaStatusIntegrationTest : FunSpec({
 
-    val database = TestDB()
+    val database = TestDB.database
 
     val environment = mockkClass(Environment::class)
     setUpEnvironment(environment)
@@ -90,7 +90,7 @@ class KafkaStatusIntegrationTest : FunSpec({
     afterSpec {
         applicationState.ready = false
         applicationState.alive = false
-        database.stop()
+        TestDB.stop()
     }
 
     beforeTest {

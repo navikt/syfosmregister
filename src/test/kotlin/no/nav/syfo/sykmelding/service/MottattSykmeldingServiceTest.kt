@@ -33,7 +33,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import java.time.Duration
 
 class MottattSykmeldingServiceTest : FunSpec({
-    val testDb = TestDB()
+    val database = TestDB.database
 
     val environment = mockkClass(Environment::class)
     mockEnvironment(environment)
@@ -55,7 +55,7 @@ class MottattSykmeldingServiceTest : FunSpec({
         applicationState = applicationState,
         kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
         env = environment,
-        database = testDb,
+        database = database,
         mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
         sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
         mottattSykmeldingStatusService = mottattSykmeldingStatusService
@@ -63,7 +63,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
     afterTest {
         clearAllMocks()
-        testDb.connection.dropData()
+        database.connection.dropData()
     }
 
     beforeTest {
@@ -72,7 +72,7 @@ class MottattSykmeldingServiceTest : FunSpec({
     }
 
     afterSpec {
-        testDb.stop()
+        TestDB.stop()
     }
 
     context("Test receive sykmelding") {
@@ -111,7 +111,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             mottattSykmeldingService.start()
 
-            val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
+            val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
             coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
@@ -136,7 +136,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             mottattSykmeldingService.start()
 
-            val merknader = testDb.connection.getMerknaderForId("1")
+            val merknader = database.connection.getMerknaderForId("1")
             merknader!![0].type shouldBeEqualTo "UGYLDIG_TILBAKEDATERING"
             merknader[0].beskrivelse shouldBeEqualTo "ikke godkjent"
             coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
@@ -155,7 +155,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             mottattSykmeldingService.start()
 
-            val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
+            val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
             coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
@@ -172,7 +172,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             mottattSykmeldingService.start()
 
-            val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
+            val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
             coVerify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
@@ -190,7 +190,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             mottattSykmeldingService.start()
 
-            val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
+            val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe false
             coVerify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }

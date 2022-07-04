@@ -1,9 +1,11 @@
-name: Deploy to dev
+name: Deploy to dev onprem
 on:
   push:
     branches:
       - '**'
-      - '!master'
+    branches-ignore:
+      - 'gcp**'
+      - 'master'
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/syfosmregister:${{ github.sha }}
 

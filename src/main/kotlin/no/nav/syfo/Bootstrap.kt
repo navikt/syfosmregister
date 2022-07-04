@@ -30,7 +30,6 @@ import no.nav.syfo.application.getWellKnown
 import no.nav.syfo.application.getWellKnownTokenX
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.Database
-import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.identendring.IdentendringService
 import no.nav.syfo.identendring.PdlAktorConsumer
 import no.nav.syfo.kafka.aiven.KafkaUtils
@@ -52,13 +51,11 @@ import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.util.util.Unbounded
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.ProxySelector
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import kotlin.time.ExperimentalTime
@@ -76,7 +73,7 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 @ExperimentalTime
 fun main() {
     val environment = Environment()
-    val vaultServiceUser = VaultServiceUser()
+    val serviceUser = Serviceuser()
     val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
         .cached(10, 24, TimeUnit.HOURS)
@@ -94,8 +91,7 @@ fun main() {
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
 
-    val vaultCredentialService = VaultCredentialService()
-    val database = Database(environment, vaultCredentialService)
+    val database = Database(environment)
 
     val applicationState = ApplicationState()
 
@@ -167,22 +163,9 @@ fun main() {
         }
         expectSuccess = true
     }
-    val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        config()
-        engine {
-            customizeClient {
-                setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
-            }
-            socketTimeout = 3_000
-            connectTimeout = 3_000
-            connectionRequestTimeout = 10_000
-        }
-    }
 
     val httpClient = HttpClient(Apache, config)
-
-    val httpProxyClient = HttpClient(Apache, proxyConfig)
-    val azureAdV2Client = AzureAdV2Client(environment.clientIdV2, environment.clientSecretV2, environment.azureTokenEndpoint, httpProxyClient)
+    val azureAdV2Client = AzureAdV2Client(environment.clientIdV2, environment.clientSecretV2, environment.azureTokenEndpoint, httpClient)
     val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, environment.syfoTilgangskontrollUrl, environment.syfotilgangskontrollClientId)
 
     val pdlClient = PdlClient(
@@ -193,7 +176,7 @@ fun main() {
     val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
 
     val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
-    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
+    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(serviceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
 
     val sykmeldingerService = SykmeldingerService(database)
 
@@ -211,7 +194,6 @@ fun main() {
         tilgangskontrollService = tilgangskontrollService
     )
 
-    RenewVaultService(vaultCredentialService, applicationState).startRenewTasks()
 //    pdlAktorConsumer.startConsumer()
 //    launchListeners(
 //        applicationState = applicationState,

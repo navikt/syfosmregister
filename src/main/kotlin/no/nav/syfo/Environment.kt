@@ -2,17 +2,11 @@ package no.nav.syfo
 
 import no.nav.syfo.kafka.KafkaConfig
 import no.nav.syfo.kafka.KafkaCredentials
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Paths
 
 data class Environment(
     val applicationPort: Int = getEnvVar("APPLICATION_PORT", "8080").toInt(),
-    val databaseName: String = getEnvVar("DATABASE_NAME", "syfosmregister"),
     val applicationName: String = getEnvVar("APPLICATION_NAME", "syfosmregister"),
     override val kafkaBootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS_URL"),
-    val syfosmregisterDBURL: String = getEnvVar("SYFOSMREGISTER_DB_URL"),
-    val mountPathVault: String = getEnvVar("MOUNT_PATH_VAULT"),
     override val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
     override val truststore: String? = getEnvVar("NAV_TRUSTSTORE_PATH"),
     override val truststorePassword: String? = getEnvVar("NAV_TRUSTSTORE_PASSWORD"),
@@ -37,13 +31,22 @@ data class Environment(
     val manuellSykmeldingTopic: String = "teamsykmelding.manuell-behandling-sykmelding",
     val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",
     val tokenXWellKnownUrl: String = getEnvVar("TOKEN_X_WELL_KNOWN_URL"),
-    val clientIdTokenX: String = getEnvVar("TOKEN_X_CLIENT_ID")
+    val clientIdTokenX: String = getEnvVar("TOKEN_X_CLIENT_ID"),
+    val databaseUsername: String = getEnvVar("NAIS_DATABASE_USERNAME"),
+    val databasePassword: String = getEnvVar("NAIS_DATABASE_PASSWORD"),
+    val dbHost: String = getEnvVar("NAIS_DATABASE_HOST"),
+    val dbPort: String = getEnvVar("NAIS_DATABASE_PORT"),
+    val dbName: String = getEnvVar("NAIS_DATABASE_DATABASE"),
 
-) : KafkaConfig
+) : KafkaConfig {
+    fun jdbcUrl(): String {
+        return "jdbc:postgresql://$dbHost:$dbPort/$dbName"
+    }
+}
 
-data class VaultServiceUser(
-    val serviceuserUsername: String = getFileAsString("/secrets/serviceuser/username"),
-    val serviceuserPassword: String = getFileAsString("/secrets/serviceuser/password")
+data class Serviceuser(
+    val serviceuserUsername: String = getEnvVar("SERVICEUSER_USERNAME"),
+    val serviceuserPassword: String = getEnvVar("SERVICEUSER_PASSWORD")
 ) : KafkaCredentials {
     override val kafkaUsername: String = serviceuserUsername
     override val kafkaPassword: String = serviceuserPassword
@@ -51,5 +54,3 @@ data class VaultServiceUser(
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
     System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
-
-fun getFileAsString(filePath: String) = String(Files.readAllBytes(Paths.get(filePath)), StandardCharsets.UTF_8)

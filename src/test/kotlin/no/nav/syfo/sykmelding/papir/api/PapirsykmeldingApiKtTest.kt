@@ -29,7 +29,7 @@ import java.nio.file.Paths
 
 class PapirsykmeldingApiKtTest : FunSpec({
 
-    val database = TestDB()
+    val database = TestDB.database
     val sykmeldingerService = PapirsykmeldingService(database)
 
     beforeTest {
@@ -38,7 +38,7 @@ class PapirsykmeldingApiKtTest : FunSpec({
         database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument.copy(sykmelding = sykmelding.copy(avsenderSystem = AvsenderSystem("Papirsykmelding", "1.0"))))
     }
     afterSpec {
-        database.stop()
+        TestDB.stop()
     }
 
     context("SykmeldingApiV2 papirsykmelding integration test") {
