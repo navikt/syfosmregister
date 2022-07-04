@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - 'gcp**'
-    branches-ignore:
-      - 'gcp'
+      - '!gcp'
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/syfosmregister:${{ github.sha }}
 
