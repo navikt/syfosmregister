@@ -51,6 +51,9 @@ spec:
           namespace: flex
         - application: esyfovarsel
           namespace: team-esyfo
+        - application: esyfovarsel
+          namespace: team-esyfo
+          cluster: prod-gcp
         - application: sparenaproxy
         - application: syfosmregler
         - application: smregistrering-backend
