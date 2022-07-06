@@ -89,7 +89,7 @@ class KafkaFactory private constructor() {
         fun getKafkaConsumerPdlAktor(vaultServiceUser: Serviceuser, environment: Environment): KafkaConsumer<String, GenericRecord> {
             val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
                 .also {
-                    it["auto.offset.reset"] = "latest"
+                    it["auto.offset.reset"] = "none"
                     it["specific.avro.reader"] = false
                 }
                 .envOverrides()
