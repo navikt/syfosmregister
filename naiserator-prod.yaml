@@ -106,3 +106,5 @@ spec:
       value: https://pdl-api.nais.adeo.no/graphql
     - name: PDL_SCOPE
       value: api://prod-fss.pdl.pdl-api/.default
+    - name: KAFKA_SCHEMA_REGISTRY_URL
+      value: https://kafka-schema-registry.nais.adeo.no

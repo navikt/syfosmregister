@@ -91,6 +91,7 @@ class KafkaFactory private constructor() {
                 .also {
                     it["auto.offset.reset"] = "none"
                     it["specific.avro.reader"] = false
+                    it["schema.registry.url"] = environment.onPremSchemaRegistryUrl
                 }
                 .envOverrides()
             val properties = kafkaBaseConfig.toConsumerConfig("${environment.applicationName}-gcp-consumer", KafkaAvroDeserializer::class)
