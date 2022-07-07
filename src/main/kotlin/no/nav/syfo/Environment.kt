@@ -37,6 +37,7 @@ data class Environment(
     val dbHost: String = getEnvVar("NAIS_DATABASE_HOST"),
     val dbPort: String = getEnvVar("NAIS_DATABASE_PORT"),
     val dbName: String = getEnvVar("NAIS_DATABASE_DATABASE"),
+    val onPremSchemaRegistryUrl: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_URL"),
 
 ) : KafkaConfig {
     fun jdbcUrl(): String {

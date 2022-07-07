@@ -30,21 +30,21 @@ class KafkaFactory private constructor() {
     companion object {
         fun getSykmeldingStatusKafkaProducer(kafkaBaseConfig: Properties, environment: Environment): SykmeldingStatusKafkaProducer {
             val kafkaStatusProducerConfig = kafkaBaseConfig.toProducerConfig(
-                "${environment.applicationName}-producer", JacksonKafkaSerializer::class
+                "${environment.applicationName}-gcp-producer", JacksonKafkaSerializer::class
             )
             val kafkaProducer = KafkaProducer<String, SykmeldingStatusKafkaMessageDTO>(kafkaStatusProducerConfig)
             return SykmeldingStatusKafkaProducer(kafkaProducer, environment.sykmeldingStatusAivenTopic)
         }
 
         fun getKafkaStatusConsumerAiven(kafkaConfig: Properties, environment: Environment): SykmeldingStatusKafkaConsumer {
-            val properties = kafkaConfig.toConsumerConfig("${environment.applicationName}-consumer", JacksonKafkaDeserializer::class)
+            val properties = kafkaConfig.toConsumerConfig("${environment.applicationName}-gcp-consumer", JacksonKafkaDeserializer::class)
             val kafkaConsumer = KafkaConsumer<String, SykmeldingStatusKafkaMessageDTO>(properties, StringDeserializer(), JacksonKafkaDeserializer(SykmeldingStatusKafkaMessageDTO::class))
             return SykmeldingStatusKafkaConsumer(kafkaConsumer, listOf(environment.sykmeldingStatusAivenTopic))
         }
 
         fun getSendtSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): SendtSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
-                "${environment.applicationName}-producer",
+                "${environment.applicationName}-gcp-producer",
                 JacksonNullableKafkaSerializer::class
             )
             val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage>(kafkaProducerProperties)
@@ -52,7 +52,7 @@ class KafkaFactory private constructor() {
         }
         fun getBekreftetSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): BekreftSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
-                "${environment.applicationName}-producer",
+                "${environment.applicationName}-gcp-producer",
                 JacksonNullableKafkaSerializer::class
             )
             val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage?>(kafkaProducerProperties)
@@ -61,7 +61,7 @@ class KafkaFactory private constructor() {
 
         fun getMottattSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): MottattSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
-                "${environment.applicationName}-producer",
+                "${environment.applicationName}-gcp-producer",
                 JacksonNullableKafkaSerializer::class
             )
             val kafkaProducer = KafkaProducer<String, MottattSykmeldingKafkaMessage?>(kafkaProducerProperties)
@@ -70,7 +70,7 @@ class KafkaFactory private constructor() {
 
         fun getTombstoneProducer(kafkaConfig: Properties, environment: Environment): SykmeldingTombstoneProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
-                "${environment.applicationName}-producer",
+                "${environment.applicationName}-gcp-producer",
                 JacksonNullableKafkaSerializer::class
             )
             val kafkaProducer = KafkaProducer<String, Any?>(kafkaProducerProperties)
@@ -89,11 +89,12 @@ class KafkaFactory private constructor() {
         fun getKafkaConsumerPdlAktor(vaultServiceUser: Serviceuser, environment: Environment): KafkaConsumer<String, GenericRecord> {
             val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
                 .also {
-                    it["auto.offset.reset"] = "latest"
+                    it["auto.offset.reset"] = "none"
                     it["specific.avro.reader"] = false
+                    it["schema.registry.url"] = environment.onPremSchemaRegistryUrl
                 }
                 .envOverrides()
-            val properties = kafkaBaseConfig.toConsumerConfig("${environment.applicationName}-consumer", KafkaAvroDeserializer::class)
+            val properties = kafkaBaseConfig.toConsumerConfig("${environment.applicationName}-gcp-consumer", KafkaAvroDeserializer::class)
             properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
 
             return KafkaConsumer<String, GenericRecord>(properties)

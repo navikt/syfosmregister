@@ -60,6 +60,7 @@ fun getEnvironment(): Environment {
         databaseUsername = "username",
         dbHost = "localhost",
         dbPort = "5432",
+        onPremSchemaRegistryUrl = "",
     )
 }
 
