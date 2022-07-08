@@ -3,17 +3,13 @@ package no.nav.syfo.sykmelding.kafka.service
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import kotlinx.coroutines.delay
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
-import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 
 class SykmeldingStatusConsumerServiceTest : FunSpec({
@@ -26,12 +22,8 @@ class SykmeldingStatusConsumerServiceTest : FunSpec({
         coEvery { delay(any<Long>()) } returns Unit
     }
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
-    val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)
-    val tombstoneProducer = mockkClass(type = SykmeldingTombstoneProducer::class, relaxed = true)
-    val database = mockk<DatabaseInterface>(relaxed = true)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
     val updateStatusService = UpdateStatusService(sykmeldingStatusService)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusKafkaConsumer, applicationState, mottattSykmeldingStatusService, updateStatusService)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusKafkaConsumer, applicationState, updateStatusService)
 
     context("Test retry") {
         test("Should retry if error happens") {
