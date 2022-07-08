@@ -277,7 +277,7 @@ suspend fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> 
                 FROM svar
                          INNER JOIN sporsmal
                                     ON sporsmal.id = svar.sporsmal_id
-                WHERE svar.sykmelding_id = ?
+                WHERE svar.sykmelding_id = ? order by sporsmal.id;
             """
     ).use {
         it.setString(1, sykmeldingId)
