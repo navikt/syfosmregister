@@ -33,6 +33,7 @@ import no.nav.syfo.db.Database
 import no.nav.syfo.db.VaultCredentialService
 import no.nav.syfo.identendring.IdentendringService
 import no.nav.syfo.identendring.PdlAktorConsumer
+import no.nav.syfo.identendring.UpdateIdentService
 import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.pdl.client.PdlClient
@@ -47,9 +48,12 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKa
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getTombstoneProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
+import no.nav.syfo.sykmelding.kafka.service.UpdateStatusService
 import no.nav.syfo.sykmelding.service.BehandlingsutfallService
+import no.nav.syfo.sykmelding.service.MottattSykmeldingConsumerService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
+import no.nav.syfo.sykmelding.service.UpdateSykmeldingService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.util.util.Unbounded
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner
@@ -116,10 +120,17 @@ fun main() {
     val tombstoneProducer = getTombstoneProducer(kafkaBaseConfigAiven, environment)
     val mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
+
+    val updateSykmeldingService = UpdateSykmeldingService(
+        database = database
+    )
+    val updateStatusService = UpdateStatusService(sykmeldingStatusService)
+
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(
-        sykmeldingStatusKafkaConsumerAiven = sykmeldingStatusKafkaConsumerAiven,
+        sykmeldingStatusKafkaConsumer = sykmeldingStatusKafkaConsumerAiven,
         applicationState = applicationState,
-        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService,
+        updateStatusService = updateStatusService,
     )
 
     val receivedSykmeldingKafkaConsumerAiven = KafkaConsumer<String, String>(
@@ -128,15 +139,20 @@ fun main() {
             .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
     )
     val mottattSykmeldingService = MottattSykmeldingService(
-        applicationState = applicationState,
         env = environment,
-        kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
         database = database,
         sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
         mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
         mottattSykmeldingStatusService = mottattSykmeldingStatusService
     )
 
+    val mottattSykmeldingConsumerService = MottattSykmeldingConsumerService(
+        applicationState = applicationState,
+        kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
+        mottattSykmeldingService = mottattSykmeldingService,
+        updateSykmeldingService = updateSykmeldingService,
+        env = environment
+    )
     val behandlingsutfallKafkaConsumerAiven = KafkaConsumer<String, String>(
         kafkaBaseConfigAiven
             .toConsumerConfig("${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
@@ -193,7 +209,8 @@ fun main() {
     val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
 
     val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
-    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
+    val updateIdentService = UpdateIdentService(database, pdlService)
+    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, identendringService, updateIdentService)
 
     val sykmeldingerService = SykmeldingerService(database)
 
@@ -216,7 +233,7 @@ fun main() {
     launchListeners(
         applicationState = applicationState,
         sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
-        mottattSykmeldingService = mottattSykmeldingService,
+        mottattSykmeldingConsumerService = mottattSykmeldingConsumerService,
         behandlingsutfallService = behandlingsutfallService
     )
 
@@ -242,11 +259,11 @@ fun createListener(applicationState: ApplicationState, action: suspend Coroutine
 fun launchListeners(
     applicationState: ApplicationState,
     sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
-    mottattSykmeldingService: MottattSykmeldingService,
+    mottattSykmeldingConsumerService: MottattSykmeldingConsumerService,
     behandlingsutfallService: BehandlingsutfallService
 ) {
     createListener(applicationState) {
-        mottattSykmeldingService.start()
+        mottattSykmeldingConsumerService.start()
     }
     createListener(applicationState) {
         behandlingsutfallService.start()
