@@ -51,11 +51,11 @@ class AzureAdV2Client(
      * Returns a obo-token for a given user
      */
     suspend fun getOnBehalfOfToken(
-        scopeClientId: String,
+        scope: String,
         token: String
     ): AzureAdV2Token? {
         return azureAdV2Cache.getToken(token)
-            ?: getOboAccessToken(token, scopeClientId)?.let {
+            ?: getOboAccessToken(token, scope)?.let {
                 azureAdV2Cache.putValue(token, it)
             }
     }
@@ -71,7 +71,7 @@ class AzureAdV2Client(
                 append("client_assertion_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
                 append("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
                 append("assertion", token)
-                append("scope", "api://$scopeClientId/.default")
+                append("scope", scopeClientId)
                 append("requested_token_use", "on_behalf_of")
             }
         )?.toAzureAdV2Token()
