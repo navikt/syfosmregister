@@ -24,7 +24,7 @@ class MottattSykmeldingConsumerService(
 ) {
 
     companion object {
-        val CHANGE_TIMESTAMP: OffsetDateTime = OffsetDateTime.of(2022, 7, 8, 11, 15, 0, 0, ZoneOffset.UTC)
+        val CHANGE_TIMESTAMP: OffsetDateTime = OffsetDateTime.of(2022, 7, 8, 16, 0, 0, 0, ZoneOffset.UTC)
     }
 
     suspend fun start() {
