@@ -67,10 +67,13 @@ spec:
           namespace: team-esyfo
           cluster: dev-fss
         - application: sparenaproxy
+          namespace: teamsykmelding
           cluster: dev-fss
         - application: syfosmregler
+          namespace: teamsykmelding
           cluster: dev-fss
         - application: smregistrering-backend
+          namespace: teamsykmelding
           cluster: dev-fss
         - application: smoppslag
           namespace: risk
@@ -79,9 +82,6 @@ spec:
           namespace: plattformsikkerhet
           cluster: dev-gcp
         - application: sykmeldinger-backend
-        - application: sykmeldinger-backend
-          namespace: teamsykmelding
-          cluster: dev-fss
         - application: teamsykmelding-mock-backend
           namespace: teamsykmelding
           cluster: dev-gcp
