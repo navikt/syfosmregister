@@ -371,7 +371,7 @@ private fun getSykmeldingBekreftEvent(sykmelding: Sykmeldingsopplysninger): Sykm
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
         statusEvent = STATUS_BEKREFTET,
-        timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
+        timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
         arbeidsgiver = null,
         sporsmals = listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI"))
     )
@@ -380,7 +380,7 @@ private fun getSykmeldingBekreftEvent(sykmelding: Sykmeldingsopplysninger): Sykm
 private fun getSendtEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
-        timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
+        timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
         arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
         statusEvent = STATUS_SENDT,
         sporsmals = listOf(
