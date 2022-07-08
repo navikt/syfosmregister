@@ -53,7 +53,7 @@ class SykmeldingStatusConsumerService(
                 updateStatusService.handleStatusEvent(it)
             }
             else -> {
-                log.info("Mottatt sykmelding ${it.event.sykmeldingId} er før bytting av logikk")
+                log.info("Mottatt sykmelding status ${it.event.sykmeldingId} er før bytting av logikk")
                 mottattSykmeldingStatusService.handleStatusEvent(it)
             }
         }
