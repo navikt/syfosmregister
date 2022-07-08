@@ -5,14 +5,12 @@ import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import kotlinx.coroutines.delay
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
@@ -24,9 +22,6 @@ import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
-import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
 import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
@@ -51,14 +46,10 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
     val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = mockkClass(SykmeldingStatusService::class)
-    val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
-    val bekreftSykmeldingKafkaProducer = mockkClass(BekreftSykmeldingKafkaProducer::class)
-    val tombstoneKafkaProducer = mockkClass(type = SykmeldingTombstoneProducer::class, relaxed = true)
-    val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneKafkaProducer, databaseInterface)
+
     val consumer = spyk(KafkaFactory.getKafkaStatusConsumerAiven(kafkaConfig, environment))
     val updateStatusService = UpdateStatusService(sykmeldingStatusService)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService, updateStatusService)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, updateStatusService)
 
     afterTest {
         clearAllMocks()
@@ -70,9 +61,6 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
         every { environment.applicationName } returns "${SykmeldingStatusConsumerServiceKafkaTest::class.simpleName}"
         every { environment.sykmeldingStatusAivenTopic } returns "${environment.applicationName}-topic"
         every { environment.cluster } returns "localhost"
-        coEvery { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
-        coEvery { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) } returns Unit
-        coEvery { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) } returns Unit
         mockkStatic("kotlinx.coroutines.DelayKt")
         coEvery { delay(any<Long>()) } returns Unit
     }
@@ -160,7 +148,6 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             sykmeldingStatusConsumerService.start()
 
             sykmeldingStatusEvent shouldBeEqualTo SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.APEN)
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingId) }
             coVerify(exactly = 1) { sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent!!) }
         }
 
@@ -205,8 +192,6 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
                 timestamp.plusSeconds(2),
                 StatusEvent.APEN
             )
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingId) }
             coVerify(exactly = 2) { sykmeldingStatusService.registrerStatus(any()) }
         }
 
@@ -253,7 +238,6 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
                 .send(sykmeldingSendKafkaEvent, fnr)
             sykmeldingStatusConsumerService.start()
-            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
             coVerify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
             sykmeldingSendEvent shouldBeEqualTo SykmeldingSendEvent(
                 sykmeldingId,
@@ -297,7 +281,6 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             producer.send(sykmeldingSendtKafkaEvent, "fnr")
 
             sykmeldingStatusConsumerService.start()
-            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
             coVerify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
             coVerify(exactly = 2) { sykmeldingStatusService.getSykmeldingStatus(any(), any()) }
         }
@@ -352,7 +335,6 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
                 .send(sykmeldingBekreftKafkaEvent, fnr)
             sykmeldingStatusConsumerService.start()
 
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
             coVerify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
             sykmeldingBekreftEvent shouldBeEqualTo SykmeldingBekreftEvent(
                 sykmeldingId,

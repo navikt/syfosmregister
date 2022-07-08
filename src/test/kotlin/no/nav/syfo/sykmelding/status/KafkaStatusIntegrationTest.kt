@@ -13,7 +13,6 @@ import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
@@ -45,7 +44,6 @@ import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
-import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmelding.kafka.service.UpdateStatusService
 import no.nav.syfo.sykmelding.model.SporsmalDTO
@@ -80,12 +78,8 @@ class KafkaStatusIntegrationTest : FunSpec({
     val applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
     val consumer = KafkaFactory.getKafkaStatusConsumerAiven(kafkaConfig, environment)
-    val sendtSykmeldingKafkaProducer = spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment))
-    val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
-    val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
     val updateStatusService = UpdateStatusService(sykmeldingStatusService)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService, updateStatusService)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, updateStatusService)
     val sykmeldingerService = SykmeldingerService(database)
     val mockPayload = mockk<Payload>()
 
@@ -134,10 +128,6 @@ class KafkaStatusIntegrationTest : FunSpec({
                 arbeidsgiver = null
             )
             database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 1
-        }
-
-        test("test tombstone") {
-            bekreftSykmeldingKafkaProducer.tombstoneSykmelding("123")
         }
 
         test("write and read APEN and SENDT") {
@@ -215,7 +205,6 @@ class KafkaStatusIntegrationTest : FunSpec({
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
         }
         test("should test APEN -> SENDT -> SLETTET") {
             coEvery { sykmeldingStatusService.slettSykmelding(any()) } answers {
@@ -236,12 +225,6 @@ class KafkaStatusIntegrationTest : FunSpec({
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
             database.finnSvarForSykmelding(sykmelding.id).size shouldBeEqualTo 0
-
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
         }
 
         test("should test APEN -> BEKREFTET -> SLETTET") {
@@ -262,11 +245,6 @@ class KafkaStatusIntegrationTest : FunSpec({
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
         }
     }
 
