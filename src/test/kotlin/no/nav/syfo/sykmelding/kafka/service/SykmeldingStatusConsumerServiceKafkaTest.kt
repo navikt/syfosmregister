@@ -57,7 +57,8 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
     val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneKafkaProducer, databaseInterface)
     val consumer = spyk(KafkaFactory.getKafkaStatusConsumerAiven(kafkaConfig, environment))
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
+    val updateStatusService = UpdateStatusService(sykmeldingStatusService)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService, updateStatusService)
 
     afterTest {
         clearAllMocks()
@@ -85,7 +86,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             var currentError = 0
             0.until(messages).forEach {
                 val sykmelidngId = "" + it
-                val timestamp = getNowTickMillisOffsetDateTime()
+                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
                 val sykmeldingApenEvent = SykmeldingStatusKafkaEventDTO(sykmelidngId, timestamp, STATUS_APEN)
                 kafkaProducer.send(sykmeldingApenEvent, fnr)
             }
@@ -109,7 +110,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
     context("SykmeldingStatusConsumerService read from statustopic") {
         test("Test APEN status") {
             val sykmeldingId = UUID.randomUUID().toString()
-            val timestamp = getNowTickMillisOffsetDateTime()
+            val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
             var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
             val sykmeldingApenEvent =
                 SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, STATUS_APEN, null, null)
@@ -131,7 +132,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
 
         test("tombstone with APEN status") {
             val sykmeldingId = UUID.randomUUID().toString()
-            val timestamp = getNowTickMillisOffsetDateTime()
+            val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
             var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
             val sykmeldingApenEvent =
                 SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, STATUS_APEN, null, null)
@@ -143,7 +144,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             } returns listOf(
                 SykmeldingStatusEvent(
                     sykmeldingId,
-                    getNowTickMillisOffsetDateTime(),
+                    getNowTickMillisOffsetDateTime().plusMonths(1),
                     StatusEvent.BEKREFTET
                 )
             )
@@ -165,7 +166,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
 
         test("test tombstone with apen -> bekreft -> apen") {
             val sykmeldingId = UUID.randomUUID().toString()
-            val timestamp = getNowTickMillisOffsetDateTime()
+            val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
             var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
             val sykmeldingApenEvent =
                 SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, STATUS_APEN, null, null)
@@ -181,7 +182,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
             coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } returns Unit
             coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(
-                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.BEKREFTET)
+                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime().plusMonths(1), StatusEvent.BEKREFTET)
             )
             coEvery { sykmeldingStatusService.registrerStatus(any()) } answers {
                 val lastBekreftet = sykmeldingStatusEvent?.event == StatusEvent.APEN
@@ -211,7 +212,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
 
         test("Test SENDT status") {
             val sykmeldingId = UUID.randomUUID().toString()
-            val timestamp = getNowTickMillisOffsetDateTime()
+            val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
             var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
             var sykmeldingSendEvent: SykmeldingSendEvent? = null
             val sykmeldingSendKafkaEvent = SykmeldingStatusKafkaEventDTO(
@@ -237,7 +238,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             } returns listOf(
                 SykmeldingStatusEvent(
                     sykmeldingId,
-                    getNowTickMillisOffsetDateTime(),
+                    getNowTickMillisOffsetDateTime().plusMonths(1),
                     StatusEvent.APEN
                 )
             )
@@ -270,7 +271,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
         test("Test SENDT -> SENDT") {
             val sykmeldingId = UUID.randomUUID().toString()
             val sykmeldingSendtKafkaEvent = SykmeldingStatusKafkaEventDTO(
-                sykmeldingId, getNowTickMillisOffsetDateTime(), STATUS_SENDT,
+                sykmeldingId, getNowTickMillisOffsetDateTime().plusMonths(1), STATUS_SENDT,
                 ArbeidsgiverStatusDTO("1", "2", "navn"),
                 listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar"))
             )
@@ -289,7 +290,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
 
             coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
             coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } returns Unit
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT))
+            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime().plusMonths(1), StatusEvent.SENDT))
 
             val producer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
             producer.send(sykmeldingSendtKafkaEvent, "fnr")
@@ -303,7 +304,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
 
         test("test AVBRUTT status") {
             val sykmeldingId = UUID.randomUUID().toString()
-            val timestamp = getNowTickMillisOffsetDateTime()
+            val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
             var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
             val sykmeldingApenEvent =
                 SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, STATUS_AVBRUTT, null, null)
@@ -329,7 +330,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
 
         test("Test BEREFTET status") {
             val sykmeldingId = "BEKREFT"
-            val timestamp = getNowTickMillisOffsetDateTime()
+            val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
             var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
             var sykmeldingBekreftEvent: SykmeldingBekreftEvent? = null
             val sykmeldingBekreftKafkaEvent = SykmeldingStatusKafkaEventDTO(

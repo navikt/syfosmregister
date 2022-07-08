@@ -47,6 +47,7 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
+import no.nav.syfo.sykmelding.kafka.service.UpdateStatusService
 import no.nav.syfo.sykmelding.model.SporsmalDTO
 import no.nav.syfo.sykmelding.model.SvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
@@ -83,7 +84,8 @@ class KafkaStatusIntegrationTest : FunSpec({
     val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
     val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
+    val updateStatusService = UpdateStatusService(sykmeldingStatusService)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService, updateStatusService)
     val sykmeldingerService = SykmeldingerService(database)
     val mockPayload = mockk<Payload>()
 
@@ -329,7 +331,7 @@ class KafkaStatusIntegrationTest : FunSpec({
 })
 
 fun getSlettetEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
-    return SykmeldingStatusKafkaEventDTO(sykmelding.id, getNowTickMillisOffsetDateTime(), STATUS_SLETTET, null, null)
+    return SykmeldingStatusKafkaEventDTO(sykmelding.id, getNowTickMillisOffsetDateTime().plusMonths(1), STATUS_SLETTET, null, null)
 }
 
 private fun setUpEnvironment(environment: Environment) {
