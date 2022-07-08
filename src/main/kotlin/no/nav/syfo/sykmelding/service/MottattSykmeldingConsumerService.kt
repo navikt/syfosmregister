@@ -11,22 +11,13 @@ import no.nav.syfo.objectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
-import java.time.Instant
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class MottattSykmeldingConsumerService(
     private val applicationState: ApplicationState,
     private val env: Environment,
     private val kafkaAivenConsumer: KafkaConsumer<String, String>,
-    private val updateSykmeldingService: UpdateSykmeldingService,
     private val mottattSykmeldingService: MottattSykmeldingService
 ) {
-
-    companion object {
-        val CHANGE_TIMESTAMP: OffsetDateTime = OffsetDateTime.of(2022, 7, 8, 12, 5, 0, 0, ZoneOffset.UTC)
-    }
-
     suspend fun start() {
         kafkaAivenConsumer.subscribe(
             listOf(
@@ -51,16 +42,7 @@ class MottattSykmeldingConsumerService(
             msgId = receivedSykmelding.msgId,
             sykmeldingId = receivedSykmelding.sykmelding.id
         )
-        val kafkaMessageTimestamp = OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.timestamp()), ZoneOffset.UTC)
-        when (kafkaMessageTimestamp.isAfter(CHANGE_TIMESTAMP)) {
-            true -> {
-                log.info("Mottatt sykmelding ${receivedSykmelding.sykmelding.id} er etter tidspunkt for bytting av logikk", loggingMeta)
-                mottattSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, it.topic())
-            }
-            else -> {
-                log.info("Mottatt sykmelding ${receivedSykmelding.sykmelding.id} er før bytting, lagrer bare i DB", loggingMeta)
-                updateSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, it.topic())
-            }
-        }
+        log.info("Mottatt sykmelding ${receivedSykmelding.sykmelding.id} er etter tidspunkt for bytting av logikk", loggingMeta)
+        mottattSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, it.topic())
     }
 }

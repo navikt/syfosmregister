@@ -12,16 +12,12 @@ import no.nav.syfo.identendring.model.IdentType
 import no.nav.syfo.log
 import no.nav.syfo.pdl.error.InactiveIdentException
 import no.nav.syfo.pdl.error.PersonNotFoundException
-import no.nav.syfo.sykmelding.service.MottattSykmeldingConsumerService
 import no.nav.syfo.util.util.Unbounded
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
-import java.time.Instant
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 
@@ -29,8 +25,7 @@ class PdlAktorConsumer(
     private val kafkaConsumer: KafkaConsumer<String, GenericRecord>,
     private val applicationState: ApplicationState,
     private val topic: String,
-    private val identendringService: IdentendringService,
-    private val updateIdentService: UpdateIdentService
+    private val identendringService: IdentendringService
 ) {
     companion object {
         private const val DELAY_ON_ERROR_SECONDS = 60L
@@ -78,17 +73,7 @@ class PdlAktorConsumer(
     }
 
     private suspend fun handleIdent(it: ConsumerRecord<String, GenericRecord>) {
-        val kafkaMessageTimestamp = OffsetDateTime.ofInstant(Instant.ofEpochMilli(it.timestamp()), ZoneOffset.UTC)
-        when (kafkaMessageTimestamp.isAfter(MottattSykmeldingConsumerService.CHANGE_TIMESTAMP)) {
-            true -> {
-                log.info("Mottatt identoppdatering, er etter tidspunkt for bytting av logikk")
-                identendringService.oppdaterIdent(it.value().toIdentListe())
-            }
-            else -> {
-                log.info("Mottatt identoppdatering, er før bytting, lagrer bare i DB")
-                updateIdentService.oppdaterIdent(it.value().toIdentListe())
-            }
-        }
+        identendringService.oppdaterIdent(it.value().toIdentListe())
     }
 }
 

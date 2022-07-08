@@ -30,7 +30,7 @@ class SykmeldingStatusConsumerServiceTest : FunSpec({
     val tombstoneProducer = mockkClass(type = SykmeldingTombstoneProducer::class, relaxed = true)
     val database = mockk<DatabaseInterface>(relaxed = true)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusKafkaConsumer, applicationState, mottattSykmeldingStatusService, mockk(relaxed = true))
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(sykmeldingStatusKafkaConsumer, applicationState, mottattSykmeldingStatusService)
 
     context("Test retry") {
         test("Should retry if error happens") {
