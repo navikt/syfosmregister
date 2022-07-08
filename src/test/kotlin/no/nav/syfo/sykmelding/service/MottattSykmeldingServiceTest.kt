@@ -11,10 +11,9 @@ import no.nav.syfo.LoggingMeta
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
-import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
-import no.nav.syfo.testutil.KafkaTest
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getMerknaderForId
@@ -26,11 +25,10 @@ class MottattSykmeldingServiceTest : FunSpec({
 
     val environment = mockkClass(Environment::class)
     mockEnvironment(environment)
-    val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(true, true)
 
     val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
-    val sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+    val sykmeldingStatusKafkaProducer = mockk<SykmeldingStatusKafkaProducer>(relaxed = true)
     val mottattSykmeldingStatusService = mockk<MottattSykmeldingStatusService>(relaxed = true)
     val mottattSykmeldingService = MottattSykmeldingService(
         env = environment,

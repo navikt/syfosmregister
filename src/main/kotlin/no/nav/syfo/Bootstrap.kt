@@ -116,9 +116,6 @@ fun main() {
             .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
     )
     val updateSykmeldingService = UpdateSykmeldingService(
-        applicationState = applicationState,
-        env = environment,
-        kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
         database = database
     )
 
@@ -155,7 +152,7 @@ fun main() {
 
     val httpClient = HttpClient(Apache, config)
     val azureAdV2Client = AzureAdV2Client(environment.clientIdV2, environment.clientSecretV2, environment.azureTokenEndpoint, httpClient)
-    val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, environment.syfoTilgangskontrollUrl, environment.syfotilgangskontrollClientId)
+    val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, environment.syfoTilgangskontrollUrl, environment.syfotilgangskontrollScope)
 
     val pdlClient = PdlClient(
         httpClient,

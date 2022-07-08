@@ -21,7 +21,7 @@ data class Environment(
     val clientSecretV2: String = getEnvVar("AZURE_APP_CLIENT_SECRET"),
     val jwkKeysUrlV2: String = getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI"),
     val jwtIssuerV2: String = getEnvVar("AZURE_OPENID_CONFIG_ISSUER"),
-    val syfotilgangskontrollClientId: String = getEnvVar("SYFOTILGANGSKONTROLL_CLIENT_ID"),
+    val syfotilgangskontrollScope: String = getEnvVar("SYFOTILGANGSKONTROLL_SCOPE"),
     val azureTokenEndpoint: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
     val pdlAktorTopic: String = "aapen-person-pdl-aktor-v1",
     val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),

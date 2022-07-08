@@ -92,18 +92,14 @@ spec:
   env:
     - name: KAFKA_BOOTSTRAP_SERVERS_URL
       value: SASL_SSL://a01apvl00145.adeo.no:8443,SASL_SSL://a01apvl00146.adeo.no:8443,SASL_SSL://a01apvl00147.adeo.no:8443,SASL_SSL://a01apvl00149.adeo.no:8443
-    - name: SYFOSMREGISTER_DB_URL
-      value: jdbc:postgresql://fsspgdb.adeo.no:5432/syfosmregister
-    - name: MOUNT_PATH_VAULT
-      value: /postgresql/prod-fss
     - name: SYFOTILGANGSKONTROLL_URL
-      value: https://syfo-tilgangskontroll.nais.adeo.no
-    - name: SYFOTILGANGSKONTROLL_CLIENT_ID
-      value: prod-fss.teamsykefravr.syfo-tilgangskontroll
+      value: https://syfo-tilgangskontroll.dev-fss-pub.nais.io
+    - name: SYFOTILGANGSKONTROLL_SCOPE
+      value: api://prod-fss.teamsykefravr.syfo-tilgangskontroll/.default
     - name: KAFKA_CLIENT_ID
       value: syfosmregister
     - name: PDL_GRAPHQL_PATH
-      value: https://pdl-api.nais.adeo.no/graphql
+      value: https://pdl-api.prod-fss-pub.nais.io/graphql
     - name: PDL_SCOPE
       value: api://prod-fss.pdl.pdl-api/.default
     - name: KAFKA_SCHEMA_REGISTRY_URL

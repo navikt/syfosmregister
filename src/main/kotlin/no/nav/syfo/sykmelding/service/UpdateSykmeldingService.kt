@@ -3,9 +3,7 @@ package no.nav.syfo.sykmelding.service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.logstash.logback.argument.StructuredArguments
-import no.nav.syfo.Environment
 import no.nav.syfo.LoggingMeta
-import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
@@ -17,13 +15,9 @@ import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.updateMottattSykmelding
 import no.nav.syfo.sykmelding.util.mapToSykmeldingsopplysninger
 import no.nav.syfo.wrapExceptions
-import org.apache.kafka.clients.consumer.KafkaConsumer
 
 class UpdateSykmeldingService(
-    private val applicationState: ApplicationState,
-    private val kafkaAivenConsumer: KafkaConsumer<String, String>,
-    private val database: DatabaseInterface,
-    private val env: Environment
+    private val database: DatabaseInterface
 ) {
     suspend fun handleMessageSykmelding(
         receivedSykmelding: ReceivedSykmelding,
