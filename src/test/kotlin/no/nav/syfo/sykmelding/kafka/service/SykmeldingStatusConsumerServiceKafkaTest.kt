@@ -57,7 +57,8 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
     val databaseInterface = mockk<DatabaseInterface>(relaxed = true)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneKafkaProducer, databaseInterface)
     val consumer = spyk(KafkaFactory.getKafkaStatusConsumerAiven(kafkaConfig, environment))
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
+    val updateStatusService = UpdateStatusService(sykmeldingStatusService)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService, updateStatusService)
 
     afterTest {
         clearAllMocks()

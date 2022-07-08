@@ -1,13 +1,10 @@
 package no.nav.syfo.sykmelding.service
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
 import no.nav.syfo.LoggingMeta
-import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
@@ -16,7 +13,6 @@ import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
-import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.persistering.lagreMottattSykmelding
@@ -28,46 +24,16 @@ import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.util.mapToSykmeldingsopplysninger
 import no.nav.syfo.wrapExceptions
-import org.apache.kafka.clients.consumer.KafkaConsumer
-import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 class MottattSykmeldingService(
-    private val applicationState: ApplicationState,
-    private val env: Environment,
-    private val kafkaAivenConsumer: KafkaConsumer<String, String>,
     private val database: DatabaseInterface,
+    private val env: Environment,
     private val sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     private val mottattSykmeldingKafkaProducer: MottattSykmeldingKafkaProducer,
     private val mottattSykmeldingStatusService: MottattSykmeldingStatusService
 ) {
-    suspend fun start() {
-        kafkaAivenConsumer.subscribe(
-            listOf(
-                env.okSykmeldingTopic,
-                env.manuellSykmeldingTopic,
-                env.avvistSykmeldingTopic
-            )
-        )
-        while (applicationState.ready) {
-            kafkaAivenConsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
-                val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
-                val loggingMeta = LoggingMeta(
-                    mottakId = receivedSykmelding.navLogId,
-                    orgNr = receivedSykmelding.legekontorOrgNr,
-                    msgId = receivedSykmelding.msgId,
-                    sykmeldingId = receivedSykmelding.sykmelding.id
-                )
-                handleMessageSykmelding(receivedSykmelding, database, loggingMeta, sykmeldingStatusKafkaProducer, "aiven")
-                if (it.topic() != env.avvistSykmeldingTopic) {
-                    sendtToMottattSykmeldingTopic(receivedSykmelding)
-                }
-            }
-            delay(100)
-        }
-    }
-
     private suspend fun sendtToMottattSykmeldingTopic(receivedSykmelding: ReceivedSykmelding) {
         val sykmelding = receivedSykmelding.toArbeidsgiverSykmelding()
         val message = MottattSykmeldingKafkaMessage(
@@ -79,15 +45,13 @@ class MottattSykmeldingService(
         mottattSykmeldingKafkaProducer.sendMottattSykmelding(message)
     }
 
-    private suspend fun handleMessageSykmelding(
+    suspend fun handleMessageSykmelding(
         receivedSykmelding: ReceivedSykmelding,
-        database: DatabaseInterface,
         loggingMeta: LoggingMeta,
-        sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
-        source: String
+        topic: String
     ) = withContext(Dispatchers.IO) {
         wrapExceptions(loggingMeta) {
-            log.info("Mottatt sykmelding SM2013 fra $source, {}", StructuredArguments.fields(loggingMeta))
+            log.info("Mottatt sykmelding SM2013 fra $topic, {}", StructuredArguments.fields(loggingMeta))
             val sykmeldingsopplysninger = mapToSykmeldingsopplysninger(receivedSykmelding)
             val sykmeldingsdokument = Sykmeldingsdokument(
                 id = receivedSykmelding.sykmelding.id,
@@ -116,6 +80,10 @@ class MottattSykmeldingService(
 
                 log.info("Sykmelding SM2013 lagret i databasen, {}", StructuredArguments.fields(loggingMeta))
                 MESSAGE_STORED_IN_DB_COUNTER.inc()
+            }
+
+            if (topic != env.avvistSykmeldingTopic) {
+                sendtToMottattSykmeldingTopic(receivedSykmelding)
             }
         }
     }
