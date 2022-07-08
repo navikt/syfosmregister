@@ -53,7 +53,7 @@ class SykmeldingStatusConsumerService(
                 mottattSykmeldingStatusService.handleStatusEvent(it)
             }
             else -> {
-                log.info("Mottatt sykmelding ${it.event.sykmeldingId} er før bytting, lagrer bare i DB")
+                log.info("Mottatt sykmelding status ${it.event.sykmeldingId} er før bytting, lagrer bare i DB")
                 updateStatusService.handleStatusEvent(it)
             }
         }
