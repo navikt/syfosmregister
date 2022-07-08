@@ -4,14 +4,12 @@ import kotlinx.coroutines.delay
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
-import no.nav.syfo.sykmelding.service.MottattSykmeldingConsumerService
 import org.slf4j.LoggerFactory
 
 class SykmeldingStatusConsumerService(
     private val sykmeldingStatusKafkaConsumer: SykmeldingStatusKafkaConsumer,
     private val applicationState: ApplicationState,
-    private val mottattSykmeldingStatusService: MottattSykmeldingStatusService,
-    private val updateStatusService: UpdateStatusService
+    private val mottattSykmeldingStatusService: MottattSykmeldingStatusService
 ) {
 
     companion object {
@@ -24,7 +22,11 @@ class SykmeldingStatusConsumerService(
             try {
                 run()
             } catch (ex: Exception) {
-                log.error("Error reading status from aiven topic, trying again in {} milliseconds, error {}", delayStart, ex.message)
+                log.error(
+                    "Error reading status from aiven topic, trying again in {} milliseconds, error {}",
+                    delayStart,
+                    ex.message
+                )
                 sykmeldingStatusKafkaConsumer.unsubscribe()
             }
             delay(delayStart)
@@ -46,16 +48,7 @@ class SykmeldingStatusConsumerService(
     }
 
     private suspend fun handleStatusEvent(it: SykmeldingStatusKafkaMessageDTO) {
-        val kafkaMessageTimestamp = it.event.timestamp
-        when (kafkaMessageTimestamp.isAfter(MottattSykmeldingConsumerService.CHANGE_TIMESTAMP)) {
-            true -> {
-                log.info("Mottatt sykmelding status ${it.event.sykmeldingId} er etter tidspunkt for bytting av logikk")
-                mottattSykmeldingStatusService.handleStatusEvent(it)
-            }
-            else -> {
-                log.info("Mottatt sykmelding status ${it.event.sykmeldingId} er før bytting, lagrer bare i DB")
-                updateStatusService.handleStatusEvent(it)
-            }
-        }
+        log.info("Mottatt sykmelding status ${it.event.sykmeldingId} er etter tidspunkt for bytting av logikk")
+        mottattSykmeldingStatusService.handleStatusEvent(it)
     }
 }
