@@ -65,28 +65,26 @@ spec:
           cluster: dev-fss
         - application: esyfovarsel
           namespace: team-esyfo
+          cluster: dev-fss
         - application: sparenaproxy
+          cluster: dev-fss
         - application: syfosmregler
+          cluster: dev-fss
         - application: smregistrering-backend
+          cluster: dev-fss
         - application: smoppslag
           namespace: risk
+          cluster: dev-fss
         - application: debug-dings
           namespace: plattformsikkerhet
           cluster: dev-gcp
         - application: sykmeldinger-backend
         - application: sykmeldinger-backend
           namespace: teamsykmelding
-          cluster: dev-gcp
+          cluster: dev-fss
         - application: teamsykmelding-mock-backend
           namespace: teamsykmelding
           cluster: dev-gcp
-  vault:
-    enabled: true
-    paths:
-      - kvPath: serviceuser/data/dev/srvsyfosmregister
-        mountPath: /secrets/serviceuser
-      - kvPath: /kv/preprod/fss/syfosmregister/teamsykmelding
-        mountPath: /var/run/secrets/nais.io/vault
   ingresses:
     - "https://smregister.dev.nav.no"
   webproxy: true
@@ -107,4 +105,4 @@ spec:
     - name: PDL_SCOPE
       value: api://dev-fss.pdl.pdl-api/.defaults
     - name: KAFKA_SCHEMA_REGISTRY_URL
-      value: https://kafka-schema-registry.nais-q.adeo.note
+      value: https://kafka-schema-registry.nais-q.adeo.no

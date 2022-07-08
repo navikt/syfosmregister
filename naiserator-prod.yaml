@@ -67,22 +67,20 @@ spec:
           cluster: prod-fss
         - application: esyfovarsel
           namespace: team-esyfo
+          cluster: prod-fss
         - application: sparenaproxy
+          cluster: prod-fss
         - application: syfosmregler
+          cluster: prod-fss
         - application: smregistrering-backend
+          cluster: prod-fss
         - application: smoppslag
+          cluster: prod-fss
           namespace: risk
         - application: sykmeldinger-backend
         - application: sykmeldinger-backend
           namespace: teamsykmelding
-          cluster: prod-gcp
-  vault:
-    enabled: true
-    paths:
-      - kvPath: serviceuser/data/prod/srvsyfosmregister
-        mountPath: /secrets/serviceuser
-      - kvPath: /kv/prod/fss/syfosmregister/teamsykmelding
-        mountPath: /var/run/secrets/nais.io/vault
+          cluster: prod-fss
   ingresses:
     - "https://smregister.intern.nav.no"
   webproxy: true
