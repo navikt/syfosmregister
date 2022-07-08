@@ -30,7 +30,8 @@ import no.nav.syfo.application.getWellKnown
 import no.nav.syfo.application.getWellKnownTokenX
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.Database
-import no.nav.syfo.identendring.PdlAktorUpdateConsumer
+import no.nav.syfo.identendring.IdentendringService
+import no.nav.syfo.identendring.PdlAktorConsumer
 import no.nav.syfo.identendring.UpdateIdentService
 import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
@@ -163,15 +164,16 @@ fun main() {
     )
     val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
 
-    val identendringService = UpdateIdentService(database, pdlService)
-    val pdlAktorConsumer = PdlAktorUpdateConsumer(getKafkaConsumerPdlAktor(serviceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
-
     val sykmeldingerService = SykmeldingerService(database)
     val sendtSykmeldingKafkaProducer = KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val bekreftSykmeldingKafkaProducer =
         KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaBaseConfigAiven, environment)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
+
+    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
+    val updateIdentService = UpdateIdentService(database, pdlService)
+    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(serviceUser, environment), applicationState, environment.pdlAktorTopic, identendringService, updateIdentService)
 
     val mottattSykmeldingService = MottattSykmeldingService(
         database = database,
