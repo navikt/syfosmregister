@@ -199,7 +199,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
-                    response.content!! shouldBeEqualTo "FOM should be before or equal to TOM"
+                    response.content!! shouldBeEqualTo "\"FOM should be before or equal to TOM\""
                 }
             }
         }

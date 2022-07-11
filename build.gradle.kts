@@ -5,27 +5,27 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 group = "no.nav.syfo"
 version = "1.0.0"
 
-val coroutinesVersion = "1.6.1"
+val coroutinesVersion = "1.6.2"
 val jacksonVersion = "2.13.3"
 val confluentVersion = "7.0.1"
 val kluentVersion = "1.68"
-val ktorVersion = "2.0.1"
+val ktorVersion = "2.0.3"
 val logbackVersion = "1.2.11"
-val logstashEncoderVersion = "7.1.1"
+val logstashEncoderVersion = "7.2"
 val prometheusVersion = "0.15.0"
-val kotestVersion = "5.3.0"
-val postgresVersion = "42.3.4"
-val flywayVersion = "8.5.11"
+val kotestVersion = "5.3.1"
+val postgresVersion = "42.3.6"
+val flywayVersion = "8.5.12"
 val hikariVersion = "5.0.1"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "1.f132f2b"
 val mockkVersion = "1.12.4"
-val nimbusdsVersion = "9.22"
-val testContainerKafkaVersion = "1.17.1"
-val caffeineVersion = "3.1.0"
+val nimbusdsVersion = "9.23"
+val testContainerKafkaVersion = "1.17.2"
+val caffeineVersion = "3.1.1"
 val kotlinVersion = "1.6.21"
-val swaggerUiVersion = "4.10.3"
-val testContainerVersion = "1.17.1"
+val swaggerUiVersion = "4.11.1"
+val testContainerVersion = "1.17.2"
 
 plugins {
     id("org.jmailen.kotlinter") version "3.10.0"
@@ -96,7 +96,6 @@ dependencies {
     implementation("org.postgresql:postgresql:$postgresVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")
     implementation("org.flywaydb:flyway-core:$flywayVersion")
-    implementation("com.bettercloud:vault-java-driver:$vaultJavaDriveVersion")
 
     implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 
