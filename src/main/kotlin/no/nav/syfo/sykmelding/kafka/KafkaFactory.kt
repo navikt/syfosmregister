@@ -30,7 +30,7 @@ class KafkaFactory private constructor() {
     companion object {
         fun getSykmeldingStatusKafkaProducer(kafkaBaseConfig: Properties, environment: Environment): SykmeldingStatusKafkaProducer {
             val kafkaStatusProducerConfig = kafkaBaseConfig.toProducerConfig(
-                "${environment.applicationName}-producer", JacksonKafkaSerializer::class
+                "${environment.applicationName}-fss-producer", JacksonKafkaSerializer::class
             )
             val kafkaProducer = KafkaProducer<String, SykmeldingStatusKafkaMessageDTO>(kafkaStatusProducerConfig)
             return SykmeldingStatusKafkaProducer(kafkaProducer, environment.sykmeldingStatusAivenTopic)

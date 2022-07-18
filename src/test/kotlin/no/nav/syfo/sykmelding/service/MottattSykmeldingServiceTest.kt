@@ -3,12 +3,14 @@ package no.nav.syfo.sykmelding.service
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearAllMocks
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkClass
 import no.nav.syfo.Environment
 import no.nav.syfo.LoggingMeta
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
+import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.TestDB.Companion.database
 import no.nav.syfo.testutil.dropData
@@ -23,6 +25,7 @@ class MottattSykmeldingServiceTest : FunSpec({
     val applicationState = ApplicationState(true, true)
     val mottattSykmeldingService = UpdateSykmeldingService(
         database = testDb,
+        mockk<SykmeldingStatusKafkaProducer>(relaxed = true),
     )
     val loggingMeta = LoggingMeta(
         sykmeldingId = "123",

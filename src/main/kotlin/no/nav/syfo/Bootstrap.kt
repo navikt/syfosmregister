@@ -40,6 +40,7 @@ import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumerAiven
+import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmelding.kafka.service.UpdateStatusService
 import no.nav.syfo.sykmelding.service.BehandlingsutfallService
@@ -108,7 +109,8 @@ fun main() {
     val sykmeldingStatusKafkaConsumerAiven = getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
 
     val updateSykmeldingService = UpdateSykmeldingService(
-        database = database
+        database = database,
+        sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment),
     )
     val updateStatusService = UpdateStatusService(sykmeldingStatusService)
 
