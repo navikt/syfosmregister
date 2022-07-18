@@ -12,8 +12,8 @@ spec:
         type: POSTGRES_14
         diskSize: 10
         databases:
-          - name: syfosmregister
-            envVarPrefix: NAIS_DATABASE
+          - name: smregister
+            envVarPrefix: DB
         diskAutoresize: true
         highAvailability: false
         diskType: SSD
