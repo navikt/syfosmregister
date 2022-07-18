@@ -23,8 +23,8 @@ import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.util.mapToSykmeldingsopplysninger
+import no.nav.syfo.util.TimestampUtil.Companion.getMinTime
 import no.nav.syfo.wrapExceptions
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
 class MottattSykmeldingService(
@@ -64,10 +64,11 @@ class MottattSykmeldingService(
                 database.updateMottattSykmelding(sykmeldingsopplysninger, sykmeldingsdokument)
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId = sykmeldingsopplysninger.id, fnr = sykmeldingsopplysninger.pasientFnr)
             } else {
+
                 sykmeldingStatusKafkaProducer.send(
                     SykmeldingStatusKafkaEventDTO(
                         receivedSykmelding.sykmelding.id,
-                        OffsetDateTime.now(ZoneOffset.UTC),
+                        getMinTime(receivedSykmelding.mottattDato),
                         STATUS_APEN
                     ),
                     receivedSykmelding.personNrPasient
