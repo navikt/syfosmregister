@@ -8,7 +8,7 @@ metadata:
 spec:
   gcp:
     sqlInstances:
-      - name: syfosmregister-db-instance
+      - name: smregister-db-instance
         type: POSTGRES_14
         tier: db-custom-2-5120
         diskSize: 100
@@ -17,14 +17,14 @@ spec:
             envVarPrefix: NAIS_DATABASE
         diskAutoresize: true
         highAvailability: true
-        pointInTimeRecovery: true
+        pointInTimeRecovery: falses
         diskType: SSD
         insights:
           enabled: true
   image: {{ image }}
   replicas:
-    min: 3
-    max: 5
+    min: 1
+    max: 1
     cpuThresholdPercentage: 80
   port: 8080
   liveness:
