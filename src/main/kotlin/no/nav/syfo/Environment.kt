@@ -32,11 +32,11 @@ data class Environment(
     val behandlingsUtfallTopic: String = "teamsykmelding.sykmelding-behandlingsutfall",
     val tokenXWellKnownUrl: String = getEnvVar("TOKEN_X_WELL_KNOWN_URL"),
     val clientIdTokenX: String = getEnvVar("TOKEN_X_CLIENT_ID"),
-    val databaseUsername: String = getEnvVar("NAIS_DATABASE_USERNAME"),
-    val databasePassword: String = getEnvVar("NAIS_DATABASE_PASSWORD"),
-    val dbHost: String = getEnvVar("NAIS_DATABASE_HOST"),
-    val dbPort: String = getEnvVar("NAIS_DATABASE_PORT"),
-    val dbName: String = getEnvVar("NAIS_DATABASE_DATABASE"),
+    val databaseUsername: String = getEnvVar("DB_USERNAME"),
+    val databasePassword: String = getEnvVar("DB_PASSWORD"),
+    val dbHost: String = getEnvVar("DB_HOST"),
+    val dbPort: String = getEnvVar("DB_PORT"),
+    val dbName: String = getEnvVar("DB_DATABASE"),
     val onPremSchemaRegistryUrl: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_URL"),
 
 ) : KafkaConfig {
