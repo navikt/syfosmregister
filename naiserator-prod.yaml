@@ -17,7 +17,6 @@ spec:
             envVarPrefix: DB
         diskAutoresize: true
         highAvailability: true
-        pointInTimeRecovery: falses
         diskType: SSD
         insights:
           enabled: true
