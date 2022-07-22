@@ -9,10 +9,6 @@ import io.ktor.server.testing.handleRequest
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.api.registerNaisApi
 import org.amshove.kluent.shouldBeEqualTo
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 class SelftestSpek : FunSpec({
     context("Successfull liveness and readyness tests") {
