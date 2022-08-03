@@ -83,10 +83,9 @@ spec:
           cluster: dev-gcp
         - application: sykmeldinger-backend
         - application: teamsykmelding-mock-backend
-          namespace: teamsykmelding
-          cluster: dev-gcp
   ingresses:
     - "https://smregister.dev.nav.no"
+    - "https://smregister.dev.intern.nav.no"
   webproxy: true
   envFrom:
     - secret: smregister-secret
