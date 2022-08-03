@@ -47,28 +47,13 @@ spec:
         - application: syfomodiaperson
           namespace: teamsykefravr
           cluster: dev-fss
-        - application: syfosoknad
-          namespace: flex
         - application: esyfovarsel
           namespace: team-esyfo
         - application: esyfovarsel
           namespace: team-esyfo
           cluster: dev-gcp
-        - application: sparenaproxy
-        - application: syfosmregler
-        - application: smregistrering-backend
         - application: smoppslag
           namespace: risk
-        - application: debug-dings
-          namespace: plattformsikkerhet
-          cluster: dev-gcp
-        - application: sykmeldinger-backend
-        - application: sykmeldinger-backend
-          namespace: teamsykmelding
-          cluster: dev-gcp
-        - application: teamsykmelding-mock-backend
-          namespace: teamsykmelding
-          cluster: dev-gcp
   vault:
     enabled: true
     paths:
