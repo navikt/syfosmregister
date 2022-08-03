@@ -44,16 +44,11 @@ spec:
   accessPolicy:
     inbound:
       rules:
-        - application: syfomodiaperson
-          namespace: teamsykefravr
-          cluster: prod-fss
         - application: esyfovarsel
           namespace: team-esyfo
         - application: esyfovarsel
           namespace: team-esyfo
           cluster: prod-gcp
-        - application: smoppslag
-          namespace: risk
   vault:
     enabled: true
     paths:
