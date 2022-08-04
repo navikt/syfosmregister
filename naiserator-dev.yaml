@@ -67,6 +67,9 @@ spec:
         - application: esyfovarsel
           namespace: team-esyfo
           cluster: dev-fss
+        - application: esyfovarsel
+          namespace: team-esyfo
+          cluster: dev-gcp
         - application: sparenaproxy
           namespace: teamsykmelding
           cluster: dev-fss

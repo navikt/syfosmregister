@@ -68,6 +68,9 @@ spec:
         - application: esyfovarsel
           namespace: team-esyfo
           cluster: prod-fss
+        - application: esyfovarsel
+          namespace: team-esyfo
+          cluster: prod-gcp
         - application: sparenaproxy
           namespace: teamsykmelding
           cluster: prod-fss
