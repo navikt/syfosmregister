@@ -1,6 +1,8 @@
 package no.nav.syfo.metrics
 
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.auth.authentication
+import io.ktor.server.request.header
 import io.ktor.server.request.path
 import io.ktor.util.pipeline.PipelineContext
 
@@ -14,6 +16,8 @@ fun monitorHttpRequests(): suspend PipelineContext<Unit, ApplicationCall>.(Unit)
     return {
         val path = context.request.path()
         val label = getLabel(path)
+        ORIGIN_COUNTER.labels(context.request.header("origin") ?: "no-origin").inc()
+        REFERER_COUNTER.labels(context.request.header("referer") ?: "no-referer").inc()
         val timer = HTTP_HISTOGRAM.labels(label).startTimer()
         proceed()
         timer.observeDuration()

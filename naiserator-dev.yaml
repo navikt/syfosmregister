@@ -41,14 +41,6 @@ spec:
       tenant: trygdeetaten.no
   tokenx:
     enabled: true
-  accessPolicy:
-    inbound:
-      rules:
-        - application: esyfovarsel
-          namespace: team-esyfo
-        - application: esyfovarsel
-          namespace: team-esyfo
-          cluster: dev-gcp
   vault:
     enabled: true
     paths:
