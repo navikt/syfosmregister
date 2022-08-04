@@ -1,10 +1,12 @@
 package no.nav.syfo.metrics
 
+import io.ktor.http.HttpHeaders.Origin
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authentication
 import io.ktor.server.request.header
 import io.ktor.server.request.path
 import io.ktor.util.pipeline.PipelineContext
+import no.nav.syfo.log
 
 val REGEX = """[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""".toRegex()
 
@@ -16,8 +18,9 @@ fun monitorHttpRequests(): suspend PipelineContext<Unit, ApplicationCall>.(Unit)
     return {
         val path = context.request.path()
         val label = getLabel(path)
-        ORIGIN_COUNTER.labels(context.request.header("origin") ?: "no-origin").inc()
-        REFERER_COUNTER.labels(context.request.header("referer") ?: "no-referer").inc()
+        log.info("origin ${context.request.header(Origin)}, referer ${context.request.header("Referer")}")
+        ORIGIN_COUNTER.labels(context.request.header(Origin) ?: "no-origin").inc()
+        REFERER_COUNTER.labels(context.request.header("Referer") ?: "no-referer").inc()
         val timer = HTTP_HISTOGRAM.labels(label).startTimer()
         proceed()
         timer.observeDuration()
