@@ -2,7 +2,6 @@ package no.nav.syfo.metrics
 
 import io.ktor.http.HttpHeaders.Origin
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.authentication
 import io.ktor.server.request.header
 import io.ktor.server.request.path
 import io.ktor.util.pipeline.PipelineContext
