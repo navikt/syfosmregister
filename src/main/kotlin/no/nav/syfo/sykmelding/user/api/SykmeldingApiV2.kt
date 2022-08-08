@@ -13,17 +13,20 @@ import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.StatusEventDTO
 import java.time.LocalDate
+import no.nav.syfo.log
 
 fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
     route("/sykmeldinger") {
         accept(ContentType.Application.Json) {
             get {
+                log.info("Incoming request from user: /sykmeldinger")
                 val principal: BrukerPrincipal = call.authentication.principal()!!
                 val fnr = principal.fnr
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
                 val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
                 val exclude = call.parameters.getAll("exclude")
                 val include = call.parameters.getAll("include")
+                log.info("Request contains all content")
 
                 when {
                     checkExcludeInclude(exclude, include) -> call.respond(HttpStatusCode.BadRequest, "Can not use both include and exclude")
