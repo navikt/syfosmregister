@@ -30,7 +30,7 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                 }
             }
             get("/sykmeldinger") {
-                log.warn("Incomming request for /sykmeldinger")
+                log.info("Incomming request for /sykmeldinger")
                 val fnr = getFnrFromHeader()
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
                 val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
