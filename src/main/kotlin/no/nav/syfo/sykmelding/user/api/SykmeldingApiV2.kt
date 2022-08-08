@@ -10,10 +10,10 @@ import io.ktor.server.routing.accept
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import no.nav.syfo.application.BrukerPrincipal
+import no.nav.syfo.log
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.StatusEventDTO
 import java.time.LocalDate
-import no.nav.syfo.log
 
 fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
     route("/sykmeldinger") {
