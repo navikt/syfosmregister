@@ -84,6 +84,9 @@ spec:
           cluster: prod-fss
           namespace: risk
         - application: sykmeldinger-backend
+        - application: syfooppfolgingsplanservice
+          namespace: team-esyfo
+          cluster: prod-fss
   ingresses:
     - "https://smregister.intern.nav.no"
   webproxy: true

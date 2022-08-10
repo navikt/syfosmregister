@@ -87,6 +87,9 @@ spec:
           cluster: dev-gcp
         - application: sykmeldinger-backend
         - application: teamsykmelding-mock-backend
+        - application: syfooppfolgingsplanservice
+          namespace: team-esyfo
+          cluster: dev-fss
   ingresses:
     - "https://smregister.dev.nav.no"
     - "https://smregister.dev.intern.nav.no"
