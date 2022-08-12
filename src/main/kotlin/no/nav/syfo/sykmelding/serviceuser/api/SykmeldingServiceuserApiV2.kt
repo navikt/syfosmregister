@@ -35,8 +35,10 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                 val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
 
                 if (fnr.isNullOrEmpty()) {
+                    log.warn("Missing header: fnr")
                     call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
                 } else {
+                    log.info("Sending back HttpStatusCode.OK")
                     call.respond(HttpStatusCode.OK, sykmeldingerService.getInternalSykmeldinger(fnr, fom, tom))
                 }
             }

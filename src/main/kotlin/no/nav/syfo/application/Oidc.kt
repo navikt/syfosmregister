@@ -10,14 +10,15 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner
-import java.net.ProxySelector
+import no.nav.syfo.application.exception.ServiceUnavailableException
 
-val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
     install(ContentNegotiation) {
         jackson {
             registerKotlinModule()
@@ -26,15 +27,16 @@ val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         }
     }
-    engine {
-        customizeClient {
-            setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
+    HttpResponseValidator {
+        handleResponseExceptionWithRequest { exception, _ ->
+            when (exception) {
+                is SocketTimeoutException -> throw ServiceUnavailableException(exception.message)
+            }
         }
     }
-    expectSuccess = true
 }
 
-fun getWellKnown(wellKnownUrl: String) = runBlocking { HttpClient(Apache, proxyConfig).get(wellKnownUrl).body<WellKnown>() }
+fun getWellKnown(wellKnownUrl: String) = runBlocking { HttpClient(Apache, config).get(wellKnownUrl).body<WellKnown>() }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class WellKnown(
@@ -45,7 +47,7 @@ data class WellKnown(
 )
 
 fun getWellKnownTokenX(wellKnownUrl: String) =
-    runBlocking { HttpClient(Apache, proxyConfig).get(wellKnownUrl).body<WellKnownTokenX>() }
+    runBlocking { HttpClient(Apache, config).get(wellKnownUrl).body<WellKnownTokenX>() }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class WellKnownTokenX(

@@ -17,7 +17,7 @@ fun monitorHttpRequests(): suspend PipelineContext<Unit, ApplicationCall>.(Unit)
     return {
         val path = context.request.path()
         val label = getLabel(path)
-        if(!path.contains("is_alive") && !path.contains("is_ready") && !path.contains("prometheus")) {
+        if (!path.contains("is_alive") && !path.contains("is_ready") && !path.contains("prometheus")) {
             log.info("origin ${context.request.header(Origin)}, referer ${context.request.header("Referer")}")
             ORIGIN_COUNTER.labels(context.request.header(Origin) ?: "no-origin").inc()
             REFERER_COUNTER.labels(context.request.header("Referer") ?: "no-referer").inc()

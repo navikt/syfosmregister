@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.service
 
 import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearAllMocks
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
@@ -10,22 +11,31 @@ import no.nav.syfo.LoggingMeta
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
+import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
-import no.nav.syfo.testutil.TestDB.Companion.database
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getMerknaderForId
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 
 class MottattSykmeldingServiceTest : FunSpec({
-    val testDb = TestDB()
+    val database = TestDB.database
+
     val environment = mockkClass(Environment::class)
     mockEnvironment(environment)
     val applicationState = ApplicationState(true, true)
-    val mottattSykmeldingService = UpdateSykmeldingService(
-        database = testDb,
-        mockk<SykmeldingStatusKafkaProducer>(relaxed = true),
+
+    val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
+    val sykmeldingStatusKafkaProducer = mockk<SykmeldingStatusKafkaProducer>(relaxed = true)
+    val mottattSykmeldingStatusService = mockk<MottattSykmeldingStatusService>(relaxed = true)
+    val mottattSykmeldingService = MottattSykmeldingService(
+        env = environment,
+        database = database,
+        mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
+        sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService
     )
     val loggingMeta = LoggingMeta(
         sykmeldingId = "123",
@@ -35,7 +45,7 @@ class MottattSykmeldingServiceTest : FunSpec({
     )
     afterTest {
         clearAllMocks()
-        testDb.connection.dropData()
+        database.connection.dropData()
     }
 
     beforeTest {
@@ -44,17 +54,28 @@ class MottattSykmeldingServiceTest : FunSpec({
     }
 
     afterSpec {
-        testDb.stop()
+        TestDB.stop()
     }
 
     context("Test receive sykmelding") {
-        test("should receive sykmelding from automatic topic") {
+        test("Handle resending to automatic topic") {
+            val receivedSykmelding = getReceivedSykmelding()
+
+            mottattSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, environment.okSykmeldingTopic)
+            mottattSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, environment.okSykmeldingTopic)
+
+            coVerify(exactly = 2) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+            coVerify(exactly = 1) { mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(receivedSykmelding.sykmelding.id, receivedSykmelding.personNrPasient) }
+        }
+
+        test("should receive sykmelding from automatic topic and publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
 
             mottattSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, environment.okSykmeldingTopic)
 
-            val lagretSykmelding = testDb.connection.erSykmeldingsopplysningerLagret("1")
+            val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
+            coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 
         test("should receive sykmelding med merknad from automatic topic and publish to mottatt sykmelding topic") {
@@ -63,9 +84,10 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             mottattSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, environment.okSykmeldingTopic)
 
-            val merknader = testDb.connection.getMerknaderForId("1")
+            val merknader = database.connection.getMerknaderForId("1")
             merknader!![0].type shouldBeEqualTo "UGYLDIG_TILBAKEDATERING"
             merknader[0].beskrivelse shouldBeEqualTo "ikke godkjent"
+            coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
 
         test("should receive sykmelding from manuell topic and publish to mottatt sykmelding topic") {
@@ -74,6 +96,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
+            coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
         test("should receive sykmelding from avvist topic and not publish to mottatt sykmelding topic") {
             val receivedSykmelding = getReceivedSykmelding()
@@ -81,6 +104,7 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
+            coVerify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
         }
     }
 })

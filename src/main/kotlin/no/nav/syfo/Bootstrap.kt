@@ -30,32 +30,31 @@ import no.nav.syfo.application.getWellKnown
 import no.nav.syfo.application.getWellKnownTokenX
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.Database
-import no.nav.syfo.db.VaultCredentialService
+import no.nav.syfo.identendring.IdentendringService
 import no.nav.syfo.identendring.PdlAktorConsumer
-import no.nav.syfo.identendring.UpdateIdentService
 import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
+import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumerAiven
+import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
-import no.nav.syfo.sykmelding.kafka.service.UpdateStatusService
 import no.nav.syfo.sykmelding.service.BehandlingsutfallService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingConsumerService
+import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
-import no.nav.syfo.sykmelding.service.UpdateSykmeldingService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.util.util.Unbounded
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.ProxySelector
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import kotlin.time.ExperimentalTime
@@ -73,7 +72,7 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 @ExperimentalTime
 fun main() {
     val environment = Environment()
-    val vaultServiceUser = VaultServiceUser()
+    val serviceUser = Serviceuser()
     val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
         .cached(10, 24, TimeUnit.HOURS)
@@ -91,8 +90,7 @@ fun main() {
         .rateLimited(10, 1, TimeUnit.MINUTES)
         .build()
 
-    val vaultCredentialService = VaultCredentialService()
-    val database = Database(environment, vaultCredentialService)
+    val database = Database(environment)
 
     val applicationState = ApplicationState()
 
@@ -108,33 +106,15 @@ fun main() {
     val sykmeldingStatusService = SykmeldingStatusService(database)
     val sykmeldingStatusKafkaConsumerAiven = getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
 
-    val updateSykmeldingService = UpdateSykmeldingService(
-        database = database,
-        sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment),
-    )
-    val updateStatusService = UpdateStatusService(sykmeldingStatusService)
-
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(
-        sykmeldingStatusKafkaConsumer = sykmeldingStatusKafkaConsumerAiven,
-        applicationState = applicationState,
-        updateStatusService = updateStatusService,
-    )
-
     val receivedSykmeldingKafkaConsumerAiven = KafkaConsumer<String, String>(
         kafkaBaseConfigAiven
-            .toConsumerConfig("${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+            .toConsumerConfig("${environment.applicationName}-gcp-consumer", valueDeserializer = StringDeserializer::class)
             .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
     )
 
-    val mottattSykmeldingConsumerService = MottattSykmeldingConsumerService(
-        applicationState = applicationState,
-        kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
-        updateSykmeldingService = updateSykmeldingService,
-        env = environment
-    )
     val behandlingsutfallKafkaConsumerAiven = KafkaConsumer<String, String>(
         kafkaBaseConfigAiven
-            .toConsumerConfig("${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class)
+            .toConsumerConfig("${environment.applicationName}-gcp-consumer", valueDeserializer = StringDeserializer::class)
             .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
     )
     val behandlingsutfallService = BehandlingsutfallService(
@@ -162,23 +142,10 @@ fun main() {
         }
         expectSuccess = true
     }
-    val proxyConfig: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        config()
-        engine {
-            customizeClient {
-                setRoutePlanner(SystemDefaultRoutePlanner(ProxySelector.getDefault()))
-            }
-            socketTimeout = 3_000
-            connectTimeout = 3_000
-            connectionRequestTimeout = 10_000
-        }
-    }
 
     val httpClient = HttpClient(Apache, config)
-
-    val httpProxyClient = HttpClient(Apache, proxyConfig)
-    val azureAdV2Client = AzureAdV2Client(environment.clientIdV2, environment.clientSecretV2, environment.azureTokenEndpoint, httpProxyClient)
-    val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, environment.syfoTilgangskontrollUrl, environment.syfotilgangskontrollClientId)
+    val azureAdV2Client = AzureAdV2Client(environment.clientIdV2, environment.clientSecretV2, environment.azureTokenEndpoint, httpClient)
+    val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, environment.syfoTilgangskontrollUrl, environment.syfotilgangskontrollScope)
 
     val pdlClient = PdlClient(
         httpClient,
@@ -187,10 +154,34 @@ fun main() {
     )
     val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
 
-    val updateIdentService = UpdateIdentService(database, pdlService)
-    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(vaultServiceUser, environment), applicationState, environment.pdlAktorTopic, updateIdentService)
-
     val sykmeldingerService = SykmeldingerService(database)
+    val sendtSykmeldingKafkaProducer = KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
+    val bekreftSykmeldingKafkaProducer =
+        KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
+    val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaBaseConfigAiven, environment)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
+
+    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
+    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(serviceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
+
+    val mottattSykmeldingService = MottattSykmeldingService(
+        database = database,
+        env = environment,
+        sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment),
+        mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment),
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+    )
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(
+        sykmeldingStatusKafkaConsumer = sykmeldingStatusKafkaConsumerAiven,
+        applicationState = applicationState,
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+    )
+    val mottattSykmeldingConsumerService = MottattSykmeldingConsumerService(
+        applicationState = applicationState,
+        kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
+        mottattSykmeldingService = mottattSykmeldingService,
+        env = environment
+    )
 
     val applicationEngine = createApplicationEngine(
         env = environment,
@@ -206,7 +197,6 @@ fun main() {
         tilgangskontrollService = tilgangskontrollService
     )
 
-    RenewVaultService(vaultCredentialService, applicationState).startRenewTasks()
     pdlAktorConsumer.startConsumer()
     launchListeners(
         applicationState = applicationState,

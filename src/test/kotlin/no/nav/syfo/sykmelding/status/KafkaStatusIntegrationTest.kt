@@ -44,8 +44,8 @@ import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
-import no.nav.syfo.sykmelding.kafka.service.UpdateStatusService
 import no.nav.syfo.sykmelding.model.SporsmalDTO
 import no.nav.syfo.sykmelding.model.SvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
@@ -67,7 +67,7 @@ import java.time.ZoneOffset
 @DelicateCoroutinesApi
 class KafkaStatusIntegrationTest : FunSpec({
 
-    val database = TestDB()
+    val database = TestDB.database
 
     val environment = mockkClass(Environment::class)
     setUpEnvironment(environment)
@@ -78,15 +78,18 @@ class KafkaStatusIntegrationTest : FunSpec({
     val applicationState = ApplicationState(alive = true, ready = true)
     val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
     val consumer = KafkaFactory.getKafkaStatusConsumerAiven(kafkaConfig, environment)
-    val updateStatusService = UpdateStatusService(sykmeldingStatusService)
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, updateStatusService)
+    val sendtSykmeldingKafkaProducer = spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment))
+    val bekreftSykmeldingKafkaProducer = spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
+    val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
+    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
     val sykmeldingerService = SykmeldingerService(database)
     val mockPayload = mockk<Payload>()
 
     afterSpec {
         applicationState.ready = false
         applicationState.alive = false
-        database.stop()
+        TestDB.stop()
     }
 
     beforeTest {
@@ -309,7 +312,7 @@ class KafkaStatusIntegrationTest : FunSpec({
 })
 
 fun getSlettetEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
-    return SykmeldingStatusKafkaEventDTO(sykmelding.id, getNowTickMillisOffsetDateTime(), STATUS_SLETTET, null, null)
+    return SykmeldingStatusKafkaEventDTO(sykmelding.id, getNowTickMillisOffsetDateTime().plusMonths(1), STATUS_SLETTET, null, null)
 }
 
 private fun setUpEnvironment(environment: Environment) {

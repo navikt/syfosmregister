@@ -25,7 +25,7 @@ class PdlAktorConsumer(
     private val kafkaConsumer: KafkaConsumer<String, GenericRecord>,
     private val applicationState: ApplicationState,
     private val topic: String,
-    private val updateIdentService: UpdateIdentService
+    private val identendringService: IdentendringService
 ) {
     companion object {
         private const val DELAY_ON_ERROR_SECONDS = 60L
@@ -73,7 +73,7 @@ class PdlAktorConsumer(
     }
 
     private suspend fun handleIdent(it: ConsumerRecord<String, GenericRecord>) {
-        updateIdentService.oppdaterIdent(it.value().toIdentListe())
+        identendringService.oppdaterIdent(it.value().toIdentListe())
     }
 }
 

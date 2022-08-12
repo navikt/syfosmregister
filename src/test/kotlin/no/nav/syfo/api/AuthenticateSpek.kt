@@ -36,7 +36,7 @@ class AuthenticateSpek : FunSpec({
     val path = "src/test/resources/jwkset.json"
     val uri = Paths.get(path).toUri().toURL()
     val jwkProvider = JwkProviderBuilder(uri).build()
-    val database = TestDB()
+    val database = TestDB.database
     val sykmeldingerService = SykmeldingerService(database)
 
     beforeTest {
@@ -46,7 +46,7 @@ class AuthenticateSpek : FunSpec({
     }
 
     afterSpec {
-        database.stop()
+        TestDB.stop()
     }
 
     context("Authenticate basicauth") {

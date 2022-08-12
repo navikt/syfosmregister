@@ -10,14 +10,14 @@ import org.amshove.kluent.shouldBeEqualTo
 import java.util.UUID
 
 class PersisterSykmeldingQueriesKtTest : FunSpec({
-    val db = TestDB()
+    val db = TestDB.database
 
     afterTest {
         db.connection.dropData()
     }
 
     afterSpec {
-        db.stop()
+        TestDB.stop()
     }
 
     context("Test at Sykmeldingsopplysninger persisteres og hentes ut riktig") {

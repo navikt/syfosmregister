@@ -24,7 +24,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import java.time.Duration
 
 class BehandligsutfallServiceTest : FunSpec({
-    val testDb = TestDB()
+    val testDb = TestDB.database
     val environment = mockkClass(Environment::class)
     every { environment.applicationName } returns "application"
     every { environment.mottattSykmeldingKafkaTopic } returns "mottatttopic"
@@ -64,7 +64,7 @@ class BehandligsutfallServiceTest : FunSpec({
     }
 
     afterSpec {
-        testDb.stop()
+        TestDB.stop()
     }
 
     context("Test BehandlingsuftallService") {

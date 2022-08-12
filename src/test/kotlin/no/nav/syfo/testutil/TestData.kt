@@ -39,8 +39,6 @@ import java.time.OffsetDateTime
 fun getEnvironment(): Environment {
     return Environment(
         kafkaBootstrapServers = "",
-        syfosmregisterDBURL = "",
-        mountPathVault = "",
         cluster = "",
         truststore = "",
         truststorePassword = "",
@@ -51,12 +49,18 @@ fun getEnvironment(): Environment {
         clientSecretV2 = "",
         jwkKeysUrlV2 = "",
         jwtIssuerV2 = "assureissuer",
-        syfotilgangskontrollClientId = "",
+        syfotilgangskontrollScope = "",
         azureTokenEndpoint = "",
         pdlGraphqlPath = "",
         pdlScope = "scope",
         tokenXWellKnownUrl = "",
-        clientIdTokenX = "clientid"
+        clientIdTokenX = "clientid",
+        dbName = "database",
+        databasePassword = "password",
+        databaseUsername = "username",
+        dbHost = "localhost",
+        dbPort = "5432",
+        onPremSchemaRegistryUrl = "",
     )
 }
 

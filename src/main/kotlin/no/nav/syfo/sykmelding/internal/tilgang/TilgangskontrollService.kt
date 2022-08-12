@@ -16,7 +16,7 @@ class TilgangskontrollService(
     private val azureAdV2Client: AzureAdV2Client,
     private val httpClient: HttpClient,
     url: String,
-    private val syfotilgangskontrollClientId: String
+    private val syfotilgangskontrollScope: String
 ) {
     companion object {
         val log: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
@@ -30,7 +30,7 @@ class TilgangskontrollService(
     }
 
     suspend fun hasAccessToUserOboToken(fnr: String, accessToken: String): Boolean {
-        val oboToken = azureAdV2Client.getOnBehalfOfToken(scopeClientId = syfotilgangskontrollClientId, token = accessToken)
+        val oboToken = azureAdV2Client.getOnBehalfOfToken(scope = syfotilgangskontrollScope, token = accessToken)
             ?.accessToken
 
         return if (oboToken != null) {

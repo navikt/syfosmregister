@@ -6,10 +6,7 @@ import io.mockk.mockk
 import no.nav.syfo.Environment
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.db.VaultCredentialService
-import no.nav.syfo.db.VaultCredentials
 import no.nav.syfo.db.toList
-import no.nav.syfo.log
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.AnnenFraversArsak
@@ -44,13 +41,12 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
 
-class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:12")
+class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:14")
 
-class TestDB : DatabaseInterface {
+class TestDB private constructor() {
 
     companion object {
         var database: DatabaseInterface
-        val vaultCredentialService = mockk<VaultCredentialService>()
         private val psqlContainer: PsqlContainer = PsqlContainer()
             .withExposedPorts(5432)
             .withUsername("username")
@@ -61,29 +57,16 @@ class TestDB : DatabaseInterface {
         init {
             psqlContainer.start()
             val mockEnv = mockk<Environment>(relaxed = true)
-            every { mockEnv.mountPathVault } returns ""
-            every { mockEnv.databaseName } returns "database"
-            every { mockEnv.syfosmregisterDBURL } returns psqlContainer.jdbcUrl
-            every { vaultCredentialService.renewCredentialsTaskData = any() } returns Unit
-            every { vaultCredentialService.getNewCredentials(any(), any(), any()) } returns VaultCredentials(
-                "1",
-                "username",
-                "password"
-            )
-            try {
-                database = Database(mockEnv, vaultCredentialService)
-            } catch (ex: Exception) {
-                log.error("error", ex)
-                database = Database(mockEnv, vaultCredentialService)
-            }
+            every { mockEnv.databaseUsername } returns "username"
+            every { mockEnv.databasePassword } returns "password"
+            every { mockEnv.dbName } returns "database"
+            every { mockEnv.jdbcUrl() } returns psqlContainer.jdbcUrl
+            database = Database(mockEnv)
         }
-    }
 
-    override val connection: Connection
-        get() = database.connection
-
-    fun stop() {
-        this.connection.dropData()
+        fun stop() {
+            database.connection.dropData()
+        }
     }
 }
 
@@ -187,7 +170,7 @@ val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
     legekontorReshId = "legekontorReshId",
     epjSystemNavn = "epjSystemNavn",
     epjSystemVersjon = "epjSystemVersjon",
-    mottattTidspunkt = getNowTickMillisLocalDateTime(),
+    mottattTidspunkt = getNowTickMillisLocalDateTime().plusMonths(1),
     tssid = "13455",
     merknader = emptyList(),
     partnerreferanse = null

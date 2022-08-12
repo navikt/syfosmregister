@@ -3,7 +3,7 @@ package no.nav.syfo.metrics
 import io.prometheus.client.Counter
 import io.prometheus.client.Histogram
 
-const val METRICS_NS = "syfosmregister"
+const val METRICS_NS = "smregister"
 
 val SYKMELDING_DUPLIKAT_COUNTER: Counter = Counter.build()
     .name(METRICS_NS)

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 class SykmeldingStatusConsumerService(
     private val sykmeldingStatusKafkaConsumer: SykmeldingStatusKafkaConsumer,
     private val applicationState: ApplicationState,
-    private val updateStatusService: UpdateStatusService
+    private val mottattSykmeldingStatusService: MottattSykmeldingStatusService
 ) {
 
     companion object {
@@ -22,7 +22,11 @@ class SykmeldingStatusConsumerService(
             try {
                 run()
             } catch (ex: Exception) {
-                log.error("Error reading status from aiven topic, trying again in {} milliseconds, error {}", delayStart, ex.message)
+                log.error(
+                    "Error reading status from aiven topic, trying again in {} milliseconds, error {}",
+                    delayStart,
+                    ex.message
+                )
                 sykmeldingStatusKafkaConsumer.unsubscribe()
             }
             delay(delayStart)
@@ -44,6 +48,7 @@ class SykmeldingStatusConsumerService(
     }
 
     private suspend fun handleStatusEvent(it: SykmeldingStatusKafkaMessageDTO) {
-        updateStatusService.handleStatusEvent(it)
+        log.info("Mottatt sykmelding status ${it.event.sykmeldingId} er etter tidspunkt for bytting av logikk")
+        mottattSykmeldingStatusService.handleStatusEvent(it)
     }
 }

@@ -21,7 +21,7 @@ import java.time.ZoneOffset
 
 class SykmeldingStatusServiceSpek : FunSpec({
 
-    val database = TestDB()
+    val database = TestDB.database
     val sykmeldingerService = SykmeldingerService(database)
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
@@ -43,12 +43,12 @@ class SykmeldingStatusServiceSpek : FunSpec({
     }
 
     afterSpec {
-        database.stop()
+        TestDB.stop()
     }
 
     context("Test registrerStatus") {
         test("Skal ikke kaste feil hvis man oppdaterer med eksisterende status på nytt") {
-            val confirmedDateTime = getNowTickMillisOffsetDateTime()
+            val confirmedDateTime = getNowTickMillisOffsetDateTime().plusMonths(1)
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.BEKREFTET)
             sykmeldingStatusService.registrerStatus(status)
             sykmeldingStatusService.registrerStatus(status)
@@ -58,7 +58,7 @@ class SykmeldingStatusServiceSpek : FunSpec({
         }
 
         test("Skal ikke hente sykmeldinger med status SLETTET") {
-            val confirmedDateTime = getNowTickMillisOffsetDateTime()
+            val confirmedDateTime = getNowTickMillisOffsetDateTime().plusMonths(1)
             val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
             sykmeldingStatusService.registrerStatus(status)
@@ -85,7 +85,7 @@ class SykmeldingStatusServiceSpek : FunSpec({
             )
             database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
-            val confirmedDateTime = getNowTickMillisOffsetDateTime()
+            val confirmedDateTime = getNowTickMillisOffsetDateTime().plusMonths(1)
             val deletedStatus = SykmeldingStatusEvent("uuid", confirmedDateTime.plusHours(1), StatusEvent.SLETTET)
             database.registerStatus(deletedStatus)
 
@@ -99,7 +99,7 @@ class SykmeldingStatusServiceSpek : FunSpec({
             database.registerStatus(
                 SykmeldingStatusEvent(
                     "uuid",
-                    getNowTickMillisOffsetDateTime().plusSeconds(10),
+                    getNowTickMillisOffsetDateTime().plusMonths(1).plusSeconds(10),
                     StatusEvent.SENDT
                 )
             )
@@ -111,7 +111,7 @@ class SykmeldingStatusServiceSpek : FunSpec({
             database.registerStatus(
                 SykmeldingStatusEvent(
                     "uuid",
-                    getNowTickMillisOffsetDateTime().plusSeconds(10),
+                    getNowTickMillisOffsetDateTime().plusMonths(1).plusSeconds(10),
                     StatusEvent.SENDT
                 )
             )
