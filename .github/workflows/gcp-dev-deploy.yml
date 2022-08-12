@@ -2,8 +2,8 @@ name: Deploy to dev gcp
 on:
   push:
     branches:
-      - 'gcp**'
-      - '!gcp'
+      - '**'
+      - '!master'
 env:
   IMAGE: docker.pkg.github.com/${{ github.repository }}/syfosmregister:${{ github.sha }}
 
