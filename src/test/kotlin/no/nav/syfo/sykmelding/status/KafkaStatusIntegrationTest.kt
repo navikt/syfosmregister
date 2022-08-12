@@ -13,7 +13,6 @@ import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
@@ -134,10 +133,6 @@ class KafkaStatusIntegrationTest : FunSpec({
             database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 1
         }
 
-        test("test tombstone") {
-            bekreftSykmeldingKafkaProducer.tombstoneSykmelding("123")
-        }
-
         test("write and read APEN and SENDT") {
             coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
                 callOriginal()
@@ -213,7 +208,6 @@ class KafkaStatusIntegrationTest : FunSpec({
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
         }
         test("should test APEN -> SENDT -> SLETTET") {
             coEvery { sykmeldingStatusService.slettSykmelding(any()) } answers {
@@ -234,12 +228,6 @@ class KafkaStatusIntegrationTest : FunSpec({
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
             database.finnSvarForSykmelding(sykmelding.id).size shouldBeEqualTo 0
-
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
         }
 
         test("should test APEN -> BEKREFTET -> SLETTET") {
@@ -260,11 +248,6 @@ class KafkaStatusIntegrationTest : FunSpec({
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
-            coVerify(exactly = 1) { tombstoneProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
         }
     }
 
@@ -369,7 +352,7 @@ private fun getSykmeldingBekreftEvent(sykmelding: Sykmeldingsopplysninger): Sykm
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
         statusEvent = STATUS_BEKREFTET,
-        timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
+        timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
         arbeidsgiver = null,
         sporsmals = listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI"))
     )
@@ -378,7 +361,7 @@ private fun getSykmeldingBekreftEvent(sykmelding: Sykmeldingsopplysninger): Sykm
 private fun getSendtEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
-        timestamp = sykmelding.mottattTidspunkt.plusHours(1).atOffset(ZoneOffset.UTC),
+        timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
         arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
         statusEvent = STATUS_SENDT,
         sporsmals = listOf(
