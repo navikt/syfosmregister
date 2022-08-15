@@ -76,6 +76,7 @@ spec:
         - application: syfosmregler
           namespace: teamsykmelding
           cluster: dev-fss
+        - application: syfosmregler
         - application: smregistrering-backend
           namespace: teamsykmelding
           cluster: dev-fss
