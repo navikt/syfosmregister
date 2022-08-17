@@ -74,13 +74,12 @@ spec:
         - application: sparenaproxy
           namespace: teamsykmelding
           cluster: prod-fss
-        - application: syfosmregler
-          namespace: teamsykmelding
-          cluster: prod-fss
+        - application: sparenaproxy
         - application: syfosmregler
         - application: smregistrering-backend
           namespace: teamsykmelding
           cluster: prod-fss
+        - application: smregistrering-backend
         - application: smoppslag
           cluster: prod-fss
           namespace: risk
