@@ -10,6 +10,8 @@ spec:
     sqlInstances:
       - name: smregister-instance
         type: POSTGRES_14
+        users:
+          - name: macgyver
         diskSize: 10
         databases:
           - name: smregister
