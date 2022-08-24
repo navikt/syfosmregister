@@ -89,6 +89,9 @@ spec:
         - application: syfooppfolgingsplanservice
           namespace: team-esyfo
           cluster: prod-fss
+        - application: macgyver
+          namespace: teamsykmelding
+          cluster: prod-gcp
   ingresses:
     - "https://smregister.intern.nav.no"
   webproxy: true

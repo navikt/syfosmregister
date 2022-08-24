@@ -92,6 +92,9 @@ spec:
         - application: syfooppfolgingsplanservice
           namespace: team-esyfo
           cluster: dev-fss
+        - application: macgyver
+          namespace: teamsykmelding
+          cluster: dev-gcp
   ingresses:
     - "https://smregister.dev.nav.no"
     - "https://smregister.dev.intern.nav.no"
