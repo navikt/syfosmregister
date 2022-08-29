@@ -34,7 +34,7 @@ Creating a docker image should be as simple as `docker build -t syfosmregister .
 Run `docker-compose up`.
 
 ### Getting github-package-registry packages NAV-IT
-Some packages used in this repo is uploaded to the Github Package Registry which requires authentication. It can, for example, be solved like this in Gradle:
+Some packages used in this repo is uploaded to the GitHub Package Registry which requires authentication. It can, for example, be solved like this in Gradle:
 ```
 val githubUser: String by project
 val githubPassword: String by project
@@ -69,32 +69,6 @@ or the command line:
 ./gradlew -PgithubUser=x-access-token -PgithubPassword=[token]
 ```
 
-### Access to the Postgres database
-
-For utfyllende dokumentasjon se [Postgres i NAV](https://github.com/navikt/utvikling/blob/main/docs/teknisk/PostgreSQL.md)
-
-#### Tldr
-
-The application uses dynamically generated user / passwords for the database.
-To connect to the database one must generate user / password (which lasts for one hour)
-as follows:
-
-Use The Vault Browser CLI that is build in https://vault.adeo.no
-
-Preprod credentials:
-
-```
-read postgresql/preprod-fss/creds/syfosmregister-admin
-
-```
-
-Prod credentials:
-
-```
-read postgresql/prod-fss/creds/syfosmregister-admin
-
-```
-
 ### Upgrading the gradle wrapper
 Find the newest version of gradle here: https://gradle.org/releases/ Then run this command:
 
@@ -103,5 +77,11 @@ Find the newest version of gradle here: https://gradle.org/releases/ Then run th
 ### Inquiries
 Questions related to the code or the project can be asked as issues here on GitHub
 
-### For NAV employees
-We are available at the Slack channel #team-sykmelding
+### Contact
+
+This project is maintained by navikt/teamsykmelding
+
+Questions and/or feature requests? Please create an [issue](https://github.com/navikt/syfosmregister/issues).
+
+If you work in [@navikt](https://github.com/navikt) you can reach us at the Slack
+channel [#team-sykmelding](https://nav-it.slack.com/archives/CMA3XV997).
