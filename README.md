@@ -8,9 +8,8 @@ Application for persisting sykmelding 2013 in database
 * Kotlin
 * Ktor
 * Gradle
-* Spek
+* Kotest
 * Kafka
-* Mq
 * Vault
 * Postgres
 
