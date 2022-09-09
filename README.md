@@ -15,7 +15,7 @@ Application for persisting sykmelding 2013 in database
 #### Requirements
 
 * JDK 17
-* 
+
 ### Getting github-package-registry packages NAV-IT
 Some packages used in this repo is uploaded to the GitHub Package Registry which requires authentication. It can, for example, be solved like this in Gradle:
 ```
@@ -71,7 +71,6 @@ Run `docker-compose up`.
 ### Access to the Postgres database
 
 For information on connecting to dev og prod DB see: [Postgres GCP](https://doc.nais.io/cli/commands/postgres/)
-
 
 ### Upgrading the gradle wrapper
 Find the newest version of gradle here: https://gradle.org/releases/ Then run this command:
