@@ -6,9 +6,9 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.util.NAV_PERSONIDENT_HEADER
-import org.apache.http.HttpHeaders
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -45,7 +45,7 @@ class TilgangskontrollService(
         return try {
             httpClient.get(requestUrl) {
                 accept(ContentType.Application.Json)
-                headers.append(HttpHeaders.AUTHORIZATION, "Bearer $accessToken")
+                headers.append(HttpHeaders.Authorization, "Bearer $accessToken")
                 headers.append(NAV_PERSONIDENT_HEADER, fnr)
             }.body<Tilgang>().harTilgang
         } catch (e: ResponseException) {
