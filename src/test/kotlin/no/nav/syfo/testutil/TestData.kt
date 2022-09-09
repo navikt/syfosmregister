@@ -64,7 +64,7 @@ fun getEnvironment(): Environment {
     )
 }
 
-fun getSykmeldingDto(skjermet: Boolean = false, perioder: List<SykmeldingsperiodeDTO> = getPerioder()): SykmeldingDTO {
+fun getSykmeldingDto(perioder: List<SykmeldingsperiodeDTO> = getPerioder()): SykmeldingDTO {
     return SykmeldingDTO(
         id = "1",
         utdypendeOpplysninger = emptyMap(),

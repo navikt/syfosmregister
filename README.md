@@ -10,28 +10,12 @@ Application for persisting sykmelding 2013 in database
 * Gradle
 * Kotest
 * Kafka
-* Vault
 * Postgres
 
 #### Requirements
 
 * JDK 17
-
-### Building the application
-#### Compile and package application
-To build locally and run the integration tests you can simply run `./gradlew shadowJar` or on windows 
-`gradlew.bat shadowJar`
-
-#### Creating a docker image
-Creating a docker image should be as simple as `docker build -t syfosmregister .`
-
-#### Running a docker image
-`docker run --rm -it -p 8080:8080 syfosmregister`
-
-#### Starting a local PostgreSQL server
-
-Run `docker-compose up`.
-
+* 
 ### Getting github-package-registry packages NAV-IT
 Some packages used in this repo is uploaded to the GitHub Package Registry which requires authentication. It can, for example, be solved like this in Gradle:
 ```
@@ -56,7 +40,8 @@ githubPassword=[token]
 ```
 
 Replace `[token]` with a personal access token with scope `read:packages`.
-
+See githubs guide [creating-a-personal-access-token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) on
+how to create a personal access token.
 Alternatively, the variables can be configured via environment variables:
 
 * `ORG_GRADLE_PROJECT_githubUser`
@@ -67,6 +52,26 @@ or the command line:
 ```
 ./gradlew -PgithubUser=x-access-token -PgithubPassword=[token]
 ```
+
+### Building the application
+#### Compile and package application
+To build locally and run the integration tests you can simply run `./gradlew shadowJar` or on windows 
+`gradlew.bat shadowJar`
+
+#### Creating a docker image
+Creating a docker image should be as simple as `docker build -t syfosmregister .`
+
+#### Running a docker image
+`docker run --rm -it -p 8080:8080 syfosmregister`
+
+#### Starting a local PostgreSQL server
+
+Run `docker-compose up`.
+
+### Access to the Postgres database
+
+For information on connecting to dev og prod DB see: [Postgres GCP](https://doc.nais.io/cli/commands/postgres/)
+
 
 ### Upgrading the gradle wrapper
 Find the newest version of gradle here: https://gradle.org/releases/ Then run this command:

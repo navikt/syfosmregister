@@ -6,11 +6,11 @@ group = "no.nav.syfo"
 version = "1.0.0"
 
 val coroutinesVersion = "1.6.4"
-val jacksonVersion = "2.13.3"
+val jacksonVersion = "2.13.4"
 val confluentVersion = "7.2.1"
 val kluentVersion = "1.68"
-val ktorVersion = "2.0.3"
-val logbackVersion = "1.2.11"
+val ktorVersion = "2.1.1"
+val logbackVersion = "1.4.0"
 val logstashEncoderVersion = "7.2"
 val prometheusVersion = "0.16.0"
 val kotestVersion = "5.4.2"
@@ -24,7 +24,7 @@ val nimbusdsVersion = "9.24.3"
 val testContainerKafkaVersion = "1.17.3"
 val caffeineVersion = "3.1.1"
 val kotlinVersion = "1.7.10"
-val swaggerUiVersion = "4.11.1"
+val swaggerUiVersion = "4.14.0"
 val testContainerVersion = "1.17.3"
 
 plugins {
@@ -74,7 +74,7 @@ dependencies {
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
@@ -147,7 +147,11 @@ tasks {
     withType<Test> {
         useJUnitPlatform {
         }
-        testLogging.showStandardStreams = true
+        testLogging {
+            events("skipped", "failed")
+            showStackTraces = true
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
     }
 
     "check" {

@@ -21,7 +21,7 @@ class HttpClientTest {
         }
         expectSuccess = true
         engine {
-            addHandler { request ->
+            addHandler { _ ->
                 respond(responseData!!.content, responseData!!.httpStatusCode, responseData!!.headers)
             }
         }
