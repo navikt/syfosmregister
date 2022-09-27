@@ -65,6 +65,7 @@ fun getReceivedSykmelding(merknader: List<Merknad>? = null): ReceivedSykmelding 
         tssid = null,
         merknader = merknader,
         partnerreferanse = "123456",
-        vedlegg = null
+        vedlegg = null,
+        utenlandskSykmelding = null
     )
 }
