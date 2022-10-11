@@ -8,8 +8,8 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.engine.cio.CIOEngineConfig
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -18,8 +18,9 @@ import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.application.exception.ServiceUnavailableException
+import no.nav.syfo.log
 
-val config: HttpClientConfig<CIOEngineConfig>.() -> Unit = {
+val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
     install(ContentNegotiation) {
         jackson {
             registerKotlinModule()
@@ -36,14 +37,23 @@ val config: HttpClientConfig<CIOEngineConfig>.() -> Unit = {
         }
     }
     install(HttpRequestRetry) {
-        maxRetries = 3
-        delayMillis { retry ->
-            retry * 500L
+        constantDelay(100, 0, false)
+        retryOnExceptionIf(3) { request, throwable ->
+            log.warn("Caught exception in oidc ${throwable.message}, for url ${request.url}")
+            true
+        }
+        retryIf(maxRetries) { request, response ->
+            if (response.status.value.let { it in 500..599 }) {
+                log.warn("Retrying for statuscode ${response.status.value}, for url ${request.url}")
+                true
+            } else {
+                false
+            }
         }
     }
 }
 
-fun getWellKnown(wellKnownUrl: String) = runBlocking { HttpClient(CIO, config).get(wellKnownUrl).body<WellKnown>() }
+fun getWellKnown(wellKnownUrl: String) = runBlocking { HttpClient(Apache, config).get(wellKnownUrl).body<WellKnown>() }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class WellKnown(
@@ -54,7 +64,7 @@ data class WellKnown(
 )
 
 fun getWellKnownTokenX(wellKnownUrl: String) =
-    runBlocking { HttpClient(CIO, config).get(wellKnownUrl).body<WellKnownTokenX>() }
+    runBlocking { HttpClient(Apache, config).get(wellKnownUrl).body<WellKnownTokenX>() }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class WellKnownTokenX(

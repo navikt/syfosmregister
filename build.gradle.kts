@@ -9,27 +9,27 @@ val coroutinesVersion = "1.6.4"
 val jacksonVersion = "2.13.4"
 val confluentVersion = "7.2.1"
 val kluentVersion = "1.68"
-val ktorVersion = "2.1.1"
-val logbackVersion = "1.4.0"
+val ktorVersion = "2.1.2"
+val logbackVersion = "1.4.3"
 val logstashEncoderVersion = "7.2"
 val prometheusVersion = "0.16.0"
-val kotestVersion = "5.4.2"
+val kotestVersion = "5.5.0"
 val postgresVersion = "42.4.1"
 val flywayVersion = "9.0.4"
 val hikariVersion = "5.0.1"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "1.ea531b3"
-val mockkVersion = "1.12.7"
-val nimbusdsVersion = "9.24.3"
-val testContainerKafkaVersion = "1.17.3"
+val mockkVersion = "1.13.2"
+val nimbusdsVersion = "9.25.4"
+val testContainerKafkaVersion = "1.17.4"
 val caffeineVersion = "3.1.1"
-val kotlinVersion = "1.7.10"
-val swaggerUiVersion = "4.14.0"
-val testContainerVersion = "1.17.3"
+val kotlinVersion = "1.7.20"
+val swaggerUiVersion = "4.14.2"
+val testContainerVersion = "1.17.4"
 
 plugins {
     id("org.jmailen.kotlinter") version "3.10.0"
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.7.20"
     id("com.diffplug.spotless") version "6.5.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.hidetake.swagger.generator") version "2.18.2" apply true
@@ -74,7 +74,7 @@ dependencies {
     implementation("io.ktor:ktor-server-call-id:$ktorVersion")
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-apache:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
@@ -122,6 +122,7 @@ swaggerSources {
 tasks {
     withType<Jar> {
         manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
+        dependsOn(":generateSwaggerUI")
     }
 
     create("printVersion") {
