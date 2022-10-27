@@ -94,7 +94,8 @@ spec:
           cluster: prod-gcp
   ingresses:
     - "https://smregister.intern.nav.no"
-  webproxy: true
+  webproxy: false
+  leaderElection: true
   envFrom:
     - secret: smregister-secret
     - configmap: loginservice-idporten

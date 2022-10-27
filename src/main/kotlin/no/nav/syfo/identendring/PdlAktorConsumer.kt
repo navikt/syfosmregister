@@ -7,6 +7,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.application.leaderelection.LeaderElection
 import no.nav.syfo.identendring.model.Ident
 import no.nav.syfo.identendring.model.IdentType
 import no.nav.syfo.log
@@ -23,8 +24,11 @@ import kotlin.time.ExperimentalTime
 
 class PdlAktorConsumer(
     private val kafkaConsumer: KafkaConsumer<String, GenericRecord>,
+    private val kafkaConsumerAiven: KafkaConsumer<String, GenericRecord>,
     private val applicationState: ApplicationState,
     private val topic: String,
+    private val aivenTopic: String,
+    private val leaderElection: LeaderElection,
     private val identendringService: IdentendringService
 ) {
     companion object {
@@ -38,7 +42,9 @@ class PdlAktorConsumer(
         GlobalScope.launch(Dispatchers.Unbounded) {
             while (applicationState.ready) {
                 try {
-                    runConsumer()
+                    if (leaderElection.isLeader()) {
+                        runConsumer()
+                    }
                 } catch (ex: Exception) {
                     when (ex) {
                         is InactiveIdentException -> {
@@ -52,6 +58,7 @@ class PdlAktorConsumer(
                         }
                     }
                     kafkaConsumer.unsubscribe()
+                    kafkaConsumerAiven.unsubscribe()
                     delay(DELAY_ON_ERROR_SECONDS.seconds)
                 }
             }
@@ -61,9 +68,16 @@ class PdlAktorConsumer(
     private suspend fun runConsumer() {
         kafkaConsumer.subscribe(listOf(topic))
         log.info("Starting consuming topic $topic")
+        kafkaConsumerAiven.subscribe(listOf(aivenTopic))
+        log.info("Starting consuming topic $aivenTopic")
         while (applicationState.ready) {
             withContext(Dispatchers.IO) {
                 kafkaConsumer.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
+                    if (it.value() != null) {
+                        handleIdent(it)
+                    }
+                }
+                kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
                     if (it.value() != null) {
                         handleIdent(it)
                     }

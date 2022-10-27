@@ -1,8 +1,10 @@
 package no.nav.syfo.sykmelding.kafka
 
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import no.nav.syfo.Environment
 import no.nav.syfo.Serviceuser
+import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.envOverrides
 import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
@@ -98,6 +100,23 @@ class KafkaFactory private constructor() {
             properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
 
             return KafkaConsumer<String, GenericRecord>(properties)
+        }
+
+        fun getKafkaConsumerAivenPdlAktor(environment: Environment): KafkaConsumer<String, GenericRecord> {
+            val consumerProperties = KafkaUtils.getAivenKafkaConfig().apply {
+                setProperty(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, environment.schemaRegistryUrl)
+                setProperty(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${environment.kafkaSchemaRegistryUsername}:${environment.kafkaSchemaRegistryPassword}")
+                setProperty(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
+            }.toConsumerConfig(
+                "${environment.applicationName}-gcp-consumer",
+                valueDeserializer = KafkaAvroDeserializer::class
+            ).also {
+                it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "latest"
+                it["specific.avro.reader"] = false
+                it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+            }
+
+            return KafkaConsumer<String, GenericRecord>(consumerProperties)
         }
     }
 }

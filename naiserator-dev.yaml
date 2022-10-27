@@ -98,7 +98,8 @@ spec:
   ingresses:
     - "https://smregister.dev.nav.no"
     - "https://smregister.dev.intern.nav.no"
-  webproxy: true
+  webproxy: false
+  leaderElection: true
   envFrom:
     - secret: smregister-secret
     - configmap: loginservice-idporten
