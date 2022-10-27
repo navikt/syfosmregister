@@ -72,24 +72,22 @@ class PdlAktorConsumer(
         log.info("Starting consuming topic $topic")
         kafkaConsumerAiven.subscribe(listOf(aivenTopic))
         log.info("Starting consuming topic $aivenTopic")
-        while (applicationState.ready) {
+        while (applicationState.ready && leaderElection.isLeader()) {
             withContext(Dispatchers.IO) {
-                if (leaderElection.isLeader()) {
-                    kafkaConsumer.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
-                        if (it.value() != null) {
-                            handleIdent(it)
-                        }
+                kafkaConsumer.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
+                    if (it.value() != null) {
+                        handleIdent(it)
                     }
-                    kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
-                        if (it.value() != null) {
-                            handleIdent(it)
-                        }
+                }
+                kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
+                    if (it.value() != null) {
+                        handleIdent(it)
                     }
-                } else {
-                    delay(10L.seconds)
                 }
             }
         }
+        kafkaConsumer.unsubscribe()
+        kafkaConsumerAiven.unsubscribe()
     }
 
     private suspend fun handleIdent(it: ConsumerRecord<String, GenericRecord>) {
