@@ -44,6 +44,8 @@ class PdlAktorConsumer(
                 try {
                     if (leaderElection.isLeader()) {
                         runConsumer()
+                    } else {
+                        delay(10L.seconds)
                     }
                 } catch (ex: Exception) {
                     when (ex) {
