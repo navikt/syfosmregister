@@ -72,15 +72,19 @@ class PdlAktorConsumer(
         log.info("Starting consuming topic $aivenTopic")
         while (applicationState.ready) {
             withContext(Dispatchers.IO) {
-                kafkaConsumer.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
-                    if (it.value() != null) {
-                        handleIdent(it)
+                if (leaderElection.isLeader()) {
+                    kafkaConsumer.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
+                        if (it.value() != null) {
+                            handleIdent(it)
+                        }
                     }
-                }
-                kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
-                    if (it.value() != null) {
-                        handleIdent(it)
+                    kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
+                        if (it.value() != null) {
+                            handleIdent(it)
+                        }
                     }
+                } else {
+                    delay(10L.seconds)
                 }
             }
         }
