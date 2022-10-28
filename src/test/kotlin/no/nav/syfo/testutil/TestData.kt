@@ -61,6 +61,11 @@ fun getEnvironment(): Environment {
         dbHost = "localhost",
         dbPort = "5432",
         onPremSchemaRegistryUrl = "",
+        schemaRegistryUrl = "schema",
+        kafkaSchemaRegistryUsername = "usr",
+        kafkaSchemaRegistryPassword = "pwd",
+        pdlAktorV2Topic = "aktorV2",
+        electorPath = "leader"
     )
 }
 

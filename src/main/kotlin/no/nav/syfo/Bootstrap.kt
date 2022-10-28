@@ -29,6 +29,7 @@ import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.application.getWellKnown
 import no.nav.syfo.application.getWellKnownTokenX
+import no.nav.syfo.application.leaderelection.LeaderElection
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.db.Database
 import no.nav.syfo.identendring.IdentendringService
@@ -39,6 +40,7 @@ import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
+import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerAivenPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumerAiven
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingKafkaProducer
@@ -177,8 +179,17 @@ fun main() {
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaBaseConfigAiven, environment)
     val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
 
+    val leaderElection = LeaderElection(httpClient, environment.electorPath)
     val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
-    val pdlAktorConsumer = PdlAktorConsumer(getKafkaConsumerPdlAktor(serviceUser, environment), applicationState, environment.pdlAktorTopic, identendringService)
+    val pdlAktorConsumer = PdlAktorConsumer(
+        kafkaConsumer = getKafkaConsumerPdlAktor(serviceUser, environment),
+        kafkaConsumerAiven = getKafkaConsumerAivenPdlAktor(environment),
+        applicationState = applicationState,
+        topic = environment.pdlAktorTopic,
+        aivenTopic = environment.pdlAktorV2Topic,
+        leaderElection = leaderElection,
+        identendringService = identendringService
+    )
 
     val mottattSykmeldingService = MottattSykmeldingService(
         database = database,

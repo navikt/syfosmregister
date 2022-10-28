@@ -24,6 +24,7 @@ data class Environment(
     val syfotilgangskontrollScope: String = getEnvVar("SYFOTILGANGSKONTROLL_SCOPE"),
     val azureTokenEndpoint: String = getEnvVar("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"),
     val pdlAktorTopic: String = "aapen-person-pdl-aktor-v1",
+    val pdlAktorV2Topic: String = "pdl.aktor-v2",
     val pdlGraphqlPath: String = getEnvVar("PDL_GRAPHQL_PATH"),
     val pdlScope: String = getEnvVar("PDL_SCOPE"),
     val okSykmeldingTopic: String = "teamsykmelding.ok-sykmelding",
@@ -38,6 +39,10 @@ data class Environment(
     val dbPort: String = getEnvVar("DB_PORT"),
     val dbName: String = getEnvVar("DB_DATABASE"),
     val onPremSchemaRegistryUrl: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_URL"),
+    val schemaRegistryUrl: String = getEnvVar("KAFKA_SCHEMA_REGISTRY"),
+    val kafkaSchemaRegistryUsername: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_USER"),
+    val kafkaSchemaRegistryPassword: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_PASSWORD"),
+    val electorPath: String = getEnvVar("ELECTOR_PATH")
 
 ) : KafkaConfig {
     fun jdbcUrl(): String {
