@@ -41,7 +41,6 @@ import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerAivenPdlAktor
-import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumerAiven
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
@@ -75,7 +74,6 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 @ExperimentalTime
 fun main() {
     val environment = Environment()
-    val serviceUser = Serviceuser()
     val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
     val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
         .cached(10, 24, TimeUnit.HOURS)
@@ -182,10 +180,8 @@ fun main() {
     val leaderElection = LeaderElection(httpClient, environment.electorPath)
     val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
     val pdlAktorConsumer = PdlAktorConsumer(
-        kafkaConsumer = getKafkaConsumerPdlAktor(serviceUser, environment),
         kafkaConsumerAiven = getKafkaConsumerAivenPdlAktor(environment),
         applicationState = applicationState,
-        topic = environment.pdlAktorTopic,
         aivenTopic = environment.pdlAktorV2Topic,
         leaderElection = leaderElection,
         identendringService = identendringService

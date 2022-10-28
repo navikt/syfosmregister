@@ -38,10 +38,7 @@ import java.time.OffsetDateTime
 
 fun getEnvironment(): Environment {
     return Environment(
-        kafkaBootstrapServers = "",
         cluster = "",
-        truststore = "",
-        truststorePassword = "",
         syfoTilgangskontrollUrl = "",
         loginserviceIdportenAudience = emptyList(),
         loginserviceIdportenDiscoveryUrl = "",
@@ -60,7 +57,6 @@ fun getEnvironment(): Environment {
         databaseUsername = "username",
         dbHost = "localhost",
         dbPort = "5432",
-        onPremSchemaRegistryUrl = "",
         schemaRegistryUrl = "schema",
         kafkaSchemaRegistryUsername = "usr",
         kafkaSchemaRegistryPassword = "pwd",
