@@ -3,10 +3,7 @@ package no.nav.syfo.sykmelding.kafka
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import no.nav.syfo.Environment
-import no.nav.syfo.Serviceuser
 import no.nav.syfo.kafka.aiven.KafkaUtils
-import no.nav.syfo.kafka.envOverrides
-import no.nav.syfo.kafka.loadBaseConfig
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
@@ -88,20 +85,6 @@ class KafkaFactory private constructor() {
             )
         }
 
-        fun getKafkaConsumerPdlAktor(vaultServiceUser: Serviceuser, environment: Environment): KafkaConsumer<String, GenericRecord> {
-            val kafkaBaseConfig = loadBaseConfig(environment, vaultServiceUser)
-                .also {
-                    it["auto.offset.reset"] = "none"
-                    it["specific.avro.reader"] = false
-                    it["schema.registry.url"] = environment.onPremSchemaRegistryUrl
-                }
-                .envOverrides()
-            val properties = kafkaBaseConfig.toConsumerConfig("${environment.applicationName}-gcp-consumer", KafkaAvroDeserializer::class)
-            properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
-
-            return KafkaConsumer<String, GenericRecord>(properties)
-        }
-
         fun getKafkaConsumerAivenPdlAktor(environment: Environment): KafkaConsumer<String, GenericRecord> {
             val consumerProperties = KafkaUtils.getAivenKafkaConfig().apply {
                 setProperty(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, environment.schemaRegistryUrl)
@@ -111,7 +94,7 @@ class KafkaFactory private constructor() {
                 "${environment.applicationName}-gcp-consumer",
                 valueDeserializer = KafkaAvroDeserializer::class
             ).also {
-                it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "latest"
+                it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
                 it["specific.avro.reader"] = false
                 it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
             }
