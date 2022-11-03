@@ -3,7 +3,6 @@ package no.nav.syfo.azuread.v2
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.accept
 import io.ktor.client.request.forms.FormDataContent
@@ -87,23 +86,15 @@ class AzureAdV2Client(
             }
             response.body<AzureAdV2TokenResponse>()
         } catch (e: ClientRequestException) {
-            handleUnexpectedResponseException(e)
+            log.warn("Client error while requesting AzureAdAccessToken with statusCode=${e.response.status.value}", e)
+            return null
         } catch (e: ServerResponseException) {
-            handleUnexpectedResponseException(e)
+            log.error("Server error while requesting AzureAdAccessToken with statusCode=${e.response.status.value}", e)
+            return null
         } catch (e: Exception) {
             log.error("Noe gikk galt ved henting av obo-accesstoken", e)
             throw e
         }
-    }
-
-    private fun handleUnexpectedResponseException(
-        responseException: ResponseException
-    ): AzureAdV2TokenResponse? {
-        log.error(
-            "Error while requesting AzureAdAccessToken with statusCode=${responseException.response.status.value}",
-            responseException
-        )
-        return null
     }
 
     companion object {
