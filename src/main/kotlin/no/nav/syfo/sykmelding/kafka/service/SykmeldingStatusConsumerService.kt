@@ -48,7 +48,7 @@ class SykmeldingStatusConsumerService(
     }
 
     private suspend fun handleStatusEvent(it: SykmeldingStatusKafkaMessageDTO) {
-        log.info("Mottatt sykmelding status ${it.event.sykmeldingId} er etter tidspunkt for bytting av logikk")
+        log.info("Mottatt sykmelding status ${it.event.sykmeldingId}")
         mottattSykmeldingStatusService.handleStatusEvent(it)
     }
 }

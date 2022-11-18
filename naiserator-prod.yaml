@@ -24,7 +24,7 @@ spec:
           enabled: true
   image: {{ image }}
   replicas:
-    min: 4
+    min: 3
     max: 7
     cpuThresholdPercentage: 80
   port: 8080
@@ -44,11 +44,11 @@ spec:
     path: /internal/prometheus
   resources:
     limits:
-      cpu: 2000m
-      memory: 1Gi
+      cpu: 500m
+      memory: 750Mi
     requests:
-      cpu: 1000m
-      memory: 768Mi
+      cpu: 100m
+      memory: 500Mi
   kafka:
     pool: nav-prod
   azure:
