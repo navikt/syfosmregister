@@ -261,5 +261,6 @@ private fun opprettArbeidsgiverSykmelding(): ArbeidsgiverSykmelding =
         egenmeldt = false,
         papirsykmelding = false,
         harRedusertArbeidsgiverperiode = false,
-        merknader = null
+        merknader = null,
+        utenlandskSykmelding = null
     )

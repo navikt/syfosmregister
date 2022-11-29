@@ -8,6 +8,7 @@ import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.PrognoseAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.SykmeldingsperiodeAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.UtenlandskSykmeldingAGDTO
 import no.nav.syfo.model.sykmelding.model.AdresseDTO
 import no.nav.syfo.model.sykmelding.model.ArbeidsrelatertArsakDTO
 import no.nav.syfo.model.sykmelding.model.ArbeidsrelatertArsakTypeDTO
@@ -34,7 +35,11 @@ fun SykmeldingDbModelUtenBehandlingsutfall.toArbeidsgiverSykmelding(): Arbeidsgi
         meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
         tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
         syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
-        behandler = sykmeldingsDokument.behandler.toBehandlerAGDTO(),
+        behandler = if (utenlandskSykmelding != null) {
+            null
+        } else {
+            sykmeldingsDokument.behandler.toBehandlerAGDTO()
+        },
         sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeAGDTO(id) },
         arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverAGDTO(),
         kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientAGDTO(),
@@ -42,7 +47,8 @@ fun SykmeldingDbModelUtenBehandlingsutfall.toArbeidsgiverSykmelding(): Arbeidsgi
         egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
         papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
         harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
-        merknader = merknader?.map { Merknad(type = it.type, beskrivelse = it.beskrivelse) }
+        merknader = merknader?.map { Merknad(type = it.type, beskrivelse = it.beskrivelse) },
+        utenlandskSykmelding = utenlandskSykmelding?.let { UtenlandskSykmeldingAGDTO(land = it.land) }
     )
 }
 

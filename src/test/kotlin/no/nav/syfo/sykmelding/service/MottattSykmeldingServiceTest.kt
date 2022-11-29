@@ -10,6 +10,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.LoggingMeta
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.model.Merknad
+import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
@@ -17,6 +18,7 @@ import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getMerknaderForId
+import no.nav.syfo.testutil.getSykmeldingsopplysninger
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldBeEqualTo
 
@@ -105,6 +107,17 @@ class MottattSykmeldingServiceTest : FunSpec({
             val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
             lagretSykmelding shouldBe true
             coVerify(exactly = 0) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(any()) }
+        }
+        test("mottar utenlandsk sykmelding fra ok-topic publiserer på riktig format til mottatt-sykmelding-topic") {
+            val receivedSykmelding =
+                getReceivedSykmelding(utenlandskSykmelding = UtenlandskSykmelding("SWE", false))
+
+            mottattSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, environment.okSykmeldingTopic)
+
+            val lagretSykmelding = database.connection.getSykmeldingsopplysninger("1")
+            lagretSykmelding?.utenlandskSykmelding?.land shouldBeEqualTo "SWE"
+            lagretSykmelding?.utenlandskSykmelding?.andreRelevanteOpplysninger shouldBeEqualTo false
+            coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(match { it.sykmelding.behandler == null && it.sykmelding.utenlandskSykmelding?.land == "SWE" }) }
         }
     }
 })

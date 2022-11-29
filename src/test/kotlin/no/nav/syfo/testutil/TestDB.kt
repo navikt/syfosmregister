@@ -29,6 +29,7 @@ import no.nav.syfo.model.SporsmalSvar
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.SvarRestriksjon
 import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Behandlingsutfall
@@ -116,7 +117,8 @@ fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? 
                 mottatt_tidspunkt,
                 tss_id,
                 merknader,
-                partnerreferanse  
+                partnerreferanse,
+                utenlandsk_sykmelding
             FROM SYKMELDINGSOPPLYSNINGER 
             WHERE id = ?;
         """
@@ -144,7 +146,8 @@ private fun ResultSet.toSykmeldingsopplysninger(): Sykmeldingsopplysninger {
         mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
         tssid = getString("tss_id"),
         merknader = getString("merknader")?.let { objectMapper.readValue<List<no.nav.syfo.model.Merknad>>(it) },
-        partnerreferanse = getString("partnerreferanse")
+        partnerreferanse = getString("partnerreferanse"),
+        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) }
     )
 }
 
@@ -173,7 +176,8 @@ val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
     mottattTidspunkt = getNowTickMillisLocalDateTime().plusMonths(1),
     tssid = "13455",
     merknader = emptyList(),
-    partnerreferanse = null
+    partnerreferanse = null,
+    utenlandskSykmelding = null
 )
 
 val testSykmeldingsdokument = Sykmeldingsdokument(

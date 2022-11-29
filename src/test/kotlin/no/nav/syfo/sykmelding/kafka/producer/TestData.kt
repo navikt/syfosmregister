@@ -26,7 +26,8 @@ fun getArbeidsgiverSykmelding(id: String): ArbeidsgiverSykmelding {
         egenmeldt = false,
         harRedusertArbeidsgiverperiode = false,
         papirsykmelding = false,
-        merknader = null
+        merknader = null,
+        utenlandskSykmelding = null
     )
 }
 

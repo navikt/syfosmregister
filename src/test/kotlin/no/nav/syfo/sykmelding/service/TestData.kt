@@ -10,10 +10,11 @@ import no.nav.syfo.model.MedisinskVurdering
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.model.Sykmelding
+import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.testutil.getNowTickMillisLocalDateTime
 import java.time.LocalDate
 
-fun getReceivedSykmelding(merknader: List<Merknad>? = null): ReceivedSykmelding {
+fun getReceivedSykmelding(merknader: List<Merknad>? = null, utenlandskSykmelding: UtenlandskSykmelding? = null): ReceivedSykmelding {
     return ReceivedSykmelding(
         sykmelding = Sykmelding(
             id = "1",
@@ -66,6 +67,6 @@ fun getReceivedSykmelding(merknader: List<Merknad>? = null): ReceivedSykmelding 
         merknader = merknader,
         partnerreferanse = "123456",
         vedlegg = null,
-        utenlandskSykmelding = null
+        utenlandskSykmelding = utenlandskSykmelding
     )
 }

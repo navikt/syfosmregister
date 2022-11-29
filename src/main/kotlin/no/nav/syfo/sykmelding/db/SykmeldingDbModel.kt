@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.db
 
+import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -25,7 +26,8 @@ data class SykmeldingDbModel(
     val behandlingsutfall: ValidationResult,
     val sykmeldingsDokument: Sykmelding,
     val status: StatusDbModel,
-    val merknader: List<Merknad>?
+    val merknader: List<Merknad>?,
+    val utenlandskSykmelding: UtenlandskSykmelding?
 )
 
 data class SykmeldingDbModelUtenBehandlingsutfall(
@@ -34,7 +36,8 @@ data class SykmeldingDbModelUtenBehandlingsutfall(
     val legekontorOrgNr: String?,
     val sykmeldingsDokument: Sykmelding,
     val status: StatusDbModel,
-    val merknader: List<Merknad>?
+    val merknader: List<Merknad>?,
+    val utenlandskSykmelding: UtenlandskSykmelding?
 )
 
 data class Sykmelding(
