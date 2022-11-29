@@ -1,0 +1,1 @@
+alter table sykmeldingsopplysninger ADD COLUMN utenlandsk_sykmelding JSONB;
