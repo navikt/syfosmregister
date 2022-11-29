@@ -18,6 +18,7 @@ import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.PrognoseAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.SykmeldingsperiodeAGDTO
+import no.nav.syfo.model.sykmelding.arbeidsgiver.UtenlandskSykmeldingAGDTO
 import no.nav.syfo.model.sykmelding.model.AdresseDTO
 import no.nav.syfo.model.sykmelding.model.ArbeidsrelatertArsakDTO
 import no.nav.syfo.model.sykmelding.model.ArbeidsrelatertArsakTypeDTO
@@ -34,14 +35,19 @@ fun ReceivedSykmelding.toArbeidsgiverSykmelding(): ArbeidsgiverSykmelding {
         meldingTilArbeidsgiver = sykmelding.meldingTilArbeidsgiver,
         kontaktMedPasient = sykmelding.kontaktMedPasient.toKontaktMedPasientAGDTO(),
         arbeidsgiver = sykmelding.arbeidsgiver.toArbeidsgiverAGDTO(),
-        behandler = sykmelding.behandler.toBehandlerAGDTO(),
+        behandler = if (utenlandskSykmelding != null) {
+            null
+        } else {
+            sykmelding.behandler.toBehandlerAGDTO()
+        },
         behandletTidspunkt = getUtcTime(sykmelding.behandletTidspunkt),
         egenmeldt = sykmelding.avsenderSystem.navn == "Egenmeldt",
         papirsykmelding = sykmelding.avsenderSystem.navn == "Papirsykmelding",
         mottattTidspunkt = getUtcTime(mottattDato),
         sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeAGDTO() },
         harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder),
-        merknader = merknader?.map { Merknad(type = it.type, beskrivelse = it.beskrivelse) }
+        merknader = merknader?.map { Merknad(type = it.type, beskrivelse = it.beskrivelse) },
+        utenlandskSykmelding = utenlandskSykmelding?.let { UtenlandskSykmeldingAGDTO(land = it.land) }
     )
 }
 

@@ -54,7 +54,8 @@ private suspend fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysni
             mottatt_tidspunkt = ?,
             tss_id = ?,
             merknader = ?,
-            partnerreferanse = ?
+            partnerreferanse = ?,
+            utenlandsk_sykmelding = ?
         where id = ?;
     """
     ).use {
@@ -75,6 +76,7 @@ private suspend fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysni
         it.setString(i++, sykmeldingsopplysninger.tssid)
         it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
         it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
+        it.setObject(i++, sykmeldingsopplysninger.utenlandskSykmelding?.toPGObject())
         it.setString(i, sykmeldingsopplysninger.id)
         it.executeUpdate()
     }
@@ -100,8 +102,9 @@ private suspend fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysn
                 mottatt_tidspunkt,
                 tss_id,
                 merknader,
-                partnerreferanse)
-            VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                partnerreferanse,
+                utenlandsk_sykmelding)
+            VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
     ).use {
         var i = 1
@@ -121,7 +124,8 @@ private suspend fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysn
         it.setTimestamp(i++, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
         it.setString(i++, sykmeldingsopplysninger.tssid)
         it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
-        it.setString(i, sykmeldingsopplysninger.partnerreferanse)
+        it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
+        it.setObject(i, sykmeldingsopplysninger.utenlandskSykmelding?.toPGObject())
         it.executeUpdate()
     }
 }

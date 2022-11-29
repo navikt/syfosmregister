@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
+import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.status.ShortName
@@ -111,7 +112,8 @@ private suspend fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<Sy
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
                     arbeidsgiver.navn,
-                    merknader
+                    merknader,
+                    utenlandsk_sykmelding
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
@@ -145,7 +147,8 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForId(id: String): Syk
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
                     arbeidsgiver.navn,
-                    merknader
+                    merknader,
+                    utenlandsk_sykmelding
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
@@ -179,7 +182,8 @@ private suspend fun Connection.getSykmelding(id: String, fnr: String): Sykmeldin
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
                     arbeidsgiver.navn,
-                    merknader
+                    merknader,
+                    utenlandsk_sykmelding
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
@@ -214,7 +218,8 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsut
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
                     arbeidsgiver.navn,
-                    merknader
+                    merknader,
+                    utenlandsk_sykmelding
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
@@ -246,7 +251,8 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsut
                     arbeidsgiver.orgnummer,
                     arbeidsgiver.juridisk_orgnummer,
                     arbeidsgiver.navn,
-                    merknader
+                    merknader,
+                    utenlandsk_sykmelding
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                         LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
@@ -294,7 +300,8 @@ fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
         legekontorOrgNr = getString("legekontor_org_nr"),
         behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java),
         status = getStatus(mottattTidspunkt),
-        merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
+        merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) },
+        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) }
     )
 }
 
@@ -306,7 +313,8 @@ fun ResultSet.toSykmeldingDbModelUtenBehandlingsutfall(): SykmeldingDbModelUtenB
         mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
         legekontorOrgNr = getString("legekontor_org_nr"),
         status = getStatus(mottattTidspunkt),
-        merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
+        merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) },
+        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) }
     )
 }
 

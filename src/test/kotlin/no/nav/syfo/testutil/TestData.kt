@@ -177,7 +177,8 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
             perioder = perioder,
             signaturDato = getNowTickMillisLocalDateTime()
         ),
-        merknader = null
+        merknader = null,
+        utenlandskSykmelding = null
     )
 }
 
@@ -252,7 +253,8 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
             perioder = perioder,
             signaturDato = getNowTickMillisLocalDateTime()
         ),
-        merknader = null
+        merknader = null,
+        utenlandskSykmelding = null
     )
 }
 
