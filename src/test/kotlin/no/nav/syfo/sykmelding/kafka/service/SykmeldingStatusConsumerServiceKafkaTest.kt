@@ -181,6 +181,8 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
             coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } returns Unit
             coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns emptyList() andThen listOf(
+                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime().plusMonths(1), StatusEvent.APEN)
+            ) andThen listOf(
                 SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime().plusMonths(1), StatusEvent.BEKREFTET)
             )
             coEvery { sykmeldingStatusService.registrerStatus(any()) } answers {
@@ -298,7 +300,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             sykmeldingStatusConsumerService.start()
             coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
             coVerify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
-            coVerify(exactly = 2) { sykmeldingStatusService.getSykmeldingStatus(any(), any()) }
+            coVerify(exactly = 3) { sykmeldingStatusService.getSykmeldingStatus(any(), any()) }
         }
 
         test("test AVBRUTT status") {
@@ -339,6 +341,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
                 null,
                 emptyList()
             )
+            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.APEN))
             coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
             coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
                 sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
@@ -351,6 +354,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
                 .send(sykmeldingBekreftKafkaEvent, fnr)
             sykmeldingStatusConsumerService.start()
 
+            coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
             coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
             coVerify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
             sykmeldingBekreftEvent shouldBeEqualTo SykmeldingBekreftEvent(
@@ -362,6 +366,91 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
                 sykmeldingId,
                 timestamp,
                 StatusEvent.BEKREFTET
+            )
+        }
+
+        test("Test BEKREFTET til BEKREFTET") {
+            val sykmeldingId = "BEKREFT"
+            val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+            var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
+            var sykmeldingBekreftEvent: SykmeldingBekreftEvent? = null
+            val sykmeldingBekreftKafkaEvent = SykmeldingStatusKafkaEventDTO(
+                sykmeldingId,
+                timestamp,
+                STATUS_BEKREFTET,
+                null,
+                emptyList()
+            )
+            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.BEKREFTET))
+            coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
+            coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers {
+                sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
+                sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
+                applicationState.alive = false
+                applicationState.ready = false
+            }
+
+            KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                .send(sykmeldingBekreftKafkaEvent, fnr)
+            sykmeldingStatusConsumerService.start()
+
+            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coVerify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+            sykmeldingBekreftEvent shouldBeEqualTo SykmeldingBekreftEvent(
+                sykmeldingId,
+                timestamp,
+                emptyList()
+            )
+            sykmeldingStatusEvent shouldBeEqualTo SykmeldingStatusEvent(
+                sykmeldingId,
+                timestamp,
+                StatusEvent.BEKREFTET
+            )
+        }
+
+        test("Test BEKREFTET til SENDT") {
+            val sykmeldingId = "SENDT"
+            val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+            var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
+            var sykmeldingSendEvent: SykmeldingSendEvent? = null
+            val sykmeldingSendKafkaEvent = SykmeldingStatusKafkaEventDTO(
+                sykmeldingId, getNowTickMillisOffsetDateTime().plusMonths(1), STATUS_SENDT,
+                ArbeidsgiverStatusDTO("1", "2", "navn"),
+                listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar"))
+            )
+            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.BEKREFTET))
+            coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
+            coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers {
+                sykmeldingSendEvent = args[0] as SykmeldingSendEvent
+                sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
+                applicationState.alive = false
+                applicationState.ready = false
+            }
+
+            KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                .send(sykmeldingSendKafkaEvent, fnr)
+            sykmeldingStatusConsumerService.start()
+
+            coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
+            coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+            coVerify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
+            sykmeldingSendEvent shouldBeEqualTo SykmeldingSendEvent(
+                sykmeldingId,
+                timestamp,
+                ArbeidsgiverStatus(sykmeldingId, "1", "2", "navn"),
+                Sporsmal(
+                    "tekst",
+                    ShortName.ARBEIDSSITUASJON,
+                    Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar")
+                )
+            )
+            sykmeldingStatusEvent shouldBeEqualTo SykmeldingStatusEvent(
+                sykmeldingId,
+                timestamp,
+                StatusEvent.SENDT
             )
         }
     }

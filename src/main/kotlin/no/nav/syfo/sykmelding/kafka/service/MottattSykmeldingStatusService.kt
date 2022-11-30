@@ -107,6 +107,7 @@ class MottattSykmeldingStatusService(
             log.warn("Sykmelding er allerede sendt sykmeldingId {}", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
             return
         }
+        sjekkStatusOgTombstone(sykmeldingStatusKafkaMessage)
         publishToSendtSykmeldingTopic(sykmeldingStatusKafkaMessage)
         registrerSendt(sykmeldingStatusKafkaMessage)
     }
@@ -116,6 +117,7 @@ class MottattSykmeldingStatusService(
 
     private suspend fun publishToBekreftSykmeldingTopic(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val sendtSykmeldingKafkaMessage = getKafkaMessage(sykmeldingStatusKafkaMessage)
+        sjekkStatusOgTombstone(sykmeldingStatusKafkaMessage)
         bekreftetSykmeldingKafkaProducer.sendSykmelding(sendtSykmeldingKafkaMessage)
     }
 
@@ -144,12 +146,19 @@ class MottattSykmeldingStatusService(
     }
 
     private suspend fun registrerStatus(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
-        val lastStatus = sykmeldingStatusService.getSykmeldingStatus(sykmeldingsid = sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId, filter = "LATEST")
+        sjekkStatusOgTombstone(sykmeldingStatusKafkaMessage)
+        val sykmeldingStatusEvent = KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
+        sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
+    }
+
+    private suspend fun sjekkStatusOgTombstone(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
+        val lastStatus = sykmeldingStatusService.getSykmeldingStatus(
+            sykmeldingsid = sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
+            filter = "LATEST"
+        )
         if (lastStatus.any { it.event == StatusEvent.BEKREFTET }) {
             bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
         }
-        val sykmeldingStatusEvent = KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
-        sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent)
     }
 
     private suspend fun registrerSendt(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
