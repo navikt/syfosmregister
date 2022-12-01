@@ -15,7 +15,7 @@ import java.sql.Timestamp
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
-suspend fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<SykmeldingStatusEvent> = withContext(Dispatchers.Default) {
+suspend fun DatabaseInterface.hentSykmeldingStatuser(sykmeldingId: String): List<SykmeldingStatusEvent> = withContext(Dispatchers.IO) {
     connection.use { connection ->
         connection.getSykmeldingstatuser(sykmeldingId)
     }
