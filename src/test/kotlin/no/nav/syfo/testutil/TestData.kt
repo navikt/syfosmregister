@@ -95,7 +95,8 @@ fun getSykmeldingDto(perioder: List<SykmeldingsperiodeDTO> = getPerioder()): Syk
         egenmeldt = false,
         harRedusertArbeidsgiverperiode = false,
         papirsykmelding = false,
-        merknader = null
+        merknader = null,
+        utenlandskSykmelding = null,
     )
 }
 

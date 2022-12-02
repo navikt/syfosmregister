@@ -406,6 +406,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Merknad'
+        utenlandskSykmelding:
+          type: object
+          required:
+            - land
+          properties:
+            land:
+              type: string
     InternalSykmelding:
       type: object
       required:

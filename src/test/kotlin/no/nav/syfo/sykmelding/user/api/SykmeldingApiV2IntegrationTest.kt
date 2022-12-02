@@ -11,8 +11,13 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import no.nav.syfo.application.setupAuth
+import no.nav.syfo.model.UtenlandskSykmelding
+import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.persistering.updateMottattSykmelding
+import no.nav.syfo.sykmelding.model.SykmeldingDTO
+import no.nav.syfo.sykmelding.model.UtenlandskSykmeldingDTO
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
@@ -110,6 +115,22 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                }
+            }
+
+            test("Skal hente utenlandsk sykmelding") {
+                database.updateMottattSykmelding(testSykmeldingsopplysninger.copy(utenlandskSykmelding = UtenlandskSykmelding("Utland", false)), testSykmeldingsdokument)
+                with(
+                    handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
+                        addHeader(
+                            HttpHeaders.Authorization,
+                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "pasientFnr")}"
+                        )
+                    }
+                ) {
+                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                    val sykmelding = objectMapper.readValue(response.content, SykmeldingDTO::class.java)
+                    sykmelding.utenlandskSykmelding shouldBeEqualTo UtenlandskSykmeldingDTO("Utland")
                 }
             }
         }
