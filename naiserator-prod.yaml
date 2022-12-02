@@ -74,24 +74,15 @@ spec:
           namespace: team-esyfo
           cluster: prod-gcp
         - application: sparenaproxy
-          namespace: teamsykmelding
-          cluster: prod-fss
-        - application: sparenaproxy
         - application: syfosmregler
-        - application: smregistrering-backend
-          namespace: teamsykmelding
-          cluster: prod-fss
         - application: smregistrering-backend
         - application: smoppslag
           cluster: prod-fss
           namespace: risk
-        - application: sykmeldinger-backend
         - application: syfooppfolgingsplanservice
           namespace: team-esyfo
           cluster: prod-fss
         - application: macgyver
-          namespace: teamsykmelding
-          cluster: prod-gcp
   ingresses:
     - "https://smregister.intern.nav.no"
   webproxy: false

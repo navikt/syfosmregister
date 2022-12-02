@@ -11,9 +11,12 @@ import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.request.header
+import io.ktor.server.request.path
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
 import no.nav.syfo.log
+import no.nav.syfo.metrics.APP_ID_PATH_COUNTER
+import no.nav.syfo.metrics.getLabel
 
 fun Application.setupAuth(
     loginserviceIdportenAudience: List<String>,
@@ -44,7 +47,11 @@ fun Application.setupAuth(
             verifier(jwkProviderAadV2, environment.jwtIssuerV2)
             validate { credentials ->
                 when {
-                    harTilgang(credentials, environment.clientIdV2) -> JWTPrincipal(credentials.payload)
+                    harTilgang(credentials, environment.clientIdV2) -> {
+                        val appid: String = credentials.payload.getClaim("azp").asString()
+                        APP_ID_PATH_COUNTER.labels(appid, getLabel(request.path())).inc()
+                        JWTPrincipal(credentials.payload)
+                    }
                     else -> unauthorized(credentials)
                 }
             }

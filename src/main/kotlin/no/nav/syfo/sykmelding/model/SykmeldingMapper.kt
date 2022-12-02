@@ -67,7 +67,8 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
         egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
         papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
         harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
-        merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) }
+        merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) },
+        utenlandskSykmelding = utenlandskSykmelding?.let { UtenlandskSykmeldingDTO(it.land) }
     )
 }
 
