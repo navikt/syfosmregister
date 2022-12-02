@@ -14,6 +14,8 @@ import io.ktor.server.request.header
 import net.logstash.logback.argument.StructuredArguments
 import no.nav.syfo.Environment
 import no.nav.syfo.log
+import no.nav.syfo.metrics.APP_ID_COUNTER
+import no.nav.syfo.metrics.CLIENT_ID_COUNTER
 
 fun Application.setupAuth(
     loginserviceIdportenAudience: List<String>,
@@ -84,6 +86,7 @@ fun ApplicationCall.getToken(): String? {
 fun harTilgang(credentials: JWTCredential, clientId: String): Boolean {
     val appid: String = credentials.payload.getClaim("azp").asString()
     log.debug("authorization attempt for $appid")
+    APP_ID_COUNTER.labels(appid).inc()
     return credentials.payload.audience.contains(clientId)
 }
 

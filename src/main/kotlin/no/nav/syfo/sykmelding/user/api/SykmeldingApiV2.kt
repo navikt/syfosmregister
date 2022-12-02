@@ -43,6 +43,7 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     null -> call.respond(HttpStatusCode.NotFound)
                     else -> call.respond(sykmelding)
                 }
+                return@get
             }
         }
     }

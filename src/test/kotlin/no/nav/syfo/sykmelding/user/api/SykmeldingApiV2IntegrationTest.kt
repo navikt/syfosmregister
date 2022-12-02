@@ -60,8 +60,8 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                 listOf("clientId"),
                 jwkProvider,
                 jwkProvider,
-                "me",
-                "me",
+                "https://sts.issuer.net/myid",
+                "https://sts.issuer.net/myid",
                 jwkProvider,
                 getEnvironment()
             )
@@ -88,7 +88,9 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                         )
                     }
                 ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                    response.status() shouldBeEqualTo HttpStatusCode.OK
+                    val sykmelding = objectMapper.readValue(response.content, SykmeldingDTO::class.java)
+                    sykmelding.utenlandskSykmelding shouldBeEqualTo null
                 }
             }
 
@@ -101,7 +103,7 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                         )
                     }
                 ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                    response.status() shouldBeEqualTo HttpStatusCode.NotFound
                 }
             }
 
@@ -114,7 +116,7 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                         )
                     }
                 ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                    response.status() shouldBeEqualTo HttpStatusCode.NotFound
                 }
             }
 
