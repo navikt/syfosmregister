@@ -49,7 +49,12 @@ fun Application.setupAuth(
                 when {
                     harTilgang(credentials, environment.clientIdV2) -> {
                         val appid: String = credentials.payload.getClaim("azp").asString()
-                        APP_ID_PATH_COUNTER.labels(appid, getLabel(request.path())).inc()
+                        val app = environment.preAuthorizedApp.firstOrNull() { it.clientId == appid }
+                        if (app != null) {
+                            APP_ID_PATH_COUNTER.labels(app.team, app.appName, getLabel(this.request.path())).inc()
+                        } else {
+                            log.warn("App not in pre authorized list: $appid")
+                        }
                         JWTPrincipal(credentials.payload)
                     }
                     else -> unauthorized(credentials)
