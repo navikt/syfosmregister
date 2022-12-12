@@ -1,0 +1,14 @@
+[
+  {
+    "name": "prod-fss:team1:app1",
+    "clientId": "1"
+  },
+  {
+    "name": "prod-gcp:team-2:team-2-app",
+    "clientId": "2"
+  },
+  {
+    "name": "prod-gcp:teamsykmelding:sykmelding-backend",
+    "clientId": "3"
+  }
+]
