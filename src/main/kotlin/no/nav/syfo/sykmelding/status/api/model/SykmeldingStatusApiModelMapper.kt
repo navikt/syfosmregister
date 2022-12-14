@@ -1,7 +1,8 @@
 package no.nav.syfo.sykmelding.status.api.model
 
+import no.nav.syfo.sykmelding.status.StatusEvent
+import no.nav.syfo.sykmelding.status.StatusEventDTO
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
-import no.nav.syfo.sykmelding.status.api.toStatusEventDTO
 
 class SykmeldingStatusApiModelMapper private constructor() {
     companion object {
@@ -17,5 +18,16 @@ class SykmeldingStatusApiModelMapper private constructor() {
                 erEgenmeldt = sykmeldingStatusEvent.erEgenmeldt
             )
         }
+    }
+}
+
+fun StatusEvent.toStatusEventDTO(): StatusEventDTO {
+    return when (this) {
+        StatusEvent.BEKREFTET -> StatusEventDTO.BEKREFTET
+        StatusEvent.APEN -> StatusEventDTO.APEN
+        StatusEvent.SENDT -> StatusEventDTO.SENDT
+        StatusEvent.AVBRUTT -> StatusEventDTO.AVBRUTT
+        StatusEvent.UTGATT -> StatusEventDTO.UTGATT
+        StatusEvent.SLETTET -> throw IllegalStateException("Sykmeldingen er slettet, skal ikke kunne skje")
     }
 }

@@ -35,7 +35,9 @@ suspend fun DatabaseInterface.registrerSendt(sykmeldingSendEvent: SykmeldingSend
     connection.use { connection ->
         connection.slettGamleSvarHvisFinnesFraFor(sykmeldingSendEvent.sykmeldingId)
         connection.lagreArbeidsgiverStatus(sykmeldingSendEvent)
-        connection.lagreSporsmalOgSvar(sykmeldingSendEvent.sporsmal)
+        sykmeldingSendEvent.sporsmal.forEach {
+            connection.lagreSporsmalOgSvar(it)
+        }
         connection.registerStatus(sykmeldingStatusEvent)
         connection.commit()
     }

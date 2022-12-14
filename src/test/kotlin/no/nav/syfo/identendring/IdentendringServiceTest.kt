@@ -147,7 +147,7 @@ suspend fun forberedTestsykmeldinger(database: DatabaseInterface, gammeltFnr: St
         SykmeldingSendEvent(
             idSendtSykmelding, getNowTickMillisOffsetDateTime(),
             ArbeidsgiverStatus(idSendtSykmelding, "orgnummer", null, "Bedrift"),
-            Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))
+            listOf(Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")))
         ),
         SykmeldingStatusEvent(idSendtSykmelding, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT)
     )
@@ -184,7 +184,7 @@ suspend fun forberedTestsykmeldinger(database: DatabaseInterface, gammeltFnr: St
         SykmeldingSendEvent(
             idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(6),
             ArbeidsgiverStatus(idGammelSendtSykmelding, "orgnummer", null, "Bedrift"),
-            Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))
+            listOf(Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")))
         ),
         SykmeldingStatusEvent(idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(6), StatusEvent.SENDT)
     )
