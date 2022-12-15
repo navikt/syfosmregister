@@ -69,19 +69,10 @@ spec:
           cluster: prod-fss
         - application: esyfovarsel
           namespace: team-esyfo
-          cluster: prod-fss
-        - application: esyfovarsel
-          namespace: team-esyfo
           cluster: prod-gcp
         - application: sparenaproxy
         - application: syfosmregler
         - application: smregistrering-backend
-        - application: smoppslag
-          cluster: prod-fss
-          namespace: risk
-        - application: syfooppfolgingsplanservice
-          namespace: team-esyfo
-          cluster: prod-fss
         - application: macgyver
   ingresses:
     - "https://smregister.intern.nav.no"
