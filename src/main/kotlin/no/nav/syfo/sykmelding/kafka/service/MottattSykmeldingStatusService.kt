@@ -8,7 +8,6 @@ import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
 import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
 import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
@@ -164,15 +163,16 @@ class MottattSykmeldingStatusService(
     private suspend fun registrerSendt(sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO) {
         val arbeidsgiver: ArbeidsgiverStatusDTO = sykmeldingStatusKafkaMessage.event.arbeidsgiver
             ?: throw IllegalArgumentException("Arbeidsgiver er ikke oppgitt")
-        val arbeidsgiverSporsmal: SporsmalOgSvarDTO = sykmeldingStatusKafkaMessage.event.sporsmals?.first { sporsmal -> sporsmal.shortName == ShortNameDTO.ARBEIDSSITUASJON }
-            ?: throw IllegalArgumentException("Ingen sporsmal funnet")
+        if (sykmeldingStatusKafkaMessage.event.sporsmals?.first { sporsmal -> sporsmal.shortName == ShortNameDTO.ARBEIDSSITUASJON } == null) {
+            throw IllegalArgumentException("Mangler relevante spørsmål")
+        }
         val sykmeldingId = sykmeldingStatusKafkaMessage.event.sykmeldingId
         val timestamp = sykmeldingStatusKafkaMessage.event.timestamp
         val sykmeldingSendEvent = SykmeldingSendEvent(
             sykmeldingId,
             timestamp,
             KafkaModelMapper.toArbeidsgiverStatus(sykmeldingId, arbeidsgiver),
-            KafkaModelMapper.toSporsmal(arbeidsgiverSporsmal, sykmeldingId)
+            sykmeldingStatusKafkaMessage.event.sporsmals!!.map { KafkaModelMapper.toSporsmal(it, sykmeldingId) }
         )
         val sykmeldingStatusEvent = KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
 

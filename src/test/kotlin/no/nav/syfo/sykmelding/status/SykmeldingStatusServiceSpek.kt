@@ -237,9 +237,11 @@ class SykmeldingStatusServiceSpek : FunSpec({
                     testSykmeldingsopplysninger.id,
                     testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5).atOffset(ZoneOffset.UTC),
                     ArbeidsgiverStatus(testSykmeldingsopplysninger.id, "orgnummer", null, "Bedrift"),
-                    Sporsmal(
-                        "Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
-                        Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
+                    listOf(
+                        Sporsmal(
+                            "Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
+                            Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
+                        )
                     )
                 ),
                 SykmeldingStatusEvent(
@@ -250,6 +252,39 @@ class SykmeldingStatusServiceSpek : FunSpec({
             )
             val sendtSykmelding = sykmeldingStatusService.getArbeidsgiverSykmelding(testSykmeldingsopplysninger.id)
             sendtSykmelding shouldNotBeEqualTo null
+        }
+
+        test("registrer sendt skal lagre alle spørsmål") {
+            val sporsmal = listOf(
+                Sporsmal(
+                    "Arbeidssituasjon", ShortName.ARBEIDSSITUASJON,
+                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
+                ),
+                Sporsmal(
+                    "Er det Din Leder som skal følge deg opp mens du er syk?",
+                    ShortName.NY_NARMESTE_LEDER,
+                    Svar("uuid", 2, Svartype.JA_NEI, "JA")
+                )
+            )
+
+            sykmeldingStatusService.registrerSendt(
+                SykmeldingSendEvent(
+                    testSykmeldingsopplysninger.id,
+                    testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5).atOffset(ZoneOffset.UTC),
+                    ArbeidsgiverStatus(testSykmeldingsopplysninger.id, "orgnummer", null, "Bedrift"),
+                    sporsmal
+                ),
+                SykmeldingStatusEvent(
+                    testSykmeldingsopplysninger.id,
+                    testSykmeldingsopplysninger.mottattTidspunkt.plusMinutes(5).atOffset(ZoneOffset.UTC),
+                    StatusEvent.SENDT
+                )
+            )
+
+            val savedSporsmals = database.connection.use {
+                it.hentSporsmalOgSvar("uuid")
+            }
+            savedSporsmals shouldBeEqualTo sporsmal
         }
     }
 })

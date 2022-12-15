@@ -29,7 +29,7 @@ data class SykmeldingSendEvent(
     val sykmeldingId: String,
     val timestamp: OffsetDateTime,
     val arbeidsgiver: ArbeidsgiverStatus,
-    val sporsmal: Sporsmal
+    val sporsmal: List<Sporsmal>
 )
 
 data class ArbeidsgiverStatus(

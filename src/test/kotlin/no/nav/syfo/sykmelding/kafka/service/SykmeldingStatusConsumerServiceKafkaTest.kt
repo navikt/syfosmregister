@@ -260,10 +260,12 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
                 sykmeldingId,
                 timestamp,
                 ArbeidsgiverStatus(sykmeldingId, "1", "2", "navn"),
-                Sporsmal(
-                    "tekst",
-                    ShortName.ARBEIDSSITUASJON,
-                    Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar")
+                listOf(
+                    Sporsmal(
+                        "tekst",
+                        ShortName.ARBEIDSSITUASJON,
+                        Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar")
+                    )
                 )
             )
             sykmeldingStatusEvent shouldBeEqualTo SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.SENDT)
@@ -417,7 +419,10 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             val sykmeldingSendKafkaEvent = SykmeldingStatusKafkaEventDTO(
                 sykmeldingId, getNowTickMillisOffsetDateTime().plusMonths(1), STATUS_SENDT,
                 ArbeidsgiverStatusDTO("1", "2", "navn"),
-                listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar"))
+                listOf(
+                    SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar"),
+                    SporsmalOgSvarDTO("Er det Din Leder som skal følge deg opp mens du er syk?", ShortNameDTO.NY_NARMESTE_LEDER, SvartypeDTO.JA_NEI, "JA")
+                )
             )
             coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.BEKREFTET))
             coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns mockkClass(ArbeidsgiverSykmelding::class)
@@ -441,10 +446,17 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
                 sykmeldingId,
                 timestamp,
                 ArbeidsgiverStatus(sykmeldingId, "1", "2", "navn"),
-                Sporsmal(
-                    "tekst",
-                    ShortName.ARBEIDSSITUASJON,
-                    Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar")
+                listOf(
+                    Sporsmal(
+                        "tekst",
+                        ShortName.ARBEIDSSITUASJON,
+                        Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar")
+                    ),
+                    Sporsmal(
+                        "Er det Din Leder som skal følge deg opp mens du er syk?",
+                        ShortName.NY_NARMESTE_LEDER,
+                        Svar(sykmeldingId, null, Svartype.JA_NEI, "JA")
+                    )
                 )
             )
             sykmeldingStatusEvent shouldBeEqualTo SykmeldingStatusEvent(
