@@ -68,23 +68,11 @@ spec:
           cluster: dev-fss
         - application: esyfovarsel
           namespace: team-esyfo
-          cluster: dev-fss
-        - application: esyfovarsel
-          namespace: team-esyfo
           cluster: dev-gcp
         - application: sparenaproxy
         - application: syfosmregler
         - application: smregistrering-backend
-        - application: smoppslag
-          namespace: risk
-          cluster: dev-fss
-        - application: debug-dings
-          namespace: plattformsikkerhet
-          cluster: dev-gcp
         - application: teamsykmelding-mock-backend
-        - application: syfooppfolgingsplanservice
-          namespace: team-esyfo
-          cluster: dev-fss
         - application: macgyver
           namespace: teamsykmelding
           cluster: dev-gcp
