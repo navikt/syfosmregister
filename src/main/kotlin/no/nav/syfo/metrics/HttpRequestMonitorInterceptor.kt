@@ -22,7 +22,7 @@ fun monitorHttpRequests(): suspend PipelineContext<Unit, ApplicationCall>.(Unit)
             log.info("origin ${context.request.header(Origin)}, referer ${context.request.header("Referer")}")
             val app = getPreauthorizedApp(context.request.header(CLIENT_ID_HEADER))
             if (app != null) {
-                APP_ID_PATH_COUNTER.labels(app.team, app.name, label)
+                APP_ID_PATH_COUNTER.labels(app.team, app.name, label).inc()
             } else {
                 log.warn("No client found in headers")
             }
