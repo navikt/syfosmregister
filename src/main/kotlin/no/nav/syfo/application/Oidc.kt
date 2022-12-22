@@ -53,16 +53,6 @@ val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
     }
 }
 
-fun getWellKnown(wellKnownUrl: String) = runBlocking { HttpClient(Apache, config).get(wellKnownUrl).body<WellKnown>() }
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class WellKnown(
-    val authorization_endpoint: String,
-    val token_endpoint: String,
-    val jwks_uri: String,
-    val issuer: String
-)
-
 fun getWellKnownTokenX(wellKnownUrl: String) =
     runBlocking { HttpClient(Apache, config).get(wellKnownUrl).body<WellKnownTokenX>() }
 

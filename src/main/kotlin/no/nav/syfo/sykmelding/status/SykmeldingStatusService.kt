@@ -45,8 +45,6 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
         }
     }
 
-    suspend fun erEier(sykmeldingsid: String, fnr: String): Boolean = database.erEier(sykmeldingsid, fnr)
-
     suspend fun slettSykmelding(sykmeldingId: String) {
         database.slettSykmelding(sykmeldingId)
     }

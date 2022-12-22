@@ -53,17 +53,14 @@ class AuthenticateSpek : FunSpec({
         with(TestApplicationEngine()) {
             start()
             application.setupAuth(
-                listOf("clientId"),
                 jwkProvider,
-                jwkProvider,
-                "https://sts.issuer.net/myid",
                 "tokenXissuer",
                 jwkProvider,
                 getEnvironment()
             )
             application.routing {
-                route("/api/v2") {
-                    authenticate("jwt") {
+                route("/api/v3") {
+                    authenticate("tokenx") {
                         registrerSykmeldingApiV2(sykmeldingerService)
                     }
                 }
@@ -78,10 +75,10 @@ class AuthenticateSpek : FunSpec({
 
             test("Aksepterer gyldig JWT med riktig audience") {
                 with(
-                    handleRequest(HttpMethod.Get, "api/v2/sykmeldinger") {
+                    handleRequest(HttpMethod.Get, "api/v3/sykmeldinger") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("2", "clientId")}"
+                            "Bearer ${generateJWT("2", "clientid")}"
                         )
                     }
                 ) {
@@ -91,7 +88,7 @@ class AuthenticateSpek : FunSpec({
 
             test("Gyldig JWT med feil audience gir Unauthorized") {
                 with(
-                    handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
+                    handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
                         addHeader(
                             HttpHeaders.Authorization,
                             "Bearer ${generateJWT("2", "annenClientId")}"
@@ -104,10 +101,10 @@ class AuthenticateSpek : FunSpec({
 
             test("Gyldig JWT med feil issuer gir Unauthorized") {
                 with(
-                    handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
+                    handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("2", "clientId", issuer = "microsoft")}"
+                            "Bearer ${generateJWT("2", "clientid", issuer = "microsoft")}"
                         )
                     }
                 ) {

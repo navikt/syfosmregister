@@ -50,8 +50,6 @@ import no.nav.syfo.sykmelding.model.SporsmalDTO
 import no.nav.syfo.sykmelding.model.SvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.service.SykmeldingerService
-import no.nav.syfo.sykmelding.status.api.model.SykmeldingStatusEventDTO
-import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.testutil.KafkaTest
 import no.nav.syfo.testutil.TestDB
@@ -255,34 +253,14 @@ class KafkaStatusIntegrationTest : FunSpec({
         with(TestApplicationEngine()) {
             setUpTestApplication()
             application.routing {
-                registerSykmeldingStatusGETApi(sykmeldingStatusService)
-                route("/api/v2") {
+                route("/api/v3") {
                     registrerSykmeldingApiV2(sykmeldingerService)
-                }
-            }
-            test("Test get stykmeldingstatus latest should be SENDT") {
-                val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
-                with(
-                    handleRequest(HttpMethod.Get, "/sykmeldinger/uuid/status?filter=LATEST") {
-                        call.authentication.principal = BrukerPrincipal("pasientFnr", JWTPrincipal(mockPayload))
-                    }
-                ) {
-                    response.status() shouldBeEqualTo HttpStatusCode.OK
-                    val sykmeldingStatuser = objectMapper.readValue<List<SykmeldingStatusEventDTO>>(response.content!!)
-                    sykmeldingStatuser.size shouldBeEqualTo 1
-                    val latestSykmeldingStatus = sykmeldingStatuser[0]
-                    latestSykmeldingStatus shouldBeEqualTo SykmeldingStatusEventDTO(
-                        StatusEventDTO.SENDT,
-                        sendtEvent.timestamp,
-                        erAvvist = false,
-                        erEgenmeldt = false
-                    )
                 }
             }
             test("test get sykmelding with latest status SENDT") {
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(
-                    handleRequest(HttpMethod.Get, "/api/v2/sykmeldinger") {
+                    handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
                         call.authentication.principal = BrukerPrincipal("pasientFnr", JWTPrincipal(mockPayload))
                     }
                 ) {

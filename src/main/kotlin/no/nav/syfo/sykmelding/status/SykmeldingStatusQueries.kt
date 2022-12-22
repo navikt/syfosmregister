@@ -56,20 +56,6 @@ suspend fun DatabaseInterface.registrerBekreftet(sykmeldingBekreftEvent: Sykmeld
     }
 }
 
-suspend fun DatabaseInterface.erEier(sykmeldingsid: String, fnr: String): Boolean = withContext(Dispatchers.IO) {
-    connection.use { connection ->
-        connection.prepareStatement(
-            """
-           SELECT 1 FROM SYKMELDINGSOPPLYSNINGER WHERE id=? AND pasient_fnr=?
-            """
-        ).use {
-            it.setString(1, sykmeldingsid)
-            it.setString(2, fnr)
-            it.executeQuery().next()
-        }
-    }
-}
-
 private suspend fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: OffsetDateTime): Boolean = withContext(Dispatchers.IO) {
     prepareStatement(
         """

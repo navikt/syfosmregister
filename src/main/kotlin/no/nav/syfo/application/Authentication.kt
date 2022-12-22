@@ -19,30 +19,12 @@ import no.nav.syfo.metrics.APP_ID_PATH_COUNTER
 import no.nav.syfo.metrics.getLabel
 
 fun Application.setupAuth(
-    loginserviceIdportenAudience: List<String>,
-    jwkProvider: JwkProvider,
     jwkProviderTokenX: JwkProvider,
-    issuer: String,
     tokenXIssuer: String,
     jwkProviderAadV2: JwkProvider,
     environment: Environment
 ) {
     install(Authentication) {
-        jwt(name = "jwt") {
-            verifier(jwkProvider, issuer)
-            validate { credentials ->
-                when {
-                    hasLoginserviceIdportenClientIdAudience(credentials, loginserviceIdportenAudience) && erNiva4(credentials) -> {
-                        val principal = JWTPrincipal(credentials.payload)
-                        BrukerPrincipal(
-                            fnr = finnFnrFraToken(principal),
-                            principal = principal
-                        )
-                    }
-                    else -> unauthorized(credentials)
-                }
-            }
-        }
         jwt(name = "azureadv2") {
             verifier(jwkProviderAadV2, environment.jwtIssuerV2)
             validate { credentials ->
@@ -110,10 +92,6 @@ fun unauthorized(credentials: JWTCredential): Principal? {
 
 fun hasClientIdAudience(credentials: JWTCredential, clientId: String): Boolean {
     return credentials.payload.audience.contains(clientId)
-}
-
-fun hasLoginserviceIdportenClientIdAudience(credentials: JWTCredential, loginserviceIdportenClientId: List<String>): Boolean {
-    return loginserviceIdportenClientId.any { credentials.payload.audience.contains(it) }
 }
 
 fun erNiva4(credentials: JWTCredential): Boolean {
