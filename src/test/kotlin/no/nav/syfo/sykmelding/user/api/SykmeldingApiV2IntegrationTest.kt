@@ -35,7 +35,7 @@ import java.nio.file.Paths
 import java.time.ZoneOffset
 
 class SykmeldingApiV2IntegrationTest : FunSpec({
-    val sykmeldingerV2Uri = "api/v2/sykmeldinger"
+    val sykmeldingerV2Uri = "api/v3/sykmeldinger"
 
     val database = TestDB.database
     val sykmeldingerService = SykmeldingerService(database)
@@ -57,17 +57,14 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
             application.setupAuth(
-                listOf("clientId"),
                 jwkProvider,
-                jwkProvider,
-                "https://sts.issuer.net/myid",
-                "https://sts.issuer.net/myid",
+                "tokenXissuer",
                 jwkProvider,
                 getEnvironment()
             )
             application.routing {
-                route("/api/v2") {
-                    authenticate("jwt") {
+                route("/api/v3") {
+                    authenticate("tokenx") {
                         registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
                     }
                 }
@@ -84,7 +81,7 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "pasientFnr")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}"
                         )
                     }
                 ) {
@@ -99,7 +96,7 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "feilFnr")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "feilFnr")}"
                         )
                     }
                 ) {
@@ -112,7 +109,7 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/annenId") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "pasientFnr")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}"
                         )
                     }
                 ) {
@@ -126,7 +123,7 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientId", subject = "pasientFnr")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}"
                         )
                     }
                 ) {

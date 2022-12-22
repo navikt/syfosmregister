@@ -2,13 +2,6 @@ package no.nav.syfo.sykmelding.status
 
 import java.time.OffsetDateTime
 
-data class SykmeldingStatus(
-    val timestamp: OffsetDateTime,
-    val statusEvent: StatusEvent,
-    val arbeidsgiver: ArbeidsgiverStatus?,
-    val sporsmalListe: List<Sporsmal>?
-)
-
 data class SykmeldingStatusEvent(
     val sykmeldingId: String,
     val timestamp: OffsetDateTime,

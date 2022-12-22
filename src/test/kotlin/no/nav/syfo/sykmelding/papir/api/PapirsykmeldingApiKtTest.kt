@@ -49,11 +49,8 @@ class PapirsykmeldingApiKtTest : FunSpec({
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
             application.setupAuth(
-                listOf("clientId"),
                 jwkProvider,
-                jwkProvider,
-                "me",
-                "me",
+                "tokenXissuer",
                 jwkProvider,
                 getEnvironment()
             )

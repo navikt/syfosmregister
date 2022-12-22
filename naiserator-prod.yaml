@@ -87,8 +87,6 @@ spec:
     - "https://smregister.intern.nav.no"
   webproxy: false
   leaderElection: true
-  envFrom:
-    - configmap: loginservice-idporten
   env:
     - name: SYFOTILGANGSKONTROLL_URL
       value: https://syfo-tilgangskontroll.prod-fss-pub.nais.io

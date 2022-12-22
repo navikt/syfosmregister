@@ -12,8 +12,6 @@ data class Environment(
     val sendSykmeldingKafkaTopic: String = "teamsykmelding.syfo-sendt-sykmelding",
     val bekreftSykmeldingKafkaTopic: String = "teamsykmelding.syfo-bekreftet-sykmelding",
     val mottattSykmeldingKafkaTopic: String = "teamsykmelding.syfo-mottatt-sykmelding",
-    val loginserviceIdportenDiscoveryUrl: String = getEnvVar("LOGINSERVICE_IDPORTEN_DISCOVERY_URL"),
-    val loginserviceIdportenAudience: List<String> = getEnvVar("LOGINSERVICE_IDPORTEN_AUDIENCE").split(","),
     val clientIdV2: String = getEnvVar("AZURE_APP_CLIENT_ID"),
     val clientSecretV2: String = getEnvVar("AZURE_APP_CLIENT_SECRET"),
     val jwkKeysUrlV2: String = getEnvVar("AZURE_OPENID_CONFIG_JWKS_URI"),

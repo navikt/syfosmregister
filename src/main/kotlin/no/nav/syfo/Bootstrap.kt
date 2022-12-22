@@ -27,7 +27,6 @@ import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
 import no.nav.syfo.application.exception.ServiceUnavailableException
-import no.nav.syfo.application.getWellKnown
 import no.nav.syfo.application.getWellKnownTokenX
 import no.nav.syfo.application.leaderelection.LeaderElection
 import no.nav.syfo.azuread.v2.AzureAdV2Client
@@ -74,11 +73,6 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 @ExperimentalTime
 fun main() {
     val environment = Environment()
-    val wellKnown = getWellKnown(environment.loginserviceIdportenDiscoveryUrl)
-    val jwkProvider = JwkProviderBuilder(URL(wellKnown.jwks_uri))
-        .cached(10, 24, TimeUnit.HOURS)
-        .rateLimited(10, 1, TimeUnit.MINUTES)
-        .build()
 
     val jwkProviderAadV2 = JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
         .cached(10, 24, TimeUnit.HOURS)
@@ -210,11 +204,8 @@ fun main() {
         env = environment,
         applicationState = applicationState,
         database = database,
-        jwkProvider = jwkProvider,
         jwkProviderTokenX = jwkProviderTokenX,
-        issuer = wellKnown.issuer,
         tokenXIssuer = wellKnownTokenX.issuer,
-        sykmeldingStatusService = sykmeldingStatusService,
         jwkProviderAadV2 = jwkProviderAadV2,
         sykmeldingerService = sykmeldingerService,
         tilgangskontrollService = tilgangskontrollService

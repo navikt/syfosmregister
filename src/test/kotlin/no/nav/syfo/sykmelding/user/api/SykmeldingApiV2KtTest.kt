@@ -33,7 +33,7 @@ import java.time.LocalDate
 
 class SykmeldingApiV2KtTest : FunSpec({
 
-    val sykmeldingerV2Uri = "api/v2/sykmeldinger"
+    val sykmeldingerV2Uri = "api/v3/sykmeldinger"
 
     val sykmeldingerService = mockkClass(SykmeldingerService::class)
 
@@ -47,7 +47,7 @@ class SykmeldingApiV2KtTest : FunSpec({
         with(TestApplicationEngine()) {
             setUpTestApplication()
             application.routing {
-                route("/api/v2") {
+                route("/api/v3") {
                     registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
                 }
             }
@@ -212,17 +212,14 @@ class SykmeldingApiV2KtTest : FunSpec({
             val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
             application.setupAuth(
-                loginserviceIdportenAudience = listOf("loginservice-client-id"),
-                jwkProvider = jwkProvider,
                 jwkProviderTokenX = jwkProvider,
-                issuer = "https://sts.issuer.net/myid",
-                tokenXIssuer = "",
+                tokenXIssuer = "tokenXissuer",
                 jwkProviderAadV2 = jwkProvider,
                 environment = getEnvironment()
             )
             application.routing {
-                route("/api/v2") {
-                    authenticate("jwt") {
+                route("/api/v3") {
+                    authenticate("tokenx") {
                         registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
                     }
                 }
@@ -233,7 +230,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("", "loginservice-client-id", subject = "123")}"
+                            "Bearer ${generateJWT("", "clientid", subject = "123")}"
                         )
                     }
                 ) {
@@ -247,7 +244,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("", "loginservice-client-id", subject = "123", level = "Level3")}"
+                            "Bearer ${generateJWT("", "clientid", subject = "123", level = "Level3")}"
                         )
                     }
                 ) {
@@ -274,7 +271,7 @@ class SykmeldingApiV2KtTest : FunSpec({
             test("Get sykmeldinger Unauthorized with incorrect issuer") {
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
-                        addHeader("Authorization", "Bearer ${generateJWT("", "loginservice-client-id", subject = "123", issuer = "microsoft")}")
+                        addHeader("Authorization", "Bearer ${generateJWT("", "clientid", subject = "123", issuer = "microsoft")}")
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized

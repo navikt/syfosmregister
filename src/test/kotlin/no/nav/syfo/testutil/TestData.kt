@@ -40,8 +40,6 @@ fun getEnvironment(): Environment {
     return Environment(
         cluster = "",
         syfoTilgangskontrollUrl = "",
-        loginserviceIdportenAudience = emptyList(),
-        loginserviceIdportenDiscoveryUrl = "",
         clientIdV2 = "clientid",
         clientSecretV2 = "",
         jwkKeysUrlV2 = "",

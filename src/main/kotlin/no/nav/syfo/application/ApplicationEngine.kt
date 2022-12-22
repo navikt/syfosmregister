@@ -33,8 +33,6 @@ import no.nav.syfo.sykmelding.papir.PapirsykmeldingService
 import no.nav.syfo.sykmelding.papir.api.registrerServiceuserPapirsykmeldingApi
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV2
-import no.nav.syfo.sykmelding.status.SykmeldingStatusService
-import no.nav.syfo.sykmelding.status.api.registerSykmeldingStatusGETApi
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import java.util.UUID
 
@@ -42,11 +40,8 @@ fun createApplicationEngine(
     env: Environment,
     applicationState: ApplicationState,
     database: DatabaseInterface,
-    jwkProvider: JwkProvider,
     jwkProviderTokenX: JwkProvider,
-    issuer: String,
     tokenXIssuer: String,
-    sykmeldingStatusService: SykmeldingStatusService,
     jwkProviderAadV2: JwkProvider,
     sykmeldingerService: SykmeldingerService,
     tilgangskontrollService: TilgangskontrollService
@@ -62,9 +57,6 @@ fun createApplicationEngine(
             }
         }
         setupAuth(
-            loginserviceIdportenAudience = env.loginserviceIdportenAudience,
-            jwkProvider = jwkProvider,
-            issuer = issuer,
             tokenXIssuer = tokenXIssuer,
             jwkProviderAadV2 = jwkProviderAadV2,
             jwkProviderTokenX = jwkProviderTokenX,
@@ -91,23 +83,15 @@ fun createApplicationEngine(
             route("internal") {
                 registerNaisApi(applicationState)
             }
-
             route("/api/v2") {
-                authenticate("jwt") {
-                    registrerSykmeldingApiV2(sykmeldingerService)
-                }
                 authenticate("azureadv2") {
                     registrerSykmeldingServiceuserApiV2(sykmeldingerService)
                     registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
                     registrerServiceuserPapirsykmeldingApi(papirsykmeldingService = PapirsykmeldingService(database))
                 }
             }
-            authenticate("jwt") {
-                registerSykmeldingStatusGETApi(sykmeldingStatusService)
-            }
             route("/api/v3") {
                 authenticate("tokenx") {
-                    registerSykmeldingStatusGETApi(sykmeldingStatusService)
                     registrerSykmeldingApiV2(sykmeldingerService)
                 }
             }
