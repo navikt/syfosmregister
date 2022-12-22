@@ -417,7 +417,7 @@ class SykmeldingStatusConsumerServiceKafkaTest : FunSpec({
             var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
             var sykmeldingSendEvent: SykmeldingSendEvent? = null
             val sykmeldingSendKafkaEvent = SykmeldingStatusKafkaEventDTO(
-                sykmeldingId, getNowTickMillisOffsetDateTime().plusMonths(1), STATUS_SENDT,
+                sykmeldingId, timestamp, STATUS_SENDT,
                 ArbeidsgiverStatusDTO("1", "2", "navn"),
                 listOf(
                     SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar"),
