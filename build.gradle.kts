@@ -9,7 +9,7 @@ val coroutinesVersion = "1.6.4"
 val jacksonVersion = "2.14.0"
 val confluentVersion = "7.2.1"
 val kluentVersion = "1.72"
-val ktorVersion = "2.1.3"
+val ktorVersion = "2.2.2"
 val logbackVersion = "1.4.5"
 val logstashEncoderVersion = "7.2"
 val prometheusVersion = "0.16.0"
@@ -23,14 +23,13 @@ val mockkVersion = "1.13.2"
 val nimbusdsVersion = "9.25.6"
 val testContainerKafkaVersion = "1.17.6"
 val caffeineVersion = "3.1.1"
-val kotlinVersion = "1.7.21"
+val kotlinVersion = "1.8.0"
 val swaggerUiVersion = "4.15.0"
 val testContainerVersion = "1.17.6"
-val nettyCodecVersion = "4.1.86.Final"
 
 plugins {
     id("org.jmailen.kotlinter") version "3.10.0"
-    kotlin("jvm") version "1.7.21"
+    kotlin("jvm") version "1.8.0"
     id("com.diffplug.spotless") version "6.5.0"
     id("com.github.johnrengelman.shadow") version "7.1.2"
     id("org.hidetake.swagger.generator") version "2.18.2" apply true
@@ -67,9 +66,6 @@ dependencies {
 
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    // This is to override version that is in io.ktor:ktor-server-netty
-    // https://www.cve.org/CVERecord?id=CVE-2022-41915
-    implementation("io.netty:netty-codec:$nettyCodecVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-server-cors:$ktorVersion")
@@ -139,6 +135,7 @@ tasks {
 
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "17"
+        dependsOn(":generateSwaggerUI")
     }
 
     withType<ShadowJar> {
