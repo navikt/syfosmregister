@@ -5,7 +5,7 @@ info:
   description: API for sykmeldinger.
   version: 1.0.0
 servers:
-  - url: 'https://syfosmregister.nais.preprod.local'
+  - url: 'https://smregister.dev.intern.nav.no'
 paths:
   /api/v2/sykmeldinger:
     get:

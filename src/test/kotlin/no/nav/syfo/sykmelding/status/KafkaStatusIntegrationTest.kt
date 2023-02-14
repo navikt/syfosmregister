@@ -261,7 +261,7 @@ class KafkaStatusIntegrationTest : FunSpec({
                 val sendtEvent = publishSendAndWait(sykmeldingStatusService, applicationState, kafkaProducer, sykmelding, sykmeldingStatusConsumerService)
                 with(
                     handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
-                        call.authentication.principal = BrukerPrincipal("pasientFnr", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("pasientFnr", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK

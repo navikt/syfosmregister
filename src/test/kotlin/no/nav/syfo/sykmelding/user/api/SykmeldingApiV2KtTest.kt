@@ -56,7 +56,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -66,7 +66,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=APEN") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -76,7 +76,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -87,7 +87,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT&include=AVBRUTT") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
@@ -97,7 +97,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=ÅPEN") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
@@ -108,7 +108,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 coEvery { sykmeldingerService.getUserSykmelding(any(), any(), any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=ALL") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
@@ -119,7 +119,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 coEvery { sykmeldingerService.getUserSykmelding(any(), null, null, any(), any(), any()) } returns listOf(getSykmeldingDto())
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -142,7 +142,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 )
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-01-20&tom=2020-02-10") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -163,7 +163,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 )
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-02-20") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -184,7 +184,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 )
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?tom=2020-02-20") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
@@ -195,7 +195,7 @@ class SykmeldingApiV2KtTest : FunSpec({
             test("Skal få Bad Requeset om TOM dato er før FOM dato") {
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-05-20&tom=2020-02-10") {
-                        call.authentication.principal = BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                        call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
                     }
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
