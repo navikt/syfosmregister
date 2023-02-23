@@ -46,13 +46,14 @@ data class Svar(
 )
 
 enum class ShortName {
-    ARBEIDSSITUASJON, NY_NARMESTE_LEDER, FRAVAER, PERIODE, FORSIKRING
+    ARBEIDSSITUASJON, NY_NARMESTE_LEDER, FRAVAER, PERIODE, FORSIKRING, EGENMELDINGSDAGER
 }
 
 enum class Svartype {
     ARBEIDSSITUASJON,
     PERIODER,
-    JA_NEI
+    JA_NEI,
+    DAGER
 }
 
 data class SykmeldingBekreftEvent(

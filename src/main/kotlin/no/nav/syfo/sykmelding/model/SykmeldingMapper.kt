@@ -87,6 +87,7 @@ private fun ShortName.toDTO(): ShortNameDTO {
         ShortName.FRAVAER -> ShortNameDTO.FRAVAER
         ShortName.PERIODE -> ShortNameDTO.PERIODE
         ShortName.NY_NARMESTE_LEDER -> ShortNameDTO.NY_NARMESTE_LEDER
+        ShortName.EGENMELDINGSDAGER -> ShortNameDTO.EGENMELDINGSDAGER
     }
 }
 
@@ -102,6 +103,7 @@ private fun Svartype.toDTO(): SvartypeDTO {
         Svartype.ARBEIDSSITUASJON -> SvartypeDTO.ARBEIDSSITUASJON
         Svartype.JA_NEI -> SvartypeDTO.JA_NEI
         Svartype.PERIODER -> SvartypeDTO.PERIODER
+        Svartype.DAGER -> SvartypeDTO.DAGER
     }
 }
 
