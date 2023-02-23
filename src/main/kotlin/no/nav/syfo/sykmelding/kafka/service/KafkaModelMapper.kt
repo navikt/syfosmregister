@@ -64,6 +64,7 @@ class KafkaModelMapper private constructor() {
                 SvartypeDTO.ARBEIDSSITUASJON -> Svartype.ARBEIDSSITUASJON
                 SvartypeDTO.PERIODER -> Svartype.PERIODER
                 SvartypeDTO.JA_NEI -> Svartype.JA_NEI
+                SvartypeDTO.DAGER -> Svartype.DAGER
             }
         }
 
@@ -74,6 +75,7 @@ class KafkaModelMapper private constructor() {
                 ShortNameDTO.FRAVAER -> ShortName.FRAVAER
                 ShortNameDTO.PERIODE -> ShortName.PERIODE
                 ShortNameDTO.FORSIKRING -> ShortName.FORSIKRING
+                ShortNameDTO.EGENMELDINGSDAGER -> ShortName.EGENMELDINGSDAGER
             }
         }
 
@@ -113,6 +115,7 @@ class KafkaModelMapper private constructor() {
                 Svartype.ARBEIDSSITUASJON -> SvartypeDTO.ARBEIDSSITUASJON
                 Svartype.PERIODER -> SvartypeDTO.PERIODER
                 Svartype.JA_NEI -> SvartypeDTO.JA_NEI
+                Svartype.DAGER -> SvartypeDTO.DAGER
             }
         }
 
@@ -123,6 +126,7 @@ class KafkaModelMapper private constructor() {
                 ShortName.FRAVAER -> ShortNameDTO.FRAVAER
                 ShortName.PERIODE -> ShortNameDTO.PERIODE
                 ShortName.FORSIKRING -> ShortNameDTO.FORSIKRING
+                ShortName.EGENMELDINGSDAGER -> ShortNameDTO.EGENMELDINGSDAGER
             }
         }
     }
