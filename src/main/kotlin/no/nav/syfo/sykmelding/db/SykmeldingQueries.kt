@@ -358,6 +358,7 @@ private fun tilShortName(shortname: String): ShortName {
         "FRAVAER" -> ShortName.FRAVAER
         "PERIODE" -> ShortName.PERIODE
         "NY_NARMESTE_LEDER" -> ShortName.NY_NARMESTE_LEDER
+        "EGENMELDINGSDAGER" -> ShortName.EGENMELDINGSDAGER
         else -> throw IllegalStateException("Sykmeldingen har en ukjent spørsmålskode, skal ikke kunne skje")
     }
 }
@@ -367,6 +368,7 @@ private fun tilSvartype(svartype: String): Svartype {
         "ARBEIDSSITUASJON" -> Svartype.ARBEIDSSITUASJON
         "PERIODER" -> Svartype.PERIODER
         "JA_NEI" -> Svartype.JA_NEI
+        "DAGER" -> Svartype.DAGER
         else -> throw IllegalStateException("Sykmeldingen har en ukjent svartype, skal ikke kunne skje")
     }
 }
