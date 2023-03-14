@@ -26,24 +26,11 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
         database.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
     }
 
-    suspend fun getSykmeldingStatus(sykmeldingsid: String, filter: String?): List<SykmeldingStatusEvent> {
-        val sykmeldingStatus = database.hentSykmeldingStatuser(sykmeldingsid)
-        return when (filter) {
-            "LATEST" -> getLatestSykmeldingStatus(sykmeldingStatus)
-            else -> sykmeldingStatus
-        }
-    }
+    suspend fun getLatestSykmeldingStatus(sykmeldingId: String): SykmeldingStatusEvent? =
+        database.hentSykmeldingStatuser(sykmeldingId).maxByOrNull { it.timestamp }
 
     suspend fun getArbeidsgiverSykmelding(sykmeldingId: String): ArbeidsgiverSykmelding? =
         database.getSykmeldingerMedIdUtenBehandlingsutfall(sykmeldingId)?.toArbeidsgiverSykmelding()
-
-    private fun getLatestSykmeldingStatus(sykmeldingStatus: List<SykmeldingStatusEvent>): List<SykmeldingStatusEvent> {
-        val latest = sykmeldingStatus.maxByOrNull { it.timestamp }
-        return when (latest) {
-            null -> emptyList()
-            else -> listOf(latest)
-        }
-    }
 
     suspend fun slettSykmelding(sykmeldingId: String) {
         database.slettSykmelding(sykmeldingId)

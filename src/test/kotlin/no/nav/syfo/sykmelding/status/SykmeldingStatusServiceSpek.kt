@@ -16,6 +16,7 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBe
 import org.amshove.kluent.shouldNotBeEqualTo
 import java.time.ZoneOffset
 
@@ -95,17 +96,6 @@ class SykmeldingStatusServiceSpek : FunSpec({
             sykmeldinger.first().id shouldBeEqualTo "uuid2"
         }
 
-        test("Skal hente alle statuser") {
-            database.registerStatus(
-                SykmeldingStatusEvent(
-                    "uuid",
-                    getNowTickMillisOffsetDateTime().plusMonths(1).plusSeconds(10),
-                    StatusEvent.SENDT
-                )
-            )
-            val sykmeldingStatuser = sykmeldingStatusService.getSykmeldingStatus("uuid", null)
-            sykmeldingStatuser.size shouldBeEqualTo 2
-        }
 
         test("Skal hente siste status") {
             database.registerStatus(
@@ -115,11 +105,11 @@ class SykmeldingStatusServiceSpek : FunSpec({
                     StatusEvent.SENDT
                 )
             )
-            val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid", "LATEST")
-            sykmeldingstatuser.size shouldBeEqualTo 1
-            sykmeldingstatuser[0].event shouldBeEqualTo StatusEvent.SENDT
-            sykmeldingstatuser[0].erAvvist shouldBeEqualTo false
-            sykmeldingstatuser[0].erEgenmeldt shouldBeEqualTo false
+            val sykmeldingstatuser = sykmeldingStatusService.getLatestSykmeldingStatus("uuid")
+            sykmeldingstatuser shouldNotBe null
+            sykmeldingstatuser?.event shouldBeEqualTo StatusEvent.SENDT
+            sykmeldingstatuser?.erAvvist shouldBeEqualTo false
+            sykmeldingstatuser?.erEgenmeldt shouldBeEqualTo false
         }
 
         test("Status skal vises som avvist hvis sykmelding er avvist") {
@@ -145,9 +135,9 @@ class SykmeldingStatusServiceSpek : FunSpec({
                 )
             )
 
-            val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid2", "LATEST")
+            val sykmeldingstatuser = sykmeldingStatusService.getLatestSykmeldingStatus("uuid2")
 
-            sykmeldingstatuser[0].erAvvist shouldBeEqualTo true
+            sykmeldingstatuser?.erAvvist shouldBeEqualTo true
         }
 
         test("Status skal vises som egenmeldt hvis sykmelding er egenmelding") {
@@ -165,9 +155,9 @@ class SykmeldingStatusServiceSpek : FunSpec({
             )
             database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
-            val sykmeldingstatuser = sykmeldingStatusService.getSykmeldingStatus("uuid2", "LATEST")
+            val sykmeldingstatuser = sykmeldingStatusService.getLatestSykmeldingStatus("uuid2")
 
-            sykmeldingstatuser[0].erEgenmeldt shouldBeEqualTo true
+            sykmeldingstatuser?.erEgenmeldt shouldBeEqualTo true
         }
 
         test("registrer bekreftet skal ikke lagre spørsmål og svar om den ikke er nyest") {

@@ -43,7 +43,13 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
     val bekreftetSykmeldingKafkaProducer = mockk<BekreftSykmeldingKafkaProducer>(relaxed = true)
     val tombstoneProducer = mockk<SykmeldingTombstoneProducer>()
     val databaseInterface = mockkClass(DatabaseInterface::class)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftetSykmeldingKafkaProducer, tombstoneProducer, databaseInterface)
+    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(
+        sykmeldingStatusService,
+        sendtSykmeldingKafkaProducer,
+        bekreftetSykmeldingKafkaProducer,
+        tombstoneProducer,
+        databaseInterface
+    )
 
     beforeTest {
         clearAllMocks()
@@ -53,8 +59,10 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
 
     context("Test status event for resendt sykmelding") {
         test("Test resending to sendt topic") {
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT)
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
+                sykmeldingId,
+                getNowTickMillisOffsetDateTime(),
+                StatusEvent.SENDT
             )
             coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(
                 Sporsmal(
@@ -64,7 +72,11 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
                     )
                 )
             )
-            coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
+            coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel(
+                "orgnummer",
+                "juridisk",
+                "orgnavn"
+            )
 
             mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId, "123")
 
@@ -72,10 +84,17 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
         test("Test resending to bekreft topic") {
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.BEKREFTET)
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
+                sykmeldingId,
+                getNowTickMillisOffsetDateTime(),
+                StatusEvent.BEKREFTET
             )
-            coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
+
+            coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel(
+                "orgnummer",
+                "juridisk",
+                "orgnavn"
+            )
             coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(
                 Sporsmal(
                     "ARBEIDSGIVER", ShortName.ARBEIDSSITUASJON,
@@ -91,8 +110,10 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
         test("Skal ikke resende når status ikke er sendt/bekreftet") {
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(sykmeldingId, getNowTickMillisOffsetDateTime(), StatusEvent.APEN)
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
+                sykmeldingId,
+                getNowTickMillisOffsetDateTime(),
+                StatusEvent.APEN
             )
             coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns null
             coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns emptyList()
@@ -107,10 +128,10 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
     context("Skal ikke oppdatere database hvis skriv til kafka feiler") {
 
         test("SENDT") {
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(
-                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
-                )
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
+                sykmeldingId,
+                getNowTickMillisOffsetDateTime().minusHours(5),
+                StatusEvent.APEN
             )
             coEvery { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -120,10 +141,10 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coVerify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
         }
         test("BEKREFTET") {
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(
-                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
-                )
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
+                sykmeldingId,
+                getNowTickMillisOffsetDateTime().minusHours(5),
+                StatusEvent.APEN
             )
             coEvery { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -133,10 +154,10 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
         }
         test("SLETTET") {
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(
-                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
-                )
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
+                sykmeldingId,
+                getNowTickMillisOffsetDateTime().minusHours(5),
+                StatusEvent.APEN
             )
             coEvery { tombstoneProducer.tombstoneSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -149,10 +170,10 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
 
     context("Test av bekreft") {
         test("Bekreft oppdaterer kafka og database") {
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(
-                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
-                )
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
+                sykmeldingId,
+                getNowTickMillisOffsetDateTime().minusHours(5),
+                StatusEvent.APEN
             )
 
             mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
@@ -161,11 +182,10 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coVerify { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
         test("Bekreft avvist sykmelding oppdaterer kun database") {
-            coEvery { sykmeldingStatusService.getSykmeldingStatus(any(), any()) } returns listOf(
-                SykmeldingStatusEvent(
-                    sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
-                )
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
+                sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
             )
+
 
             mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmeldingAvvistSykmelding())
 
