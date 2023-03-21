@@ -193,11 +193,41 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coVerify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
     }
+
+    context("Test av oppdatering av egenmeldingsdager (aka SENDT->SENDT)") {
+        test("Skal tillate at en SENDT sykmelding blir SENDT på nytt med nye egenmeldingsdager") {
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
+                SykmeldingStatusEvent(
+                    sykmeldingId,
+                    getNowTickMillisOffsetDateTime().minusHours(5),
+                    StatusEvent.SENDT,
+                )
+
+            mottattSykmeldingStatusService.handleStatusEvent(opprettSendtStatusmelding(erSvarOppdatering = true))
+
+            coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coVerify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
+        }
+
+        test("Skal IKKE tillate at en SENDT sykmelding blir SENDT på nytt når den ikke har erSvarOppdatering=true") {
+            coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
+                SykmeldingStatusEvent(
+                    sykmeldingId,
+                    getNowTickMillisOffsetDateTime().minusHours(5),
+                    StatusEvent.SENDT,
+                )
+
+            mottattSykmeldingStatusService.handleStatusEvent(opprettSendtStatusmelding(erSvarOppdatering = false))
+
+            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+            coVerify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
+        }
+    }
 })
 
 val sykmeldingId = UUID.randomUUID().toString()
 
-private fun opprettSendtStatusmelding() =
+private fun opprettSendtStatusmelding(erSvarOppdatering: Boolean = false) =
     SykmeldingStatusKafkaMessageDTO(
         KafkaMetadataDTO(
             sykmeldingId,
@@ -210,7 +240,8 @@ private fun opprettSendtStatusmelding() =
             getNowTickMillisOffsetDateTime(),
             "SENDT",
             ArbeidsgiverStatusDTO("9999", null, "Arbeidsplassen AS"),
-            listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar"))
+            listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar")),
+            erSvarOppdatering = erSvarOppdatering,
         )
     )
 

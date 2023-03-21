@@ -128,7 +128,12 @@ class MottattSykmeldingStatusService(
         val latestStatus =
             sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingStatusKafkaMessage.event.sykmeldingId)
 
-        if (latestStatus?.event == StatusEvent.SENDT) {
+        if (
+            latestStatus?.event == StatusEvent.SENDT &&
+            // Når sykmeldinger-backend sender oppdaterte sykmelding så skal
+            // vi sende den på nytt på syfo-sendt-sykmelding
+            sykmeldingStatusKafkaMessage.event.erSvarOppdatering != true
+        ) {
             log.warn(
                 "Sykmelding er allerede sendt sykmeldingId {}",
                 sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId
