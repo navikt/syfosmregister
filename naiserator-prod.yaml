@@ -66,6 +66,7 @@ spec:
       external:
         - host: kafka-schema-registry.nais.adeo.no
         - host: syfo-tilgangskontroll.prod-fss-pub.nais.io
+        - host: pdl-api.prod-fss-pub.nais.io
     inbound:
       rules:
         - application: syfomodiaperson

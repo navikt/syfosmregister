@@ -26,12 +26,13 @@ val caffeineVersion = "3.1.1"
 val kotlinVersion = "1.8.10"
 val swaggerUiVersion = "4.15.0"
 val testContainerVersion = "1.17.6"
+val commonsCodecVersion = "1.15"
 
 plugins {
-    id("org.jmailen.kotlinter") version "3.10.0"
+    id("org.jmailen.kotlinter") version "3.14.0"
     kotlin("jvm") version "1.8.10"
     id("com.diffplug.spotless") version "6.5.0"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.hidetake.swagger.generator") version "2.18.2" apply true
 }
 
@@ -75,6 +76,8 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation("commons-codec:commons-codec:$commonsCodecVersion")
+    // override transient version 1.10 from io.ktor:ktor-client-apache
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
