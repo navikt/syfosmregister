@@ -31,7 +31,7 @@ val commonsCodecVersion = "1.15"
 plugins {
     id("org.jmailen.kotlinter") version "3.14.0"
     kotlin("jvm") version "1.8.20"
-    id("com.diffplug.spotless") version "6.5.0"
+    id("com.diffplug.spotless") version "6.18.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.hidetake.swagger.generator") version "2.19.2" apply true
 }
