@@ -24,7 +24,7 @@ val nimbusdsVersion = "9.25.6"
 val testContainerKafkaVersion = "1.18.0"
 val caffeineVersion = "3.1.1"
 val kotlinVersion = "1.8.20"
-val swaggerUiVersion = "4.15.0"
+val swaggerUiVersion = "4.18.2"
 val testContainerVersion = "1.18.0"
 val commonsCodecVersion = "1.15"
 
