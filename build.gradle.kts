@@ -25,7 +25,7 @@ val testContainerKafkaVersion = "1.18.0"
 val caffeineVersion = "3.1.1"
 val kotlinVersion = "1.8.10"
 val swaggerUiVersion = "4.15.0"
-val testContainerVersion = "1.17.6"
+val testContainerVersion = "1.18.0"
 val commonsCodecVersion = "1.15"
 
 plugins {
