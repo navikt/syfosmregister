@@ -57,7 +57,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
@@ -67,7 +67,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=APEN") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
@@ -77,7 +77,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
@@ -88,7 +88,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=APEN&exclude=SENDT&include=AVBRUTT") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                 }
@@ -98,7 +98,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?exclude=ÅPEN") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                 }
@@ -109,7 +109,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?include=ALL") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                 }
@@ -120,7 +120,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
@@ -129,21 +129,26 @@ class SykmeldingApiV2KtTest : FunSpec({
             test("should get sykmeldinger for user with FOM and TOM queryparams") {
                 val periode = getSykmeldingperiodeDto(
                     fom = LocalDate.of(2020, 1, 20),
-                    tom = LocalDate.of(2020, 2, 10)
+                    tom = LocalDate.of(2020, 2, 10),
                 )
                 coEvery {
                     sykmeldingerService.getUserSykmelding(
-                        any(), periode.fom, periode.tom, any(), any(), any()
+                        any(),
+                        periode.fom,
+                        periode.tom,
+                        any(),
+                        any(),
+                        any(),
                     )
                 } returns listOf(
                     getSykmeldingDto(
-                        perioder = listOf(periode)
-                    )
+                        perioder = listOf(periode),
+                    ),
                 )
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-01-20&tom=2020-02-10") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                     val sykmeldinger: List<SykmeldingDTO> = objectMapper.readValue(response.content!!)
@@ -154,17 +159,17 @@ class SykmeldingApiV2KtTest : FunSpec({
             test("should not get sykmeldinger with only FOM") {
                 val periode = getSykmeldingperiodeDto(
                     fom = LocalDate.of(2020, 2, 11),
-                    tom = LocalDate.of(2020, 2, 20)
+                    tom = LocalDate.of(2020, 2, 20),
                 )
                 coEvery { sykmeldingerService.getUserSykmelding(any(), LocalDate.of(2020, 2, 20), null, any(), any(), any()) } returns listOf(
                     getSykmeldingDto(
-                        perioder = listOf(periode)
-                    )
+                        perioder = listOf(periode),
+                    ),
                 )
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-02-20") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                     val sykmeldinger: List<SykmeldingDTO> = objectMapper.readValue(response.content!!)
@@ -175,17 +180,17 @@ class SykmeldingApiV2KtTest : FunSpec({
             test("should not get sykmeldinger with only TOM") {
                 val periode = getSykmeldingperiodeDto(
                     fom = LocalDate.of(2020, 2, 11),
-                    tom = LocalDate.of(2020, 2, 20)
+                    tom = LocalDate.of(2020, 2, 20),
                 )
                 coEvery { sykmeldingerService.getUserSykmelding(any(), null, LocalDate.of(2020, 2, 20), any(), any(), any()) } returns listOf(
                     getSykmeldingDto(
-                        perioder = listOf(periode)
-                    )
+                        perioder = listOf(periode),
+                    ),
                 )
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?tom=2020-02-20") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                     val sykmeldinger: List<SykmeldingDTO> = objectMapper.readValue(response.content!!)
@@ -196,7 +201,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri?fom=2020-05-20&tom=2020-02-10") {
                         call.authentication.principal(BrukerPrincipal("123", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                     response.content!! shouldBeEqualTo "FOM should be before or equal to TOM"
@@ -215,7 +220,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 jwkProviderTokenX = jwkProvider,
                 tokenXIssuer = "tokenXissuer",
                 jwkProviderAadV2 = jwkProvider,
-                environment = getEnvironment()
+                environment = getEnvironment(),
             )
             application.routing {
                 route("/api/v3") {
@@ -230,9 +235,9 @@ class SykmeldingApiV2KtTest : FunSpec({
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("", "clientid", subject = "123")}"
+                            "Bearer ${generateJWT("", "clientid", subject = "123")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
@@ -244,9 +249,9 @@ class SykmeldingApiV2KtTest : FunSpec({
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("", "clientid", subject = "123", level = "Level3")}"
+                            "Bearer ${generateJWT("", "clientid", subject = "123", level = "Level3")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }
@@ -262,7 +267,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader("Authorization", "Bearer ${generateJWT("", "error", subject = "123")}")
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }
@@ -272,7 +277,7 @@ class SykmeldingApiV2KtTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, sykmeldingerV2Uri) {
                         addHeader("Authorization", "Bearer ${generateJWT("", "clientid", subject = "123", issuer = "microsoft")}")
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }

@@ -4,12 +4,12 @@ import java.time.LocalDate
 
 data class StatusRequest(
     val fnr: String,
-    val dato: LocalDate
+    val dato: LocalDate,
 )
 
 data class SykmeldtStatus(
     val erSykmeldt: Boolean,
     val gradert: Boolean?,
     val fom: LocalDate?,
-    val tom: LocalDate?
+    val tom: LocalDate?,
 )

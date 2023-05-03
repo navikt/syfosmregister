@@ -52,7 +52,7 @@ class PapirsykmeldingApiKtTest : FunSpec({
                 jwkProvider,
                 "tokenXissuer",
                 jwkProvider,
-                getEnvironment()
+                getEnvironment(),
             )
             application.routing {
                 route("/api/v2") {
@@ -73,9 +73,9 @@ class PapirsykmeldingApiKtTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientid", issuer = "assureissuer")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", issuer = "assureissuer")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                     val sykmelding = objectMapper.readValue(response.content, PapirsykmeldingDTO::class.java)

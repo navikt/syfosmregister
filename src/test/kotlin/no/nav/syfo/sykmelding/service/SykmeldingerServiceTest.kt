@@ -49,7 +49,7 @@ class SykmeldingerServiceTest : FunSpec({
         test("should filter include statuses") {
             coEvery { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null)),
             )
 
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, listOf("AVBRUTT"), null)
@@ -60,7 +60,7 @@ class SykmeldingerServiceTest : FunSpec({
         test("getUserSykmelding should filter behandler fnr if fullBehandler = false") {
             coEvery { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null)),
             )
 
             val sykmeldinger =
@@ -73,7 +73,7 @@ class SykmeldingerServiceTest : FunSpec({
         test("getUserSykmelding should not filter behandler fnr if fullBehandler = true") {
             coEvery { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null)),
             )
 
             val sykmeldinger =
@@ -86,7 +86,7 @@ class SykmeldingerServiceTest : FunSpec({
         test("should filter multiple include statuses") {
             coEvery { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null)),
             )
 
             val sykmeldinger =
@@ -99,7 +99,7 @@ class SykmeldingerServiceTest : FunSpec({
         test("should filter exclude statuses") {
             coEvery { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null)),
             )
 
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null, null, listOf("AVBRUTT"))
@@ -110,7 +110,7 @@ class SykmeldingerServiceTest : FunSpec({
         test("should filter multiple exclude statuses") {
             coEvery { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(status = StatusDbModel("APEN", getNowTickMillisOffsetDateTime(), null)),
-                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null))
+                getSykmeldingerDBmodel().copy(status = StatusDbModel("AVBRUTT", getNowTickMillisOffsetDateTime(), null)),
             )
 
             val sykmeldinger =
@@ -130,9 +130,9 @@ class SykmeldingerServiceTest : FunSpec({
             coEvery { database.getSykmeldinger(any()) } returns listOf(
                 getSykmeldingerDBmodel().copy(
                     merknader = listOf(
-                        Merknad(type = "UGYLDIG_TILBAKEDATERING", beskrivelse = null)
-                    )
-                )
+                        Merknad(type = "UGYLDIG_TILBAKEDATERING", beskrivelse = null),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null)
             sykmeldinger.size shouldBeEqualTo 1
@@ -163,9 +163,9 @@ class SykmeldingerServiceTest : FunSpec({
                 getSykmeldingerDBmodelEgenmeldt(
                     avsenderSystem = AvsenderSystem(
                         "Egenmeldt",
-                        "versjon"
-                    )
-                )
+                        "versjon",
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
             sykmeldinger.size shouldBeEqualTo 1
@@ -180,9 +180,9 @@ class SykmeldingerServiceTest : FunSpec({
                 getSykmeldingerDBmodelEgenmeldt(
                     avsenderSystem = AvsenderSystem(
                         "Papirsykmelding",
-                        "versjon"
-                    )
-                )
+                        "versjon",
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
             sykmeldinger.size shouldBeEqualTo 1
@@ -206,9 +206,9 @@ class SykmeldingerServiceTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
             sykmelding shouldNotBe null
@@ -222,9 +222,9 @@ class SykmeldingerServiceTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
             sykmelding shouldNotBe null
@@ -238,9 +238,9 @@ class SykmeldingerServiceTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
             sykmelding shouldNotBe null
@@ -254,10 +254,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger =
                 sykmeldingerService.getUserSykmelding(sykmeldingId, LocalDate.of(2020, 1, 1), LocalDate.of(2020, 3, 1))
@@ -269,10 +269,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, LocalDate.of(2020, 2, 9), null)
             sykmeldinger.size shouldBeEqualTo 1
@@ -283,10 +283,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, LocalDate.of(2020, 2, 16), null)
             sykmeldinger.size shouldBeEqualTo 1
@@ -297,10 +297,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, LocalDate.of(2020, 2, 20), null)
             sykmeldinger.size shouldBeEqualTo 1
@@ -311,10 +311,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, LocalDate.of(2020, 2, 21), null)
             sykmeldinger.size shouldBeEqualTo 0
@@ -326,14 +326,14 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
+                            tom = LocalDate.of(2020, 2, 20),
                         ),
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 21),
-                            tom = LocalDate.of(2020, 2, 21)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 21),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, LocalDate.of(2020, 2, 21), null)
             sykmeldinger.size shouldBeEqualTo 1
@@ -344,10 +344,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, LocalDate.of(2020, 2, 21))
             sykmeldinger.size shouldBeEqualTo 1
@@ -358,10 +358,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, LocalDate.of(2020, 2, 20))
             sykmeldinger.size shouldBeEqualTo 1
@@ -372,10 +372,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, LocalDate.of(2020, 2, 15))
             sykmeldinger.size shouldBeEqualTo 1
@@ -386,10 +386,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, LocalDate.of(2020, 2, 10))
             sykmeldinger.size shouldBeEqualTo 1
@@ -400,10 +400,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, LocalDate.of(2020, 2, 9))
             sykmeldinger.size shouldBeEqualTo 0
@@ -414,14 +414,14 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
+                            tom = LocalDate.of(2020, 2, 20),
                         ),
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 5),
-                            tom = LocalDate.of(2020, 2, 9)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 9),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, LocalDate.of(2020, 2, 9))
             sykmeldinger.size shouldBeEqualTo 1
@@ -433,15 +433,15 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(
                 sykmeldingId,
                 LocalDate.of(2020, 2, 11),
-                LocalDate.of(2020, 2, 19)
+                LocalDate.of(2020, 2, 19),
             )
             sykmeldinger.size shouldBeEqualTo 1
         }
@@ -451,15 +451,15 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(
                 sykmeldingId,
                 LocalDate.of(2019, 2, 11),
-                LocalDate.of(2020, 2, 19)
+                LocalDate.of(2020, 2, 19),
             )
             sykmeldinger.size shouldBeEqualTo 1
         }
@@ -469,15 +469,15 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(
                 sykmeldingId,
                 LocalDate.of(2019, 2, 20),
-                LocalDate.of(2020, 2, 28)
+                LocalDate.of(2020, 2, 28),
             )
             sykmeldinger.size shouldBeEqualTo 1
         }
@@ -488,10 +488,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger =
                 sykmeldingerService.getUserSykmelding(sykmeldingId, LocalDate.of(2019, 2, 5), LocalDate.of(2020, 2, 9))
@@ -503,15 +503,15 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(
                 sykmeldingId,
                 LocalDate.of(2020, 2, 21),
-                LocalDate.of(2020, 2, 28)
+                LocalDate.of(2020, 2, 28),
             )
             sykmeldinger.size shouldBeEqualTo 0
         }
@@ -522,19 +522,19 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
+                            tom = LocalDate.of(2020, 2, 20),
                         ),
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 21),
-                            tom = LocalDate.of(2020, 2, 21)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 21),
+                        ),
+                    ),
+                ),
             )
             val sykmeldinger = sykmeldingerService.getUserSykmelding(
                 sykmeldingId,
                 LocalDate.of(2020, 2, 21),
-                LocalDate.of(2020, 2, 28)
+                LocalDate.of(2020, 2, 28),
             )
             sykmeldinger.size shouldBeEqualTo 1
         }
@@ -548,10 +548,10 @@ class SykmeldingerServiceTest : FunSpec({
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
                             tom = LocalDate.of(2020, 2, 20),
-                            gradert = Gradert(false, 50)
-                        )
-                    )
-                )
+                            gradert = Gradert(false, 50),
+                        ),
+                    ),
+                ),
             )
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 10))
@@ -560,7 +560,7 @@ class SykmeldingerServiceTest : FunSpec({
                 erSykmeldt = true,
                 gradert = true,
                 fom = LocalDate.of(2020, 2, 10),
-                tom = LocalDate.of(2020, 2, 20)
+                tom = LocalDate.of(2020, 2, 20),
             )
         }
         test("Skal få sykmeldt = true hvis sykmeldt på gitt dato (tom)") {
@@ -569,19 +569,19 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
                 ),
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2019, 2, 10),
                             tom = LocalDate.of(2019, 2, 20),
-                            gradert = Gradert(false, 50)
-                        )
-                    )
-                )
+                            gradert = Gradert(false, 50),
+                        ),
+                    ),
+                ),
             )
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 20))
@@ -590,7 +590,7 @@ class SykmeldingerServiceTest : FunSpec({
                 erSykmeldt = true,
                 gradert = false,
                 fom = LocalDate.of(2020, 2, 10),
-                tom = LocalDate.of(2020, 2, 20)
+                tom = LocalDate.of(2020, 2, 20),
             )
         }
         test("Skal få sykmeldt = false hvis ikke sykmeldt på gitt dato (fom)") {
@@ -599,10 +599,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 9))
@@ -615,10 +615,10 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 10),
-                            tom = LocalDate.of(2020, 2, 20)
-                        )
-                    )
-                )
+                            tom = LocalDate.of(2020, 2, 20),
+                        ),
+                    ),
+                ),
             )
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 21))
@@ -648,24 +648,24 @@ class SykmeldingerServiceTest : FunSpec({
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 8),
-                            tom = LocalDate.of(2020, 2, 15)
+                            tom = LocalDate.of(2020, 2, 15),
                         ),
                         getPeriode(
                             fom = LocalDate.of(2020, 2, 16),
                             tom = LocalDate.of(2020, 2, 25),
-                            gradert = Gradert(false, 50)
-                        )
-                    )
+                            gradert = Gradert(false, 50),
+                        ),
+                    ),
                 ),
                 getSykmeldingerDBmodel(
                     perioder = listOf(
                         getPeriode(
                             fom = LocalDate.of(2019, 2, 10),
                             tom = LocalDate.of(2019, 2, 20),
-                            gradert = Gradert(false, 50)
-                        )
-                    )
-                )
+                            gradert = Gradert(false, 50),
+                        ),
+                    ),
+                ),
             )
 
             val sykmeldtStatus = sykmeldingerService.getSykmeldtStatusForDato("fnr", LocalDate.of(2020, 2, 20))
@@ -674,7 +674,7 @@ class SykmeldingerServiceTest : FunSpec({
                 erSykmeldt = true,
                 gradert = true,
                 fom = LocalDate.of(2020, 2, 8),
-                tom = LocalDate.of(2020, 2, 25)
+                tom = LocalDate.of(2020, 2, 25),
             )
         }
     }

@@ -14,7 +14,7 @@ import no.nav.syfo.pdl.client.model.PdlResponse
 class PdlClient(
     private val httpClient: HttpClient,
     private val basePath: String,
-    private val graphQlQuery: String
+    private val graphQlQuery: String,
 ) {
 
     private val temaHeader = "TEMA"

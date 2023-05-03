@@ -37,13 +37,13 @@ class MottattSykmeldingServiceTest : FunSpec({
         database = database,
         mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
         sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
-        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService,
     )
     val loggingMeta = LoggingMeta(
         sykmeldingId = "123",
         msgId = "123",
         mottakId = "123",
-        orgNr = "123"
+        orgNr = "123",
     )
     afterTest {
         clearAllMocks()

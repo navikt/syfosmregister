@@ -7,7 +7,7 @@ data class SykmeldingStatusEvent(
     val timestamp: OffsetDateTime,
     val event: StatusEvent,
     val erAvvist: Boolean? = null,
-    val erEgenmeldt: Boolean? = null
+    val erEgenmeldt: Boolean? = null,
 )
 
 enum class StatusEvent {
@@ -22,27 +22,27 @@ data class SykmeldingSendEvent(
     val sykmeldingId: String,
     val timestamp: OffsetDateTime,
     val arbeidsgiver: ArbeidsgiverStatus,
-    val sporsmal: List<Sporsmal>
+    val sporsmal: List<Sporsmal>,
 )
 
 data class ArbeidsgiverStatus(
     val sykmeldingId: String,
     val orgnummer: String,
     val juridiskOrgnummer: String?,
-    val orgnavn: String
+    val orgnavn: String,
 )
 
 data class Sporsmal(
     val tekst: String,
     val shortName: ShortName,
-    val svar: Svar
+    val svar: Svar,
 )
 
 data class Svar(
     val sykmeldingId: String,
     val sporsmalId: Int?,
     val svartype: Svartype,
-    val svar: String
+    val svar: String,
 )
 
 enum class ShortName {
@@ -53,11 +53,11 @@ enum class Svartype {
     ARBEIDSSITUASJON,
     PERIODER,
     JA_NEI,
-    DAGER
+    DAGER,
 }
 
 data class SykmeldingBekreftEvent(
     val sykmeldingId: String,
     val timestamp: OffsetDateTime,
-    val sporsmal: List<Sporsmal>?
+    val sporsmal: List<Sporsmal>?,
 )

@@ -38,9 +38,9 @@ class SykmeldingMapperKtTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             ).toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
             sykmeldingDto.harRedusertArbeidsgiverperiode shouldBeEqualTo false
         }
@@ -49,9 +49,9 @@ class SykmeldingMapperKtTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmeldingMedSmittefare = sykmeldingDbModel.copy(
                 sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
@@ -59,11 +59,11 @@ class SykmeldingMapperKtTest : FunSpec({
                         annenFraversArsak = AnnenFraversArsak(
                             null,
                             listOf(
-                                AnnenFraverGrunn.SMITTEFARE
-                            )
-                        )
-                    )
-                )
+                                AnnenFraverGrunn.SMITTEFARE,
+                            ),
+                        ),
+                    ),
+                ),
             )
 
             val sykmeldingDto =
@@ -75,9 +75,9 @@ class SykmeldingMapperKtTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmeldingMedSmittefare = sykmeldingDbModel.copy(
                 sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
@@ -85,11 +85,11 @@ class SykmeldingMapperKtTest : FunSpec({
                         annenFraversArsak = AnnenFraversArsak(
                             null,
                             listOf(
-                                AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID
-                            )
-                        )
-                    )
-                )
+                                AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID,
+                            ),
+                        ),
+                    ),
+                ),
             )
 
             val sykmeldingDto =
@@ -101,15 +101,15 @@ class SykmeldingMapperKtTest : FunSpec({
                 Status.INVALID,
                 listOf(
                     RuleInfo("rulename", "sender", "user", Status.MANUAL_PROCESSING),
-                    RuleInfo("rulename2", "sender2", "user2", Status.INVALID)
-                )
+                    RuleInfo("rulename2", "sender2", "user2", Status.INVALID),
+                ),
             )
 
             val mappetBehandlingsutfall = validationResult.toBehandlingsutfallDTO(true)
 
             mappetBehandlingsutfall shouldBeEqualTo BehandlingsutfallDTO(
                 RegelStatusDTO.INVALID,
-                listOf(RegelinfoDTO("sender2", "user2", "rulename2", RegelStatusDTO.INVALID))
+                listOf(RegelinfoDTO("sender2", "user2", "rulename2", RegelStatusDTO.INVALID)),
             )
         }
         test("tilBehandlingsutfall fjerner ikke regelinfo for manuell hvis ikke pasient") {
@@ -117,8 +117,8 @@ class SykmeldingMapperKtTest : FunSpec({
                 Status.INVALID,
                 listOf(
                     RuleInfo("rulename", "sender", "user", Status.MANUAL_PROCESSING),
-                    RuleInfo("rulename2", "sender2", "user2", Status.INVALID)
-                )
+                    RuleInfo("rulename2", "sender2", "user2", Status.INVALID),
+                ),
             )
 
             val mappetBehandlingsutfall = validationResult.toBehandlingsutfallDTO(false)
@@ -127,8 +127,8 @@ class SykmeldingMapperKtTest : FunSpec({
                 RegelStatusDTO.INVALID,
                 listOf(
                     RegelinfoDTO("sender", "user", "rulename", RegelStatusDTO.MANUAL_PROCESSING),
-                    RegelinfoDTO("sender2", "user2", "rulename2", RegelStatusDTO.INVALID)
-                )
+                    RegelinfoDTO("sender2", "user2", "rulename2", RegelStatusDTO.INVALID),
+                ),
             )
         }
     }
@@ -139,22 +139,22 @@ class SykmeldingMapperKtTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmeldingMedUtdypendeOpplysninger = sykmeldingDbModel.copy(
                 sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
                     utdypendeOpplysninger = objectMapper.readValue(
-                        utdypendeopplysningerJson
-                    )
-                )
+                        utdypendeopplysningerJson,
+                    ),
+                ),
             )
 
             val mappetSykmelding = sykmeldingMedUtdypendeOpplysninger.toSykmeldingDTO(
                 sporsmal = emptyList(),
                 isPasient = false,
-                ikkeTilgangTilDiagnose = true
+                ikkeTilgangTilDiagnose = true,
             )
 
             mappetSykmelding.andreTiltak shouldBeEqualTo null
@@ -170,22 +170,22 @@ class SykmeldingMapperKtTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmeldingMedUtdypendeOpplysninger = sykmeldingDbModel.copy(
                 sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
                     utdypendeOpplysninger = objectMapper.readValue(
-                        utdypendeopplysningerJson
-                    )
-                )
+                        utdypendeopplysningerJson,
+                    ),
+                ),
             )
 
             val mappetSykmelding = sykmeldingMedUtdypendeOpplysninger.toSykmeldingDTO(
                 sporsmal = emptyList(),
                 isPasient = false,
-                ikkeTilgangTilDiagnose = true
+                ikkeTilgangTilDiagnose = true,
             )
 
             mappetSykmelding.andreTiltak shouldBeEqualTo null
@@ -201,22 +201,22 @@ class SykmeldingMapperKtTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmeldingMedUtdypendeOpplysninger = sykmeldingDbModel.copy(
                 sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
                     utdypendeOpplysninger = objectMapper.readValue(
-                        utdypendeopplysningerJson
-                    )
-                )
+                        utdypendeopplysningerJson,
+                    ),
+                ),
             )
 
             val mappetSykmelding = sykmeldingMedUtdypendeOpplysninger.toSykmeldingDTO(
                 sporsmal = emptyList(),
                 isPasient = true,
-                ikkeTilgangTilDiagnose = false
+                ikkeTilgangTilDiagnose = false,
             )
 
             mappetSykmelding.andreTiltak shouldBeEqualTo null
@@ -232,22 +232,22 @@ class SykmeldingMapperKtTest : FunSpec({
                 perioder = listOf(
                     getPeriode(
                         fom = LocalDate.of(2020, 3, 10),
-                        tom = LocalDate.of(2020, 3, 20)
-                    )
-                )
+                        tom = LocalDate.of(2020, 3, 20),
+                    ),
+                ),
             )
             val sykmeldingMedUtdypendeOpplysninger = sykmeldingDbModel.copy(
                 sykmeldingsDokument = sykmeldingDbModel.sykmeldingsDokument.copy(
                     utdypendeOpplysninger = objectMapper.readValue(
-                        utdypendeopplysningerJson
-                    )
-                )
+                        utdypendeopplysningerJson,
+                    ),
+                ),
             )
 
             val mappetSykmelding = sykmeldingMedUtdypendeOpplysninger.toSykmeldingDTO(
                 sporsmal = emptyList(),
                 isPasient = false,
-                ikkeTilgangTilDiagnose = false
+                ikkeTilgangTilDiagnose = false,
             )
 
             mappetSykmelding.andreTiltak shouldBeEqualTo "Andre tiltak"
@@ -257,13 +257,13 @@ class SykmeldingMapperKtTest : FunSpec({
                 hovedDiagnose = DiagnoseDTO(
                     "L87",
                     "ICPC-2",
-                    "Bursitt/tendinitt/synovitt IKA"
+                    "Bursitt/tendinitt/synovitt IKA",
                 ),
                 biDiagnoser = emptyList(),
                 annenFraversArsak = null,
                 svangerskap = false,
                 yrkesskade = false,
-                yrkesskadeDato = null
+                yrkesskadeDato = null,
             )
             mappetSykmelding.meldingTilNAV shouldBeEqualTo MeldingTilNavDTO(true, "Masse bistand")
             objectMapper.writeValueAsString(mappetSykmelding.utdypendeOpplysninger) shouldBeEqualTo mappedOpplysningerJson

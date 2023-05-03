@@ -26,7 +26,7 @@ import java.time.LocalDate
 class IdentendringService(
     private val database: DatabaseInterface,
     private val sendtSykmeldingKafkaProducer: SendtSykmeldingKafkaProducer,
-    private val pdlService: PdlPersonService
+    private val pdlService: PdlPersonService,
 ) {
     suspend fun oppdaterIdent(identListe: List<Ident>): Int {
         if (harEndretFnr(identListe)) {
@@ -41,7 +41,7 @@ class IdentendringService(
 
                 val sendteSykmeldingerSisteFireMnd = sykmeldinger.filter {
                     it.status.statusEvent == STATUS_SENDT && finnSisteTom(it.sykmeldingsDokument.perioder).isAfter(
-                        LocalDate.now().minusMonths(4)
+                        LocalDate.now().minusMonths(4),
                     )
                 }
                 log.info("Resender ${sendteSykmeldingerSisteFireMnd.size} sendte sykmeldinger")
@@ -80,7 +80,7 @@ class IdentendringService(
             sykmeldingId = sykmelding.id,
             timestamp = sykmelding.status.statusTimestamp,
             source = "pdl",
-            fnr = nyttFnr
+            fnr = nyttFnr,
         )
         val sendEvent = SykmeldingStatusKafkaEventDTO(
             metadata.sykmeldingId,
@@ -89,16 +89,16 @@ class IdentendringService(
             ArbeidsgiverStatusDTO(
                 sykmelding.status.arbeidsgiver!!.orgnummer,
                 sykmelding.status.arbeidsgiver.juridiskOrgnummer,
-                sykmelding.status.arbeidsgiver.orgNavn
+                sykmelding.status.arbeidsgiver.orgNavn,
             ),
             listOf(
                 SporsmalOgSvarDTO(
                     tekst = "Jeg er sykmeldt fra",
                     shortName = ShortNameDTO.ARBEIDSSITUASJON,
                     svartype = SvartypeDTO.ARBEIDSSITUASJON,
-                    svar = "ARBEIDSTAKER"
-                )
-            )
+                    svar = "ARBEIDSTAKER",
+                ),
+            ),
         )
         return SykmeldingKafkaMessage(sendtSykmelding, metadata, sendEvent)
     }

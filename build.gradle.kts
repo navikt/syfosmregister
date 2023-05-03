@@ -18,7 +18,7 @@ val postgresVersion = "42.6.0"
 val flywayVersion = "9.17.0"
 val hikariVersion = "5.0.1"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.9df1108"
+val smCommonVersion = "1.0.1"
 val mockkVersion = "1.13.5"
 val nimbusdsVersion = "9.31"
 val testContainerKafkaVersion = "1.18.0"
@@ -27,11 +27,11 @@ val kotlinVersion = "1.8.21"
 val swaggerUiVersion = "4.18.2"
 val testContainerVersion = "1.18.0"
 val commonsCodecVersion = "1.15"
+val snakeyamlVersion= "2.0"
 
 plugins {
     id("org.jmailen.kotlinter") version "3.14.0"
     kotlin("jvm") version "1.8.21"
-    id("com.diffplug.spotless") version "6.18.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.hidetake.swagger.generator") version "2.19.2" apply true
 }
@@ -85,6 +85,8 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
 
     implementation("io.confluent:kafka-avro-serializer:$confluentVersion")
+    implementation("org.yaml:snakeyaml:$snakeyamlVersion")
+    // override transient version 1.32 from io.confluent:kafka-avro-serializer
 
     implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")

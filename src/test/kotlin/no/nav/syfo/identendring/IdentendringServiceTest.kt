@@ -62,7 +62,7 @@ class IdentendringServiceTest : FunSpec({
             val identListeUtenEndringIFnr = listOf(
                 Ident(idnummer = "1234", gjeldende = true, type = IdentType.FOLKEREGISTERIDENT),
                 Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
-                Ident(idnummer = "2222", gjeldende = false, type = IdentType.AKTORID)
+                Ident(idnummer = "2222", gjeldende = false, type = IdentType.AKTORID),
             )
 
             identendringService.oppdaterIdent(identListeUtenEndringIFnr) shouldBeEqualTo 0
@@ -72,7 +72,7 @@ class IdentendringServiceTest : FunSpec({
             val identListeMedEndringIFnr = listOf(
                 Ident(idnummer = "1234", gjeldende = true, type = IdentType.FOLKEREGISTERIDENT),
                 Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
-                Ident(idnummer = "2222", gjeldende = false, type = IdentType.FOLKEREGISTERIDENT)
+                Ident(idnummer = "2222", gjeldende = false, type = IdentType.FOLKEREGISTERIDENT),
             )
 
             coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("1234", false, "FOLKEREGISTERIDENT")))
@@ -85,7 +85,7 @@ class IdentendringServiceTest : FunSpec({
             val gammeltFnr = "2222"
             val identListeMedEndringIFnr = listOf(
                 Ident(idnummer = "1234", gjeldende = true, type = IdentType.FOLKEREGISTERIDENT),
-                Ident(idnummer = gammeltFnr, gjeldende = false, type = IdentType.FOLKEREGISTERIDENT)
+                Ident(idnummer = gammeltFnr, gjeldende = false, type = IdentType.FOLKEREGISTERIDENT),
             )
 
             val idNySykmelding = UUID.randomUUID().toString()
@@ -111,7 +111,7 @@ class IdentendringServiceTest : FunSpec({
             val identListe = listOf(
                 Ident(idnummer = nyttFnr, gjeldende = true, type = IdentType.FOLKEREGISTERIDENT),
                 Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
-                Ident(idnummer = gammeltFnr, gjeldende = false, type = IdentType.FOLKEREGISTERIDENT)
+                Ident(idnummer = gammeltFnr, gjeldende = false, type = IdentType.FOLKEREGISTERIDENT),
             )
 
             coEvery { pdlService.getPdlPerson(any()) } returns PdlPerson(listOf(IdentInformasjon("10987654321", false, "FOLKEREGISTERIDENT")))
@@ -130,26 +130,29 @@ suspend fun forberedTestsykmeldinger(database: DatabaseInterface, gammeltFnr: St
         SykmeldingStatusEvent(
             idNySykmelding,
             testSykmeldingsopplysninger.mottattTidspunkt.atOffset(
-                ZoneOffset.UTC
+                ZoneOffset.UTC,
             ),
-            StatusEvent.APEN
-        )
+            StatusEvent.APEN,
+        ),
     )
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idNySykmelding))
 
     database.lagreMottattSykmelding(testSykmeldingsopplysninger.copy(id = idSendtSykmelding, pasientFnr = gammeltFnr), testSykmeldingsdokument.copy(id = idSendtSykmelding))
     database.registerStatus(
         SykmeldingStatusEvent(
-            idSendtSykmelding, getNowTickMillisOffsetDateTime().minusDays(10), StatusEvent.APEN
-        )
+            idSendtSykmelding,
+            getNowTickMillisOffsetDateTime().minusDays(10),
+            StatusEvent.APEN,
+        ),
     )
     database.registrerSendt(
         SykmeldingSendEvent(
-            idSendtSykmelding, getNowTickMillisOffsetDateTime(),
+            idSendtSykmelding,
+            getNowTickMillisOffsetDateTime(),
             ArbeidsgiverStatus(idSendtSykmelding, "orgnummer", null, "Bedrift"),
-            listOf(Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")))
+            listOf(Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))),
         ),
-        SykmeldingStatusEvent(idSendtSykmelding, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT)
+        SykmeldingStatusEvent(idSendtSykmelding, getNowTickMillisOffsetDateTime(), StatusEvent.SENDT),
     )
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idSendtSykmelding))
 
@@ -164,29 +167,32 @@ suspend fun forberedTestsykmeldinger(database: DatabaseInterface, gammeltFnr: St
                         tom = LocalDate.now().minusMonths(6),
                         aktivitetIkkeMulig = AktivitetIkkeMulig(
                             medisinskArsak = MedisinskArsak(null, emptyList()),
-                            arbeidsrelatertArsak = ArbeidsrelatertArsak(null, emptyList())
+                            arbeidsrelatertArsak = ArbeidsrelatertArsak(null, emptyList()),
                         ),
                         avventendeInnspillTilArbeidsgiver = null,
                         behandlingsdager = null,
                         gradert = Gradert(false, 0),
-                        reisetilskudd = false
-                    )
-                )
-            )
-        )
+                        reisetilskudd = false,
+                    ),
+                ),
+            ),
+        ),
     )
     database.registerStatus(
         SykmeldingStatusEvent(
-            idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(8), StatusEvent.APEN
-        )
+            idGammelSendtSykmelding,
+            getNowTickMillisOffsetDateTime().minusMonths(8),
+            StatusEvent.APEN,
+        ),
     )
     database.registrerSendt(
         SykmeldingSendEvent(
-            idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(6),
+            idGammelSendtSykmelding,
+            getNowTickMillisOffsetDateTime().minusMonths(6),
             ArbeidsgiverStatus(idGammelSendtSykmelding, "orgnummer", null, "Bedrift"),
-            listOf(Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")))
+            listOf(Sporsmal("Arbeidssituasjon", ShortName.ARBEIDSSITUASJON, Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"))),
         ),
-        SykmeldingStatusEvent(idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(6), StatusEvent.SENDT)
+        SykmeldingStatusEvent(idGammelSendtSykmelding, getNowTickMillisOffsetDateTime().minusMonths(6), StatusEvent.SENDT),
     )
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idGammelSendtSykmelding))
 }

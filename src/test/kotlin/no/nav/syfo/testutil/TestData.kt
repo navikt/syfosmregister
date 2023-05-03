@@ -59,7 +59,7 @@ fun getEnvironment(): Environment {
         kafkaSchemaRegistryUsername = "usr",
         kafkaSchemaRegistryPassword = "pwd",
         pdlAktorV2Topic = "aktorV2",
-        electorPath = "leader"
+        electorPath = "leader",
     )
 }
 
@@ -75,7 +75,7 @@ fun getSykmeldingDto(perioder: List<SykmeldingsperiodeDTO> = getPerioder()): Syk
         behandler = BehandlerDTO(
             "fornavn", null, "etternavn",
             "123", "01234567891", null, null,
-            AdresseDTO(null, null, null, null, null), null
+            AdresseDTO(null, null, null, null, null), null,
         ),
         behandletTidspunkt = getNowTickMillisOffsetDateTime(),
         mottattTidspunkt = getNowTickMillisOffsetDateTime(),
@@ -105,7 +105,7 @@ fun getMedisinskVurdering(): MedisinskVurderingDTO {
         annenFraversArsak = AnnenFraversArsakDTO("", emptyList()),
         svangerskap = false,
         yrkesskade = false,
-        yrkesskadeDato = null
+        yrkesskadeDato = null,
     )
 }
 
@@ -125,7 +125,7 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
         status = StatusDbModel(
             statusEvent = "APEN",
             arbeidsgiver = null,
-            statusTimestamp = getNowTickMillisOffsetDateTime()
+            statusTimestamp = getNowTickMillisOffsetDateTime(),
         ),
         legekontorOrgNr = "123456789",
         sykmeldingsDokument = Sykmelding(
@@ -134,7 +134,7 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
                 harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
                 navn = "navn",
                 stillingsprosent = null,
-                yrkesbetegnelse = null
+                yrkesbetegnelse = null,
             ),
             medisinskVurdering = MedisinskVurdering(
                 hovedDiagnose = Diagnose(Diagnosekoder.ICPC2_CODE, "L87", null),
@@ -142,7 +142,7 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
                 yrkesskade = false,
                 svangerskap = false,
                 annenFraversArsak = null,
-                yrkesskadeDato = null
+                yrkesskadeDato = null,
             ),
             andreTiltak = "Andre tiltak",
             meldingTilArbeidsgiver = null,
@@ -163,21 +163,21 @@ fun getSykmeldingerDBmodel(skjermet: Boolean = false, perioder: List<Periode> = 
                 null,
                 null,
                 Adresse(null, null, null, null, null),
-                null
+                null,
             ),
             kontaktMedPasient = KontaktMedPasient(
                 LocalDate.now(),
-                "Begrunnelse"
+                "Begrunnelse",
             ),
             utdypendeOpplysninger = emptyMap(),
             msgId = "msgid",
             pasientAktoerId = "aktorId",
             avsenderSystem = AvsenderSystem("Navn", "verjosn"),
             perioder = perioder,
-            signaturDato = getNowTickMillisLocalDateTime()
+            signaturDato = getNowTickMillisLocalDateTime(),
         ),
         merknader = null,
-        utenlandskSykmelding = null
+        utenlandskSykmelding = null,
     )
 }
 
@@ -189,7 +189,7 @@ fun getPeriode(fom: LocalDate, tom: LocalDate, gradert: Gradert? = null): Period
         gradert = gradert,
         behandlingsdager = null,
         reisetilskudd = false,
-        avventendeInnspillTilArbeidsgiver = null
+        avventendeInnspillTilArbeidsgiver = null,
     )
 }
 
@@ -201,7 +201,7 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
         status = StatusDbModel(
             statusEvent = "APEN",
             arbeidsgiver = null,
-            statusTimestamp = getNowTickMillisOffsetDateTime()
+            statusTimestamp = getNowTickMillisOffsetDateTime(),
         ),
         legekontorOrgNr = "123456789",
         sykmeldingsDokument = Sykmelding(
@@ -210,7 +210,7 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
                 harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
                 navn = "navn",
                 stillingsprosent = null,
-                yrkesbetegnelse = null
+                yrkesbetegnelse = null,
             ),
             medisinskVurdering = MedisinskVurdering(
                 hovedDiagnose = Diagnose("system", hovediagnosekode, "tekst"),
@@ -218,7 +218,7 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
                 yrkesskade = false,
                 svangerskap = false,
                 annenFraversArsak = null,
-                yrkesskadeDato = null
+                yrkesskadeDato = null,
             ),
             andreTiltak = null,
             meldingTilArbeidsgiver = null,
@@ -239,27 +239,27 @@ fun getSykmeldingerDBmodelEgenmeldt(hovediagnosekode: String = "kode", bidiagnos
                 null,
                 null,
                 Adresse(null, null, null, null, null),
-                null
+                null,
             ),
             kontaktMedPasient = KontaktMedPasient(
                 LocalDate.now(),
-                "Begrunnelse"
+                "Begrunnelse",
             ),
             utdypendeOpplysninger = emptyMap(),
             msgId = "msgid",
             pasientAktoerId = "aktorId",
             avsenderSystem = avsenderSystem,
             perioder = perioder,
-            signaturDato = getNowTickMillisLocalDateTime()
+            signaturDato = getNowTickMillisLocalDateTime(),
         ),
         merknader = null,
-        utenlandskSykmelding = null
+        utenlandskSykmelding = null,
     )
 }
 
 fun getPapirsykmeldingDbModel(
     pasientFnr: String = "12345678912",
-    mottattTidspunkt: OffsetDateTime = OffsetDateTime.now()
+    mottattTidspunkt: OffsetDateTime = OffsetDateTime.now(),
 ): PapirsykmeldingDbModel {
     return PapirsykmeldingDbModel(
         pasientFnr = pasientFnr,
@@ -274,14 +274,14 @@ fun getPapirsykmeldingDbModel(
                 yrkesskade = false,
                 svangerskap = false,
                 annenFraversArsak = null,
-                yrkesskadeDato = null
+                yrkesskadeDato = null,
             ),
             skjermesForPasient = false,
             arbeidsgiver = Arbeidsgiver(
                 harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
                 navn = "Arbeidsgiver",
                 yrkesbetegnelse = "Advokat",
-                stillingsprosent = 100
+                stillingsprosent = 100,
             ),
             perioder = listOf(
                 Periode(
@@ -291,8 +291,8 @@ fun getPapirsykmeldingDbModel(
                     avventendeInnspillTilArbeidsgiver = null,
                     behandlingsdager = null,
                     gradert = null,
-                    reisetilskudd = false
-                )
+                    reisetilskudd = false,
+                ),
             ),
             prognose = null,
             utdypendeOpplysninger = emptyMap(),
@@ -312,12 +312,12 @@ fun getPapirsykmeldingDbModel(
                 hpr = null,
                 her = null,
                 adresse = Adresse(null, null, null, null, null),
-                tlf = null
+                tlf = null,
             ),
             avsenderSystem = AvsenderSystem(navn = "Papirsykmelding", versjon = "1.0"),
             syketilfelleStartDato = mottattTidspunkt.toLocalDate(),
             signaturDato = mottattTidspunkt.toLocalDateTime(),
-            navnFastlege = "Behandler Behandlersen"
+            navnFastlege = "Behandler Behandlersen",
         ),
     )
 }

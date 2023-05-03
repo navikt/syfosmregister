@@ -68,7 +68,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(sporsmal: List<Sporsmal>, isPasie
         papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
         harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
         merknader = merknader?.map { MerknadDTO(type = it.type, beskrivelse = it.beskrivelse) },
-        utenlandskSykmelding = utenlandskSykmelding?.let { UtenlandskSykmeldingDTO(it.land) }
+        utenlandskSykmelding = utenlandskSykmelding?.let { UtenlandskSykmeldingDTO(it.land) },
     )
 }
 
@@ -76,7 +76,7 @@ fun Sporsmal.toSporsmalDTO(): SporsmalDTO {
     return SporsmalDTO(
         tekst = tekst,
         svar = svar.toDTO(),
-        shortName = shortName.toDTO()
+        shortName = shortName.toDTO(),
     )
 }
 
@@ -94,7 +94,7 @@ private fun ShortName.toDTO(): ShortNameDTO {
 private fun Svar.toDTO(): SvarDTO {
     return SvarDTO(
         svar = svar,
-        svarType = svartype.toDTO()
+        svarType = svartype.toDTO(),
     )
 }
 
@@ -136,7 +136,7 @@ fun SporsmalSvar.toSporsmalSvarDTO(): SporsmalSvarDTO {
     return SporsmalSvarDTO(
         sporsmal = sporsmal,
         svar = svar,
-        restriksjoner = restriksjoner.map { it.toSvarRestriksjonDTO() }
+        restriksjoner = restriksjoner.map { it.toSvarRestriksjonDTO() },
 
     )
 }
@@ -154,7 +154,7 @@ fun Prognose.toPrognoseDTO(): PrognoseDTO {
         arbeidsforEtterPeriode = arbeidsforEtterPeriode,
         erIArbeid = erIArbeid?.toErIArbeidDTO(),
         erIkkeIArbeid = erIkkeIArbeid?.toErIkkeIArbeidDTO(),
-        hensynArbeidsplassen = hensynArbeidsplassen
+        hensynArbeidsplassen = hensynArbeidsplassen,
     )
 }
 
@@ -162,7 +162,7 @@ private fun ErIkkeIArbeid.toErIkkeIArbeidDTO(): ErIkkeIArbeidDTO {
     return ErIkkeIArbeidDTO(
         arbeidsforPaSikt = arbeidsforPaSikt,
         arbeidsforFOM = arbeidsforFOM,
-        vurderingsdato = vurderingsdato
+        vurderingsdato = vurderingsdato,
     )
 }
 
@@ -171,21 +171,21 @@ private fun ErIArbeid.toErIArbeidDTO(): ErIArbeidDTO {
         egetArbeidPaSikt = egetArbeidPaSikt,
         annetArbeidPaSikt = annetArbeidPaSikt,
         arbeidFOM = arbeidFOM,
-        vurderingsdato = vurderingsdato
+        vurderingsdato = vurderingsdato,
     )
 }
 
 private fun MeldingTilNAV.toMeldingTilNavDTO(): MeldingTilNavDTO? {
     return MeldingTilNavDTO(
         bistandUmiddelbart = bistandUmiddelbart,
-        beskrivBistand = beskrivBistand
+        beskrivBistand = beskrivBistand,
     )
 }
 
 fun KontaktMedPasient.toKontaktMedPasientDTO(): KontaktMedPasientDTO {
     return KontaktMedPasientDTO(
         kontaktDato = kontaktDato,
-        begrunnelseIkkeKontakt = begrunnelseIkkeKontakt
+        begrunnelseIkkeKontakt = begrunnelseIkkeKontakt,
     )
 }
 
@@ -202,7 +202,7 @@ fun Periode.toSykmeldingsperiodeDTO(sykmeldingId: String): SykmeldingsperiodeDTO
         innspillTilArbeidsgiver = avventendeInnspillTilArbeidsgiver,
         type = finnPeriodetype(this, sykmeldingId).toDTO(),
         aktivitetIkkeMulig = aktivitetIkkeMulig?.toDto(),
-        reisetilskudd = reisetilskudd
+        reisetilskudd = reisetilskudd,
     )
 }
 
@@ -212,14 +212,14 @@ fun Periodetype.toDTO(): PeriodetypeDTO =
 private fun AktivitetIkkeMulig.toDto(): AktivitetIkkeMuligDTO {
     return AktivitetIkkeMuligDTO(
         medisinskArsak = medisinskArsak?.toMedisinskArsakDto(),
-        arbeidsrelatertArsak = arbeidsrelatertArsak?.toArbeidsrelatertArsakDto()
+        arbeidsrelatertArsak = arbeidsrelatertArsak?.toArbeidsrelatertArsakDto(),
     )
 }
 
 private fun ArbeidsrelatertArsak.toArbeidsrelatertArsakDto(): ArbeidsrelatertArsakDTO {
     return ArbeidsrelatertArsakDTO(
         beskrivelse = beskrivelse,
-        arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) }
+        arsak = arsak.map { toArbeidsrelatertArsakTypeDto(it) },
     )
 }
 
@@ -233,7 +233,7 @@ fun toArbeidsrelatertArsakTypeDto(arbeidsrelatertArsakType: ArbeidsrelatertArsak
 private fun MedisinskArsak.toMedisinskArsakDto(): MedisinskArsakDTO {
     return MedisinskArsakDTO(
         beskrivelse = beskrivelse,
-        arsak = arsak.map { toMedisinskArsakTypeDto(it) }
+        arsak = arsak.map { toMedisinskArsakTypeDto(it) },
     )
 }
 
@@ -253,7 +253,7 @@ private fun Gradert.toGradertDTO(): GradertDTO {
 fun ValidationResult.toBehandlingsutfallDTO(isPasient: Boolean): BehandlingsutfallDTO {
     return BehandlingsutfallDTO(
         status = status.toRuleStatusDTO(),
-        ruleHits = ruleHits.map { it.toRegeleinfoDTO() }.filterNot { it.ruleStatus == RegelStatusDTO.MANUAL_PROCESSING && isPasient }
+        ruleHits = ruleHits.map { it.toRegeleinfoDTO() }.filterNot { it.ruleStatus == RegelStatusDTO.MANUAL_PROCESSING && isPasient },
     )
 }
 
@@ -262,7 +262,7 @@ private fun RuleInfo.toRegeleinfoDTO(): RegelinfoDTO {
         messageForSender = messageForSender,
         messageForUser = messageForUser,
         ruleName = ruleName,
-        ruleStatus = ruleStatus.toRuleStatusDTO()
+        ruleStatus = ruleStatus.toRuleStatusDTO(),
     )
 }
 
@@ -284,14 +284,14 @@ private fun MedisinskVurdering.toMedisinskVurderingDTO(): MedisinskVurderingDTO 
         annenFraversArsak = annenFraversArsak?.toDTO(),
         svangerskap = svangerskap,
         yrkesskade = yrkesskade,
-        yrkesskadeDato = yrkesskadeDato
+        yrkesskadeDato = yrkesskadeDato,
     )
 }
 
 private fun AnnenFraversArsak.toDTO(): AnnenFraversArsakDTO {
     return AnnenFraversArsakDTO(
         beskrivelse = beskrivelse,
-        grunn = grunn.map { it.toDTO() }
+        grunn = grunn.map { it.toDTO() },
     )
 }
 
@@ -314,7 +314,7 @@ fun Diagnose.toDiagnoseDTO(): DiagnoseDTO {
     return DiagnoseDTO(
         kode = kode,
         system = getDiagnosesystem(system),
-        tekst = getDiagnosetekst(this)
+        tekst = getDiagnosetekst(this),
     )
 }
 
@@ -328,7 +328,7 @@ fun Behandler.toBehandlerDTO(fullBehandler: Boolean = true): BehandlerDTO {
         her = if (fullBehandler) { her } else null,
         hpr = if (fullBehandler) { hpr } else null,
         tlf = tlf,
-        adresse = adresse.toAdresseDTO()
+        adresse = adresse.toAdresseDTO(),
     )
 }
 
@@ -338,7 +338,7 @@ private fun Adresse.toAdresseDTO(): AdresseDTO {
         kommune = kommune,
         land = land,
         postboks = postboks,
-        postnummer = postnummer
+        postnummer = postnummer,
     )
 }
 

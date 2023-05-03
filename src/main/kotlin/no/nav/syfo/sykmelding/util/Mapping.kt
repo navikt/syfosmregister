@@ -22,5 +22,5 @@ fun mapToSykmeldingsopplysninger(receivedSykmelding: ReceivedSykmelding) =
         tssid = receivedSykmelding.tssid,
         merknader = receivedSykmelding.merknader,
         partnerreferanse = receivedSykmelding.partnerreferanse,
-        utenlandskSykmelding = receivedSykmelding.utenlandskSykmelding
+        utenlandskSykmelding = receivedSykmelding.utenlandskSykmelding,
     )

@@ -3,7 +3,7 @@ package no.nav.syfo.sykmelding.model
 data class SporsmalDTO(
     val tekst: String,
     val shortName: ShortNameDTO,
-    val svar: SvarDTO
+    val svar: SvarDTO,
 )
 
 enum class ShortNameDTO {
@@ -12,7 +12,7 @@ enum class ShortNameDTO {
 
 data class SvarDTO(
     val svarType: SvartypeDTO,
-    val svar: String
+    val svar: String,
 )
 
 enum class SvartypeDTO {

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 class SykmeldingStatusConsumerService(
     private val sykmeldingStatusKafkaConsumer: SykmeldingStatusKafkaConsumer,
     private val applicationState: ApplicationState,
-    private val mottattSykmeldingStatusService: MottattSykmeldingStatusService
+    private val mottattSykmeldingStatusService: MottattSykmeldingStatusService,
 ) {
 
     companion object {
@@ -25,7 +25,7 @@ class SykmeldingStatusConsumerService(
                 log.error(
                     "Error reading status from aiven topic, trying again in {} milliseconds, error {}",
                     delayStart,
-                    ex.message
+                    ex.message,
                 )
                 sykmeldingStatusKafkaConsumer.unsubscribe()
             }

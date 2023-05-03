@@ -36,10 +36,12 @@ class BehandligsutfallServiceTest : FunSpec({
     val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(true, true)
     val consumerProperties = kafkaConfig.toConsumerConfig(
-        "${environment.applicationName}-consumer", valueDeserializer = StringDeserializer::class
+        "${environment.applicationName}-consumer",
+        valueDeserializer = StringDeserializer::class,
     )
     val producerProperties = kafkaConfig.toProducerConfig(
-        "${environment.applicationName}-consumer", valueSerializer = JacksonKafkaSerializer::class
+        "${environment.applicationName}-consumer",
+        valueSerializer = JacksonKafkaSerializer::class,
     )
     val behandlingsutfallKafkaProducer = KafkaProducer<String, ValidationResult>(producerProperties)
     val behandlingsutfallKafkaConsumerAiven = spyk(KafkaConsumer<String, String>(consumerProperties))
@@ -47,7 +49,7 @@ class BehandligsutfallServiceTest : FunSpec({
         applicationState = applicationState,
         database = testDb,
         env = environment,
-        kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven
+        kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven,
     )
     beforeTest {
         every { environment.applicationName } returns "application"
@@ -74,8 +76,8 @@ class BehandligsutfallServiceTest : FunSpec({
                 ProducerRecord(
                     environment.behandlingsUtfallTopic,
                     "1",
-                    validationResult
-                )
+                    validationResult,
+                ),
 
             )
             every { behandlingsutfallKafkaConsumerAiven.poll(any<Duration>()) } answers {

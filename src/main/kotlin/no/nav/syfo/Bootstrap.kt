@@ -104,19 +104,19 @@ fun main() {
     val receivedSykmeldingKafkaConsumerAiven = KafkaConsumer<String, String>(
         kafkaBaseConfigAiven
             .toConsumerConfig("${environment.applicationName}-gcp-consumer", valueDeserializer = StringDeserializer::class)
-            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
+            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
     )
 
     val behandlingsutfallKafkaConsumerAiven = KafkaConsumer<String, String>(
         kafkaBaseConfigAiven
             .toConsumerConfig("${environment.applicationName}-gcp-consumer", valueDeserializer = StringDeserializer::class)
-            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
+            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
     )
     val behandlingsutfallService = BehandlingsutfallService(
         applicationState = applicationState,
         kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven,
         env = environment,
-        database = database
+        database = database,
     )
 
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
@@ -160,7 +160,7 @@ fun main() {
     val pdlClient = PdlClient(
         httpClient,
         environment.pdlGraphqlPath,
-        PdlClient::class.java.getResource("/graphql/getPerson.graphql").readText().replace(Regex("[\n\t]"), "")
+        PdlClient::class.java.getResource("/graphql/getPerson.graphql").readText().replace(Regex("[\n\t]"), ""),
     )
     val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
 
@@ -178,7 +178,7 @@ fun main() {
         applicationState = applicationState,
         aivenTopic = environment.pdlAktorV2Topic,
         leaderElection = leaderElection,
-        identendringService = identendringService
+        identendringService = identendringService,
     )
 
     val mottattSykmeldingService = MottattSykmeldingService(
@@ -186,18 +186,18 @@ fun main() {
         env = environment,
         sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment),
         mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment),
-        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService,
     )
     val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(
         sykmeldingStatusKafkaConsumer = sykmeldingStatusKafkaConsumerAiven,
         applicationState = applicationState,
-        mottattSykmeldingStatusService = mottattSykmeldingStatusService
+        mottattSykmeldingStatusService = mottattSykmeldingStatusService,
     )
     val mottattSykmeldingConsumerService = MottattSykmeldingConsumerService(
         applicationState = applicationState,
         kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
         mottattSykmeldingService = mottattSykmeldingService,
-        env = environment
+        env = environment,
     )
 
     val applicationEngine = createApplicationEngine(
@@ -208,7 +208,7 @@ fun main() {
         tokenXIssuer = wellKnownTokenX.issuer,
         jwkProviderAadV2 = jwkProviderAadV2,
         sykmeldingerService = sykmeldingerService,
-        tilgangskontrollService = tilgangskontrollService
+        tilgangskontrollService = tilgangskontrollService,
     )
 
     pdlAktorConsumer.startConsumer()
@@ -216,7 +216,7 @@ fun main() {
         applicationState = applicationState,
         sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
         mottattSykmeldingConsumerService = mottattSykmeldingConsumerService,
-        behandlingsutfallService = behandlingsutfallService
+        behandlingsutfallService = behandlingsutfallService,
     )
 
     ApplicationServer(applicationEngine, applicationState).start()
@@ -242,7 +242,7 @@ fun launchListeners(
     applicationState: ApplicationState,
     sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
     mottattSykmeldingConsumerService: MottattSykmeldingConsumerService,
-    behandlingsutfallService: BehandlingsutfallService
+    behandlingsutfallService: BehandlingsutfallService,
 ) {
     createListener(applicationState) {
         mottattSykmeldingConsumerService.start()

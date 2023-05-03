@@ -93,7 +93,7 @@ fun Connection.getMerknaderForId(id: String): List<Merknad>? =
                     SELECT merknader 
                     FROM sykmeldingsopplysninger
                     where id = ?
-            """
+            """,
     ).use {
         it.setString(1, id)
         it.executeQuery().toList { tilMerknadliste() }.firstOrNull()
@@ -122,7 +122,7 @@ fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? 
                 utenlandsk_sykmelding
             FROM SYKMELDINGSOPPLYSNINGER 
             WHERE id = ?;
-        """
+        """,
     ).use {
         it.setString(1, id)
         return it.executeQuery().toList { toSykmeldingsopplysninger() }.firstOrNull()
@@ -148,7 +148,7 @@ private fun ResultSet.toSykmeldingsopplysninger(): Sykmeldingsopplysninger {
         tssid = getString("tss_id"),
         merknader = getString("merknader")?.let { objectMapper.readValue<List<no.nav.syfo.model.Merknad>>(it) },
         partnerreferanse = getString("partnerreferanse"),
-        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) }
+        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) },
     )
 }
 
@@ -178,7 +178,7 @@ val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
     tssid = "13455",
     merknader = emptyList(),
     partnerreferanse = null,
-    utenlandskSykmelding = null
+    utenlandskSykmelding = null,
 )
 
 val testSykmeldingsdokument = Sykmeldingsdokument(
@@ -189,11 +189,11 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
             harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
             navn = "Arbeidsgiver AS",
             yrkesbetegnelse = "aktiv",
-            stillingsprosent = 100
+            stillingsprosent = 100,
         ),
         avsenderSystem = AvsenderSystem(
             navn = "avsenderSystem",
-            versjon = "versjon-1.0"
+            versjon = "versjon-1.0",
         ),
         behandler = Behandler(
             fornavn = "Fornavn",
@@ -205,18 +205,18 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
                 postboks = null,
                 postnummer = null,
                 kommune = null,
-                land = null
+                land = null,
             ),
             fnr = "legeFnr",
             hpr = "hpr",
             her = "her",
-            tlf = "tlf"
+            tlf = "tlf",
         ),
         behandletTidspunkt = getNowTickMillisLocalDateTime(),
         id = "uuid",
         kontaktMedPasient = KontaktMedPasient(
             kontaktDato = null,
-            begrunnelseIkkeKontakt = null
+            begrunnelseIkkeKontakt = null,
         ),
         medisinskVurdering = MedisinskVurdering(
             hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01", "Brukket fot"),
@@ -224,7 +224,7 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
             svangerskap = false,
             yrkesskade = false,
             yrkesskadeDato = null,
-            annenFraversArsak = AnnenFraversArsak(null, emptyList())
+            annenFraversArsak = AnnenFraversArsak(null, emptyList()),
         ),
         meldingTilArbeidsgiver = "",
         meldingTilNAV = MeldingTilNAV(false, null),
@@ -236,19 +236,19 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
                 tom = LocalDate.now(),
                 aktivitetIkkeMulig = AktivitetIkkeMulig(
                     medisinskArsak = MedisinskArsak(null, emptyList()),
-                    arbeidsrelatertArsak = ArbeidsrelatertArsak(null, emptyList())
+                    arbeidsrelatertArsak = ArbeidsrelatertArsak(null, emptyList()),
                 ),
                 avventendeInnspillTilArbeidsgiver = null,
                 behandlingsdager = null,
                 gradert = Gradert(false, 0),
-                reisetilskudd = false
-            )
+                reisetilskudd = false,
+            ),
         ),
         prognose = Prognose(
             true,
             null,
             ErIArbeid(false, false, null, null),
-            ErIkkeIArbeid(false, null, null)
+            ErIkkeIArbeid(false, null, null),
         ),
         signaturDato = getNowTickMillisLocalDateTime(),
         skjermesForPasient = false,
@@ -256,8 +256,8 @@ val testSykmeldingsdokument = Sykmeldingsdokument(
         tiltakArbeidsplassen = "tiltakArbeidsplassen",
         tiltakNAV = "tiltakNAV",
         utdypendeOpplysninger = getUtdypendeOpplysninger(),
-        navnFastlege = "Per Hansen"
-    )
+        navnFastlege = "Per Hansen",
+    ),
 )
 
 fun getUtdypendeOpplysninger(): Map<String, Map<String, SporsmalSvar>> {
@@ -273,7 +273,7 @@ fun getUtdypendeOpplysninger(): Map<String, Map<String, SporsmalSvar>> {
 
 val testBehandlingsutfall = Behandlingsutfall(
     id = "uuid",
-    behandlingsutfall = ValidationResult(Status.OK, emptyList())
+    behandlingsutfall = ValidationResult(Status.OK, emptyList()),
 )
 
 fun getRandomPort() = ServerSocket(0).use {

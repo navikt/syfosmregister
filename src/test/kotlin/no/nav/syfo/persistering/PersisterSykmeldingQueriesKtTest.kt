@@ -27,7 +27,7 @@ class PersisterSykmeldingQueriesKtTest : FunSpec({
             .copy(
                 id = sykmeldingsId,
                 legeHpr = "hpr",
-                legeHelsepersonellkategori = "LE"
+                legeHelsepersonellkategori = "LE",
             )
 
         db.lagreMottattSykmelding(sykmeldingsOpplysninger, testSykmeldingsdokument.copy(id = sykmeldingsId))

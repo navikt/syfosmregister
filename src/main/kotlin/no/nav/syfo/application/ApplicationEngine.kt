@@ -14,6 +14,7 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -27,7 +28,6 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
-import no.nav.syfo.sykmelding.internal.api.setupSwaggerDocApi
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.papir.PapirsykmeldingService
 import no.nav.syfo.sykmelding.papir.api.registrerServiceuserPapirsykmeldingApi
@@ -44,7 +44,7 @@ fun createApplicationEngine(
     tokenXIssuer: String,
     jwkProviderAadV2: JwkProvider,
     sykmeldingerService: SykmeldingerService,
-    tilgangskontrollService: TilgangskontrollService
+    tilgangskontrollService: TilgangskontrollService,
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
         install(ContentNegotiation) {
@@ -60,7 +60,7 @@ fun createApplicationEngine(
             tokenXIssuer = tokenXIssuer,
             jwkProviderAadV2 = jwkProviderAadV2,
             jwkProviderTokenX = jwkProviderTokenX,
-            environment = env
+            environment = env,
         )
         install(CallId) {
             generate { UUID.randomUUID().toString() }
@@ -78,7 +78,9 @@ fun createApplicationEngine(
 
         routing {
             if (env.cluster == "dev-gcp") {
-                setupSwaggerDocApi()
+                staticResources("/api/v1/docs/", "api") {
+                    default("api/index.html")
+                }
             }
             route("internal") {
                 registerNaisApi(applicationState)

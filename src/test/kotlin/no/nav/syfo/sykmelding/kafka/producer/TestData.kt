@@ -27,7 +27,7 @@ fun getArbeidsgiverSykmelding(id: String): ArbeidsgiverSykmelding {
         harRedusertArbeidsgiverperiode = false,
         papirsykmelding = false,
         merknader = null,
-        utenlandskSykmelding = null
+        utenlandskSykmelding = null,
     )
 }
 
@@ -36,7 +36,7 @@ fun getKafkaMetadata(id: String): KafkaMetadataDTO {
         sykmeldingId = id,
         timestamp = getNowTickMillisOffsetDateTime(),
         fnr = "fnr",
-        source = "source"
+        source = "source",
     )
 }
 
@@ -46,6 +46,6 @@ fun getSykmeldingStatusEvent(id: String): SykmeldingStatusKafkaEventDTO {
         timestamp = getNowTickMillisOffsetDateTime(),
         arbeidsgiver = null,
         sporsmals = null,
-        statusEvent = STATUS_BEKREFTET
+        statusEvent = STATUS_BEKREFTET,
     )
 }

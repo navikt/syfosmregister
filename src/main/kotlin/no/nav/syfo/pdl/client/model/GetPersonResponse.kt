@@ -5,28 +5,28 @@ data class PdlResponse(
 )
 
 data class Identliste(
-    val identer: List<IdentInformasjon>
+    val identer: List<IdentInformasjon>,
 )
 
 data class IdentInformasjon(
     val ident: String,
     val historisk: Boolean,
-    val gruppe: String
+    val gruppe: String,
 )
 
 data class ResponseError(
     val message: String?,
     val locations: List<ErrorLocation>?,
     val path: List<String>?,
-    val extensions: ErrorExtension?
+    val extensions: ErrorExtension?,
 )
 
 data class ErrorLocation(
     val line: String?,
-    val column: String?
+    val column: String?,
 )
 
 data class ErrorExtension(
     val code: String?,
-    val classification: String?
+    val classification: String?,
 )

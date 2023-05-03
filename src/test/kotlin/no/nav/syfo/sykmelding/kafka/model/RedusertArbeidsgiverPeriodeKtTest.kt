@@ -26,8 +26,8 @@ class RedusertArbeidsgiverPeriodeKtTest : FunSpec({
             gradert = null,
             behandlingsdager = null,
             reisetilskudd = false,
-            avventendeInnspillTilArbeidsgiver = null
-        )
+            avventendeInnspillTilArbeidsgiver = null,
+        ),
     )
     val periodeUtenforKoronaregler = listOf<Periode>(
         Periode(
@@ -37,8 +37,8 @@ class RedusertArbeidsgiverPeriodeKtTest : FunSpec({
             gradert = null,
             behandlingsdager = null,
             reisetilskudd = false,
-            avventendeInnspillTilArbeidsgiver = null
-        )
+            avventendeInnspillTilArbeidsgiver = null,
+        ),
     )
     val perioderUtenforOgInnenforKoronaregler = listOf<Periode>(
         Periode(
@@ -48,7 +48,7 @@ class RedusertArbeidsgiverPeriodeKtTest : FunSpec({
             gradert = null,
             behandlingsdager = null,
             reisetilskudd = false,
-            avventendeInnspillTilArbeidsgiver = null
+            avventendeInnspillTilArbeidsgiver = null,
         ),
         Periode(
             fom = koronaForsteFraDato.plusDays(1),
@@ -57,8 +57,8 @@ class RedusertArbeidsgiverPeriodeKtTest : FunSpec({
             gradert = null,
             behandlingsdager = null,
             reisetilskudd = false,
-            avventendeInnspillTilArbeidsgiver = null
-        )
+            avventendeInnspillTilArbeidsgiver = null,
+        ),
     )
     val dbPeriodeInnenforKoronaregler = listOf<no.nav.syfo.sykmelding.db.Periode>(
         no.nav.syfo.sykmelding.db.Periode(
@@ -68,8 +68,8 @@ class RedusertArbeidsgiverPeriodeKtTest : FunSpec({
             gradert = null,
             behandlingsdager = null,
             reisetilskudd = false,
-            avventendeInnspillTilArbeidsgiver = null
-        )
+            avventendeInnspillTilArbeidsgiver = null,
+        ),
     )
     val dbPeriodeUtenforKoronaregler = listOf<no.nav.syfo.sykmelding.db.Periode>(
         no.nav.syfo.sykmelding.db.Periode(
@@ -79,8 +79,8 @@ class RedusertArbeidsgiverPeriodeKtTest : FunSpec({
             gradert = null,
             behandlingsdager = null,
             reisetilskudd = false,
-            avventendeInnspillTilArbeidsgiver = null
-        )
+            avventendeInnspillTilArbeidsgiver = null,
+        ),
     )
     val dbPerioderUtenforOgInnenforKoronaregler = listOf<no.nav.syfo.sykmelding.db.Periode>(
         no.nav.syfo.sykmelding.db.Periode(
@@ -90,7 +90,7 @@ class RedusertArbeidsgiverPeriodeKtTest : FunSpec({
             gradert = null,
             behandlingsdager = null,
             reisetilskudd = false,
-            avventendeInnspillTilArbeidsgiver = null
+            avventendeInnspillTilArbeidsgiver = null,
         ),
         no.nav.syfo.sykmelding.db.Periode(
             fom = koronaForsteFraDato.plusDays(1),
@@ -99,8 +99,8 @@ class RedusertArbeidsgiverPeriodeKtTest : FunSpec({
             gradert = null,
             behandlingsdager = null,
             reisetilskudd = false,
-            avventendeInnspillTilArbeidsgiver = null
-        )
+            avventendeInnspillTilArbeidsgiver = null,
+        ),
     )
     context("Test har redusertArbeidsgiverperiode no.nav.syfo.model.MedisinskVurdering") {
         test("Should not get redusert arbeidsgiverperiode") {
@@ -281,7 +281,7 @@ private fun getMedisinskVurdering(diagnoseKode: String? = null, bidiagnoseKode: 
         false,
         false,
         null,
-        annenFraversArsak
+        annenFraversArsak,
     )
 }
 
@@ -299,6 +299,6 @@ private fun getMedisinskVurderingDB(diagnoseKode: String? = null, bidiagnoseKode
         false,
         false,
         null,
-        annenFraversArsak
+        annenFraversArsak,
     )
 }

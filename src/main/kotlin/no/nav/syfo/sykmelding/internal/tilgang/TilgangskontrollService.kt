@@ -16,7 +16,7 @@ class TilgangskontrollService(
     private val azureAdV2Client: AzureAdV2Client,
     private val httpClient: HttpClient,
     url: String,
-    private val syfotilgangskontrollScope: String
+    private val syfotilgangskontrollScope: String,
 ) {
     companion object {
         val log: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
