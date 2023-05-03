@@ -14,6 +14,6 @@ fun PapirsykmeldingDbModel.toPapirsykmeldingDTO(): PapirsykmeldingDTO {
     return PapirsykmeldingDTO(
         pasientFnr = this.pasientFnr,
         mottattTidspunkt = this.mottattTidspunkt,
-        sykmelding = this.sykmelding
+        sykmelding = this.sykmelding,
     )
 }

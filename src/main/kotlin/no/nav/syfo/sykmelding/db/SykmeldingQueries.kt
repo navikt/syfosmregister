@@ -25,7 +25,7 @@ suspend fun DatabaseInterface.getArbeidsgiverStatus(sykmeldingId: String): Arbei
             connection.prepareStatement(
                 """
            Select * from arbeidsgiver where sykmelding_id = ? 
-        """
+        """,
             ).use { ps ->
                 ps.setString(1, sykmeldingId)
                 ps.executeQuery().use {
@@ -33,7 +33,7 @@ suspend fun DatabaseInterface.getArbeidsgiverStatus(sykmeldingId: String): Arbei
                         true -> ArbeidsgiverDbModel(
                             orgnummer = it.getString("orgnummer"),
                             juridiskOrgnummer = it.getString("juridisk_orgnummer"),
-                            orgNavn = it.getString("navn")
+                            orgNavn = it.getString("navn"),
                         )
                         else -> null
                     }
@@ -87,7 +87,7 @@ suspend fun DatabaseInterface.updateFnr(fnr: String, nyttFnr: String): Int = wit
         connection.prepareStatement(
             """
             UPDATE sykmeldingsopplysninger set pasient_fnr = ? where pasient_fnr = ?;
-        """
+        """,
         ).use {
             it.setString(1, nyttFnr)
             it.setString(2, fnr)
@@ -126,7 +126,7 @@ private suspend fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<Sy
                                                                                              LIMIT 1)
                     where pasient_fnr = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
-                    """
+                    """,
         ).use {
             it.setString(1, fnr)
             it.executeQuery().toList { toSykmeldingDbModel() }
@@ -161,7 +161,7 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForId(id: String): Syk
                                                                                              LIMIT 1)
                     where opplysninger.id = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
-                    """
+                    """,
         ).use {
             it.setString(1, id)
             it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
@@ -197,7 +197,7 @@ private suspend fun Connection.getSykmelding(id: String, fnr: String): Sykmeldin
                     where opplysninger.id = ?
                     and pasient_fnr = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
-                    """
+                    """,
         ).use {
             it.setString(1, id)
             it.setString(2, fnr)
@@ -231,7 +231,7 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsut
                                                                                              LIMIT 1)
                     where opplysninger.id = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
-                    """
+                    """,
         ).use {
             it.setString(1, id)
             it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }.firstOrNull()
@@ -264,7 +264,7 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsut
                                                                                              LIMIT 1)
                     where pasient_fnr = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
-                    """
+                    """,
         ).use {
             it.setString(1, fnr)
             it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }
@@ -284,7 +284,7 @@ suspend fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> 
                          INNER JOIN sporsmal
                                     ON sporsmal.id = svar.sporsmal_id
                 WHERE svar.sykmelding_id = ? order by sporsmal.id;
-            """
+            """,
     ).use {
         it.setString(1, sykmeldingId)
         it.executeQuery().toList { tilSporsmal() }
@@ -301,7 +301,7 @@ fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
         behandlingsutfall = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java),
         status = getStatus(mottattTidspunkt),
         merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) },
-        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) }
+        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) },
     )
 }
 
@@ -314,7 +314,7 @@ fun ResultSet.toSykmeldingDbModelUtenBehandlingsutfall(): SykmeldingDbModelUtenB
         legekontorOrgNr = getString("legekontor_org_nr"),
         status = getStatus(mottattTidspunkt),
         merknader = getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) },
-        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) }
+        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) },
     )
 }
 
@@ -327,7 +327,7 @@ private fun ResultSet.getStatus(mottattTidspunkt: OffsetDateTime): StatusDbModel
                 StatusEvent.SENDT.name -> ArbeidsgiverDbModel(
                     orgnummer = getString("orgnummer"),
                     juridiskOrgnummer = getString("juridisk_orgnummer"),
-                    orgNavn = getString("navn")
+                    orgNavn = getString("navn"),
                 )
                 else -> null
             }
@@ -340,7 +340,7 @@ fun ResultSet.tilSporsmal(): Sporsmal =
     Sporsmal(
         tekst = getString("tekst"),
         shortName = tilShortName(getString("shortname")),
-        svar = tilSvar()
+        svar = tilSvar(),
     )
 
 fun ResultSet.tilSvar(): Svar =
@@ -348,7 +348,7 @@ fun ResultSet.tilSvar(): Svar =
         sykmeldingId = getString("sykmelding_id"),
         sporsmalId = getInt("sporsmal_id"),
         svartype = tilSvartype(getString("svartype")),
-        svar = getString("svar")
+        svar = getString("svar"),
     )
 
 private fun tilShortName(shortname: String): ShortName {

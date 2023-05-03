@@ -7,5 +7,5 @@ data class SykmeldingStatusDTO(
     val statusEvent: String,
     val timestamp: OffsetDateTime,
     val arbeidsgiver: ArbeidsgiverStatusDTO?,
-    val sporsmalOgSvarListe: List<SporsmalDTO>
+    val sporsmalOgSvarListe: List<SporsmalDTO>,
 )

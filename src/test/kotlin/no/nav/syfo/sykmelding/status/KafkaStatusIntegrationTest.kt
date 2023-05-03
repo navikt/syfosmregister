@@ -112,7 +112,7 @@ class KafkaStatusIntegrationTest : FunSpec({
 
             kafkaProducer.send(
                 getApenEvent(sykmelding),
-                testSykmeldingsopplysninger.pasientFnr
+                testSykmeldingsopplysninger.pasientFnr,
             )
 
             runBlocking {
@@ -126,7 +126,7 @@ class KafkaStatusIntegrationTest : FunSpec({
             sykmeldinger[0].status shouldBeEqualTo StatusDbModel(
                 statusTimestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
                 statusEvent = "APEN",
-                arbeidsgiver = null
+                arbeidsgiver = null,
             )
             database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 1
         }
@@ -154,7 +154,7 @@ class KafkaStatusIntegrationTest : FunSpec({
             sykmeldingstatus shouldBeEqualTo StatusDbModel(
                 statusTimestamp = sendEvent.timestamp,
                 statusEvent = "SENDT",
-                arbeidsgiver = ArbeidsgiverDbModel("org", "jorg", "navn")
+                arbeidsgiver = ArbeidsgiverDbModel("org", "jorg", "navn"),
             )
 
             database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 2
@@ -183,7 +183,7 @@ class KafkaStatusIntegrationTest : FunSpec({
             sykmeldingStatus shouldBeEqualTo StatusDbModel(
                 statusTimestamp = bekreftetEvent.timestamp,
                 statusEvent = "BEKREFTET",
-                arbeidsgiver = null
+                arbeidsgiver = null,
             )
 
             database.hentSykmeldingStatuser(sykmelding.id).size shouldBeEqualTo 2
@@ -262,7 +262,7 @@ class KafkaStatusIntegrationTest : FunSpec({
                 with(
                     handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
                         call.authentication.principal(BrukerPrincipal("pasientFnr", JWTPrincipal(mockPayload)))
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                     val sykmeldingDTO = objectMapper.readValue<List<SykmeldingDTO>>(response.content!!)[0]
@@ -274,13 +274,13 @@ class KafkaStatusIntegrationTest : FunSpec({
                                 tekst = "din arbeidssituasjon?",
                                 svar = SvarDTO(
                                     no.nav.syfo.sykmelding.model.SvartypeDTO.ARBEIDSSITUASJON,
-                                    "ARBEIDSTAKER"
+                                    "ARBEIDSTAKER",
                                 ),
-                                shortName = no.nav.syfo.sykmelding.model.ShortNameDTO.ARBEIDSSITUASJON
-                            )
+                                shortName = no.nav.syfo.sykmelding.model.ShortNameDTO.ARBEIDSSITUASJON,
+                            ),
                         ),
                         arbeidsgiver = no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO("org", "jorg", "navn"),
-                        statusEvent = "SENDT"
+                        statusEvent = "SENDT",
 
                     )
                 }
@@ -332,7 +332,7 @@ private fun getSykmeldingBekreftEvent(sykmelding: Sykmeldingsopplysninger): Sykm
         statusEvent = STATUS_BEKREFTET,
         timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
         arbeidsgiver = null,
-        sporsmals = listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI"))
+        sporsmals = listOf(SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI")),
     )
 }
 
@@ -343,8 +343,8 @@ private fun getSendtEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatus
         arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
         statusEvent = STATUS_SENDT,
         sporsmals = listOf(
-            SporsmalOgSvarDTO("din arbeidssituasjon?", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER")
-        )
+            SporsmalOgSvarDTO("din arbeidssituasjon?", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+        ),
     )
 }
 
@@ -352,6 +352,6 @@ private fun getApenEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusK
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
         timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
-        statusEvent = STATUS_APEN
+        statusEvent = STATUS_APEN,
     )
 }

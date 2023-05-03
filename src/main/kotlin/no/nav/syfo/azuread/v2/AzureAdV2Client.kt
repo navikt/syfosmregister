@@ -18,14 +18,14 @@ class AzureAdV2Client(
     private val azureAppClientSecret: String,
     private val azureTokenEndpoint: String,
     private val httpClient: HttpClient,
-    private val azureAdV2Cache: AzureAdV2Cache = AzureAdV2Cache()
+    private val azureAdV2Cache: AzureAdV2Cache = AzureAdV2Cache(),
 ) {
 
     /**
      * Returns a non-obo access token authenticated using app specific client credentials
      */
     suspend fun getAccessToken(
-        scope: String
+        scope: String,
     ): AzureAdV2Token? {
         return azureAdV2Cache.getToken(scope)
             ?: getClientSecretAccessToken(scope)?.let {
@@ -34,7 +34,7 @@ class AzureAdV2Client(
     }
 
     private suspend fun getClientSecretAccessToken(
-        scope: String
+        scope: String,
     ): AzureAdV2Token? {
         return getOboAccessToken(
             Parameters.build {
@@ -42,7 +42,7 @@ class AzureAdV2Client(
                 append("client_secret", azureAppClientSecret)
                 append("scope", scope)
                 append("grant_type", "client_credentials")
-            }
+            },
         )?.toAzureAdV2Token()
     }
 
@@ -51,7 +51,7 @@ class AzureAdV2Client(
      */
     suspend fun getOnBehalfOfToken(
         scope: String,
-        token: String
+        token: String,
     ): AzureAdV2Token? {
         return azureAdV2Cache.getToken(token)
             ?: getOboAccessToken(token, scope)?.let {
@@ -61,7 +61,7 @@ class AzureAdV2Client(
 
     private suspend fun getOboAccessToken(
         token: String,
-        scopeClientId: String
+        scopeClientId: String,
     ): AzureAdV2Token? {
         return getOboAccessToken(
             Parameters.build {
@@ -72,12 +72,12 @@ class AzureAdV2Client(
                 append("assertion", token)
                 append("scope", scopeClientId)
                 append("requested_token_use", "on_behalf_of")
-            }
+            },
         )?.toAzureAdV2Token()
     }
 
     private suspend fun getOboAccessToken(
-        formParameters: Parameters
+        formParameters: Parameters,
     ): AzureAdV2TokenResponse? {
         return try {
             val response: HttpResponse = httpClient.post(azureTokenEndpoint) {

@@ -9,7 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 
 class BekreftSykmeldingKafkaProducer(
     private val kafkaProducer: KafkaProducer<String, SykmeldingKafkaMessage?>,
-    private val topic: String
+    private val topic: String,
 ) {
     suspend fun sendSykmelding(sykmeldingKafkaMessage: SykmeldingKafkaMessage) {
         withContext(Dispatchers.IO) {
@@ -19,7 +19,7 @@ class BekreftSykmeldingKafkaProducer(
             } catch (e: Exception) {
                 log.error(
                     "Kunne ikke skrive til bekreft-topic for sykmeldingid ${sykmeldingKafkaMessage.sykmelding.id}: {}",
-                    e.message
+                    e.message,
                 )
                 throw e
             }

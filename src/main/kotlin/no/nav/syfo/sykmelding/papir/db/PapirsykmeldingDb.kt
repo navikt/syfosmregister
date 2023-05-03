@@ -18,7 +18,7 @@ fun DatabaseInterface.getPapirsykmelding(sykmeldingId: String): PapirsykmeldingD
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                     where opplysninger.id = ?
                     and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
-                    """
+                    """,
         ).use {
             it.setString(1, sykmeldingId)
             it.executeQuery().toList { toPapirsykmeldingDbModel() }.firstOrNull { result ->
@@ -31,6 +31,6 @@ fun ResultSet.toPapirsykmeldingDbModel(): PapirsykmeldingDbModel {
     return PapirsykmeldingDbModel(
         sykmelding = objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java),
         mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC),
-        pasientFnr = getString("pasient_fnr")
+        pasientFnr = getString("pasient_fnr"),
     )
 }

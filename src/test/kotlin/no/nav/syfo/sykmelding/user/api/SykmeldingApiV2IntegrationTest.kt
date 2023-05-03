@@ -60,7 +60,7 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                 jwkProvider,
                 "tokenXissuer",
                 jwkProvider,
-                getEnvironment()
+                getEnvironment(),
             )
             application.routing {
                 route("/api/v3") {
@@ -81,9 +81,9 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                     val sykmelding = objectMapper.readValue(response.content, SykmeldingDTO::class.java)
@@ -96,9 +96,9 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "feilFnr")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "feilFnr")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.NotFound
                 }
@@ -109,9 +109,9 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/annenId") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.NotFound
                 }
@@ -123,9 +123,9 @@ class SykmeldingApiV2IntegrationTest : FunSpec({
                     handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}"
+                            "Bearer ${generateJWT("syfosoknad", "clientid", subject = "pasientFnr")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                     val sykmelding = objectMapper.readValue(response.content, SykmeldingDTO::class.java)

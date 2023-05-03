@@ -26,7 +26,7 @@ private suspend fun Connection.updateSykmeldingsdokument(sykmeldingsdokument: Sy
     prepareStatement(
         """
             update SYKMELDINGSDOKUMENT set id = ?, sykmelding = ? where id = ?;
-            """
+            """,
     ).use {
         it.setString(1, sykmeldingsdokument.id)
         it.setObject(2, sykmeldingsdokument.sykmelding.toPGObject())
@@ -57,7 +57,7 @@ private suspend fun Connection.updateSykmeldingsopplysninger(sykmeldingsopplysni
             partnerreferanse = ?,
             utenlandsk_sykmelding = ?
         where id = ?;
-    """
+    """,
     ).use {
         var i = 1
         it.setString(i++, sykmeldingsopplysninger.pasientFnr)
@@ -105,7 +105,7 @@ private suspend fun Connection.opprettSykmeldingsopplysninger(sykmeldingsopplysn
                 partnerreferanse,
                 utenlandsk_sykmelding)
             VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
+            """,
     ).use {
         var i = 1
         it.setString(i++, sykmeldingsopplysninger.id)
@@ -134,7 +134,7 @@ private suspend fun Connection.opprettSykmeldingsdokument(sykmeldingsdokument: S
     prepareStatement(
         """
             INSERT INTO SYKMELDINGSDOKUMENT(id, sykmelding) VALUES  (?, ?)
-            """
+            """,
     ).use {
         it.setString(1, sykmeldingsdokument.id)
         it.setObject(2, sykmeldingsdokument.sykmelding.toPGObject())
@@ -147,7 +147,7 @@ suspend fun Connection.updateBehandlingsutfall(behandlingsutfall: Behandlingsutf
         connection.prepareStatement(
             """
            update behandlingsutfall set behandlingsutfall = ? where id = ?;
-        """
+        """,
         ).use {
             it.setObject(1, behandlingsutfall.behandlingsutfall.toPGObject())
             it.setString(2, behandlingsutfall.id)
@@ -162,7 +162,7 @@ suspend fun Connection.opprettBehandlingsutfall(behandlingsutfall: Behandlingsut
         connection.prepareStatement(
             """
                     INSERT INTO BEHANDLINGSUTFALL(id, behandlingsutfall) VALUES (?, ?)
-                """
+                """,
         ).use {
             it.setString(1, behandlingsutfall.id)
             it.setObject(2, behandlingsutfall.behandlingsutfall.toPGObject())
@@ -180,7 +180,7 @@ suspend fun Connection.erSykmeldingsopplysningerLagret(sykmeldingsid: String) = 
                 SELECT *
                 FROM SYKMELDINGSOPPLYSNINGER
                 WHERE id=?;
-                """
+                """,
         ).use {
             it.setString(1, sykmeldingsid)
             it.executeQuery().next()
@@ -195,7 +195,7 @@ suspend fun Connection.erBehandlingsutfallLagret(sykmeldingsid: String) = withCo
                 SELECT *
                 FROM BEHANDLINGSUTFALL
                 WHERE id=?;
-                """
+                """,
         ).use {
             it.setString(1, sykmeldingsid)
             it.executeQuery().next()

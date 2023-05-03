@@ -13,6 +13,6 @@ fun getSykmeldingperiodeDto(fom: LocalDate, tom: LocalDate): SykmeldingsperiodeD
         gradert = null,
         aktivitetIkkeMulig = null,
         innspillTilArbeidsgiver = null,
-        type = PeriodetypeDTO.AKTIVITET_IKKE_MULIG
+        type = PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
     )
 }

@@ -28,7 +28,7 @@ fun getReceivedSykmelding(merknader: List<Merknad>? = null, utenlandskSykmelding
                 her = null,
                 tlf = null,
                 hpr = null,
-                mellomnavn = null
+                mellomnavn = null,
             ),
             arbeidsgiver = Arbeidsgiver(HarArbeidsgiver.EN_ARBEIDSGIVER, null, null, null),
             andreTiltak = null,
@@ -47,7 +47,7 @@ fun getReceivedSykmelding(merknader: List<Merknad>? = null, utenlandskSykmelding
             syketilfelleStartDato = LocalDate.now(),
             tiltakArbeidsplassen = null,
             tiltakNAV = null,
-            utdypendeOpplysninger = emptyMap()
+            utdypendeOpplysninger = emptyMap(),
         ),
         msgId = "1",
         fellesformat = "",
@@ -67,6 +67,6 @@ fun getReceivedSykmelding(merknader: List<Merknad>? = null, utenlandskSykmelding
         merknader = merknader,
         partnerreferanse = "123456",
         vedlegg = null,
-        utenlandskSykmelding = utenlandskSykmelding
+        utenlandskSykmelding = utenlandskSykmelding,
     )
 }

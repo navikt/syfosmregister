@@ -27,7 +27,7 @@ class KafkaModelMapper private constructor() {
                 sykmeldingId,
                 arbeidsgiver.orgnummer,
                 arbeidsgiver.juridiskOrgnummer,
-                arbeidsgiver.orgNavn
+                arbeidsgiver.orgNavn,
             )
 
         fun toSporsmal(sporsmal: SporsmalOgSvarDTO, sykmeldingId: String): Sporsmal {
@@ -43,20 +43,20 @@ class KafkaModelMapper private constructor() {
                 sykmeldingId,
                 sporsmalId = null,
                 svartype = toSvartype(arbeidsgiverSporsmal.svartype),
-                svar = arbeidsgiverSporsmal.svar
+                svar = arbeidsgiverSporsmal.svar,
             )
         }
 
         fun toSykmeldingStatusKafkaEventDTO(
             status: SykmeldingStatusEvent,
             arbeidsgiverStatus: ArbeidsgiverDbModel?,
-            sporsmal: List<Sporsmal>
+            sporsmal: List<Sporsmal>,
         ) = SykmeldingStatusKafkaEventDTO(
             sykmeldingId = status.sykmeldingId,
             timestamp = status.timestamp,
             statusEvent = status.event.name,
             arbeidsgiver = toArbeidsgiverStatusDto(arbeidsgiverStatus),
-            sporsmals = sporsmal.map { toSporsmalOgSvar(it) }
+            sporsmals = sporsmal.map { toSporsmalOgSvar(it) },
         )
 
         private fun toSvartype(svartype: SvartypeDTO): Svartype {
@@ -96,7 +96,7 @@ class KafkaModelMapper private constructor() {
                 ArbeidsgiverStatusDTO(
                     orgnummer = it.orgnummer,
                     juridiskOrgnummer = it.juridiskOrgnummer,
-                    orgNavn = it.orgNavn
+                    orgNavn = it.orgNavn,
                 )
             }
         }
@@ -106,7 +106,7 @@ class KafkaModelMapper private constructor() {
                 tekst = it.tekst,
                 shortName = toShortNameDto(it.shortName),
                 svartype = toSvartypeDto(it.svar.svartype),
-                svar = it.svar.svar
+                svar = it.svar.svar,
             )
         }
 

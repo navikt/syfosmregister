@@ -60,7 +60,7 @@ private suspend fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: O
     prepareStatement(
         """
         SELECT 1 FROM sykmeldingstatus WHERE sykmelding_id = ? and timestamp > ?
-        """
+        """,
     ).use {
         it.setString(1, sykmeldingId)
         it.setTimestamp(2, Timestamp.from(timestamp.toInstant()))
@@ -80,7 +80,7 @@ private suspend fun Connection.getSykmeldingstatuser(sykmeldingId: String): List
             INNER JOIN sykmeldingsopplysninger AS opplysninger ON status.sykmelding_id = opplysninger.id
             INNER JOIN behandlingsutfall AS utfall ON status.sykmelding_id = utfall.id 
         WHERE status.sykmelding_id = ?
-    """
+    """,
     ).use {
         it.setString(1, sykmeldingId)
         it.executeQuery().toList { toSykmeldingStatusEvent() }
@@ -93,7 +93,7 @@ private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
         timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
         event = tilStatusEvent(getString("event")),
         erAvvist = objectMapper.readValue(getString("behandlingsutfall"), ValidationResult::class.java).status == Status.INVALID,
-        erEgenmeldt = getString("epj_system_navn") == "Egenmeldt"
+        erEgenmeldt = getString("epj_system_navn") == "Egenmeldt",
     )
 }
 
@@ -109,7 +109,7 @@ private suspend fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
     prepareStatement(
         """
                 SELECT 1 FROM svar WHERE sykmelding_id=?;
-                """
+                """,
     ).use {
         it.setString(1, sykmeldingId)
         it.executeQuery().next()
@@ -120,7 +120,7 @@ suspend fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEve
     prepareStatement(
         """
                 INSERT INTO sykmeldingstatus(sykmelding_id, event, timestamp) VALUES (?, ?, ?) ON CONFLICT DO NOTHING
-                """
+                """,
     ).use {
         it.setString(1, sykmeldingStatusEvent.sykmeldingId)
         it.setString(2, sykmeldingStatusEvent.event.name)
@@ -133,7 +133,7 @@ private suspend fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: Sykm
     prepareStatement(
         """
                 INSERT INTO arbeidsgiver(sykmelding_id, orgnummer, juridisk_orgnummer, navn) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING
-                """
+                """,
     ).use {
         it.setString(1, sykmeldingSendEvent.sykmeldingId)
         it.setString(2, sykmeldingSendEvent.arbeidsgiver.orgnummer)
@@ -163,7 +163,7 @@ private suspend fun Connection.lagreSporsmal(sporsmal: Sporsmal): Int = withCont
         """
                 INSERT INTO sporsmal(shortName, tekst) VALUES (?, ?)
                 """,
-        Statement.RETURN_GENERATED_KEYS
+        Statement.RETURN_GENERATED_KEYS,
     ).use {
         it.setString(1, sporsmal.shortName.name)
         it.setString(2, sporsmal.tekst)
@@ -181,7 +181,7 @@ private suspend fun Connection.finnSporsmal(sporsmal: Sporsmal): Int? = withCont
                 SELECT sporsmal.id
                 FROM sporsmal
                 WHERE shortName=? AND tekst=?;
-                """
+                """,
     ).use {
         it.setString(1, sporsmal.shortName.name)
         it.setString(2, sporsmal.tekst)
@@ -194,7 +194,7 @@ private suspend fun Connection.lagreSvar(sporsmalId: Int, svar: Svar) = withCont
     prepareStatement(
         """
                 INSERT INTO svar(sykmelding_id, sporsmal_id, svartype, svar) VALUES (?, ?, ?, ?)
-                """
+                """,
     ).use {
         it.setString(1, svar.sykmeldingId)
         it.setInt(2, sporsmalId)
@@ -208,7 +208,7 @@ private suspend fun Connection.slettArbeidsgiver(sykmeldingId: String) = withCon
     prepareStatement(
         """
                 DELETE FROM arbeidsgiver WHERE sykmelding_id=?;
-                """
+                """,
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()
@@ -219,7 +219,7 @@ private suspend fun Connection.slettSvar(sykmeldingId: String) = withContext(Dis
     prepareStatement(
         """
                 DELETE FROM svar WHERE sykmelding_id=?;
-                """
+                """,
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()

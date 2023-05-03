@@ -6,7 +6,7 @@ import org.postgresql.util.PGobject
 
 data class Behandlingsutfall(
     val id: String,
-    val behandlingsutfall: ValidationResult
+    val behandlingsutfall: ValidationResult,
 )
 
 fun ValidationResult.toPGObject() = PGobject().also {

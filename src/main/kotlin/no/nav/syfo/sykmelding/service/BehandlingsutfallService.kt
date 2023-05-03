@@ -22,14 +22,14 @@ class BehandlingsutfallService(
     private val applicationState: ApplicationState,
     private val kafkaAivenConsumer: KafkaConsumer<String, String>,
     private val database: DatabaseInterface,
-    private val env: Environment
+    private val env: Environment,
 ) {
 
     suspend fun start() {
         kafkaAivenConsumer.subscribe(
             listOf(
-                env.behandlingsUtfallTopic
-            )
+                env.behandlingsUtfallTopic,
+            ),
         )
         while (applicationState.ready) {
             kafkaAivenConsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
@@ -39,7 +39,7 @@ class BehandlingsutfallService(
                     mottakId = "",
                     orgNr = "",
                     msgId = "",
-                    sykmeldingId = sykmeldingsid
+                    sykmeldingId = sykmeldingsid,
                 )
                 handleMessageBehandlingsutfall(validationResult, sykmeldingsid, database, loggingMeta, "aiven")
             }
@@ -52,22 +52,23 @@ class BehandlingsutfallService(
         sykmeldingsid: String,
         database: DatabaseInterface,
         loggingMeta: LoggingMeta,
-        source: String
+        source: String,
     ) {
         wrapExceptions(loggingMeta) {
             log.info("Mottatt behandlingsutfall fra $source, {}", StructuredArguments.fields(loggingMeta))
 
             if (database.connection.erBehandlingsutfallLagret(sykmeldingsid)) {
                 log.warn(
-                    "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}", StructuredArguments.fields(loggingMeta)
+                    "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}",
+                    StructuredArguments.fields(loggingMeta),
                 )
                 database.connection.updateBehandlingsutfall(Behandlingsutfall(id = sykmeldingsid, behandlingsutfall = validationResult))
             } else {
                 database.connection.opprettBehandlingsutfall(
                     Behandlingsutfall(
                         id = sykmeldingsid,
-                        behandlingsutfall = validationResult
-                    )
+                        behandlingsutfall = validationResult,
+                    ),
                 )
                 log.info("Behandlingsutfall lagret i databasen, {}", StructuredArguments.fields(loggingMeta))
             }

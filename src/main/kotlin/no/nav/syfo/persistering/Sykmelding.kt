@@ -25,12 +25,12 @@ data class Sykmeldingsopplysninger(
     val tssid: String?,
     val merknader: List<Merknad>?,
     val partnerreferanse: String?,
-    val utenlandskSykmelding: UtenlandskSykmelding?
+    val utenlandskSykmelding: UtenlandskSykmelding?,
 )
 
 data class Sykmeldingsdokument(
     val id: String,
-    val sykmelding: Sykmelding
+    val sykmelding: Sykmelding,
 )
 
 fun Sykmelding.toPGObject() = PGobject().also {

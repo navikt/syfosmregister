@@ -27,7 +27,7 @@ class DatebaseTimestampTest : FunSpec({
             val sykmeldingStatusEvent = SykmeldingStatusEvent("123", timestamp, StatusEvent.APEN)
             db.lagreMottattSykmelding(
                 testSykmeldingsopplysninger.copy(id = "123"),
-                testSykmeldingsdokument.copy(id = "123")
+                testSykmeldingsdokument.copy(id = "123"),
             )
             db.registerStatus(sykmeldingStatusEvent)
             db.connection.opprettBehandlingsutfall(behandlingsutfall("123"))
@@ -41,7 +41,7 @@ class DatebaseTimestampTest : FunSpec({
             val sykmeldingStatusEvent = SykmeldingStatusEvent("1234", timestamp, StatusEvent.APEN)
             db.lagreMottattSykmelding(
                 testSykmeldingsopplysninger.copy(id = "1234"),
-                testSykmeldingsdokument.copy(id = "1234")
+                testSykmeldingsdokument.copy(id = "1234"),
             )
             db.registerStatus(sykmeldingStatusEvent)
             db.connection.opprettBehandlingsutfall(behandlingsutfall("1234"))
@@ -55,5 +55,5 @@ class DatebaseTimestampTest : FunSpec({
 private fun behandlingsutfall(id: String) =
     Behandlingsutfall(
         id = id,
-        behandlingsutfall = ValidationResult(Status.OK, emptyList())
+        behandlingsutfall = ValidationResult(Status.OK, emptyList()),
     )

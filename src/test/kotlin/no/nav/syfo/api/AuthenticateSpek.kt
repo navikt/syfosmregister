@@ -56,7 +56,7 @@ class AuthenticateSpek : FunSpec({
                 jwkProvider,
                 "tokenXissuer",
                 jwkProvider,
-                getEnvironment()
+                getEnvironment(),
             )
             application.routing {
                 route("/api/v3") {
@@ -78,9 +78,9 @@ class AuthenticateSpek : FunSpec({
                     handleRequest(HttpMethod.Get, "api/v3/sykmeldinger") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("2", "clientid")}"
+                            "Bearer ${generateJWT("2", "clientid")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.OK
                 }
@@ -91,9 +91,9 @@ class AuthenticateSpek : FunSpec({
                     handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("2", "annenClientId")}"
+                            "Bearer ${generateJWT("2", "annenClientId")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }
@@ -104,9 +104,9 @@ class AuthenticateSpek : FunSpec({
                     handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
                         addHeader(
                             HttpHeaders.Authorization,
-                            "Bearer ${generateJWT("2", "clientid", issuer = "microsoft")}"
+                            "Bearer ${generateJWT("2", "clientid", issuer = "microsoft")}",
                         )
-                    }
+                    },
                 ) {
                     response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
                 }

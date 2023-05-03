@@ -14,7 +14,7 @@ class SykmeldingStatusKafkaProducer(private val kafkaProducer: KafkaProducer<Str
         log.info("Sending status to kafka topic $topicName")
         val sykmeldingStatusKafkaMessageDTO = SykmeldingStatusKafkaMessageDTO(
             KafkaMetadataDTO(sykmeldingStatusKafkaEventDTO.sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), fnr, "syfosmregister"),
-            sykmeldingStatusKafkaEventDTO
+            sykmeldingStatusKafkaEventDTO,
         )
         try {
             kafkaProducer.send(ProducerRecord(topicName, sykmeldingStatusKafkaEventDTO.sykmeldingId, sykmeldingStatusKafkaMessageDTO)).get()

@@ -14,14 +14,13 @@ import java.time.LocalDate
 
 fun Route.registrerInternalSykmeldingApiV2(
     sykmeldingService: SykmeldingerService,
-    tilgangskontrollService: TilgangskontrollService
+    tilgangskontrollService: TilgangskontrollService,
 ) {
     route("/internal") {
         get("/sykmeldinger") {
             val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
             log.info("Got request to V2 endpoint")
             try {
-
                 if (token == null) {
                     log.warn("Token is missing, returing with httpstatus Unauthorized")
                     call.respond(HttpStatusCode.Unauthorized)
@@ -34,7 +33,7 @@ fun Route.registrerInternalSykmeldingApiV2(
                         fnr.isNullOrEmpty() -> call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
                         tilgangskontrollService.hasAccessToUserOboToken(fnr, token) -> call.respond(
                             HttpStatusCode.OK,
-                            sykmeldingService.getInternalSykmeldinger(fnr, fom, tom)
+                            sykmeldingService.getInternalSykmeldinger(fnr, fom, tom),
                         )
                         else -> call.respond(HttpStatusCode.Forbidden, "Forbidden")
                     }

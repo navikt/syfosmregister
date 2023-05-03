@@ -43,7 +43,7 @@ class MottattSykmeldingStatusService(
         val sykmeldingStatusKafkaEventDTO = toSykmeldingStatusKafkaEventDTO(
             status,
             getArbeidsgiverStatus(sykmeldingId, status.event),
-            getSporsmalOgSvar(sykmeldingId)
+            getSporsmalOgSvar(sykmeldingId),
         )
         val kafkaMetadata = KafkaMetadataDTO(sykmeldingId, OffsetDateTime.now(ZoneOffset.UTC), fnr, "syfosmregister")
         val sykmeldingStatus =
@@ -72,7 +72,7 @@ class MottattSykmeldingStatusService(
         log.info(
             "Got status update from $source kafka topic, sykmeldingId: {}, status: {}",
             sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
-            sykmeldingStatusKafkaMessage.event.statusEvent
+            sykmeldingStatusKafkaMessage.event.statusEvent,
         )
         try {
             when (sykmeldingStatusKafkaMessage.event.statusEvent) {
@@ -98,7 +98,7 @@ class MottattSykmeldingStatusService(
                 "Kunne ikke prosessere statusendring {} for sykmeldingid {} fordi {}",
                 sykmeldingStatusKafkaMessage.event.statusEvent,
                 sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
-                e.message
+                e.message,
             )
             throw e
         }
@@ -115,7 +115,7 @@ class MottattSykmeldingStatusService(
         when (latestStatus?.event) {
             StatusEvent.SENDT -> sendtSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
             StatusEvent.BEKREFTET -> bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(
-                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId
+                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
             )
 
             else -> {}
@@ -136,7 +136,7 @@ class MottattSykmeldingStatusService(
         ) {
             log.warn(
                 "Sykmelding er allerede sendt sykmeldingId {}",
-                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId
+                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
             )
             return
         }
@@ -177,9 +177,9 @@ class MottattSykmeldingStatusService(
             sykmeldingStatusKafkaMessage.event.sporsmals?.map {
                 KafkaModelMapper.toSporsmal(
                     it,
-                    sykmeldingStatusKafkaMessage.event.sykmeldingId
+                    sykmeldingStatusKafkaMessage.event.sykmeldingId,
                 )
-            }
+            },
         )
 
         sykmeldingStatusService.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
@@ -213,7 +213,7 @@ class MottattSykmeldingStatusService(
             sykmeldingId,
             timestamp,
             KafkaModelMapper.toArbeidsgiverStatus(sykmeldingId, arbeidsgiver),
-            sykmeldingStatusKafkaMessage.event.sporsmals!!.map { KafkaModelMapper.toSporsmal(it, sykmeldingId) }
+            sykmeldingStatusKafkaMessage.event.sporsmals!!.map { KafkaModelMapper.toSporsmal(it, sykmeldingId) },
         )
         val sykmeldingStatusEvent = KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
 

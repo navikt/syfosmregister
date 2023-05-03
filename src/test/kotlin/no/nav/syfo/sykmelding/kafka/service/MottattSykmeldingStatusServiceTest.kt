@@ -48,7 +48,7 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
         sendtSykmeldingKafkaProducer,
         bekreftetSykmeldingKafkaProducer,
         tombstoneProducer,
-        databaseInterface
+        databaseInterface,
     )
 
     beforeTest {
@@ -62,20 +62,24 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
                 sykmeldingId,
                 getNowTickMillisOffsetDateTime(),
-                StatusEvent.SENDT
+                StatusEvent.SENDT,
             )
             coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(
                 Sporsmal(
-                    "ARBEIDSGIVER", ShortName.ARBEIDSSITUASJON,
+                    "ARBEIDSGIVER",
+                    ShortName.ARBEIDSSITUASJON,
                     Svar(
-                        sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"
-                    )
-                )
+                        sykmeldingId,
+                        null,
+                        Svartype.ARBEIDSSITUASJON,
+                        "ARBEIDSTAKER",
+                    ),
+                ),
             )
             coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel(
                 "orgnummer",
                 "juridisk",
-                "orgnavn"
+                "orgnavn",
             )
 
             mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId, "123")
@@ -87,21 +91,25 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
                 sykmeldingId,
                 getNowTickMillisOffsetDateTime(),
-                StatusEvent.BEKREFTET
+                StatusEvent.BEKREFTET,
             )
 
             coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns ArbeidsgiverDbModel(
                 "orgnummer",
                 "juridisk",
-                "orgnavn"
+                "orgnavn",
             )
             coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns listOf(
                 Sporsmal(
-                    "ARBEIDSGIVER", ShortName.ARBEIDSSITUASJON,
+                    "ARBEIDSGIVER",
+                    ShortName.ARBEIDSSITUASJON,
                     Svar(
-                        sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"
-                    )
-                )
+                        sykmeldingId,
+                        null,
+                        Svartype.ARBEIDSSITUASJON,
+                        "ARBEIDSTAKER",
+                    ),
+                ),
             )
 
             mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId, "123")
@@ -113,7 +121,7 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
                 sykmeldingId,
                 getNowTickMillisOffsetDateTime(),
-                StatusEvent.APEN
+                StatusEvent.APEN,
             )
             coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns null
             coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns emptyList()
@@ -131,7 +139,7 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
                 sykmeldingId,
                 getNowTickMillisOffsetDateTime().minusHours(5),
-                StatusEvent.APEN
+                StatusEvent.APEN,
             )
             coEvery { sendtSykmeldingKafkaProducer.sendSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -144,7 +152,7 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
                 sykmeldingId,
                 getNowTickMillisOffsetDateTime().minusHours(5),
-                StatusEvent.APEN
+                StatusEvent.APEN,
             )
             coEvery { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -157,7 +165,7 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
                 sykmeldingId,
                 getNowTickMillisOffsetDateTime().minusHours(5),
-                StatusEvent.APEN
+                StatusEvent.APEN,
             )
             coEvery { tombstoneProducer.tombstoneSykmelding(any()) } throws RuntimeException("Noe gikk galt")
 
@@ -173,7 +181,7 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
             coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
                 sykmeldingId,
                 getNowTickMillisOffsetDateTime().minusHours(5),
-                StatusEvent.APEN
+                StatusEvent.APEN,
             )
 
             mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
@@ -183,9 +191,10 @@ class MottattSykmeldingStatusServiceTest : FunSpec({
         }
         test("Bekreft avvist sykmelding oppdaterer kun database") {
             coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns SykmeldingStatusEvent(
-                sykmeldingId, getNowTickMillisOffsetDateTime().minusHours(5), StatusEvent.APEN
+                sykmeldingId,
+                getNowTickMillisOffsetDateTime().minusHours(5),
+                StatusEvent.APEN,
             )
-
 
             mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmeldingAvvistSykmelding())
 
@@ -233,7 +242,7 @@ private fun opprettSendtStatusmelding(erSvarOppdatering: Boolean = false) =
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "fnr",
-            "user"
+            "user",
         ),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
@@ -242,7 +251,7 @@ private fun opprettSendtStatusmelding(erSvarOppdatering: Boolean = false) =
             ArbeidsgiverStatusDTO("9999", null, "Arbeidsplassen AS"),
             listOf(SporsmalOgSvarDTO("tekst", ShortNameDTO.ARBEIDSSITUASJON, SvartypeDTO.ARBEIDSSITUASJON, "svar")),
             erSvarOppdatering = erSvarOppdatering,
-        )
+        ),
     )
 
 private fun opprettBekreftStatusmelding() =
@@ -251,15 +260,15 @@ private fun opprettBekreftStatusmelding() =
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "fnr",
-            "user"
+            "user",
         ),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "BEKREFTET",
             null,
-            emptyList()
-        )
+            emptyList(),
+        ),
     )
 
 private fun opprettBekreftStatusmeldingAvvistSykmelding() =
@@ -268,15 +277,15 @@ private fun opprettBekreftStatusmeldingAvvistSykmelding() =
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "fnr",
-            "user"
+            "user",
         ),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "BEKREFTET",
             null,
-            null
-        )
+            null,
+        ),
     )
 
 private fun opprettSlettetStatusmelding() =
@@ -285,15 +294,15 @@ private fun opprettSlettetStatusmelding() =
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "fnr",
-            "user"
+            "user",
         ),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "SLETTET",
             null,
-            emptyList()
-        )
+            emptyList(),
+        ),
     )
 
 private fun opprettArbeidsgiverSykmelding(): ArbeidsgiverSykmelding =
@@ -313,5 +322,5 @@ private fun opprettArbeidsgiverSykmelding(): ArbeidsgiverSykmelding =
         papirsykmelding = false,
         harRedusertArbeidsgiverperiode = false,
         merknader = null,
-        utenlandskSykmelding = null
+        utenlandskSykmelding = null,
     )

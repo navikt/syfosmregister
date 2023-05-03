@@ -21,7 +21,7 @@ private suspend fun deleteSykmeldingsopplysninger(connection: Connection, sykmel
     connection.prepareStatement(
         """
             delete from sykmeldingsopplysninger where id = ? 
-        """
+        """,
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()
@@ -32,7 +32,7 @@ private suspend fun deleteSykmeldingsdokument(connection: Connection, sykmelding
     connection.prepareStatement(
         """
             delete from sykmeldingsdokument where id = ? 
-        """
+        """,
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()
@@ -43,7 +43,7 @@ private suspend fun deleteSykmeldingstatus(connection: Connection, sykmeldingId:
     connection.prepareStatement(
         """
             delete from sykmeldingstatus where sykmelding_id = ? 
-        """
+        """,
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()
@@ -54,7 +54,7 @@ private suspend fun deleteSvar(connection: Connection, sykmeldingId: String) = w
     connection.prepareStatement(
         """
             delete from svar where sykmelding_id = ? 
-        """
+        """,
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()
@@ -65,7 +65,7 @@ private suspend fun deleteArbeidsgiver(connection: Connection, sykmeldingId: Str
     connection.prepareStatement(
         """
             delete from arbeidsgiver where sykmelding_id = ?
-        """
+        """,
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()
@@ -74,7 +74,7 @@ private suspend fun deleteArbeidsgiver(connection: Connection, sykmeldingId: Str
 
 private suspend fun deleteBehandlingsutfall(connection: Connection, sykmeldingId: String) = withContext(Dispatchers.IO) {
     connection.prepareStatement(
-        """delete from behandlingsutfall where id = ?"""
+        """delete from behandlingsutfall where id = ?""",
     ).use {
         it.setString(1, sykmeldingId)
         it.execute()

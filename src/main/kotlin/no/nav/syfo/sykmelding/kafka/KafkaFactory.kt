@@ -29,7 +29,8 @@ class KafkaFactory private constructor() {
     companion object {
         fun getSykmeldingStatusKafkaProducer(kafkaBaseConfig: Properties, environment: Environment): SykmeldingStatusKafkaProducer {
             val kafkaStatusProducerConfig = kafkaBaseConfig.toProducerConfig(
-                "${environment.applicationName}-gcp-producer", JacksonKafkaSerializer::class
+                "${environment.applicationName}-gcp-producer",
+                JacksonKafkaSerializer::class,
             )
             val kafkaProducer = KafkaProducer<String, SykmeldingStatusKafkaMessageDTO>(kafkaStatusProducerConfig)
             return SykmeldingStatusKafkaProducer(kafkaProducer, environment.sykmeldingStatusAivenTopic)
@@ -44,7 +45,7 @@ class KafkaFactory private constructor() {
         fun getSendtSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): SendtSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
                 "${environment.applicationName}-gcp-producer",
-                JacksonNullableKafkaSerializer::class
+                JacksonNullableKafkaSerializer::class,
             )
             val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage>(kafkaProducerProperties)
             return SendtSykmeldingKafkaProducer(kafkaProducer, environment.sendSykmeldingKafkaTopic)
@@ -52,7 +53,7 @@ class KafkaFactory private constructor() {
         fun getBekreftetSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): BekreftSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
                 "${environment.applicationName}-gcp-producer",
-                JacksonNullableKafkaSerializer::class
+                JacksonNullableKafkaSerializer::class,
             )
             val kafkaProducer = KafkaProducer<String, SykmeldingKafkaMessage?>(kafkaProducerProperties)
             return BekreftSykmeldingKafkaProducer(kafkaProducer, environment.bekreftSykmeldingKafkaTopic)
@@ -61,7 +62,7 @@ class KafkaFactory private constructor() {
         fun getMottattSykmeldingKafkaProducer(kafkaConfig: Properties, environment: Environment): MottattSykmeldingKafkaProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
                 "${environment.applicationName}-gcp-producer",
-                JacksonNullableKafkaSerializer::class
+                JacksonNullableKafkaSerializer::class,
             )
             val kafkaProducer = KafkaProducer<String, MottattSykmeldingKafkaMessage?>(kafkaProducerProperties)
             return MottattSykmeldingKafkaProducer(kafkaProducer, environment.mottattSykmeldingKafkaTopic)
@@ -70,7 +71,7 @@ class KafkaFactory private constructor() {
         fun getTombstoneProducer(kafkaConfig: Properties, environment: Environment): SykmeldingTombstoneProducer {
             val kafkaProducerProperties = kafkaConfig.toProducerConfig(
                 "${environment.applicationName}-gcp-producer",
-                JacksonNullableKafkaSerializer::class
+                JacksonNullableKafkaSerializer::class,
             )
             val kafkaProducer = KafkaProducer<String, Any?>(kafkaProducerProperties)
             return SykmeldingTombstoneProducer(
@@ -80,8 +81,8 @@ class KafkaFactory private constructor() {
                     environment.manuellSykmeldingTopic,
                     environment.avvistSykmeldingTopic,
                     environment.behandlingsUtfallTopic,
-                    environment.mottattSykmeldingKafkaTopic
-                )
+                    environment.mottattSykmeldingKafkaTopic,
+                ),
             )
         }
 
@@ -92,7 +93,7 @@ class KafkaFactory private constructor() {
                 setProperty(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
             }.toConsumerConfig(
                 "${environment.applicationName}-gcp-consumer",
-                valueDeserializer = KafkaAvroDeserializer::class
+                valueDeserializer = KafkaAvroDeserializer::class,
             ).also {
                 it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
                 it["specific.avro.reader"] = false

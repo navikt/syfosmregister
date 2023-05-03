@@ -16,15 +16,15 @@ class MottattSykmeldingConsumerService(
     private val applicationState: ApplicationState,
     private val env: Environment,
     private val kafkaAivenConsumer: KafkaConsumer<String, String>,
-    private val mottattSykmeldingService: MottattSykmeldingService
+    private val mottattSykmeldingService: MottattSykmeldingService,
 ) {
     suspend fun start() {
         kafkaAivenConsumer.subscribe(
             listOf(
                 env.okSykmeldingTopic,
                 env.manuellSykmeldingTopic,
-                env.avvistSykmeldingTopic
-            )
+                env.avvistSykmeldingTopic,
+            ),
         )
         while (applicationState.ready) {
             kafkaAivenConsumer.poll(Duration.ofMillis(0)).filterNot { it.value() == null }.forEach {
@@ -40,7 +40,7 @@ class MottattSykmeldingConsumerService(
             mottakId = receivedSykmelding.navLogId,
             orgNr = receivedSykmelding.legekontorOrgNr,
             msgId = receivedSykmelding.msgId,
-            sykmeldingId = receivedSykmelding.sykmelding.id
+            sykmeldingId = receivedSykmelding.sykmelding.id,
         )
         log.info("Mottatt sykmelding ${receivedSykmelding.sykmelding.id} er etter tidspunkt for bytting av logikk", loggingMeta)
         mottattSykmeldingService.handleMessageSykmelding(receivedSykmelding, loggingMeta, it.topic())

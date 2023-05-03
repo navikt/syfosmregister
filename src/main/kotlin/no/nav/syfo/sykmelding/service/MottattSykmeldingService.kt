@@ -32,15 +32,18 @@ class MottattSykmeldingService(
     private val env: Environment,
     private val sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     private val mottattSykmeldingKafkaProducer: MottattSykmeldingKafkaProducer,
-    private val mottattSykmeldingStatusService: MottattSykmeldingStatusService
+    private val mottattSykmeldingStatusService: MottattSykmeldingStatusService,
 ) {
     private suspend fun sendtToMottattSykmeldingTopic(receivedSykmelding: ReceivedSykmelding) {
         val sykmelding = receivedSykmelding.toArbeidsgiverSykmelding()
         val message = MottattSykmeldingKafkaMessage(
             sykmelding = sykmelding,
             kafkaMetadata = KafkaMetadataDTO(
-                receivedSykmelding.msgId, receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC), receivedSykmelding.personNrPasient, "syfosmregister"
-            )
+                receivedSykmelding.msgId,
+                receivedSykmelding.mottattDato.atOffset(ZoneOffset.UTC),
+                receivedSykmelding.personNrPasient,
+                "syfosmregister",
+            ),
         )
         mottattSykmeldingKafkaProducer.sendMottattSykmelding(message)
     }
@@ -48,14 +51,14 @@ class MottattSykmeldingService(
     suspend fun handleMessageSykmelding(
         receivedSykmelding: ReceivedSykmelding,
         loggingMeta: LoggingMeta,
-        topic: String
+        topic: String,
     ) = withContext(Dispatchers.IO) {
         wrapExceptions(loggingMeta) {
             log.info("Mottatt sykmelding SM2013 fra $topic, {}", StructuredArguments.fields(loggingMeta))
             val sykmeldingsopplysninger = mapToSykmeldingsopplysninger(receivedSykmelding)
             val sykmeldingsdokument = Sykmeldingsdokument(
                 id = receivedSykmelding.sykmelding.id,
-                sykmelding = receivedSykmelding.sykmelding
+                sykmelding = receivedSykmelding.sykmelding,
             )
 
             if (database.connection.erSykmeldingsopplysningerLagret(sykmeldingsopplysninger.id)) {
@@ -64,19 +67,18 @@ class MottattSykmeldingService(
                 database.updateMottattSykmelding(sykmeldingsopplysninger, sykmeldingsdokument)
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(sykmeldingId = sykmeldingsopplysninger.id, fnr = sykmeldingsopplysninger.pasientFnr)
             } else {
-
                 sykmeldingStatusKafkaProducer.send(
                     SykmeldingStatusKafkaEventDTO(
                         receivedSykmelding.sykmelding.id,
                         getMinTime(receivedSykmelding.mottattDato),
-                        STATUS_APEN
+                        STATUS_APEN,
                     ),
-                    receivedSykmelding.personNrPasient
+                    receivedSykmelding.personNrPasient,
                 )
 
                 database.lagreMottattSykmelding(
                     sykmeldingsopplysninger,
-                    sykmeldingsdokument
+                    sykmeldingsdokument,
                 )
 
                 log.info("Sykmelding SM2013 lagret i databasen, {}", StructuredArguments.fields(loggingMeta))

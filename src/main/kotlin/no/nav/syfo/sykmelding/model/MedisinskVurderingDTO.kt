@@ -8,5 +8,5 @@ data class MedisinskVurderingDTO(
     val annenFraversArsak: AnnenFraversArsakDTO?,
     val svangerskap: Boolean,
     val yrkesskade: Boolean,
-    val yrkesskadeDato: LocalDate?
+    val yrkesskadeDato: LocalDate?,
 )
