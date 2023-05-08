@@ -65,8 +65,11 @@ spec:
     outbound:
       external:
         - host: kafka-schema-registry.nais.adeo.no
-        - host: syfo-tilgangskontroll.prod-fss-pub.nais.io
         - host: pdl-api.prod-fss-pub.nais.io
+      rules:
+        - application: syfo-tilgangskontroll
+          namespace: teamsykefravr
+          cluster: prod-gcp
     inbound:
       rules:
         - application: syfomodiaperson
@@ -96,10 +99,8 @@ spec:
   webproxy: false
   leaderElection: true
   env:
-    - name: SYFOTILGANGSKONTROLL_URL
-      value: https://syfo-tilgangskontroll.prod-fss-pub.nais.io
     - name: SYFOTILGANGSKONTROLL_SCOPE
-      value: api://prod-fss.teamsykefravr.syfo-tilgangskontroll/.default
+      value: api://prod-gcp.teamsykefravr.syfo-tilgangskontroll/.default
     - name: KAFKA_CLIENT_ID
       value: syfosmregister
     - name: PDL_GRAPHQL_PATH

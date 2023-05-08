@@ -7,7 +7,7 @@ data class Environment(
     val applicationPort: Int = getEnvVar("APPLICATION_PORT", "8080").toInt(),
     val applicationName: String = getEnvVar("APPLICATION_NAME", "syfosmregister"),
     val cluster: String = getEnvVar("NAIS_CLUSTER_NAME"),
-    val syfoTilgangskontrollUrl: String = getEnvVar("SYFOTILGANGSKONTROLL_URL"),
+    val syfoTilgangskontrollUrl: String = "http://syfo-tilgangskontroll.teamsykefravr",
     val sykmeldingStatusAivenTopic: String = "teamsykmelding.sykmeldingstatus-leesah",
     val sendSykmeldingKafkaTopic: String = "teamsykmelding.syfo-sendt-sykmelding",
     val bekreftSykmeldingKafkaTopic: String = "teamsykmelding.syfo-bekreftet-sykmelding",
