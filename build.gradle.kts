@@ -25,7 +25,7 @@ val testContainerKafkaVersion = "1.18.1"
 val caffeineVersion = "3.1.6"
 val kotlinVersion = "1.8.21"
 val swaggerUiVersion = "4.18.2"
-val testContainerVersion = "1.18.0"
+val testContainerVersion = "1.18.1"
 val commonsCodecVersion = "1.15"
 val snakeyamlVersion= "2.0"
 
