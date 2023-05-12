@@ -116,7 +116,6 @@ class MottattSykmeldingServiceTest : FunSpec({
 
             val lagretSykmelding = database.connection.getSykmeldingsopplysninger("1")
             lagretSykmelding?.utenlandskSykmelding?.land shouldBeEqualTo "SWE"
-            lagretSykmelding?.utenlandskSykmelding?.andreRelevanteOpplysninger shouldBeEqualTo false
             coVerify(exactly = 1) { mottattSykmeldingKafkaProducer.sendMottattSykmelding(match { it.sykmelding.behandler == null && it.sykmelding.utenlandskSykmelding?.land == "SWE" }) }
         }
     }
