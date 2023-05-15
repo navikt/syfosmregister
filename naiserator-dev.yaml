@@ -99,6 +99,8 @@ spec:
         - application: macgyver
           namespace: teamsykmelding
           cluster: dev-gcp
+  ingresses:
+    - "https://smregister.intern.dev.nav.no"
   webproxy: false
   leaderElection: true
   env:
