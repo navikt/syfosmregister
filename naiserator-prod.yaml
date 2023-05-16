@@ -86,6 +86,7 @@ spec:
           cluster: prod-gcp
         - application: sparenaproxy
         - application: syfosmregler
+        - application: syfosmpapirregler
         - application: smregistrering-backend
         - application: smoppslag
           cluster: prod-fss
