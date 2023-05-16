@@ -85,6 +85,7 @@ spec:
           cluster: dev-gcp
         - application: sparenaproxy
         - application: syfosmregler
+        - application: syfosmpapirregler
         - application: smregistrering-backend
         - application: smoppslag
           namespace: risk
