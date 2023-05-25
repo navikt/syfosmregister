@@ -88,6 +88,7 @@ spec:
         - application: syfosmregler
         - application: syfosmpapirregler
         - application: smregistrering-backend
+        - application: syfosminfotrygd
         - application: smoppslag
           cluster: prod-fss
           namespace: risk
