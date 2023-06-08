@@ -31,7 +31,7 @@ val snakeyamlVersion= "2.0"
 
 plugins {
     id("org.jmailen.kotlinter") version "3.15.0"
-    kotlin("jvm") version "1.8.21"
+    kotlin("jvm") version "1.8.22"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.hidetake.swagger.generator") version "2.19.2" apply true
 }
