@@ -49,6 +49,7 @@ fun SykmeldingDbModelUtenBehandlingsutfall.toArbeidsgiverSykmelding(): Arbeidsgi
         harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
         merknader = merknader?.map { Merknad(type = it.type, beskrivelse = it.beskrivelse) },
         utenlandskSykmelding = utenlandskSykmelding?.let { UtenlandskSykmeldingAGDTO(land = it.land) },
+        signaturDato = getUtcTime(sykmeldingsDokument.signaturDato),
     )
 }
 

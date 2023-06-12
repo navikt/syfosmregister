@@ -323,4 +323,5 @@ private fun opprettArbeidsgiverSykmelding(): ArbeidsgiverSykmelding =
         harRedusertArbeidsgiverperiode = false,
         merknader = null,
         utenlandskSykmelding = null,
+        signaturDato = getNowTickMillisOffsetDateTime(),
     )

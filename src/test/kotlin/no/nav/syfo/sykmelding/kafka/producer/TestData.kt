@@ -28,6 +28,7 @@ fun getArbeidsgiverSykmelding(id: String): ArbeidsgiverSykmelding {
         papirsykmelding = false,
         merknader = null,
         utenlandskSykmelding = null,
+        signaturDato = getNowTickMillisOffsetDateTime(),
     )
 }
 
