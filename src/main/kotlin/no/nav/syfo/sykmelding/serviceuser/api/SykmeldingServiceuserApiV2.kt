@@ -10,11 +10,11 @@ import io.ktor.server.routing.accept
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import java.time.LocalDate
 import no.nav.syfo.log
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.model.StatusRequest
 import no.nav.syfo.util.getFnrFromHeader
-import java.time.LocalDate
 
 fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerService) {
     route("/sykmelding") {
@@ -39,12 +39,21 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                     call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
                 } else {
                     log.info("Sending back HttpStatusCode.OK")
-                    call.respond(HttpStatusCode.OK, sykmeldingerService.getInternalSykmeldinger(fnr, fom, tom))
+                    call.respond(
+                        HttpStatusCode.OK,
+                        sykmeldingerService.getInternalSykmeldinger(fnr, fom, tom)
+                    )
                 }
             }
             post("/sykmeldtStatus") {
                 val statusRequest = call.receive<StatusRequest>()
-                call.respond(HttpStatusCode.OK, sykmeldingerService.getSykmeldtStatusForDato(statusRequest.fnr, statusRequest.dato))
+                call.respond(
+                    HttpStatusCode.OK,
+                    sykmeldingerService.getSykmeldtStatusForDato(
+                        statusRequest.fnr,
+                        statusRequest.dato
+                    )
+                )
             }
         }
     }

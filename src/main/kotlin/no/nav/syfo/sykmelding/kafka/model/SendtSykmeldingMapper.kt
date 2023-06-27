@@ -35,20 +35,25 @@ fun SykmeldingDbModelUtenBehandlingsutfall.toArbeidsgiverSykmelding(): Arbeidsgi
         meldingTilArbeidsgiver = sykmeldingsDokument.meldingTilArbeidsgiver,
         tiltakArbeidsplassen = sykmeldingsDokument.tiltakArbeidsplassen,
         syketilfelleStartDato = sykmeldingsDokument.syketilfelleStartDato,
-        behandler = if (utenlandskSykmelding != null) {
-            null
-        } else {
-            sykmeldingsDokument.behandler.toBehandlerAGDTO()
-        },
+        behandler =
+            if (utenlandskSykmelding != null) {
+                null
+            } else {
+                sykmeldingsDokument.behandler.toBehandlerAGDTO()
+            },
         sykmeldingsperioder = sykmeldingsDokument.perioder.map { it.toSykmeldingsperiodeAGDTO(id) },
         arbeidsgiver = sykmeldingsDokument.arbeidsgiver.toArbeidsgiverAGDTO(),
         kontaktMedPasient = sykmeldingsDokument.kontaktMedPasient.toKontaktMedPasientAGDTO(),
         prognose = sykmeldingsDokument.prognose?.toPrognoseAGDTO(),
         egenmeldt = sykmeldingsDokument.avsenderSystem.navn == "Egenmeldt",
         papirsykmelding = sykmeldingsDokument.avsenderSystem.navn == "Papirsykmelding",
-        harRedusertArbeidsgiverperiode = sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmeldingsDokument.perioder),
+        harRedusertArbeidsgiverperiode =
+            sykmeldingsDokument.medisinskVurdering.getHarRedusertArbeidsgiverperiode(
+                sykmeldingsDokument.perioder
+            ),
         merknader = merknader?.map { Merknad(type = it.type, beskrivelse = it.beskrivelse) },
-        utenlandskSykmelding = utenlandskSykmelding?.let { UtenlandskSykmeldingAGDTO(land = it.land) },
+        utenlandskSykmelding =
+            utenlandskSykmelding?.let { UtenlandskSykmeldingAGDTO(land = it.land) },
         signaturDato = getUtcTime(sykmeldingsDokument.signaturDato),
     )
 }
@@ -58,7 +63,10 @@ fun Behandler.toBehandlerAGDTO(fullBehandler: Boolean = true): BehandlerAGDTO {
         fornavn = fornavn,
         mellomnavn = mellomnavn,
         etternavn = etternavn,
-        hpr = if (fullBehandler) { hpr } else null,
+        hpr =
+            if (fullBehandler) {
+                hpr
+            } else null,
         tlf = tlf,
         adresse = adresse.toAdresseDTO(),
     )
@@ -90,10 +98,11 @@ fun Periode.toSykmeldingsperiodeAGDTO(sykmeldingId: String): SykmeldingsperiodeA
 private fun Gradert?.toGradertDTO(): GradertDTO? {
     return when (this) {
         null -> null
-        else -> GradertDTO(
-            grad = grad,
-            reisetilskudd = reisetilskudd,
-        )
+        else ->
+            GradertDTO(
+                grad = grad,
+                reisetilskudd = reisetilskudd,
+            )
     }
 }
 
@@ -104,31 +113,39 @@ private fun finnPeriodetype(periode: Periode, sykmeldingId: String): Periodetype
         periode.behandlingsdager != null -> PeriodetypeDTO.BEHANDLINGSDAGER
         periode.gradert != null -> PeriodetypeDTO.GRADERT
         periode.reisetilskudd -> PeriodetypeDTO.REISETILSKUDD
-        else -> throw RuntimeException("Kunne ikke bestemme typen til periode: $periode for sykmeldingId $sykmeldingId")
+        else ->
+            throw RuntimeException(
+                "Kunne ikke bestemme typen til periode: $periode for sykmeldingId $sykmeldingId"
+            )
     }
 
 private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligAGDTO(): AktivitetIkkeMuligAGDTO? {
     return when (this) {
         null -> null
-        else -> AktivitetIkkeMuligAGDTO(
-            arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDTO(),
-        )
+        else ->
+            AktivitetIkkeMuligAGDTO(
+                arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDTO(),
+            )
     }
 }
 
 private fun ArbeidsrelatertArsak?.toArbeidsRelatertArsakDTO(): ArbeidsrelatertArsakDTO? {
     return when (this) {
         null -> null
-        else -> ArbeidsrelatertArsakDTO(
-            beskrivelse = beskrivelse,
-            arsak = arsak.map { toArbeidsrelatertArsakTypeDTO(it) },
-        )
+        else ->
+            ArbeidsrelatertArsakDTO(
+                beskrivelse = beskrivelse,
+                arsak = arsak.map { toArbeidsrelatertArsakTypeDTO(it) },
+            )
     }
 }
 
-private fun toArbeidsrelatertArsakTypeDTO(arbeidsrelatertArsakType: ArbeidsrelatertArsakType): ArbeidsrelatertArsakTypeDTO {
+private fun toArbeidsrelatertArsakTypeDTO(
+    arbeidsrelatertArsakType: ArbeidsrelatertArsakType
+): ArbeidsrelatertArsakTypeDTO {
     return when (arbeidsrelatertArsakType) {
-        ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakTypeDTO.MANGLENDE_TILRETTELEGGING
+        ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING ->
+            ArbeidsrelatertArsakTypeDTO.MANGLENDE_TILRETTELEGGING
         ArbeidsrelatertArsakType.ANNET -> ArbeidsrelatertArsakTypeDTO.ANNET
     }
 }

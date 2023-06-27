@@ -6,5 +6,4 @@ import io.ktor.util.pipeline.PipelineContext
 
 const val NAV_PERSONIDENT_HEADER = "nav-personident"
 
-fun PipelineContext<Unit, ApplicationCall>.getFnrFromHeader() =
-    call.request.headers["fnr"]
+fun PipelineContext<Unit, ApplicationCall>.getFnrFromHeader() = call.request.headers["fnr"]

@@ -1,11 +1,11 @@
 package no.nav.syfo.persistering
 
+import java.time.LocalDateTime
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.objectMapper
 import org.postgresql.util.PGobject
-import java.time.LocalDateTime
 
 data class Sykmeldingsopplysninger(
     val id: String,
@@ -33,17 +33,20 @@ data class Sykmeldingsdokument(
     val sykmelding: Sykmelding,
 )
 
-fun Sykmelding.toPGObject() = PGobject().also {
-    it.type = "json"
-    it.value = objectMapper.writeValueAsString(this)
-}
+fun Sykmelding.toPGObject() =
+    PGobject().also {
+        it.type = "json"
+        it.value = objectMapper.writeValueAsString(this)
+    }
 
-fun List<Merknad>.toPGObject() = PGobject().also {
-    it.type = "json"
-    it.value = objectMapper.writeValueAsString(this)
-}
+fun List<Merknad>.toPGObject() =
+    PGobject().also {
+        it.type = "json"
+        it.value = objectMapper.writeValueAsString(this)
+    }
 
-fun UtenlandskSykmelding.toPGObject() = PGobject().also {
-    it.type = "json"
-    it.value = objectMapper.writeValueAsString(this)
-}
+fun UtenlandskSykmelding.toPGObject() =
+    PGobject().also {
+        it.type = "json"
+        it.value = objectMapper.writeValueAsString(this)
+    }

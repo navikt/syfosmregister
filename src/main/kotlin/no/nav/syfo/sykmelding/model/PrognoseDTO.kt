@@ -5,5 +5,4 @@ data class PrognoseDTO(
     val hensynArbeidsplassen: String?,
     val erIArbeid: ErIArbeidDTO?,
     val erIkkeIArbeid: ErIkkeIArbeidDTO?,
-
 )

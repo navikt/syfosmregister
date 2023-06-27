@@ -35,19 +35,22 @@ fun ReceivedSykmelding.toArbeidsgiverSykmelding(): ArbeidsgiverSykmelding {
         meldingTilArbeidsgiver = sykmelding.meldingTilArbeidsgiver,
         kontaktMedPasient = sykmelding.kontaktMedPasient.toKontaktMedPasientAGDTO(),
         arbeidsgiver = sykmelding.arbeidsgiver.toArbeidsgiverAGDTO(),
-        behandler = if (utenlandskSykmelding != null) {
-            null
-        } else {
-            sykmelding.behandler.toBehandlerAGDTO()
-        },
+        behandler =
+            if (utenlandskSykmelding != null) {
+                null
+            } else {
+                sykmelding.behandler.toBehandlerAGDTO()
+            },
         behandletTidspunkt = getUtcTime(sykmelding.behandletTidspunkt),
         egenmeldt = sykmelding.avsenderSystem.navn == "Egenmeldt",
         papirsykmelding = sykmelding.avsenderSystem.navn == "Papirsykmelding",
         mottattTidspunkt = getUtcTime(mottattDato),
         sykmeldingsperioder = sykmelding.perioder.map { it.toPeriodeAGDTO() },
-        harRedusertArbeidsgiverperiode = sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder),
+        harRedusertArbeidsgiverperiode =
+            sykmelding.medisinskVurdering.getHarRedusertArbeidsgiverperiode(sykmelding.perioder),
         merknader = merknader?.map { Merknad(type = it.type, beskrivelse = it.beskrivelse) },
-        utenlandskSykmelding = utenlandskSykmelding?.let { UtenlandskSykmeldingAGDTO(land = it.land) },
+        utenlandskSykmelding =
+            utenlandskSykmelding?.let { UtenlandskSykmeldingAGDTO(land = it.land) },
         signaturDato = getUtcTime(sykmelding.signaturDato),
     )
 }
@@ -78,25 +81,30 @@ private fun finnPeriodetype(periode: Periode): PeriodetypeDTO =
 private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligAGDTO(): AktivitetIkkeMuligAGDTO? {
     return when (this) {
         null -> null
-        else -> AktivitetIkkeMuligAGDTO(
-            arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDTO(),
-        )
+        else ->
+            AktivitetIkkeMuligAGDTO(
+                arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDTO(),
+            )
     }
 }
 
 private fun ArbeidsrelatertArsak?.toArbeidsRelatertArsakDTO(): ArbeidsrelatertArsakDTO? {
     return when (this) {
         null -> null
-        else -> ArbeidsrelatertArsakDTO(
-            beskrivelse = beskrivelse,
-            arsak = arsak.map { toArbeidsrelatertArsakTypeDTO(it) },
-        )
+        else ->
+            ArbeidsrelatertArsakDTO(
+                beskrivelse = beskrivelse,
+                arsak = arsak.map { toArbeidsrelatertArsakTypeDTO(it) },
+            )
     }
 }
 
-private fun toArbeidsrelatertArsakTypeDTO(arbeidsrelatertArsakType: ArbeidsrelatertArsakType): ArbeidsrelatertArsakTypeDTO {
+private fun toArbeidsrelatertArsakTypeDTO(
+    arbeidsrelatertArsakType: ArbeidsrelatertArsakType
+): ArbeidsrelatertArsakTypeDTO {
     return when (arbeidsrelatertArsakType) {
-        ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING -> ArbeidsrelatertArsakTypeDTO.MANGLENDE_TILRETTELEGGING
+        ArbeidsrelatertArsakType.MANGLENDE_TILRETTELEGGING ->
+            ArbeidsrelatertArsakTypeDTO.MANGLENDE_TILRETTELEGGING
         ArbeidsrelatertArsakType.ANNET -> ArbeidsrelatertArsakTypeDTO.ANNET
     }
 }
@@ -104,10 +112,11 @@ private fun toArbeidsrelatertArsakTypeDTO(arbeidsrelatertArsakType: Arbeidsrelat
 private fun Gradert?.toGradertDTO(): GradertDTO? {
     return when (this) {
         null -> null
-        else -> GradertDTO(
-            grad = grad,
-            reisetilskudd = reisetilskudd,
-        )
+        else ->
+            GradertDTO(
+                grad = grad,
+                reisetilskudd = reisetilskudd,
+            )
     }
 }
 
@@ -118,7 +127,14 @@ private fun Behandler.toBehandlerAGDTO(): BehandlerAGDTO {
         hpr = hpr,
         tlf = tlf,
         etternavn = etternavn,
-        adresse = AdresseDTO(adresse.gate, adresse.postnummer, adresse.kommune, adresse.postboks, adresse.land),
+        adresse =
+            AdresseDTO(
+                adresse.gate,
+                adresse.postnummer,
+                adresse.kommune,
+                adresse.postboks,
+                adresse.land
+            ),
     )
 }
 

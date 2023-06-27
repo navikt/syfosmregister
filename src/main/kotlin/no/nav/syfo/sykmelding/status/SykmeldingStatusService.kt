@@ -14,14 +14,24 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
 
     suspend fun registrerSendt(
         sykmeldingSendEvent: SykmeldingSendEvent,
-        sykmeldingStatusEvent: SykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingSendEvent.sykmeldingId, sykmeldingSendEvent.timestamp, StatusEvent.SENDT),
+        sykmeldingStatusEvent: SykmeldingStatusEvent =
+            SykmeldingStatusEvent(
+                sykmeldingSendEvent.sykmeldingId,
+                sykmeldingSendEvent.timestamp,
+                StatusEvent.SENDT
+            ),
     ) {
         database.registrerSendt(sykmeldingSendEvent, sykmeldingStatusEvent)
     }
 
     suspend fun registrerBekreftet(
         sykmeldingBekreftEvent: SykmeldingBekreftEvent,
-        sykmeldingStatusEvent: SykmeldingStatusEvent = SykmeldingStatusEvent(sykmeldingBekreftEvent.sykmeldingId, sykmeldingBekreftEvent.timestamp, StatusEvent.BEKREFTET),
+        sykmeldingStatusEvent: SykmeldingStatusEvent =
+            SykmeldingStatusEvent(
+                sykmeldingBekreftEvent.sykmeldingId,
+                sykmeldingBekreftEvent.timestamp,
+                StatusEvent.BEKREFTET
+            ),
     ) {
         database.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
     }

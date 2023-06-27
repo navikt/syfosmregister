@@ -7,13 +7,27 @@ import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
-class SendtSykmeldingKafkaProducer(private val kafkaProducer: KafkaProducer<String, SykmeldingKafkaMessage>, private val topic: String) {
+class SendtSykmeldingKafkaProducer(
+    private val kafkaProducer: KafkaProducer<String, SykmeldingKafkaMessage>,
+    private val topic: String
+) {
     suspend fun sendSykmelding(sykmeldingKafkaMessage: SykmeldingKafkaMessage) {
         withContext(Dispatchers.IO) {
             try {
-                kafkaProducer.send(ProducerRecord(topic, sykmeldingKafkaMessage.sykmelding.id, sykmeldingKafkaMessage)).get()
+                kafkaProducer
+                    .send(
+                        ProducerRecord(
+                            topic,
+                            sykmeldingKafkaMessage.sykmelding.id,
+                            sykmeldingKafkaMessage
+                        )
+                    )
+                    .get()
             } catch (e: Exception) {
-                log.error("Kunne ikke skrive til sendt-topic for sykmeldingid ${sykmeldingKafkaMessage.sykmelding.id}: {}", e.message)
+                log.error(
+                    "Kunne ikke skrive til sendt-topic for sykmeldingid ${sykmeldingKafkaMessage.sykmelding.id}: {}",
+                    e.message
+                )
                 throw e
             }
         }
@@ -25,7 +39,10 @@ class SendtSykmeldingKafkaProducer(private val kafkaProducer: KafkaProducer<Stri
             try {
                 kafkaProducer.send(ProducerRecord(topic, sykmeldingId, null)).get()
             } catch (e: Exception) {
-                log.error("Kunne ikke skrive tombstone til bekreft-topic for sykmeldingid $sykmeldingId: {}", e.message)
+                log.error(
+                    "Kunne ikke skrive tombstone til bekreft-topic for sykmeldingid $sykmeldingId: {}",
+                    e.message
+                )
                 throw e
             }
         }

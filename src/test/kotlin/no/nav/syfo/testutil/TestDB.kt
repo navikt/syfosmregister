@@ -3,6 +3,10 @@ package no.nav.syfo.testutil
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
+import java.net.ServerSocket
+import java.sql.Connection
+import java.sql.ResultSet
+import java.time.LocalDate
 import no.nav.syfo.Environment
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.DatabaseInterface
@@ -37,10 +41,6 @@ import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.sykmelding.db.Merknad
 import org.testcontainers.containers.PostgreSQLContainer
-import java.net.ServerSocket
-import java.sql.Connection
-import java.sql.ResultSet
-import java.time.LocalDate
 
 class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:14")
 
@@ -48,13 +48,14 @@ class TestDB private constructor() {
 
     companion object {
         var database: DatabaseInterface
-        private val psqlContainer: PsqlContainer = PsqlContainer()
-            .withCommand("postgres", "-c", "wal_level=logical")
-            .withExposedPorts(5432)
-            .withUsername("username")
-            .withPassword("password")
-            .withDatabaseName("database")
-            .withInitScript("db/testdb-init.sql")
+        private val psqlContainer: PsqlContainer =
+            PsqlContainer()
+                .withCommand("postgres", "-c", "wal_level=logical")
+                .withExposedPorts(5432)
+                .withUsername("username")
+                .withPassword("password")
+                .withDatabaseName("database")
+                .withInitScript("db/testdb-init.sql")
 
         init {
             psqlContainer.start()
@@ -89,19 +90,20 @@ fun Connection.dropData() {
 
 fun Connection.getMerknaderForId(id: String): List<Merknad>? =
     this.prepareStatement(
-        """
+            """
                     SELECT merknader 
                     FROM sykmeldingsopplysninger
                     where id = ?
             """,
-    ).use {
-        it.setString(1, id)
-        it.executeQuery().toList { tilMerknadliste() }.firstOrNull()
-    }
+        )
+        .use {
+            it.setString(1, id)
+            it.executeQuery().toList { tilMerknadliste() }.firstOrNull()
+        }
 
 fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? {
     this.prepareStatement(
-        """
+            """
             SELECT id,
                 pasient_fnr,
                 pasient_aktoer_id,
@@ -123,10 +125,11 @@ fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? 
             FROM SYKMELDINGSOPPLYSNINGER 
             WHERE id = ?;
         """,
-    ).use {
-        it.setString(1, id)
-        return it.executeQuery().toList { toSykmeldingsopplysninger() }.firstOrNull()
-    }
+        )
+        .use {
+            it.setString(1, id)
+            return it.executeQuery().toList { toSykmeldingsopplysninger() }.firstOrNull()
+        }
 }
 
 private fun ResultSet.toSykmeldingsopplysninger(): Sykmeldingsopplysninger {
@@ -146,9 +149,15 @@ private fun ResultSet.toSykmeldingsopplysninger(): Sykmeldingsopplysninger {
         epjSystemVersjon = getString("epj_system_versjon"),
         mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toLocalDateTime(),
         tssid = getString("tss_id"),
-        merknader = getString("merknader")?.let { objectMapper.readValue<List<no.nav.syfo.model.Merknad>>(it) },
+        merknader =
+            getString("merknader")?.let {
+                objectMapper.readValue<List<no.nav.syfo.model.Merknad>>(it)
+            },
         partnerreferanse = getString("partnerreferanse"),
-        utenlandskSykmelding = getString("utenlandsk_sykmelding")?.let { objectMapper.readValue<UtenlandskSykmelding>(it) },
+        utenlandskSykmelding =
+            getString("utenlandsk_sykmelding")?.let {
+                objectMapper.readValue<UtenlandskSykmelding>(it)
+            },
     )
 }
 
@@ -156,126 +165,168 @@ private fun ResultSet.tilMerknadliste(): List<Merknad>? {
     return getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
 }
 
-fun getSykmeldingOpplysninger(fnr: String = "pasientFnr", id: String = "123"): Sykmeldingsopplysninger {
+fun getSykmeldingOpplysninger(
+    fnr: String = "pasientFnr",
+    id: String = "123"
+): Sykmeldingsopplysninger {
     return testSykmeldingsopplysninger.copy(pasientFnr = fnr, id = id)
 }
 
-val testSykmeldingsopplysninger = Sykmeldingsopplysninger(
-    id = "uuid",
-    pasientFnr = "pasientFnr",
-    pasientAktoerId = "pasientAktorId",
-    legeFnr = "legeFnr",
-    legeHpr = "123774",
-    legeHelsepersonellkategori = "LE",
-    legeAktoerId = "legeAktorId",
-    mottakId = "eid-1",
-    legekontorOrgNr = "lege-orgnummer",
-    legekontorHerId = "legekontorHerId",
-    legekontorReshId = "legekontorReshId",
-    epjSystemNavn = "epjSystemNavn",
-    epjSystemVersjon = "epjSystemVersjon",
-    mottattTidspunkt = getNowTickMillisLocalDateTime().plusMonths(1),
-    tssid = "13455",
-    merknader = emptyList(),
-    partnerreferanse = null,
-    utenlandskSykmelding = null,
-)
-
-val testSykmeldingsdokument = Sykmeldingsdokument(
-    id = "uuid",
-    sykmelding = Sykmelding(
-        andreTiltak = "andreTiltak",
-        arbeidsgiver = Arbeidsgiver(
-            harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
-            navn = "Arbeidsgiver AS",
-            yrkesbetegnelse = "aktiv",
-            stillingsprosent = 100,
-        ),
-        avsenderSystem = AvsenderSystem(
-            navn = "avsenderSystem",
-            versjon = "versjon-1.0",
-        ),
-        behandler = Behandler(
-            fornavn = "Fornavn",
-            mellomnavn = "Mellomnavn",
-            aktoerId = "legeAktorId",
-            etternavn = "Etternavn",
-            adresse = Adresse(
-                gate = null,
-                postboks = null,
-                postnummer = null,
-                kommune = null,
-                land = null,
-            ),
-            fnr = "legeFnr",
-            hpr = "hpr",
-            her = "her",
-            tlf = "tlf",
-        ),
-        behandletTidspunkt = getNowTickMillisLocalDateTime(),
+val testSykmeldingsopplysninger =
+    Sykmeldingsopplysninger(
         id = "uuid",
-        kontaktMedPasient = KontaktMedPasient(
-            kontaktDato = null,
-            begrunnelseIkkeKontakt = null,
-        ),
-        medisinskVurdering = MedisinskVurdering(
-            hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01", "Brukket fot"),
-            biDiagnoser = emptyList(),
-            svangerskap = false,
-            yrkesskade = false,
-            yrkesskadeDato = null,
-            annenFraversArsak = AnnenFraversArsak(null, emptyList()),
-        ),
-        meldingTilArbeidsgiver = "",
-        meldingTilNAV = MeldingTilNAV(false, null),
-        msgId = "msgId",
-        pasientAktoerId = "pasientAktoerId",
-        perioder = listOf(
-            Periode(
-                fom = LocalDate.now(),
-                tom = LocalDate.now(),
-                aktivitetIkkeMulig = AktivitetIkkeMulig(
-                    medisinskArsak = MedisinskArsak(null, emptyList()),
-                    arbeidsrelatertArsak = ArbeidsrelatertArsak(null, emptyList()),
-                ),
-                avventendeInnspillTilArbeidsgiver = null,
-                behandlingsdager = null,
-                gradert = Gradert(false, 0),
-                reisetilskudd = false,
+        pasientFnr = "pasientFnr",
+        pasientAktoerId = "pasientAktorId",
+        legeFnr = "legeFnr",
+        legeHpr = "123774",
+        legeHelsepersonellkategori = "LE",
+        legeAktoerId = "legeAktorId",
+        mottakId = "eid-1",
+        legekontorOrgNr = "lege-orgnummer",
+        legekontorHerId = "legekontorHerId",
+        legekontorReshId = "legekontorReshId",
+        epjSystemNavn = "epjSystemNavn",
+        epjSystemVersjon = "epjSystemVersjon",
+        mottattTidspunkt = getNowTickMillisLocalDateTime().plusMonths(1),
+        tssid = "13455",
+        merknader = emptyList(),
+        partnerreferanse = null,
+        utenlandskSykmelding = null,
+    )
+
+val testSykmeldingsdokument =
+    Sykmeldingsdokument(
+        id = "uuid",
+        sykmelding =
+            Sykmelding(
+                andreTiltak = "andreTiltak",
+                arbeidsgiver =
+                    Arbeidsgiver(
+                        harArbeidsgiver = HarArbeidsgiver.EN_ARBEIDSGIVER,
+                        navn = "Arbeidsgiver AS",
+                        yrkesbetegnelse = "aktiv",
+                        stillingsprosent = 100,
+                    ),
+                avsenderSystem =
+                    AvsenderSystem(
+                        navn = "avsenderSystem",
+                        versjon = "versjon-1.0",
+                    ),
+                behandler =
+                    Behandler(
+                        fornavn = "Fornavn",
+                        mellomnavn = "Mellomnavn",
+                        aktoerId = "legeAktorId",
+                        etternavn = "Etternavn",
+                        adresse =
+                            Adresse(
+                                gate = null,
+                                postboks = null,
+                                postnummer = null,
+                                kommune = null,
+                                land = null,
+                            ),
+                        fnr = "legeFnr",
+                        hpr = "hpr",
+                        her = "her",
+                        tlf = "tlf",
+                    ),
+                behandletTidspunkt = getNowTickMillisLocalDateTime(),
+                id = "uuid",
+                kontaktMedPasient =
+                    KontaktMedPasient(
+                        kontaktDato = null,
+                        begrunnelseIkkeKontakt = null,
+                    ),
+                medisinskVurdering =
+                    MedisinskVurdering(
+                        hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01", "Brukket fot"),
+                        biDiagnoser = emptyList(),
+                        svangerskap = false,
+                        yrkesskade = false,
+                        yrkesskadeDato = null,
+                        annenFraversArsak = AnnenFraversArsak(null, emptyList()),
+                    ),
+                meldingTilArbeidsgiver = "",
+                meldingTilNAV = MeldingTilNAV(false, null),
+                msgId = "msgId",
+                pasientAktoerId = "pasientAktoerId",
+                perioder =
+                    listOf(
+                        Periode(
+                            fom = LocalDate.now(),
+                            tom = LocalDate.now(),
+                            aktivitetIkkeMulig =
+                                AktivitetIkkeMulig(
+                                    medisinskArsak = MedisinskArsak(null, emptyList()),
+                                    arbeidsrelatertArsak = ArbeidsrelatertArsak(null, emptyList()),
+                                ),
+                            avventendeInnspillTilArbeidsgiver = null,
+                            behandlingsdager = null,
+                            gradert = Gradert(false, 0),
+                            reisetilskudd = false,
+                        ),
+                    ),
+                prognose =
+                    Prognose(
+                        true,
+                        null,
+                        ErIArbeid(false, false, null, null),
+                        ErIkkeIArbeid(false, null, null),
+                    ),
+                signaturDato = getNowTickMillisLocalDateTime(),
+                skjermesForPasient = false,
+                syketilfelleStartDato = LocalDate.now(),
+                tiltakArbeidsplassen = "tiltakArbeidsplassen",
+                tiltakNAV = "tiltakNAV",
+                utdypendeOpplysninger = getUtdypendeOpplysninger(),
+                navnFastlege = "Per Hansen",
             ),
-        ),
-        prognose = Prognose(
-            true,
-            null,
-            ErIArbeid(false, false, null, null),
-            ErIkkeIArbeid(false, null, null),
-        ),
-        signaturDato = getNowTickMillisLocalDateTime(),
-        skjermesForPasient = false,
-        syketilfelleStartDato = LocalDate.now(),
-        tiltakArbeidsplassen = "tiltakArbeidsplassen",
-        tiltakNAV = "tiltakNAV",
-        utdypendeOpplysninger = getUtdypendeOpplysninger(),
-        navnFastlege = "Per Hansen",
-    ),
-)
+    )
 
 fun getUtdypendeOpplysninger(): Map<String, Map<String, SporsmalSvar>> {
     val map = HashMap<String, HashMap<String, SporsmalSvar>>()
     val map62 = HashMap<String, SporsmalSvar>()
-    map62.put("6.2.1", SporsmalSvar(sporsmal = "Beskriv kort sykehistorie, symptomer og funn i dagens situasjon.", svar = "Veldig syk med masse feber.", restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)))
-    map62.put("6.2.2", SporsmalSvar(sporsmal = "sporsaml", svar = "svar", restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)))
-    map62.put("6.2.3", SporsmalSvar(sporsmal = "sporsmal", svar = "svar", restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)))
-    map62.put("6.2.4", SporsmalSvar(sporsmal = "sporsmal", svar = "svar", restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)))
+    map62.put(
+        "6.2.1",
+        SporsmalSvar(
+            sporsmal = "Beskriv kort sykehistorie, symptomer og funn i dagens situasjon.",
+            svar = "Veldig syk med masse feber.",
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+        )
+    )
+    map62.put(
+        "6.2.2",
+        SporsmalSvar(
+            sporsmal = "sporsaml",
+            svar = "svar",
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+        )
+    )
+    map62.put(
+        "6.2.3",
+        SporsmalSvar(
+            sporsmal = "sporsmal",
+            svar = "svar",
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+        )
+    )
+    map62.put(
+        "6.2.4",
+        SporsmalSvar(
+            sporsmal = "sporsmal",
+            svar = "svar",
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+        )
+    )
     map.put("6.2", map62)
     return map
 }
 
-val testBehandlingsutfall = Behandlingsutfall(
-    id = "uuid",
-    behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-)
+val testBehandlingsutfall =
+    Behandlingsutfall(
+        id = "uuid",
+        behandlingsutfall = ValidationResult(Status.OK, emptyList()),
+    )
 
-fun getRandomPort() = ServerSocket(0).use {
-    it.localPort
-}
+fun getRandomPort() = ServerSocket(0).use { it.localPort }

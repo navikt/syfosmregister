@@ -31,9 +31,15 @@ fun Application.setupAuth(
                 when {
                     harTilgang(credentials, environment.clientIdV2) -> {
                         val appid: String = credentials.payload.getClaim("azp").asString()
-                        val app = environment.preAuthorizedApp.firstOrNull() { it.clientId == appid }
+                        val app =
+                            environment.preAuthorizedApp.firstOrNull() { it.clientId == appid }
                         if (app != null) {
-                            APP_ID_PATH_COUNTER.labels(app.team, app.appName, getLabel(this.request.path())).inc()
+                            APP_ID_PATH_COUNTER.labels(
+                                    app.team,
+                                    app.appName,
+                                    getLabel(this.request.path())
+                                )
+                                .inc()
                         } else {
                             log.warn("App not in pre authorized list: $appid")
                         }
@@ -53,14 +59,14 @@ fun Application.setupAuth(
             verifier(jwkProviderTokenX, tokenXIssuer)
             validate { credentials ->
                 when {
-                    hasClientIdAudience(credentials, environment.clientIdTokenX) && erNiva4(credentials) ->
-                        {
-                            val principal = JWTPrincipal(credentials.payload)
-                            BrukerPrincipal(
-                                fnr = finnFnrFraToken(principal),
-                                principal = principal,
-                            )
-                        }
+                    hasClientIdAudience(credentials, environment.clientIdTokenX) &&
+                        erNiva4(credentials) -> {
+                        val principal = JWTPrincipal(credentials.payload)
+                        BrukerPrincipal(
+                            fnr = finnFnrFraToken(principal),
+                            principal = principal,
+                        )
+                    }
                     else -> unauthorized(credentials)
                 }
             }
@@ -99,7 +105,10 @@ fun erNiva4(credentials: JWTCredential): Boolean {
 }
 
 fun finnFnrFraToken(principal: JWTPrincipal): String {
-    return if (principal.payload.getClaim("pid") != null && !principal.payload.getClaim("pid").asString().isNullOrEmpty()) {
+    return if (
+        principal.payload.getClaim("pid") != null &&
+            !principal.payload.getClaim("pid").asString().isNullOrEmpty()
+    ) {
         log.debug("Bruker fnr fra pid-claim")
         principal.payload.getClaim("pid").asString()
     } else {

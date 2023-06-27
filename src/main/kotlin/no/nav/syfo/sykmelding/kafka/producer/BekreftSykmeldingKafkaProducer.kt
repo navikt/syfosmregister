@@ -14,7 +14,14 @@ class BekreftSykmeldingKafkaProducer(
     suspend fun sendSykmelding(sykmeldingKafkaMessage: SykmeldingKafkaMessage) {
         withContext(Dispatchers.IO) {
             try {
-                kafkaProducer.send(ProducerRecord(topic, sykmeldingKafkaMessage.sykmelding.id, sykmeldingKafkaMessage))
+                kafkaProducer
+                    .send(
+                        ProducerRecord(
+                            topic,
+                            sykmeldingKafkaMessage.sykmelding.id,
+                            sykmeldingKafkaMessage
+                        )
+                    )
                     .get()
             } catch (e: Exception) {
                 log.error(
@@ -32,7 +39,10 @@ class BekreftSykmeldingKafkaProducer(
             try {
                 kafkaProducer.send(ProducerRecord(topic, sykmeldingId, null)).get()
             } catch (e: Exception) {
-                log.error("Kunne ikke skrive tombstone til bekreft-topic for sykmeldingid $sykmeldingId: {}", e.message)
+                log.error(
+                    "Kunne ikke skrive tombstone til bekreft-topic for sykmeldingid $sykmeldingId: {}",
+                    e.message
+                )
                 throw e
             }
         }

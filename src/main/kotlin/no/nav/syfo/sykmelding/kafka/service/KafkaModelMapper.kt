@@ -31,11 +31,19 @@ class KafkaModelMapper private constructor() {
             )
 
         fun toSporsmal(sporsmal: SporsmalOgSvarDTO, sykmeldingId: String): Sporsmal {
-            return Sporsmal(sporsmal.tekst, toShortName(sporsmal.shortName), toSvar(sporsmal, sykmeldingId))
+            return Sporsmal(
+                sporsmal.tekst,
+                toShortName(sporsmal.shortName),
+                toSvar(sporsmal, sykmeldingId)
+            )
         }
 
         fun toSykmeldingStatusEvent(event: SykmeldingStatusKafkaEventDTO): SykmeldingStatusEvent {
-            return SykmeldingStatusEvent(event.sykmeldingId, event.timestamp, toStatusEvent(event.statusEvent))
+            return SykmeldingStatusEvent(
+                event.sykmeldingId,
+                event.timestamp,
+                toStatusEvent(event.statusEvent)
+            )
         }
 
         private fun toSvar(arbeidsgiverSporsmal: SporsmalOgSvarDTO, sykmeldingId: String): Svar {
@@ -51,13 +59,14 @@ class KafkaModelMapper private constructor() {
             status: SykmeldingStatusEvent,
             arbeidsgiverStatus: ArbeidsgiverDbModel?,
             sporsmal: List<Sporsmal>,
-        ) = SykmeldingStatusKafkaEventDTO(
-            sykmeldingId = status.sykmeldingId,
-            timestamp = status.timestamp,
-            statusEvent = status.event.name,
-            arbeidsgiver = toArbeidsgiverStatusDto(arbeidsgiverStatus),
-            sporsmals = sporsmal.map { toSporsmalOgSvar(it) },
-        )
+        ) =
+            SykmeldingStatusKafkaEventDTO(
+                sykmeldingId = status.sykmeldingId,
+                timestamp = status.timestamp,
+                statusEvent = status.event.name,
+                arbeidsgiver = toArbeidsgiverStatusDto(arbeidsgiverStatus),
+                sporsmals = sporsmal.map { toSporsmalOgSvar(it) },
+            )
 
         private fun toSvartype(svartype: SvartypeDTO): Svartype {
             return when (svartype) {

@@ -9,7 +9,8 @@ data class Behandlingsutfall(
     val behandlingsutfall: ValidationResult,
 )
 
-fun ValidationResult.toPGObject() = PGobject().also {
-    it.type = "json"
-    it.value = objectMapper.writeValueAsString(this)
-}
+fun ValidationResult.toPGObject() =
+    PGobject().also {
+        it.type = "json"
+        it.value = objectMapper.writeValueAsString(this)
+    }

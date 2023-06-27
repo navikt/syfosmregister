@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.service
 
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
@@ -13,15 +14,23 @@ import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
 import no.nav.syfo.sykmelding.model.toSykmeldingDTO
 import no.nav.syfo.sykmelding.serviceuser.api.model.SykmeldtStatus
 import no.nav.syfo.sykmelding.status.Sporsmal
-import java.time.LocalDate
 
 class SykmeldingerService(private val database: DatabaseInterface) {
-    suspend fun getInternalSykmeldinger(fnr: String, fom: LocalDate? = null, tom: LocalDate? = null): List<SykmeldingDTO> =
-        getSykmeldingerWithSporsmal(fnr)
-            .filter(filterFomDate(fom))
-            .filter(filterTomDate(tom))
+    suspend fun getInternalSykmeldinger(
+        fnr: String,
+        fom: LocalDate? = null,
+        tom: LocalDate? = null
+    ): List<SykmeldingDTO> =
+        getSykmeldingerWithSporsmal(fnr).filter(filterFomDate(fom)).filter(filterTomDate(tom))
 
-    suspend fun getUserSykmelding(fnr: String, fom: LocalDate?, tom: LocalDate?, include: List<String>? = null, exclude: List<String>? = null, fullBehandler: Boolean = true): List<SykmeldingDTO> {
+    suspend fun getUserSykmelding(
+        fnr: String,
+        fom: LocalDate?,
+        tom: LocalDate?,
+        include: List<String>? = null,
+        exclude: List<String>? = null,
+        fullBehandler: Boolean = true
+    ): List<SykmeldingDTO> {
         return getSykmeldingerWithSporsmal(fnr, true, fullBehandler)
             .filter(filterIncludeAndExclude(include, exclude))
             .filter(filterFomDate(fom))
@@ -34,7 +43,12 @@ class SykmeldingerService(private val database: DatabaseInterface) {
             SykmeldtStatus(erSykmeldt = false, gradert = null, fom = null, tom = null)
         } else {
             val sykmelding = sykmeldinger.first()
-            SykmeldtStatus(erSykmeldt = true, gradert = inneholderGradertPeriode(sykmelding.sykmeldingsperioder), fom = finnForsteFom(sykmelding.sykmeldingsperioder), tom = finnSisteTom(sykmelding.sykmeldingsperioder))
+            SykmeldtStatus(
+                erSykmeldt = true,
+                gradert = inneholderGradertPeriode(sykmelding.sykmeldingsperioder),
+                fom = finnForsteFom(sykmelding.sykmeldingsperioder),
+                tom = finnSisteTom(sykmelding.sykmeldingsperioder)
+            )
         }
     }
 
@@ -43,14 +57,19 @@ class SykmeldingerService(private val database: DatabaseInterface) {
     }
 
     fun finnForsteFom(perioder: List<SykmeldingsperiodeDTO>): LocalDate {
-        return perioder.minByOrNull { it.fom }?.fom ?: throw IllegalStateException("Skal ikke kunne ha periode uten fom")
+        return perioder.minByOrNull { it.fom }?.fom
+            ?: throw IllegalStateException("Skal ikke kunne ha periode uten fom")
     }
 
     fun finnSisteTom(perioder: List<SykmeldingsperiodeDTO>): LocalDate {
-        return perioder.maxByOrNull { it.tom }?.tom ?: throw IllegalStateException("Skal ikke kunne ha periode uten tom")
+        return perioder.maxByOrNull { it.tom }?.tom
+            ?: throw IllegalStateException("Skal ikke kunne ha periode uten tom")
     }
 
-    private fun filterIncludeAndExclude(include: List<String>?, exclude: List<String>?): (SykmeldingDTO) -> Boolean {
+    private fun filterIncludeAndExclude(
+        include: List<String>?,
+        exclude: List<String>?
+    ): (SykmeldingDTO) -> Boolean {
         return {
             if (!include.isNullOrEmpty()) {
                 include.contains(it.sykmeldingStatus.statusEvent)
@@ -65,30 +84,56 @@ class SykmeldingerService(private val database: DatabaseInterface) {
     suspend fun getSykmeldingMedId(sykmeldingId: String): SykmeldingDTO? =
         withContext(Dispatchers.IO) {
             database.getSykmeldingerMedId(sykmeldingId)?.let {
-                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = false, ikkeTilgangTilDiagnose = true)
-            }
-        }
-    suspend fun getSykmelding(sykmeldingId: String, fnr: String, fullBehandler: Boolean = false): SykmeldingDTO? =
-        withContext(Dispatchers.IO) {
-            database.getSykmelding(sykmeldingId, fnr)?.let {
-                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = true, ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient, fullBehandler = fullBehandler)
+                it.toSykmeldingDTO(
+                    sporsmal = getSporsmal(it),
+                    isPasient = false,
+                    ikkeTilgangTilDiagnose = true
+                )
             }
         }
 
-    private suspend fun getSykmeldingerWithSporsmal(fnr: String, isPasient: Boolean = false, fullBehandler: Boolean = true): List<SykmeldingDTO> {
+    suspend fun getSykmelding(
+        sykmeldingId: String,
+        fnr: String,
+        fullBehandler: Boolean = false
+    ): SykmeldingDTO? =
+        withContext(Dispatchers.IO) {
+            database.getSykmelding(sykmeldingId, fnr)?.let {
+                it.toSykmeldingDTO(
+                    sporsmal = getSporsmal(it),
+                    isPasient = true,
+                    ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient,
+                    fullBehandler = fullBehandler
+                )
+            }
+        }
+
+    private suspend fun getSykmeldingerWithSporsmal(
+        fnr: String,
+        isPasient: Boolean = false,
+        fullBehandler: Boolean = true
+    ): List<SykmeldingDTO> {
         return withContext(Dispatchers.IO) {
             database.getSykmeldinger(fnr).map {
-                it.toSykmeldingDTO(sporsmal = getSporsmal(it), isPasient = isPasient, ikkeTilgangTilDiagnose = false, fullBehandler = fullBehandler)
+                it.toSykmeldingDTO(
+                    sporsmal = getSporsmal(it),
+                    isPasient = isPasient,
+                    ikkeTilgangTilDiagnose = false,
+                    fullBehandler = fullBehandler
+                )
             }
         }
     }
 
     private suspend fun getSporsmal(sykmelding: SykmeldingDbModel): List<Sporsmal> {
         return withContext(Dispatchers.IO) {
-            val sporsmal = when {
-                sykmelding.status.statusEvent == "SENDT" || sykmelding.status.statusEvent == "BEKREFTET" -> database.hentSporsmalOgSvar(sykmelding.id)
-                else -> emptyList()
-            }
+            val sporsmal =
+                when {
+                    sykmelding.status.statusEvent == "SENDT" ||
+                        sykmelding.status.statusEvent == "BEKREFTET" ->
+                        database.hentSporsmalOgSvar(sykmelding.id)
+                    else -> emptyList()
+                }
             sporsmal
         }
     }
@@ -99,7 +144,8 @@ class SykmeldingerService(private val database: DatabaseInterface) {
                 it.sykmeldingsperioder.any { sykmeldingsperiodeDTO ->
                     tomDate >= sykmeldingsperiodeDTO.fom
                 }
-            } ?: true
+            }
+                ?: true
         }
     }
 
@@ -109,7 +155,8 @@ class SykmeldingerService(private val database: DatabaseInterface) {
                 it.sykmeldingsperioder.any { sykmeldingsperiodeDTO ->
                     fomDate <= sykmeldingsperiodeDTO.tom
                 }
-            } ?: true
+            }
+                ?: true
         }
     }
 }

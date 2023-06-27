@@ -11,11 +11,21 @@ data class SykmeldingStatusEvent(
 )
 
 enum class StatusEvent {
-    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET, SLETTET
+    APEN,
+    AVBRUTT,
+    UTGATT,
+    SENDT,
+    BEKREFTET,
+    SLETTET
 }
 
 enum class StatusEventDTO {
-    APEN, AVBRUTT, UTGATT, SENDT, BEKREFTET, SLETTET
+    APEN,
+    AVBRUTT,
+    UTGATT,
+    SENDT,
+    BEKREFTET,
+    SLETTET
 }
 
 data class SykmeldingSendEvent(
@@ -46,7 +56,12 @@ data class Svar(
 )
 
 enum class ShortName {
-    ARBEIDSSITUASJON, NY_NARMESTE_LEDER, FRAVAER, PERIODE, FORSIKRING, EGENMELDINGSDAGER
+    ARBEIDSSITUASJON,
+    NY_NARMESTE_LEDER,
+    FRAVAER,
+    PERIODE,
+    FORSIKRING,
+    EGENMELDINGSDAGER
 }
 
 enum class Svartype {

@@ -20,7 +20,8 @@ class TilgangskontrollService(
 ) {
     companion object {
         val log: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
-        const val TILGANGSKONTROLL_PERSON_PATH = "/syfo-tilgangskontroll/api/tilgang/navident/person"
+        const val TILGANGSKONTROLL_PERSON_PATH =
+            "/syfo-tilgangskontroll/api/tilgang/navident/person"
     }
 
     private val tilgangskontrollPersonUrl: String
@@ -30,8 +31,10 @@ class TilgangskontrollService(
     }
 
     suspend fun hasAccessToUserOboToken(fnr: String, accessToken: String): Boolean {
-        val oboToken = azureAdV2Client.getOnBehalfOfToken(scope = syfotilgangskontrollScope, token = accessToken)
-            ?.accessToken
+        val oboToken =
+            azureAdV2Client
+                .getOnBehalfOfToken(scope = syfotilgangskontrollScope, token = accessToken)
+                ?.accessToken
 
         return if (oboToken != null) {
             hasAccess(oboToken, tilgangskontrollPersonUrl, fnr)
@@ -43,13 +46,18 @@ class TilgangskontrollService(
 
     private suspend fun hasAccess(accessToken: String, requestUrl: String, fnr: String): Boolean {
         return try {
-            httpClient.get(requestUrl) {
-                accept(ContentType.Application.Json)
-                headers.append(HttpHeaders.Authorization, "Bearer $accessToken")
-                headers.append(NAV_PERSONIDENT_HEADER, fnr)
-            }.body<Tilgang>().harTilgang
+            httpClient
+                .get(requestUrl) {
+                    accept(ContentType.Application.Json)
+                    headers.append(HttpHeaders.Authorization, "Bearer $accessToken")
+                    headers.append(NAV_PERSONIDENT_HEADER, fnr)
+                }
+                .body<Tilgang>()
+                .harTilgang
         } catch (e: ResponseException) {
-            log.info("Ingen tilgang, syfotilgangskontroll returnerte statuskode ${e.response.status.value}")
+            log.info(
+                "Ingen tilgang, syfotilgangskontroll returnerte statuskode ${e.response.status.value}"
+            )
             false
         } catch (e: Exception) {
             log.error("Noe gikk galt ved sjekk mot syfotilgangskontroll", e)

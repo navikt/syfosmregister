@@ -6,11 +6,11 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
+import java.time.LocalDate
 import no.nav.syfo.log
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.util.getFnrFromHeader
-import java.time.LocalDate
 
 fun Route.registrerInternalSykmeldingApiV2(
     sykmeldingService: SykmeldingerService,
@@ -30,11 +30,13 @@ fun Route.registrerInternalSykmeldingApiV2(
                     val tom = call.parameters["tom"]?.let { LocalDate.parse(it) }
 
                     when {
-                        fnr.isNullOrEmpty() -> call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
-                        tilgangskontrollService.hasAccessToUserOboToken(fnr, token) -> call.respond(
-                            HttpStatusCode.OK,
-                            sykmeldingService.getInternalSykmeldinger(fnr, fom, tom),
-                        )
+                        fnr.isNullOrEmpty() ->
+                            call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
+                        tilgangskontrollService.hasAccessToUserOboToken(fnr, token) ->
+                            call.respond(
+                                HttpStatusCode.OK,
+                                sykmeldingService.getInternalSykmeldinger(fnr, fom, tom),
+                            )
                         else -> call.respond(HttpStatusCode.Forbidden, "Forbidden")
                     }
                 }

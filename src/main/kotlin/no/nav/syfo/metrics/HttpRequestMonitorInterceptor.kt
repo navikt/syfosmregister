@@ -7,7 +7,8 @@ import io.ktor.server.request.path
 import io.ktor.util.pipeline.PipelineContext
 import no.nav.syfo.log
 
-val REGEX = """[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""".toRegex()
+val REGEX =
+    """[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""".toRegex()
 
 val REGEX_MOTTAKID = """[0-9]{10}[a-z]{4}[0-9]{5}.1""".toRegex()
 
@@ -17,8 +18,12 @@ fun monitorHttpRequests(): suspend PipelineContext<Unit, ApplicationCall>.(Unit)
     return {
         val path = context.request.path()
         val label = getLabel(path)
-        if (!path.contains("is_alive") && !path.contains("is_ready") && !path.contains("prometheus")) {
-            log.info("origin ${context.request.header(Origin)}, referer ${context.request.header("Referer")}")
+        if (
+            !path.contains("is_alive") && !path.contains("is_ready") && !path.contains("prometheus")
+        ) {
+            log.info(
+                "origin ${context.request.header(Origin)}, referer ${context.request.header("Referer")}"
+            )
             ORIGIN_COUNTER.labels(context.request.header(Origin) ?: "no-origin").inc()
             REFERER_COUNTER.labels(context.request.header("Referer") ?: "no-referer").inc()
         }

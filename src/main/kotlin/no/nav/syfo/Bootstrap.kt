@@ -16,6 +16,9 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.network.sockets.SocketTimeoutException
 import io.ktor.serialization.jackson.jackson
 import io.prometheus.client.hotspot.DefaultExports
+import java.net.URL
+import java.util.concurrent.TimeUnit
+import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -56,16 +59,14 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.URL
-import java.util.concurrent.TimeUnit
-import kotlin.time.ExperimentalTime
 
-val objectMapper: ObjectMapper = ObjectMapper().apply {
-    registerKotlinModule()
-    registerModule(JavaTimeModule())
-    configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-}
+val objectMapper: ObjectMapper =
+    ObjectMapper().apply {
+        registerKotlinModule()
+        registerModule(JavaTimeModule())
+        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    }
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 
@@ -74,16 +75,18 @@ val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 fun main() {
     val environment = Environment()
 
-    val jwkProviderAadV2 = JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
-        .cached(10, 24, TimeUnit.HOURS)
-        .rateLimited(10, 1, TimeUnit.MINUTES)
-        .build()
+    val jwkProviderAadV2 =
+        JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
+            .cached(10, 24, TimeUnit.HOURS)
+            .rateLimited(10, 1, TimeUnit.MINUTES)
+            .build()
 
     val wellKnownTokenX = getWellKnownTokenX(environment.tokenXWellKnownUrl)
-    val jwkProviderTokenX = JwkProviderBuilder(URL(wellKnownTokenX.jwks_uri))
-        .cached(10, 24, TimeUnit.HOURS)
-        .rateLimited(10, 1, TimeUnit.MINUTES)
-        .build()
+    val jwkProviderTokenX =
+        JwkProviderBuilder(URL(wellKnownTokenX.jwks_uri))
+            .cached(10, 24, TimeUnit.HOURS)
+            .rateLimited(10, 1, TimeUnit.MINUTES)
+            .build()
 
     val database = Database(environment)
 
@@ -91,33 +94,44 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfigAiven = KafkaUtils.getAivenKafkaConfig().also {
-        it.let {
-            it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
-            it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+    val kafkaBaseConfigAiven =
+        KafkaUtils.getAivenKafkaConfig().also {
+            it.let {
+                it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+                it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+            }
         }
-    }
 
     val sykmeldingStatusService = SykmeldingStatusService(database)
-    val sykmeldingStatusKafkaConsumerAiven = getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
+    val sykmeldingStatusKafkaConsumerAiven =
+        getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
 
-    val receivedSykmeldingKafkaConsumerAiven = KafkaConsumer<String, String>(
-        kafkaBaseConfigAiven
-            .toConsumerConfig("${environment.applicationName}-gcp-consumer", valueDeserializer = StringDeserializer::class)
-            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
-    )
+    val receivedSykmeldingKafkaConsumerAiven =
+        KafkaConsumer<String, String>(
+            kafkaBaseConfigAiven
+                .toConsumerConfig(
+                    "${environment.applicationName}-gcp-consumer",
+                    valueDeserializer = StringDeserializer::class
+                )
+                .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
+        )
 
-    val behandlingsutfallKafkaConsumerAiven = KafkaConsumer<String, String>(
-        kafkaBaseConfigAiven
-            .toConsumerConfig("${environment.applicationName}-gcp-consumer", valueDeserializer = StringDeserializer::class)
-            .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
-    )
-    val behandlingsutfallService = BehandlingsutfallService(
-        applicationState = applicationState,
-        kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven,
-        env = environment,
-        database = database,
-    )
+    val behandlingsutfallKafkaConsumerAiven =
+        KafkaConsumer<String, String>(
+            kafkaBaseConfigAiven
+                .toConsumerConfig(
+                    "${environment.applicationName}-gcp-consumer",
+                    valueDeserializer = StringDeserializer::class
+                )
+                .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
+        )
+    val behandlingsutfallService =
+        BehandlingsutfallService(
+            applicationState = applicationState,
+            kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven,
+            env = environment,
+            database = database,
+        )
 
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
         install(ContentNegotiation) {
@@ -131,7 +145,8 @@ fun main() {
         HttpResponseValidator {
             handleResponseExceptionWithRequest { exception, _ ->
                 when (exception) {
-                    is SocketTimeoutException -> throw ServiceUnavailableException(exception.message)
+                    is SocketTimeoutException ->
+                        throw ServiceUnavailableException(exception.message)
                 }
             }
         }
@@ -143,7 +158,9 @@ fun main() {
             }
             retryIf(maxRetries) { request, response ->
                 if (response.status.value.let { it in 500..599 }) {
-                    log.warn("Retrying for statuscode ${response.status.value}, for url ${request.url}")
+                    log.warn(
+                        "Retrying for statuscode ${response.status.value}, for url ${request.url}"
+                    )
                     true
                 } else {
                     false
@@ -154,62 +171,95 @@ fun main() {
     }
 
     val httpClient = HttpClient(Apache, config)
-    val azureAdV2Client = AzureAdV2Client(environment.clientIdV2, environment.clientSecretV2, environment.azureTokenEndpoint, httpClient)
-    val tilgangskontrollService = TilgangskontrollService(azureAdV2Client, httpClient, environment.syfoTilgangskontrollUrl, environment.syfotilgangskontrollScope)
+    val azureAdV2Client =
+        AzureAdV2Client(
+            environment.clientIdV2,
+            environment.clientSecretV2,
+            environment.azureTokenEndpoint,
+            httpClient
+        )
+    val tilgangskontrollService =
+        TilgangskontrollService(
+            azureAdV2Client,
+            httpClient,
+            environment.syfoTilgangskontrollUrl,
+            environment.syfotilgangskontrollScope
+        )
 
-    val pdlClient = PdlClient(
-        httpClient,
-        environment.pdlGraphqlPath,
-        PdlClient::class.java.getResource("/graphql/getPerson.graphql").readText().replace(Regex("[\n\t]"), ""),
-    )
+    val pdlClient =
+        PdlClient(
+            httpClient,
+            environment.pdlGraphqlPath,
+            PdlClient::class
+                .java
+                .getResource("/graphql/getPerson.graphql")
+                .readText()
+                .replace(Regex("[\n\t]"), ""),
+        )
     val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
 
     val sykmeldingerService = SykmeldingerService(database)
-    val sendtSykmeldingKafkaProducer = KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
+    val sendtSykmeldingKafkaProducer =
+        KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val bekreftSykmeldingKafkaProducer =
         KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
     val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaBaseConfigAiven, environment)
-    val mottattSykmeldingStatusService = MottattSykmeldingStatusService(sykmeldingStatusService, sendtSykmeldingKafkaProducer, bekreftSykmeldingKafkaProducer, tombstoneProducer, database)
+    val mottattSykmeldingStatusService =
+        MottattSykmeldingStatusService(
+            sykmeldingStatusService,
+            sendtSykmeldingKafkaProducer,
+            bekreftSykmeldingKafkaProducer,
+            tombstoneProducer,
+            database
+        )
 
     val leaderElection = LeaderElection(httpClient, environment.electorPath)
-    val identendringService = IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
-    val pdlAktorConsumer = PdlAktorConsumer(
-        kafkaConsumerAiven = getKafkaConsumerAivenPdlAktor(environment),
-        applicationState = applicationState,
-        aivenTopic = environment.pdlAktorV2Topic,
-        leaderElection = leaderElection,
-        identendringService = identendringService,
-    )
+    val identendringService =
+        IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
+    val pdlAktorConsumer =
+        PdlAktorConsumer(
+            kafkaConsumerAiven = getKafkaConsumerAivenPdlAktor(environment),
+            applicationState = applicationState,
+            aivenTopic = environment.pdlAktorV2Topic,
+            leaderElection = leaderElection,
+            identendringService = identendringService,
+        )
 
-    val mottattSykmeldingService = MottattSykmeldingService(
-        database = database,
-        env = environment,
-        sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment),
-        mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment),
-        mottattSykmeldingStatusService = mottattSykmeldingStatusService,
-    )
-    val sykmeldingStatusConsumerService = SykmeldingStatusConsumerService(
-        sykmeldingStatusKafkaConsumer = sykmeldingStatusKafkaConsumerAiven,
-        applicationState = applicationState,
-        mottattSykmeldingStatusService = mottattSykmeldingStatusService,
-    )
-    val mottattSykmeldingConsumerService = MottattSykmeldingConsumerService(
-        applicationState = applicationState,
-        kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
-        mottattSykmeldingService = mottattSykmeldingService,
-        env = environment,
-    )
+    val mottattSykmeldingService =
+        MottattSykmeldingService(
+            database = database,
+            env = environment,
+            sykmeldingStatusKafkaProducer =
+                getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment),
+            mottattSykmeldingKafkaProducer =
+                getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment),
+            mottattSykmeldingStatusService = mottattSykmeldingStatusService,
+        )
+    val sykmeldingStatusConsumerService =
+        SykmeldingStatusConsumerService(
+            sykmeldingStatusKafkaConsumer = sykmeldingStatusKafkaConsumerAiven,
+            applicationState = applicationState,
+            mottattSykmeldingStatusService = mottattSykmeldingStatusService,
+        )
+    val mottattSykmeldingConsumerService =
+        MottattSykmeldingConsumerService(
+            applicationState = applicationState,
+            kafkaAivenConsumer = receivedSykmeldingKafkaConsumerAiven,
+            mottattSykmeldingService = mottattSykmeldingService,
+            env = environment,
+        )
 
-    val applicationEngine = createApplicationEngine(
-        env = environment,
-        applicationState = applicationState,
-        database = database,
-        jwkProviderTokenX = jwkProviderTokenX,
-        tokenXIssuer = wellKnownTokenX.issuer,
-        jwkProviderAadV2 = jwkProviderAadV2,
-        sykmeldingerService = sykmeldingerService,
-        tilgangskontrollService = tilgangskontrollService,
-    )
+    val applicationEngine =
+        createApplicationEngine(
+            env = environment,
+            applicationState = applicationState,
+            database = database,
+            jwkProviderTokenX = jwkProviderTokenX,
+            tokenXIssuer = wellKnownTokenX.issuer,
+            jwkProviderAadV2 = jwkProviderAadV2,
+            sykmeldingerService = sykmeldingerService,
+            tilgangskontrollService = tilgangskontrollService,
+        )
 
     pdlAktorConsumer.startConsumer()
     launchListeners(
@@ -223,12 +273,19 @@ fun main() {
 }
 
 @DelicateCoroutinesApi
-fun createListener(applicationState: ApplicationState, action: suspend CoroutineScope.() -> Unit): Job =
+fun createListener(
+    applicationState: ApplicationState,
+    action: suspend CoroutineScope.() -> Unit
+): Job =
     GlobalScope.launch(Dispatchers.Unbounded) {
         try {
             action()
         } catch (e: TrackableException) {
-            log.error("En uhåndtert feil oppstod, applikasjonen restarter {}", fields(e.loggingMeta), e.cause)
+            log.error(
+                "En uhåndtert feil oppstod, applikasjonen restarter {}",
+                fields(e.loggingMeta),
+                e.cause
+            )
         } catch (ex: Exception) {
             log.error("Noe gikk galt", ex.cause)
         } finally {
@@ -244,13 +301,7 @@ fun launchListeners(
     mottattSykmeldingConsumerService: MottattSykmeldingConsumerService,
     behandlingsutfallService: BehandlingsutfallService,
 ) {
-    createListener(applicationState) {
-        mottattSykmeldingConsumerService.start()
-    }
-    createListener(applicationState) {
-        behandlingsutfallService.start()
-    }
-    createListener(applicationState) {
-        sykmeldingStatusConsumerService.start()
-    }
+    createListener(applicationState) { mottattSykmeldingConsumerService.start() }
+    createListener(applicationState) { behandlingsutfallService.start() }
+    createListener(applicationState) { sykmeldingStatusConsumerService.start() }
 }

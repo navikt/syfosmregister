@@ -1,5 +1,6 @@
 package no.nav.syfo.identendring
 
+import java.time.LocalDate
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.identendring.model.Ident
 import no.nav.syfo.identendring.model.IdentType
@@ -21,7 +22,6 @@ import no.nav.syfo.sykmelding.db.updateFnr
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
-import java.time.LocalDate
 
 class IdentendringService(
     private val database: DatabaseInterface,
@@ -30,27 +30,40 @@ class IdentendringService(
 ) {
     suspend fun oppdaterIdent(identListe: List<Ident>): Int {
         if (harEndretFnr(identListe)) {
-            val nyttFnr = identListe.find { it.type == IdentType.FOLKEREGISTERIDENT && it.gjeldende }?.idnummer
-                ?: throw IllegalStateException("Mangler gyldig fnr!")
+            val nyttFnr =
+                identListe
+                    .find { it.type == IdentType.FOLKEREGISTERIDENT && it.gjeldende }
+                    ?.idnummer
+                    ?: throw IllegalStateException("Mangler gyldig fnr!")
 
-            val tidligereFnr = identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
-            val sykmeldinger = tidligereFnr.flatMap { database.getSykmeldingerMedIdUtenBehandlingsutfallForFnr(it.idnummer) }
+            val tidligereFnr =
+                identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
+            val sykmeldinger =
+                tidligereFnr.flatMap {
+                    database.getSykmeldingerMedIdUtenBehandlingsutfallForFnr(it.idnummer)
+                }
 
             if (sykmeldinger.isNotEmpty()) {
                 sjekkPDL(nyttFnr)
 
-                val sendteSykmeldingerSisteFireMnd = sykmeldinger.filter {
-                    it.status.statusEvent == STATUS_SENDT && finnSisteTom(it.sykmeldingsDokument.perioder).isAfter(
-                        LocalDate.now().minusMonths(4),
-                    )
-                }
+                val sendteSykmeldingerSisteFireMnd =
+                    sykmeldinger.filter {
+                        it.status.statusEvent == STATUS_SENDT &&
+                            finnSisteTom(it.sykmeldingsDokument.perioder)
+                                .isAfter(
+                                    LocalDate.now().minusMonths(4),
+                                )
+                    }
                 log.info("Resender ${sendteSykmeldingerSisteFireMnd.size} sendte sykmeldinger")
                 sendteSykmeldingerSisteFireMnd.forEach {
                     sendtSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(it, nyttFnr))
                 }
 
                 var oppdaterteSykmeldinger = 0
-                tidligereFnr.forEach { oppdaterteSykmeldinger += database.updateFnr(nyttFnr = nyttFnr, fnr = it.idnummer) }
+                tidligereFnr.forEach {
+                    oppdaterteSykmeldinger +=
+                        database.updateFnr(nyttFnr = nyttFnr, fnr = it.idnummer)
+                }
                 log.info("Har oppdatert $oppdaterteSykmeldinger sykmeldinger i databasen")
                 NYTT_FNR_COUNTER.inc()
                 return oppdaterteSykmeldinger
@@ -61,7 +74,10 @@ class IdentendringService(
 
     private suspend fun sjekkPDL(nyttFnr: String) {
         val pdlPerson = pdlService.getPdlPerson(nyttFnr)
-        if (pdlPerson.fnr != nyttFnr || pdlPerson.identer.any { it.ident == nyttFnr && it.historisk }) {
+        if (
+            pdlPerson.fnr != nyttFnr ||
+                pdlPerson.identer.any { it.ident == nyttFnr && it.historisk }
+        ) {
             throw InactiveIdentException("Nytt FNR er ikke aktivt FNR i PDL API")
         }
     }
@@ -74,36 +90,42 @@ class IdentendringService(
         return true
     }
 
-    private fun getKafkaMessage(sykmelding: SykmeldingDbModelUtenBehandlingsutfall, nyttFnr: String): SykmeldingKafkaMessage {
+    private fun getKafkaMessage(
+        sykmelding: SykmeldingDbModelUtenBehandlingsutfall,
+        nyttFnr: String
+    ): SykmeldingKafkaMessage {
         val sendtSykmelding = sykmelding.toArbeidsgiverSykmelding()
-        val metadata = KafkaMetadataDTO(
-            sykmeldingId = sykmelding.id,
-            timestamp = sykmelding.status.statusTimestamp,
-            source = "pdl",
-            fnr = nyttFnr,
-        )
-        val sendEvent = SykmeldingStatusKafkaEventDTO(
-            metadata.sykmeldingId,
-            metadata.timestamp,
-            STATUS_SENDT,
-            ArbeidsgiverStatusDTO(
-                sykmelding.status.arbeidsgiver!!.orgnummer,
-                sykmelding.status.arbeidsgiver.juridiskOrgnummer,
-                sykmelding.status.arbeidsgiver.orgNavn,
-            ),
-            listOf(
-                SporsmalOgSvarDTO(
-                    tekst = "Jeg er sykmeldt fra",
-                    shortName = ShortNameDTO.ARBEIDSSITUASJON,
-                    svartype = SvartypeDTO.ARBEIDSSITUASJON,
-                    svar = "ARBEIDSTAKER",
+        val metadata =
+            KafkaMetadataDTO(
+                sykmeldingId = sykmelding.id,
+                timestamp = sykmelding.status.statusTimestamp,
+                source = "pdl",
+                fnr = nyttFnr,
+            )
+        val sendEvent =
+            SykmeldingStatusKafkaEventDTO(
+                metadata.sykmeldingId,
+                metadata.timestamp,
+                STATUS_SENDT,
+                ArbeidsgiverStatusDTO(
+                    sykmelding.status.arbeidsgiver!!.orgnummer,
+                    sykmelding.status.arbeidsgiver.juridiskOrgnummer,
+                    sykmelding.status.arbeidsgiver.orgNavn,
                 ),
-            ),
-        )
+                listOf(
+                    SporsmalOgSvarDTO(
+                        tekst = "Jeg er sykmeldt fra",
+                        shortName = ShortNameDTO.ARBEIDSSITUASJON,
+                        svartype = SvartypeDTO.ARBEIDSSITUASJON,
+                        svar = "ARBEIDSTAKER",
+                    ),
+                ),
+            )
         return SykmeldingKafkaMessage(sendtSykmelding, metadata, sendEvent)
     }
 
     private fun finnSisteTom(perioder: List<Periode>): LocalDate {
-        return perioder.maxByOrNull { it.tom }?.tom ?: throw IllegalStateException("Skal ikke kunne ha periode uten tom")
+        return perioder.maxByOrNull { it.tom }?.tom
+            ?: throw IllegalStateException("Skal ikke kunne ha periode uten tom")
     }
 }

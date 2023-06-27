@@ -36,8 +36,9 @@ data class Environment(
     val kafkaSchemaRegistryUsername: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_USER"),
     val kafkaSchemaRegistryPassword: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_PASSWORD"),
     val electorPath: String = getEnvVar("ELECTOR_PATH"),
-    val preAuthorizedApp: List<PreAuthorizedApp> = System.getenv("AZURE_APP_PRE_AUTHORIZED_APPS")?.let { objectMapper.readValue(it) } ?: emptyList(),
-
+    val preAuthorizedApp: List<PreAuthorizedApp> =
+        System.getenv("AZURE_APP_PRE_AUTHORIZED_APPS")?.let { objectMapper.readValue(it) }
+            ?: emptyList(),
 ) {
     fun jdbcUrl(): String {
         return "jdbc:postgresql://$dbHost:$dbPort/$dbName"
@@ -45,4 +46,5 @@ data class Environment(
 }
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
-    System.getenv(varName) ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
+    System.getenv(varName)
+        ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")

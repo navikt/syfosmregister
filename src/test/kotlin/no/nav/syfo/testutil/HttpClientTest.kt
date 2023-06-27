@@ -9,21 +9,28 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.jackson.jackson
 
-data class ResponseData(val httpStatusCode: HttpStatusCode, val content: String, val headers: Headers = headersOf("Content-Type", listOf("application/json")))
+data class ResponseData(
+    val httpStatusCode: HttpStatusCode,
+    val content: String,
+    val headers: Headers = headersOf("Content-Type", listOf("application/json"))
+)
 
 class HttpClientTest {
 
     var responseData: ResponseData? = null
 
-    val httpClient = HttpClient(MockEngine) {
-        install(ContentNegotiation) {
-            jackson {}
-        }
-        expectSuccess = true
-        engine {
-            addHandler { _ ->
-                respond(responseData!!.content, responseData!!.httpStatusCode, responseData!!.headers)
+    val httpClient =
+        HttpClient(MockEngine) {
+            install(ContentNegotiation) { jackson {} }
+            expectSuccess = true
+            engine {
+                addHandler { _ ->
+                    respond(
+                        responseData!!.content,
+                        responseData!!.httpStatusCode,
+                        responseData!!.headers
+                    )
+                }
             }
         }
-    }
 }

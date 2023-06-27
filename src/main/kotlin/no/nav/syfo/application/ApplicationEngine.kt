@@ -22,6 +22,7 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
@@ -34,7 +35,6 @@ import no.nav.syfo.sykmelding.papir.api.registrerServiceuserPapirsykmeldingApi
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.registrerSykmeldingServiceuserApiV2
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
-import java.util.UUID
 
 fun createApplicationEngine(
     env: Environment,
@@ -78,24 +78,20 @@ fun createApplicationEngine(
 
         routing {
             if (env.cluster == "dev-gcp") {
-                staticResources("/api/v1/docs/", "api") {
-                    default("api/index.html")
-                }
+                staticResources("/api/v1/docs/", "api") { default("api/index.html") }
             }
-            route("internal") {
-                registerNaisApi(applicationState)
-            }
+            route("internal") { registerNaisApi(applicationState) }
             route("/api/v2") {
                 authenticate("azureadv2") {
                     registrerSykmeldingServiceuserApiV2(sykmeldingerService)
                     registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
-                    registrerServiceuserPapirsykmeldingApi(papirsykmeldingService = PapirsykmeldingService(database))
+                    registrerServiceuserPapirsykmeldingApi(
+                        papirsykmeldingService = PapirsykmeldingService(database)
+                    )
                 }
             }
             route("/api/v3") {
-                authenticate("tokenx") {
-                    registrerSykmeldingApiV2(sykmeldingerService)
-                }
+                authenticate("tokenx") { registrerSykmeldingApiV2(sykmeldingerService) }
             }
         }
         intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())

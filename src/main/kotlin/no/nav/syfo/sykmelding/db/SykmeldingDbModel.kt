@@ -1,16 +1,15 @@
 package no.nav.syfo.sykmelding.db
 
-import no.nav.syfo.model.UtenlandskSykmelding
-import no.nav.syfo.model.ValidationResult
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import no.nav.syfo.model.UtenlandskSykmelding
+import no.nav.syfo.model.ValidationResult
 
 data class ArbeidsgiverDbModel(
     val orgnummer: String,
     val juridiskOrgnummer: String?,
     val orgNavn: String,
-
 )
 
 data class StatusDbModel(
@@ -91,7 +90,11 @@ data class Arbeidsgiver(
     val stillingsprosent: Int?,
 )
 
-enum class HarArbeidsgiver(val codeValue: String, val text: String, val oid: String = "2.16.578.1.12.4.1.1.8130") {
+enum class HarArbeidsgiver(
+    val codeValue: String,
+    val text: String,
+    val oid: String = "2.16.578.1.12.4.1.1.8130"
+) {
     EN_ARBEIDSGIVER("1", "Én arbeidsgiver"),
     FLERE_ARBEIDSGIVERE("2", "Flere arbeidsgivere"),
     INGEN_ARBEIDSGIVER("3", "Ingen arbeidsgiver"),
@@ -130,12 +133,20 @@ data class MedisinskArsak(
     val arsak: List<MedisinskArsakType>,
 )
 
-enum class ArbeidsrelatertArsakType(val codeValue: String, val text: String, val oid: String = "2.16.578.1.12.4.1.1.8132") {
+enum class ArbeidsrelatertArsakType(
+    val codeValue: String,
+    val text: String,
+    val oid: String = "2.16.578.1.12.4.1.1.8132"
+) {
     MANGLENDE_TILRETTELEGGING("1", "Manglende tilrettelegging på arbeidsplassen"),
     ANNET("9", "Annet"),
 }
 
-enum class MedisinskArsakType(val codeValue: String, val text: String, val oid: String = "2.16.578.1.12.4.1.1.8133") {
+enum class MedisinskArsakType(
+    val codeValue: String,
+    val text: String,
+    val oid: String = "2.16.578.1.12.4.1.1.8133"
+) {
     TILSTAND_HINDRER_AKTIVITET("1", "Helsetilstanden hindrer pasienten i å være i aktivitet"),
     AKTIVITET_FORVERRER_TILSTAND("2", "Aktivitet vil forverre helsetilstanden"),
     AKTIVITET_FORHINDRER_BEDRING("3", "Aktivitet vil hindre/forsinke bedring av helsetilstanden"),
@@ -208,23 +219,49 @@ data class SporsmalSvar(
     val restriksjoner: List<SvarRestriksjon>,
 )
 
-enum class SvarRestriksjon(val codeValue: String, val text: String, val oid: String = "2.16.578.1.12.4.1.1.8134") {
+enum class SvarRestriksjon(
+    val codeValue: String,
+    val text: String,
+    val oid: String = "2.16.578.1.12.4.1.1.8134"
+) {
     SKJERMET_FOR_ARBEIDSGIVER("A", "Informasjonen skal ikke vises arbeidsgiver"),
     SKJERMET_FOR_PASIENT("P", "Informasjonen skal ikke vises pasient"),
     SKJERMET_FOR_NAV("N", "Informasjonen skal ikke vises NAV"),
 }
 
-enum class AnnenFraverGrunn(val codeValue: String, val text: String, val oid: String = "2.16.578.1.12.4.1.1.8131") {
+enum class AnnenFraverGrunn(
+    val codeValue: String,
+    val text: String,
+    val oid: String = "2.16.578.1.12.4.1.1.8131"
+) {
     GODKJENT_HELSEINSTITUSJON("1", "Når vedkommende er innlagt i en godkjent helseinstitusjon"),
-    BEHANDLING_FORHINDRER_ARBEID("2", "Når vedkommende er under behandling og legen erklærer at behandlingen gjør det nødvendig at vedkommende ikke arbeider"),
+    BEHANDLING_FORHINDRER_ARBEID(
+        "2",
+        "Når vedkommende er under behandling og legen erklærer at behandlingen gjør det nødvendig at vedkommende ikke arbeider"
+    ),
     ARBEIDSRETTET_TILTAK("3", "Når vedkommende deltar på et arbeidsrettet tiltak"),
-    MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND("4", "Når vedkommende på grunn av sykdom, skade eller lyte får tilskott når vedkommende på grunn av sykdom, skade eller lyte får tilskott"),
-    NODVENDIG_KONTROLLUNDENRSOKELSE("5", "Når vedkommende er til nødvendig kontrollundersøkelse som krever minst 24 timers fravær, reisetid medregnet"),
-    SMITTEFARE("6", "Når vedkommende myndighet har nedlagt forbud mot at han eller hun arbeider på grunn av smittefare"),
+    MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND(
+        "4",
+        "Når vedkommende på grunn av sykdom, skade eller lyte får tilskott når vedkommende på grunn av sykdom, skade eller lyte får tilskott"
+    ),
+    NODVENDIG_KONTROLLUNDENRSOKELSE(
+        "5",
+        "Når vedkommende er til nødvendig kontrollundersøkelse som krever minst 24 timers fravær, reisetid medregnet"
+    ),
+    SMITTEFARE(
+        "6",
+        "Når vedkommende myndighet har nedlagt forbud mot at han eller hun arbeider på grunn av smittefare"
+    ),
     ABORT("7", "Når vedkommende er arbeidsufør som følge av svangerskapsavbrudd"),
-    UFOR_GRUNNET_BARNLOSHET("8", "Når vedkommende er arbeidsufør som følge av behandling for barnløshet"),
+    UFOR_GRUNNET_BARNLOSHET(
+        "8",
+        "Når vedkommende er arbeidsufør som følge av behandling for barnløshet"
+    ),
     DONOR("9", "Når vedkommende er donor eller er under vurdering som donor"),
-    BEHANDLING_STERILISERING("10", "Når vedkommende er arbeidsufør som følge av behandling i forbindelse med sterilisering"),
+    BEHANDLING_STERILISERING(
+        "10",
+        "Når vedkommende er arbeidsufør som følge av behandling i forbindelse med sterilisering"
+    ),
 }
 
 data class Merknad(

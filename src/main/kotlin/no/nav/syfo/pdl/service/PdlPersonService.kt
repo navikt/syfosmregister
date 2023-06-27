@@ -1,11 +1,11 @@
 package no.nav.syfo.pdl.service
 
+import java.lang.RuntimeException
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.error.PersonNotFoundException
 import no.nav.syfo.pdl.model.PdlPerson
 import org.slf4j.LoggerFactory
-import java.lang.RuntimeException
 
 class PdlPersonService(
     private val pdlClient: PdlClient,
@@ -17,16 +17,18 @@ class PdlPersonService(
     }
 
     suspend fun getPdlPerson(fnr: String): PdlPerson {
-        val token = azureAdV2Client.getAccessToken(pdlScope)?.accessToken
-            ?: throw RuntimeException("Klarte ikke hente accessToken for PDL")
+        val token =
+            azureAdV2Client.getAccessToken(pdlScope)?.accessToken
+                ?: throw RuntimeException("Klarte ikke hente accessToken for PDL")
         val pdlResponse = pdlClient.getPerson(fnr, token)
 
         if (pdlResponse.errors != null) {
-            pdlResponse.errors.forEach {
-                log.warn("PDL kastet error: {} ", it)
-            }
+            pdlResponse.errors.forEach { log.warn("PDL kastet error: {} ", it) }
         }
-        if (pdlResponse.data.hentIdenter == null || pdlResponse.data.hentIdenter.identer.isNullOrEmpty()) {
+        if (
+            pdlResponse.data.hentIdenter == null ||
+                pdlResponse.data.hentIdenter.identer.isNullOrEmpty()
+        ) {
             log.warn("Fant ikke person i PDL")
             throw PersonNotFoundException("Fant ikke person i PDL")
         }

@@ -17,41 +17,64 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 
-class BekreftSykmeldingKafkaProducerTest : FunSpec({
+class BekreftSykmeldingKafkaProducerTest :
+    FunSpec({
+        val environment = mockkClass(Environment::class)
+        every { environment.applicationName } returns
+            "${BehandligsutfallServiceTest::class.simpleName}-application"
+        every { environment.bekreftSykmeldingKafkaTopic } returns
+            "${environment.applicationName}-syfo-bekreft-sykmelding"
+        every { environment.cluster } returns "localhost"
+        val kafkaconfig = KafkaTest.setupKafkaConfig()
+        val kafkaProducer =
+            KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaconfig, environment)
+        val properties =
+            kafkaconfig.toConsumerConfig(
+                "${environment.applicationName}-consumer",
+                JacksonKafkaDeserializer::class
+            )
+        properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
+        val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
+        val kafkaConsumer =
+            KafkaConsumer<String, SykmeldingKafkaMessage>(
+                properties,
+                StringDeserializer(),
+                JacksonKafkaDeserializer(SykmeldingKafkaMessage::class)
+            )
+        kafkaConsumer.subscribe(listOf("${environment.applicationName}-syfo-bekreft-sykmelding"))
 
-    val environment = mockkClass(Environment::class)
-    every { environment.applicationName } returns "${BehandligsutfallServiceTest::class.simpleName}-application"
-    every { environment.bekreftSykmeldingKafkaTopic } returns "${environment.applicationName}-syfo-bekreft-sykmelding"
-    every { environment.cluster } returns "localhost"
-    val kafkaconfig = KafkaTest.setupKafkaConfig()
-    val kafkaProducer = KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaconfig, environment)
-    val properties = kafkaconfig.toConsumerConfig("${environment.applicationName}-consumer", JacksonKafkaDeserializer::class)
-    properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
-    val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
-    val kafkaConsumer = KafkaConsumer<String, SykmeldingKafkaMessage>(properties, StringDeserializer(), JacksonKafkaDeserializer(SykmeldingKafkaMessage::class))
-    kafkaConsumer.subscribe(listOf("${environment.applicationName}-syfo-bekreft-sykmelding"))
+        context("Test kafka") {
+            test("Should bekreft value to topic") {
+                kafkaProducer.sendSykmelding(
+                    SykmeldingKafkaMessage(
+                        getArbeidsgiverSykmelding("1"),
+                        getKafkaMetadata("1"),
+                        getSykmeldingStatusEvent("1")
+                    )
+                )
+                var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
+                messages.get("1") shouldNotBe null
+            }
 
-    context("Test kafka") {
-        test("Should bekreft value to topic") {
-            kafkaProducer.sendSykmelding(SykmeldingKafkaMessage(getArbeidsgiverSykmelding("1"), getKafkaMetadata("1"), getSykmeldingStatusEvent("1")))
-            var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
-            messages.get("1") shouldNotBe null
+            test("Should tombstone") {
+                kafkaProducer.tombstoneSykmelding("1")
+                var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
+                messages.containsKey("1") shouldBe true
+                messages.get("1") shouldBe null
+            }
+
+            test("should send Bekreft then tombstone") {
+                kafkaProducer.sendSykmelding(
+                    SykmeldingKafkaMessage(
+                        getArbeidsgiverSykmelding("2"),
+                        getKafkaMetadata("2"),
+                        getSykmeldingStatusEvent("2")
+                    )
+                )
+                kafkaProducer.tombstoneSykmelding("2")
+                var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 2)
+                messages.containsKey("2") shouldBe true
+                messages.get("2") shouldBe null
+            }
         }
-
-        test("Should tombstone") {
-
-            kafkaProducer.tombstoneSykmelding("1")
-            var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
-            messages.containsKey("1") shouldBe true
-            messages.get("1") shouldBe null
-        }
-
-        test("should send Bekreft then tombstone") {
-            kafkaProducer.sendSykmelding(SykmeldingKafkaMessage(getArbeidsgiverSykmelding("2"), getKafkaMetadata("2"), getSykmeldingStatusEvent("2")))
-            kafkaProducer.tombstoneSykmelding("2")
-            var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 2)
-            messages.containsKey("2") shouldBe true
-            messages.get("2") shouldBe null
-        }
-    }
-})
+    })

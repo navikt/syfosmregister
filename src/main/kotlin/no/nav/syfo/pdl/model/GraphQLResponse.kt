@@ -2,7 +2,7 @@ package no.nav.syfo.graphql.model
 
 import no.nav.syfo.pdl.client.model.ResponseError
 
-data class GraphQLResponse<T> (
+data class GraphQLResponse<T>(
     val data: T,
     val errors: List<ResponseError>?,
 )

@@ -14,7 +14,15 @@ fun getArbeidsgiverSykmelding(id: String): ArbeidsgiverSykmelding {
     return ArbeidsgiverSykmelding(
         id = id,
         kontaktMedPasient = KontaktMedPasientAGDTO(null),
-        behandler = BehandlerAGDTO("fornavn", null, "etternavn", "hpr", AdresseDTO(null, null, null, null, null), null),
+        behandler =
+            BehandlerAGDTO(
+                "fornavn",
+                null,
+                "etternavn",
+                "hpr",
+                AdresseDTO(null, null, null, null, null),
+                null
+            ),
         behandletTidspunkt = getNowTickMillisOffsetDateTime(),
         prognose = null,
         syketilfelleStartDato = null,
