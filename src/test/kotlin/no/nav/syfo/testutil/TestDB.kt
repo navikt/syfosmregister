@@ -3,7 +3,6 @@ package no.nav.syfo.testutil
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
-import java.net.ServerSocket
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
@@ -165,13 +164,6 @@ private fun ResultSet.tilMerknadliste(): List<Merknad>? {
     return getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
 }
 
-fun getSykmeldingOpplysninger(
-    fnr: String = "pasientFnr",
-    id: String = "123"
-): Sykmeldingsopplysninger {
-    return testSykmeldingsopplysninger.copy(pasientFnr = fnr, id = id)
-}
-
 val testSykmeldingsopplysninger =
     Sykmeldingsopplysninger(
         id = "uuid",
@@ -271,7 +263,12 @@ val testSykmeldingsdokument =
                     Prognose(
                         true,
                         null,
-                        ErIArbeid(false, false, null, null),
+                        ErIArbeid(
+                            egetArbeidPaSikt = false,
+                            annetArbeidPaSikt = false,
+                            arbeidFOM = null,
+                            vurderingsdato = null
+                        ),
                         ErIkkeIArbeid(false, null, null),
                     ),
                 signaturDato = getNowTickMillisLocalDateTime(),
@@ -287,39 +284,31 @@ val testSykmeldingsdokument =
 fun getUtdypendeOpplysninger(): Map<String, Map<String, SporsmalSvar>> {
     val map = HashMap<String, HashMap<String, SporsmalSvar>>()
     val map62 = HashMap<String, SporsmalSvar>()
-    map62.put(
-        "6.2.1",
+    map62["6.2.1"] =
         SporsmalSvar(
             sporsmal = "Beskriv kort sykehistorie, symptomer og funn i dagens situasjon.",
             svar = "Veldig syk med masse feber.",
             restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
         )
-    )
-    map62.put(
-        "6.2.2",
+    map62["6.2.2"] =
         SporsmalSvar(
             sporsmal = "sporsaml",
             svar = "svar",
             restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
         )
-    )
-    map62.put(
-        "6.2.3",
+    map62["6.2.3"] =
         SporsmalSvar(
             sporsmal = "sporsmal",
             svar = "svar",
             restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
         )
-    )
-    map62.put(
-        "6.2.4",
+    map62["6.2.4"] =
         SporsmalSvar(
             sporsmal = "sporsmal",
             svar = "svar",
             restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
         )
-    )
-    map.put("6.2", map62)
+    map["6.2"] = map62
     return map
 }
 
@@ -328,5 +317,3 @@ val testBehandlingsutfall =
         id = "uuid",
         behandlingsutfall = ValidationResult(Status.OK, emptyList()),
     )
-
-fun getRandomPort() = ServerSocket(0).use { it.localPort }

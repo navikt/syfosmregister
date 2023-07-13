@@ -38,7 +38,6 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                     log.warn("Missing header: fnr")
                     call.respond(HttpStatusCode.BadRequest, "Missing header: fnr")
                 } else {
-                    log.info("Sending back HttpStatusCode.OK")
                     call.respond(
                         HttpStatusCode.OK,
                         sykmeldingerService.getInternalSykmeldinger(fnr, fom, tom)

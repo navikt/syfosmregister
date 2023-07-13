@@ -221,7 +221,7 @@ private fun ErIArbeid.toErIArbeidDTO(): ErIArbeidDTO {
     )
 }
 
-private fun MeldingTilNAV.toMeldingTilNavDTO(): MeldingTilNavDTO? {
+private fun MeldingTilNAV.toMeldingTilNavDTO(): MeldingTilNavDTO {
     return MeldingTilNavDTO(
         bistandUmiddelbart = bistandUmiddelbart,
         beskrivBistand = beskrivBistand,

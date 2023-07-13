@@ -10,11 +10,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
-import io.ktor.client.plugins.HttpRequestRetry
-import io.ktor.client.plugins.HttpResponseValidator
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.network.sockets.SocketTimeoutException
-import io.ktor.serialization.jackson.jackson
 import io.prometheus.client.hotspot.DefaultExports
 import java.net.URL
 import java.util.concurrent.TimeUnit
@@ -29,7 +24,6 @@ import net.logstash.logback.argument.StructuredArguments.fields
 import no.nav.syfo.application.ApplicationServer
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.createApplicationEngine
-import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.application.getWellKnownTokenX
 import no.nav.syfo.application.leaderelection.LeaderElection
 import no.nav.syfo.azuread.v2.AzureAdV2Client
@@ -53,7 +47,9 @@ import no.nav.syfo.sykmelding.service.MottattSykmeldingConsumerService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
-import no.nav.syfo.util.util.Unbounded
+import no.nav.syfo.util.handleResponseException
+import no.nav.syfo.util.setupJacksonSerialization
+import no.nav.syfo.util.setupRetry
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -103,6 +99,7 @@ fun main() {
         }
 
     val sykmeldingStatusService = SykmeldingStatusService(database)
+
     val sykmeldingStatusKafkaConsumerAiven =
         getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
 
@@ -134,39 +131,9 @@ fun main() {
         )
 
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
-        install(ContentNegotiation) {
-            jackson {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            }
-        }
-        HttpResponseValidator {
-            handleResponseExceptionWithRequest { exception, _ ->
-                when (exception) {
-                    is SocketTimeoutException ->
-                        throw ServiceUnavailableException(exception.message)
-                }
-            }
-        }
-        install(HttpRequestRetry) {
-            constantDelay(100, 0, false)
-            retryOnExceptionIf(3) { request, throwable ->
-                log.warn("Caught exception ${throwable.message}, for url ${request.url}")
-                true
-            }
-            retryIf(maxRetries) { request, response ->
-                if (response.status.value.let { it in 500..599 }) {
-                    log.warn(
-                        "Retrying for statuscode ${response.status.value}, for url ${request.url}"
-                    )
-                    true
-                } else {
-                    false
-                }
-            }
-        }
+        setupJacksonSerialization()
+        handleResponseException()
+        setupRetry()
         expectSuccess = true
     }
 
@@ -277,7 +244,7 @@ fun createListener(
     applicationState: ApplicationState,
     action: suspend CoroutineScope.() -> Unit
 ): Job =
-    GlobalScope.launch(Dispatchers.Unbounded) {
+    GlobalScope.launch(Dispatchers.IO) {
         try {
             action()
         } catch (e: TrackableException) {

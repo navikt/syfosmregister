@@ -50,7 +50,6 @@ class BehandlingsutfallService(
                         sykmeldingsid,
                         database,
                         loggingMeta,
-                        "aiven"
                     )
                 }
             delay(100)
@@ -62,17 +61,12 @@ class BehandlingsutfallService(
         sykmeldingsid: String,
         database: DatabaseInterface,
         loggingMeta: LoggingMeta,
-        source: String,
     ) {
         wrapExceptions(loggingMeta) {
-            log.info(
-                "Mottatt behandlingsutfall fra $source, {}",
-                StructuredArguments.fields(loggingMeta)
-            )
-
             if (database.connection.erBehandlingsutfallLagret(sykmeldingsid)) {
                 log.warn(
                     "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}",
+                    sykmeldingsid,
                     StructuredArguments.fields(loggingMeta),
                 )
                 database.connection.updateBehandlingsutfall(

@@ -8,12 +8,12 @@ import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.azuread.v2.AzureAdV2Client
 import no.nav.syfo.azuread.v2.AzureAdV2Token
-import no.nav.syfo.graphql.model.GraphQLResponse
 import no.nav.syfo.pdl.client.PdlClient
 import no.nav.syfo.pdl.client.model.IdentInformasjon
 import no.nav.syfo.pdl.client.model.Identliste
 import no.nav.syfo.pdl.client.model.PdlResponse
 import no.nav.syfo.pdl.error.PersonNotFoundException
+import no.nav.syfo.pdl.model.GraphQLResponse
 import no.nav.syfo.pdl.service.PdlPersonService
 import org.amshove.kluent.shouldBeEqualTo
 
