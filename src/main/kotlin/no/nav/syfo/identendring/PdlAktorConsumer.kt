@@ -16,7 +16,6 @@ import no.nav.syfo.identendring.model.IdentType
 import no.nav.syfo.log
 import no.nav.syfo.pdl.error.InactiveIdentException
 import no.nav.syfo.pdl.error.PersonNotFoundException
-import no.nav.syfo.util.util.Unbounded
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -37,7 +36,7 @@ class PdlAktorConsumer(
     @ExperimentalTime
     @DelicateCoroutinesApi
     fun startConsumer() {
-        GlobalScope.launch(Dispatchers.Unbounded) {
+        GlobalScope.launch(Dispatchers.IO) {
             while (applicationState.ready) {
                 try {
                     if (leaderElection.isLeader()) {
@@ -94,17 +93,24 @@ class PdlAktorConsumer(
 }
 
 fun GenericRecord.toIdentListe(): List<Ident> {
-    return (get("identifikatorer") as GenericData.Array<GenericRecord>).map {
+    val data = this.get("identifikatorer")
+
+    if (data !is GenericData.Array<*>) {
+        throw IllegalArgumentException("Incorrect data type for 'identifikatorer'")
+    }
+
+    return data.filterIsInstance<GenericRecord>().map {
+        val type =
+            when (val typeString = it.get("type").toString()) {
+                "FOLKEREGISTERIDENT" -> IdentType.FOLKEREGISTERIDENT
+                "AKTORID" -> IdentType.AKTORID
+                "NPID" -> IdentType.NPID
+                else -> throw IllegalStateException("Received ident with unknown type: $typeString")
+            }
         Ident(
             idnummer = it.get("idnummer").toString(),
             gjeldende = it.get("gjeldende").toString().toBoolean(),
-            type =
-                when (it.get("type").toString()) {
-                    "FOLKEREGISTERIDENT" -> IdentType.FOLKEREGISTERIDENT
-                    "AKTORID" -> IdentType.AKTORID
-                    "NPID" -> IdentType.NPID
-                    else -> throw IllegalStateException("Har mottatt ident med ukjent type")
-                },
+            type = type,
         )
     }
 }

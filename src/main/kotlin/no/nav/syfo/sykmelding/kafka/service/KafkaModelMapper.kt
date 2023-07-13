@@ -100,7 +100,7 @@ class KafkaModelMapper private constructor() {
             }
         }
 
-        fun toArbeidsgiverStatusDto(it: ArbeidsgiverDbModel?): ArbeidsgiverStatusDTO? {
+        private fun toArbeidsgiverStatusDto(it: ArbeidsgiverDbModel?): ArbeidsgiverStatusDTO? {
             return it?.let {
                 ArbeidsgiverStatusDTO(
                     orgnummer = it.orgnummer,
@@ -110,7 +110,7 @@ class KafkaModelMapper private constructor() {
             }
         }
 
-        fun toSporsmalOgSvar(it: Sporsmal): SporsmalOgSvarDTO {
+        private fun toSporsmalOgSvar(it: Sporsmal): SporsmalOgSvarDTO {
             return SporsmalOgSvarDTO(
                 tekst = it.tekst,
                 shortName = toShortNameDto(it.shortName),

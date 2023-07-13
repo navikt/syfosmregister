@@ -14,7 +14,7 @@ class SykmeldingStatusConsumerService(
 
     companion object {
         private val log = LoggerFactory.getLogger(SykmeldingStatusConsumerService::class.java)
-        private const val delayStart = 10_000L
+        private const val DELAY_START = 10_000L
     }
 
     suspend fun start() {
@@ -24,12 +24,12 @@ class SykmeldingStatusConsumerService(
             } catch (ex: Exception) {
                 log.error(
                     "Error reading status from aiven topic, trying again in {} milliseconds, error {}",
-                    delayStart,
+                    DELAY_START,
                     ex.message,
                 )
                 sykmeldingStatusKafkaConsumer.unsubscribe()
             }
-            delay(delayStart)
+            delay(DELAY_START)
         }
     }
 

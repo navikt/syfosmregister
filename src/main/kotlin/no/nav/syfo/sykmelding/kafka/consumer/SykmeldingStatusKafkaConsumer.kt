@@ -6,7 +6,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 
 class SykmeldingStatusKafkaConsumer(
     private val kafkaConsumer: KafkaConsumer<String, SykmeldingStatusKafkaMessageDTO>,
-    val topics: List<String>
+    private val topics: List<String>
 ) {
     fun subscribe() {
         kafkaConsumer.subscribe(topics)

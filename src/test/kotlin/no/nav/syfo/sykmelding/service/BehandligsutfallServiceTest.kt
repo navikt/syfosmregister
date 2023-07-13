@@ -35,7 +35,7 @@ class BehandligsutfallServiceTest :
         every { environment.manuellSykmeldingTopic } returns "manuelltopic"
         every { environment.cluster } returns "localhost"
         val kafkaConfig = KafkaTest.setupKafkaConfig()
-        val applicationState = ApplicationState(true, true)
+        val applicationState = ApplicationState(alive = true, ready = true)
         val consumerProperties =
             kafkaConfig.toConsumerConfig(
                 "${environment.applicationName}-consumer",

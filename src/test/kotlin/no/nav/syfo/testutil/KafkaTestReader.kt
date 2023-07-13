@@ -12,7 +12,7 @@ class KafkaTestReader<T> {
         var messages = 0
         while (messages < messagesToRead) {
             val records = kafkaConsumer.poll(Duration.ofMillis(100))
-            records.forEach { map.put(it.key(), it.value()) }
+            records.forEach { map[it.key()] = it.value() }
             if (!records.isEmpty) {
                 kafkaConsumer.commitSync()
             }

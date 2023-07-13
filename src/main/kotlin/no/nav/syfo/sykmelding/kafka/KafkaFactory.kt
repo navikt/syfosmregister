@@ -54,7 +54,7 @@ class KafkaFactory private constructor() {
                     JacksonKafkaDeserializer::class
                 )
             val kafkaConsumer =
-                KafkaConsumer<String, SykmeldingStatusKafkaMessageDTO>(
+                KafkaConsumer(
                     properties,
                     StringDeserializer(),
                     JacksonKafkaDeserializer(SykmeldingStatusKafkaMessageDTO::class)
@@ -75,7 +75,7 @@ class KafkaFactory private constructor() {
                     JacksonNullableKafkaSerializer::class,
                 )
             val kafkaProducer =
-                KafkaProducer<String, SykmeldingKafkaMessage>(kafkaProducerProperties)
+                KafkaProducer<String, SykmeldingKafkaMessage?>(kafkaProducerProperties)
             return SendtSykmeldingKafkaProducer(kafkaProducer, environment.sendSykmeldingKafkaTopic)
         }
 

@@ -1,7 +1,6 @@
 package no.nav.syfo.sykmelding.db
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.typesafe.config.ConfigException.IO
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.OffsetDateTime
@@ -349,7 +348,7 @@ private fun ResultSet.getStatus(mottattTidspunkt: OffsetDateTime): StatusDbModel
     return when (val status = getString("event")) {
         null -> StatusDbModel(StatusEvent.APEN.name, mottattTidspunkt, null)
         else -> {
-            val status_timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC)
+            val statusTimestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC)
             val arbeidsgiverDbModel =
                 when (status) {
                     StatusEvent.SENDT.name ->
@@ -360,7 +359,7 @@ private fun ResultSet.getStatus(mottattTidspunkt: OffsetDateTime): StatusDbModel
                         )
                     else -> null
                 }
-            return StatusDbModel(status, status_timestamp, arbeidsgiverDbModel)
+            return StatusDbModel(status, statusTimestamp, arbeidsgiverDbModel)
         }
     }
 }

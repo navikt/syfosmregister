@@ -9,7 +9,6 @@ import io.mockk.mockkStatic
 import kotlinx.coroutines.delay
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
@@ -61,7 +60,7 @@ class SykmeldingStatusConsumerServiceTest :
                             invocationsCounter > errors -> {
                                 applicationState.alive = false
                                 applicationState.ready = false
-                                emptyList<SykmeldingStatusKafkaMessageDTO>()
+                                emptyList()
                             }
                             else -> throw RuntimeException("Error")
                         }

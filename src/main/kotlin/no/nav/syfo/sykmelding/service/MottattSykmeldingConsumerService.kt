@@ -6,7 +6,6 @@ import kotlinx.coroutines.delay
 import no.nav.syfo.Environment
 import no.nav.syfo.LoggingMeta
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.log
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.objectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -44,10 +43,6 @@ class MottattSykmeldingConsumerService(
                 msgId = receivedSykmelding.msgId,
                 sykmeldingId = receivedSykmelding.sykmelding.id,
             )
-        log.info(
-            "Mottatt sykmelding ${receivedSykmelding.sykmelding.id} er etter tidspunkt for bytting av logikk",
-            loggingMeta
-        )
         mottattSykmeldingService.handleMessageSykmelding(
             receivedSykmelding,
             loggingMeta,

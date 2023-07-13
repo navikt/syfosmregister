@@ -9,8 +9,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
-import io.ktor.server.application.ApplicationCallPipeline
-import io.ktor.server.application.install
+import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
@@ -26,7 +25,6 @@ import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
-import no.nav.syfo.log
 import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
@@ -47,52 +45,74 @@ fun createApplicationEngine(
     tilgangskontrollService: TilgangskontrollService,
 ): ApplicationEngine =
     embeddedServer(Netty, env.applicationPort) {
-        install(ContentNegotiation) {
-            jackson {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            }
-        }
-        setupAuth(
-            tokenXIssuer = tokenXIssuer,
-            jwkProviderAadV2 = jwkProviderAadV2,
-            jwkProviderTokenX = jwkProviderTokenX,
-            environment = env,
+        setup(
+            tokenXIssuer,
+            jwkProviderAadV2,
+            jwkProviderTokenX,
+            env,
+            applicationState,
+            sykmeldingerService,
+            tilgangskontrollService,
+            database
         )
-        install(CallId) {
-            generate { UUID.randomUUID().toString() }
-            verify { callId: String -> callId.isNotEmpty() }
-            header(HttpHeaders.XCorrelationId)
-        }
-        install(StatusPages) {
-            exception<Throwable> { call, cause ->
-                call.respond(HttpStatusCode.InternalServerError, cause.message ?: "Unknown error")
-
-                log.error("Caught exception", cause)
-                throw cause
-            }
-        }
-
-        routing {
-            if (env.cluster == "dev-gcp") {
-                staticResources("/api/v1/docs/", "api") { default("api/index.html") }
-            }
-            route("internal") { registerNaisApi(applicationState) }
-            route("/api/v2") {
-                authenticate("azureadv2") {
-                    registrerSykmeldingServiceuserApiV2(sykmeldingerService)
-                    registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
-                    registrerServiceuserPapirsykmeldingApi(
-                        papirsykmeldingService = PapirsykmeldingService(database)
-                    )
-                }
-            }
-            route("/api/v3") {
-                authenticate("tokenx") { registrerSykmeldingApiV2(sykmeldingerService) }
-            }
-        }
-        intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())
     }
+
+private fun Application.setup(
+    tokenXIssuer: String,
+    jwkProviderAadV2: JwkProvider,
+    jwkProviderTokenX: JwkProvider,
+    env: Environment,
+    applicationState: ApplicationState,
+    sykmeldingerService: SykmeldingerService,
+    tilgangskontrollService: TilgangskontrollService,
+    database: DatabaseInterface
+) {
+    install(ContentNegotiation) {
+        jackson {
+            registerKotlinModule()
+            registerModule(JavaTimeModule())
+            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        }
+    }
+    setupAuth(
+        tokenXIssuer = tokenXIssuer,
+        jwkProviderAadV2 = jwkProviderAadV2,
+        jwkProviderTokenX = jwkProviderTokenX,
+        environment = env,
+    )
+    install(CallId) {
+        generate { UUID.randomUUID().toString() }
+        verify { callId: String -> callId.isNotEmpty() }
+        header(HttpHeaders.XCorrelationId)
+    }
+    install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            call.respond(HttpStatusCode.InternalServerError, cause.message ?: "Unknown error")
+
+            this@setup.log.error("Caught exception", cause)
+            throw cause
+        }
+    }
+
+    routing {
+        if (env.cluster == "dev-gcp") {
+            staticResources("/api/v1/docs/", "api") { default("api/index.html") }
+        }
+        route("internal") { registerNaisApi(applicationState) }
+        route("/api/v2") {
+            authenticate("azureadv2") {
+                registrerSykmeldingServiceuserApiV2(sykmeldingerService)
+                registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
+                registrerServiceuserPapirsykmeldingApi(
+                    papirsykmeldingService = PapirsykmeldingService(database),
+                )
+            }
+        }
+        route("/api/v3") {
+            authenticate("tokenx") { registrerSykmeldingApiV2(sykmeldingerService) }
+        }
+    }
+    intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())
+}

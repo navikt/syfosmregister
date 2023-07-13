@@ -40,7 +40,14 @@ fun getReceivedSykmelding(
                 avsenderSystem = AvsenderSystem("avsender", "1"),
                 kontaktMedPasient = KontaktMedPasient(LocalDate.now(), null),
                 medisinskVurdering =
-                    MedisinskVurdering(null, emptyList(), false, false, null, null),
+                    MedisinskVurdering(
+                        null,
+                        emptyList(),
+                        svangerskap = false,
+                        yrkesskade = false,
+                        yrkesskadeDato = null,
+                        annenFraversArsak = null
+                    ),
                 meldingTilArbeidsgiver = null,
                 meldingTilNAV = null,
                 msgId = "1",
