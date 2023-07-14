@@ -36,7 +36,7 @@ class BekreftSykmeldingKafkaProducerTest :
         properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
         val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
         val kafkaConsumer =
-            KafkaConsumer<String, SykmeldingKafkaMessage>(
+            KafkaConsumer(
                 properties,
                 StringDeserializer(),
                 JacksonKafkaDeserializer(SykmeldingKafkaMessage::class)
@@ -52,15 +52,15 @@ class BekreftSykmeldingKafkaProducerTest :
                         getSykmeldingStatusEvent("1")
                     )
                 )
-                var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
-                messages.get("1") shouldNotBe null
+                val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
+                messages["1"] shouldNotBe null
             }
 
             test("Should tombstone") {
                 kafkaProducer.tombstoneSykmelding("1")
-                var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
+                val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
                 messages.containsKey("1") shouldBe true
-                messages.get("1") shouldBe null
+                messages["1"] shouldBe null
             }
 
             test("should send Bekreft then tombstone") {
@@ -72,9 +72,9 @@ class BekreftSykmeldingKafkaProducerTest :
                     )
                 )
                 kafkaProducer.tombstoneSykmelding("2")
-                var messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 2)
+                val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 2)
                 messages.containsKey("2") shouldBe true
-                messages.get("2") shouldBe null
+                messages["2"] shouldBe null
             }
         }
     })

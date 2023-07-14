@@ -26,8 +26,7 @@ class PdlPersonService(
             pdlResponse.errors.forEach { log.warn("PDL kastet error: {} ", it) }
         }
         if (
-            pdlResponse.data.hentIdenter == null ||
-                pdlResponse.data.hentIdenter.identer.isNullOrEmpty()
+            pdlResponse.data.hentIdenter == null || pdlResponse.data.hentIdenter.identer.isEmpty()
         ) {
             log.warn("Fant ikke person i PDL")
             throw PersonNotFoundException("Fant ikke person i PDL")

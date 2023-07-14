@@ -23,7 +23,7 @@ typealias AnnenFraversGrunnDB = no.nav.syfo.sykmelding.db.AnnenFraverGrunn
 class RedusertArbeidsgiverPeriodeKtTest :
     FunSpec({
         val periodeInnenforKoronaregler =
-            listOf<Periode>(
+            listOf(
                 Periode(
                     fom = koronaForsteFraDato.plusDays(1),
                     tom = koronaForsteFraDato.plusDays(15),
@@ -39,7 +39,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                 ),
             )
         val periodeUtenforKoronaregler =
-            listOf<Periode>(
+            listOf(
                 Periode(
                     fom = koronaForsteFraDato.minusDays(50),
                     tom = koronaForsteFraDato.minusDays(30),
@@ -55,7 +55,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                 ),
             )
         val perioderUtenforOgInnenforKoronaregler =
-            listOf<Periode>(
+            listOf(
                 Periode(
                     fom = koronaForsteFraDato.minusDays(50),
                     tom = koronaForsteFraDato.minusDays(30),
@@ -84,7 +84,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                 ),
             )
         val dbPeriodeInnenforKoronaregler =
-            listOf<no.nav.syfo.sykmelding.db.Periode>(
+            listOf(
                 no.nav.syfo.sykmelding.db.Periode(
                     fom = koronaForsteFraDato.plusDays(1),
                     tom = koronaForsteFraDato.plusDays(15),
@@ -104,7 +104,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                 ),
             )
         val dbPeriodeUtenforKoronaregler =
-            listOf<no.nav.syfo.sykmelding.db.Periode>(
+            listOf(
                 no.nav.syfo.sykmelding.db.Periode(
                     fom = koronaForsteFraDato.minusDays(50),
                     tom = koronaForsteFraDato.minusDays(30),
@@ -124,7 +124,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                 ),
             )
         val dbPerioderUtenforOgInnenforKoronaregler =
-            listOf<no.nav.syfo.sykmelding.db.Periode>(
+            listOf(
                 no.nav.syfo.sykmelding.db.Periode(
                     fom = koronaForsteFraDato.minusDays(50),
                     tom = koronaForsteFraDato.minusDays(30),
@@ -399,10 +399,10 @@ private fun getMedisinskVurdering(
     return MedisinskVurdering(
         diagnose,
         bidiagnose,
-        false,
-        false,
-        null,
-        annenFraversArsak,
+        svangerskap = false,
+        yrkesskade = false,
+        yrkesskadeDato = null,
+        annenFraversArsak = annenFraversArsak,
     )
 }
 
@@ -419,9 +419,9 @@ private fun getMedisinskVurderingDB(
     return MedisinskVurderingDB(
         diagnose,
         bidiagnose,
-        false,
-        false,
-        null,
-        annenFraversArsak,
+        svangerskap = false,
+        yrkesskade = false,
+        yrkesskadeDato = null,
+        annenFraversArsak = annenFraversArsak,
     )
 }

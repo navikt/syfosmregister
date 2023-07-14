@@ -33,22 +33,6 @@ val NYTT_FNR_COUNTER: Counter =
         .help("Antall endrede fnr som har blitt oppdatert i registeret")
         .register()
 
-val ORIGIN_COUNTER: Counter =
-    Counter.build()
-        .namespace(METRICS_NS)
-        .name("origin_count")
-        .labelNames("origin")
-        .help("Antall endrede origin som har blitt oppdatert i registeret")
-        .register()
-
-val REFERER_COUNTER: Counter =
-    Counter.build()
-        .namespace(METRICS_NS)
-        .name("referer_count")
-        .labelNames("referer")
-        .help("Antall endrede referer som har blitt oppdatert i registeret")
-        .register()
-
 val APP_ID_PATH_COUNTER: Counter =
     Counter.build()
         .namespace(METRICS_NS)

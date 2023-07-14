@@ -1,4 +1,4 @@
-package no.nav.syfo.graphql.model
+package no.nav.syfo.pdl.model
 
 import no.nav.syfo.pdl.client.model.ResponseError
 

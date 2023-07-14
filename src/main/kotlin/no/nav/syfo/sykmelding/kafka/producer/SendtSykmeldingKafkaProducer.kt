@@ -8,9 +8,9 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
 class SendtSykmeldingKafkaProducer(
-    private val kafkaProducer: KafkaProducer<String, SykmeldingKafkaMessage>,
-    private val topic: String
-) {
+    kafkaProducer: KafkaProducer<String, SykmeldingKafkaMessage?>,
+    topic: String
+) : TombstoneKafkaProducer(kafkaProducer, topic) {
     suspend fun sendSykmelding(sykmeldingKafkaMessage: SykmeldingKafkaMessage) {
         withContext(Dispatchers.IO) {
             try {
@@ -26,21 +26,6 @@ class SendtSykmeldingKafkaProducer(
             } catch (e: Exception) {
                 log.error(
                     "Kunne ikke skrive til sendt-topic for sykmeldingid ${sykmeldingKafkaMessage.sykmelding.id}: {}",
-                    e.message
-                )
-                throw e
-            }
-        }
-    }
-
-    suspend fun tombstoneSykmelding(sykmeldingId: String) {
-        withContext(Dispatchers.IO) {
-            log.info("Tombstone sykmelding {}", sykmeldingId)
-            try {
-                kafkaProducer.send(ProducerRecord(topic, sykmeldingId, null)).get()
-            } catch (e: Exception) {
-                log.error(
-                    "Kunne ikke skrive tombstone til bekreft-topic for sykmeldingid $sykmeldingId: {}",
                     e.message
                 )
                 throw e

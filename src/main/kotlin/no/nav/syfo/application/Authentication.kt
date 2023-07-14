@@ -31,8 +31,7 @@ fun Application.setupAuth(
                 when {
                     harTilgang(credentials, environment.clientIdV2) -> {
                         val appid: String = credentials.payload.getClaim("azp").asString()
-                        val app =
-                            environment.preAuthorizedApp.firstOrNull() { it.clientId == appid }
+                        val app = environment.preAuthorizedApp.firstOrNull { it.clientId == appid }
                         if (app != null) {
                             APP_ID_PATH_COUNTER.labels(
                                     app.team,

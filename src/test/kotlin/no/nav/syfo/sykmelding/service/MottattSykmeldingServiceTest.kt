@@ -28,7 +28,7 @@ class MottattSykmeldingServiceTest :
 
         val environment = mockkClass(Environment::class)
         mockEnvironment(environment)
-        val applicationState = ApplicationState(true, true)
+        val applicationState = ApplicationState(alive = true, ready = true)
 
         val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
         val sykmeldingStatusKafkaProducer = mockk<SykmeldingStatusKafkaProducer>(relaxed = true)

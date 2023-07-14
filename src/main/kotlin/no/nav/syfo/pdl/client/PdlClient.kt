@@ -6,10 +6,10 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpHeaders
-import no.nav.syfo.graphql.model.GraphQLResponse
 import no.nav.syfo.pdl.client.model.GetPersonRequest
 import no.nav.syfo.pdl.client.model.GetPersonVeriables
 import no.nav.syfo.pdl.client.model.PdlResponse
+import no.nav.syfo.pdl.model.GraphQLResponse
 
 class PdlClient(
     private val httpClient: HttpClient,

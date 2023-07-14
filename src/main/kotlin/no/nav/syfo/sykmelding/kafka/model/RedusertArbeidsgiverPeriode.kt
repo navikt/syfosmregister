@@ -8,17 +8,11 @@ import no.nav.syfo.sykmelding.db.Periode
 
 typealias MedisinskVurderingDB = no.nav.syfo.sykmelding.db.MedisinskVurdering
 
-typealias DiagnoseDB = no.nav.syfo.sykmelding.db.Diagnose
-
-typealias AnnenFraversArsakDB = no.nav.syfo.sykmelding.db.AnnenFraversArsak
-
-typealias AnnenFraversGrunnDB = no.nav.syfo.sykmelding.db.AnnenFraverGrunn
-
 private val diagnoserSomGirRedusertArbgiverPeriode = listOf("R991", "U071", "U072", "A23", "R992")
-val koronaForsteFraDato = LocalDate.of(2020, Month.MARCH, 15)
-val koronaForsteTilDato = LocalDate.of(2021, Month.OCTOBER, 1)
-val koronaAndreFraDato = LocalDate.of(2021, Month.NOVEMBER, 30)
-val koronaAndreTilDato = LocalDate.of(2022, Month.JULY, 1)
+val koronaForsteFraDato: LocalDate = LocalDate.of(2020, Month.MARCH, 15)
+val koronaForsteTilDato: LocalDate = LocalDate.of(2021, Month.OCTOBER, 1)
+val koronaAndreFraDato: LocalDate = LocalDate.of(2021, Month.NOVEMBER, 30)
+val koronaAndreTilDato: LocalDate = LocalDate.of(2022, Month.JULY, 1)
 
 fun MedisinskVurderingDB.getHarRedusertArbeidsgiverperiode(
     sykmeldingsperioder: List<Periode>
@@ -33,7 +27,7 @@ fun MedisinskVurderingDB.getHarRedusertArbeidsgiverperiode(
     ) {
         return true
     } else if (
-        !biDiagnoser.isNullOrEmpty() &&
+        biDiagnoser.isNotEmpty() &&
             biDiagnoser.find { diagnoserSomGirRedusertArbgiverPeriode.contains(it.kode) } != null
     ) {
         return true
@@ -60,7 +54,7 @@ fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(
     ) {
         return true
     } else if (
-        !biDiagnoser.isNullOrEmpty() &&
+        biDiagnoser.isNotEmpty() &&
             biDiagnoser.find { diagnoserSomGirRedusertArbgiverPeriode.contains(it.kode) } != null
     ) {
         return true

@@ -19,7 +19,6 @@ fun Route.registrerInternalSykmeldingApiV2(
     route("/internal") {
         get("/sykmeldinger") {
             val token = call.request.headers["Authorization"]?.removePrefix("Bearer ")
-            log.info("Got request to V2 endpoint")
             try {
                 if (token == null) {
                     log.warn("Token is missing, returing with httpstatus Unauthorized")

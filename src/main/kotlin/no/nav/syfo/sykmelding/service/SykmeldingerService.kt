@@ -52,16 +52,16 @@ class SykmeldingerService(private val database: DatabaseInterface) {
         }
     }
 
-    fun inneholderGradertPeriode(perioder: List<SykmeldingsperiodeDTO>): Boolean? {
+    fun inneholderGradertPeriode(perioder: List<SykmeldingsperiodeDTO>): Boolean {
         return perioder.firstOrNull { it.gradert != null }?.gradert != null
     }
 
-    fun finnForsteFom(perioder: List<SykmeldingsperiodeDTO>): LocalDate {
+    private fun finnForsteFom(perioder: List<SykmeldingsperiodeDTO>): LocalDate {
         return perioder.minByOrNull { it.fom }?.fom
             ?: throw IllegalStateException("Skal ikke kunne ha periode uten fom")
     }
 
-    fun finnSisteTom(perioder: List<SykmeldingsperiodeDTO>): LocalDate {
+    private fun finnSisteTom(perioder: List<SykmeldingsperiodeDTO>): LocalDate {
         return perioder.maxByOrNull { it.tom }?.tom
             ?: throw IllegalStateException("Skal ikke kunne ha periode uten tom")
     }
