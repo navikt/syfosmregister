@@ -27,7 +27,7 @@ val kotlinVersion = "1.9.0"
 val swaggerUiVersion = "5.2.0"
 val testContainerVersion = "1.18.3"
 val commonsCodecVersion = "1.16.0"
-val snakeyamlVersion= "2.0"
+val snakeyamlVersion= "2.1"
 val ktfmtVersion = "0.44"
 
 plugins {
