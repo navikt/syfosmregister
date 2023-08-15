@@ -134,11 +134,6 @@ tasks {
         outputDir = File(buildDir.path + "/resources/main/api")
     }
 
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
-        dependsOn(":generateSwaggerUI")
-    }
-
     withType<ShadowJar> {
         transform(ServiceFileTransformer::class.java) {
             setPath("META-INF/cxf")
