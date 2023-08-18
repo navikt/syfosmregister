@@ -96,9 +96,6 @@ spec:
           namespace: team-esyfo
           cluster: prod-fss
         - application: macgyver
-  ingresses:
-    - "https://smregister.intern.nav.no"
-  webproxy: false
   leaderElection: true
   env:
     - name: SYFOTILGANGSKONTROLL_SCOPE
