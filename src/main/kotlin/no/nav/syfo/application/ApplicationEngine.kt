@@ -97,9 +97,6 @@ private fun Application.setup(
     }
 
     routing {
-        if (env.cluster == "dev-gcp") {
-            staticResources("/api/v1/docs/", "api") { default("api/index.html") }
-        }
         route("internal") { registerNaisApi(applicationState) }
         route("/api/v2") {
             authenticate("azureadv2") {
