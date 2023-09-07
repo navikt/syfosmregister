@@ -1,6 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.syfo"
 version = "1.0.0"
@@ -24,7 +23,6 @@ val nimbusdsVersion = "9.31"
 val testContainerKafkaVersion = "1.18.3"
 val caffeineVersion = "3.1.8"
 val kotlinVersion = "1.9.0"
-val swaggerUiVersion = "5.3.1"
 val testContainerVersion = "1.18.3"
 val commonsCodecVersion = "1.16.0"
 val snakeyamlVersion= "2.1"
@@ -34,7 +32,6 @@ plugins {
     id("com.diffplug.spotless") version "6.20.0"
     kotlin("jvm") version "1.9.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("org.hidetake.swagger.generator") version "2.19.2" apply true
     id("org.cyclonedx.bom") version "1.7.4"
 }
 
@@ -112,26 +109,16 @@ dependencies {
     testImplementation("com.nimbusds:nimbus-jose-jwt:$nimbusdsVersion")
     testImplementation("org.testcontainers:kafka:$testContainerKafkaVersion")
 
-    swaggerUI("org.webjars:swagger-ui:$swaggerUiVersion")
 }
-swaggerSources {
-    create("sykmelding").apply {
-        setInputFile(file("api/oas3/syfosmregister-v1.yaml"))
-    }
-}
+
 
 tasks {
     withType<Jar> {
         manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
-        dependsOn(":generateSwaggerUI")
     }
 
     create("printVersion") {
         println(project.version)
-    }
-
-    withType<org.hidetake.gradle.swagger.generator.GenerateSwaggerUI> {
-        outputDir = File(buildDir.path + "/resources/main/api")
     }
 
     withType<ShadowJar> {
@@ -139,7 +126,6 @@ tasks {
             setPath("META-INF/cxf")
             include("bus-extensions.txt")
         }
-        dependsOn("generateSwaggerUI")
     }
 
     withType<Test> {
