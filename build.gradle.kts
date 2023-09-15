@@ -1,6 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import com.github.jengelman.gradle.plugins.shadow.transformers.ServiceFileTransformer
-
 group = "no.nav.syfo"
 version = "1.0.0"
 
@@ -29,9 +26,13 @@ val snakeyamlVersion= "2.1"
 val ktfmtVersion = "0.44"
 
 plugins {
+    id("application")
     id("com.diffplug.spotless") version "6.21.0"
     kotlin("jvm") version "1.9.10"
     id("com.github.johnrengelman.shadow") version "8.1.1"
+}
+application {
+    mainClass.set("no.nav.syfo.BootstrapKt")
 }
 
 val githubUser: String by project
@@ -100,6 +101,7 @@ dependencies {
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
@@ -112,24 +114,23 @@ dependencies {
 
 
 tasks {
-    withType<Jar> {
-        manifest.attributes["Main-Class"] = "no.nav.syfo.BootstrapKt"
-    }
 
-    create("printVersion") {
-        println(project.version)
-    }
-
-    withType<ShadowJar> {
-        transform(ServiceFileTransformer::class.java) {
-            setPath("META-INF/cxf")
-            include("bus-extensions.txt")
+    shadowJar {
+        archiveBaseName.set("app")
+        archiveClassifier.set("")
+        isZip64 = true
+        manifest {
+            attributes(
+                mapOf(
+                    "Main-Class" to "no.nav.syfo.BootstrapKt",
+                ),
+            )
         }
     }
 
-    withType<Test> {
-        useJUnitPlatform {
-        }
+
+    test {
+        useJUnitPlatform {}
         testLogging {
             events("skipped", "failed")
             showStackTraces = true
