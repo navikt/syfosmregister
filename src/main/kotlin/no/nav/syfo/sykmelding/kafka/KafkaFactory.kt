@@ -139,7 +139,7 @@ class KafkaFactory private constructor() {
             environment: Environment
         ): KafkaConsumer<String, GenericRecord> {
             val consumerProperties =
-                KafkaUtils.getAivenKafkaConfig()
+                KafkaUtils.getAivenKafkaConfig("pdl-aktor-consumer")
                     .apply {
                         setProperty(
                             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,

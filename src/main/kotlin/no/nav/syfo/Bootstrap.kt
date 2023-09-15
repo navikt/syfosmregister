@@ -91,7 +91,7 @@ fun main() {
     DefaultExports.initialize()
 
     val kafkaBaseConfigAiven =
-        KafkaUtils.getAivenKafkaConfig().also {
+        KafkaUtils.getAivenKafkaConfig("syfosmregister-consumer").also {
             it.let {
                 it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
                 it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
