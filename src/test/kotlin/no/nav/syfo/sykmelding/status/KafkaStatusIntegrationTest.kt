@@ -11,13 +11,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
-import io.mockk.clearAllMocks
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkClass
-import io.mockk.mockkStatic
-import io.mockk.spyk
+import io.mockk.*
 import java.time.ZoneOffset
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
@@ -27,6 +21,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.createListener
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
 import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
@@ -52,14 +47,7 @@ import no.nav.syfo.sykmelding.model.SvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
-import no.nav.syfo.testutil.KafkaTest
-import no.nav.syfo.testutil.TestDB
-import no.nav.syfo.testutil.dropData
-import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
-import no.nav.syfo.testutil.setUpTestApplication
-import no.nav.syfo.testutil.testBehandlingsutfall
-import no.nav.syfo.testutil.testSykmeldingsdokument
-import no.nav.syfo.testutil.testSykmeldingsopplysninger
+import no.nav.syfo.testutil.*
 import org.amshove.kluent.shouldBeEqualTo
 
 @DelicateCoroutinesApi
@@ -171,7 +159,7 @@ class KafkaStatusIntegrationTest :
             }
 
             test("Should test APEN and BEKREFTET") {
-                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
                     {
                         callOriginal()
                         applicationState.alive = false
@@ -246,6 +234,28 @@ class KafkaStatusIntegrationTest :
                 val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
                 sykmeldinger.size shouldBeEqualTo 0
             }
+
+            test("lagrer tidligereArbeidsgiver i databasen"){
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
+                        {
+                            callOriginal()
+                            applicationState.alive = false
+                            applicationState.ready = false
+                        }
+
+                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+                val tidligereArbeidsgiver = TidligereArbeidsgiverDTO("orgNavn", "orgnummer", "1")
+                kafkaProducer.send(getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver), sykmelding.pasientFnr)
+
+                runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+
+                val tidligereArbeidsgiverList = database.connection.getTidligereArbeidsgiver()
+
+                tidligereArbeidsgiverList?.size shouldBeEqualTo 1
+
+            }
+
+
         }
 
         context("Test Kafka -> DB -> status API") {
@@ -359,7 +369,8 @@ private fun publishSendAndWait(
 }
 
 private fun getSykmeldingBekreftEvent(
-    sykmelding: Sykmeldingsopplysninger
+    sykmelding: Sykmeldingsopplysninger,
+    tidligereArbeidsgiverDTO: TidligereArbeidsgiverDTO? = null
 ): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
@@ -370,6 +381,7 @@ private fun getSykmeldingBekreftEvent(
             listOf(
                 SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI")
             ),
+        tidligereArbeidsgiver = tidligereArbeidsgiverDTO
     )
 }
 

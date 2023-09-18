@@ -13,7 +13,9 @@ import no.nav.syfo.db.toList
 import no.nav.syfo.log
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.objectMapper
+import org.postgresql.util.PGobject
 
 suspend fun DatabaseInterface.hentSykmeldingStatuser(
     sykmeldingId: String
@@ -54,7 +56,8 @@ suspend fun DatabaseInterface.registrerSendt(
 
 suspend fun DatabaseInterface.registrerBekreftet(
     sykmeldingBekreftEvent: SykmeldingBekreftEvent,
-    sykmeldingStatusEvent: SykmeldingStatusEvent
+    sykmeldingStatusEvent: SykmeldingStatusEvent,
+    tidligereArbeidsgiver: TidligereArbeidsgiverDTO?,
 ) =
     withContext(Dispatchers.IO) {
         connection.use { connection ->
@@ -68,6 +71,9 @@ suspend fun DatabaseInterface.registrerBekreftet(
                 sykmeldingBekreftEvent.sporsmal?.forEach { connection.lagreSporsmalOgSvar(it) }
             }
             connection.registerStatus(sykmeldingStatusEvent)
+            if (tidligereArbeidsgiver != null) {
+                connection.registerTidligereArbeidsgiver(sykmeldingStatusEvent.sykmeldingId ,tidligereArbeidsgiver)
+            }
             connection.commit()
         }
     }
@@ -157,6 +163,20 @@ suspend fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEve
                 it.setString(1, sykmeldingStatusEvent.sykmeldingId)
                 it.setString(2, sykmeldingStatusEvent.event.name)
                 it.setTimestamp(3, Timestamp.from(sykmeldingStatusEvent.timestamp.toInstant()))
+                it.execute()
+            }
+    }
+
+suspend fun Connection.registerTidligereArbeidsgiver(sykmeldingId: String, tidligereArbeidsgiver: TidligereArbeidsgiverDTO) =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+            """
+                INSERT INTO tidligere_arbeidsgiver(sykmeldingId, tidligere_arbeidsgiver) VALUES (?, ?) ON CONFLICT DO NOTHING
+                """,
+        )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.setObject(2, tidligereArbeidsgiver.toPGObject())
                 it.execute()
             }
     }
@@ -283,3 +303,9 @@ private fun tilStatusEvent(status: String): StatusEvent {
             )
     }
 }
+
+private fun TidligereArbeidsgiverDTO.toPGObject() =
+    PGobject().also {
+        it.type = "json"
+        it.value = objectMapper.writeValueAsString(this)
+    }

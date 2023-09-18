@@ -3,6 +3,8 @@ package no.nav.syfo.testutil
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
@@ -34,11 +36,14 @@ import no.nav.syfo.model.SvarRestriksjon
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.sykmelding.db.Merknad
+import no.nav.syfo.sykmelding.db.SykmeldingDbModel
+import no.nav.syfo.sykmelding.db.toSykmeldingDbModel
 import org.testcontainers.containers.PostgreSQLContainer
 
 class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:14")
@@ -85,6 +90,29 @@ fun Connection.dropData() {
         connection.prepareStatement("ALTER SEQUENCE sporsmal_id_seq RESTART WITH 1").executeUpdate()
         connection.commit()
     }
+}
+
+suspend fun Connection.getTidligereArbeidsgiver(): List<TidligereArbeidsgiver>? =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+            """
+                    SELECT count(*)
+                    FROM tidligere_arbeidsgiver 
+                    """,
+        )
+            .use {
+                it.executeQuery().toList { tilTidligereArbeidsgiverliste() }.firstOrNull()
+            }
+    }
+
+
+data class TidligereArbeidsgiver(
+    val sykmeldingId: String,
+    val tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+)
+
+private fun ResultSet.tilTidligereArbeidsgiverliste(): List<TidligereArbeidsgiver>? {
+    return getString("tidligere_arbeidsgiver")?.let { objectMapper.readValue<List<TidligereArbeidsgiver>>(it) }
 }
 
 fun Connection.getMerknaderForId(id: String): List<Merknad>? =

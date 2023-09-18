@@ -181,7 +181,7 @@ class MottattSykmeldingStatusServiceTest :
                 assertFailsWith<RuntimeException> {
                     mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
                 }
-                coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
             }
             test("SLETTET") {
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
@@ -211,7 +211,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
 
-                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 coVerify { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
             }
             test("Bekreft avvist sykmelding oppdaterer kun database") {
@@ -226,7 +226,7 @@ class MottattSykmeldingStatusServiceTest :
                     opprettBekreftStatusmeldingAvvistSykmelding()
                 )
 
-                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 coVerify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
             }
         }

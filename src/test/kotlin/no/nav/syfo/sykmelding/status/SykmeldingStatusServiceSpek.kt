@@ -192,6 +192,7 @@ class SykmeldingStatusServiceSpek :
                             .minusSeconds(1),
                         sporsmal,
                     ),
+                    tidligereArbeidsgiver = null
                 )
                 val savedSporsmals = database.connection.use { it.hentSporsmalOgSvar("uuid") }
                 savedSporsmals.size shouldBeEqualTo 0
@@ -214,6 +215,7 @@ class SykmeldingStatusServiceSpek :
                             .plusSeconds(1),
                         sporsmal,
                     ),
+                    tidligereArbeidsgiver = null
                 )
                 val savedSporsmals = database.connection.use { it.hentSporsmalOgSvar("uuid") }
                 savedSporsmals shouldBeEqualTo sporsmal
@@ -236,6 +238,7 @@ class SykmeldingStatusServiceSpek :
                             .plusSeconds(1),
                         sporsmal,
                     ),
+                    tidligereArbeidsgiver = null
                 )
                 sykmeldingStatusService.registrerStatus(
                     SykmeldingStatusEvent(

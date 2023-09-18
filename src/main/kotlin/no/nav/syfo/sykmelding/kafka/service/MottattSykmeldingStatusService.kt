@@ -202,6 +202,8 @@ class MottattSykmeldingStatusService(
     ) {
         val sykmeldingStatusEvent =
             KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
+        val tidligereArbeidsgiver = sykmeldingStatusKafkaMessage.event.tidligereArbeidsgiver
+
         val sykmeldingBekreftEvent =
             SykmeldingBekreftEvent(
                 sykmeldingStatusKafkaMessage.event.sykmeldingId,
@@ -214,7 +216,7 @@ class MottattSykmeldingStatusService(
                 },
             )
 
-        sykmeldingStatusService.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
+        sykmeldingStatusService.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent, tidligereArbeidsgiver)
     }
 
     private suspend fun registrerStatus(

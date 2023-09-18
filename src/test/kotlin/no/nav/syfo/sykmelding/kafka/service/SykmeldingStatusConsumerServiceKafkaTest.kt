@@ -216,7 +216,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     mockkClass(
                         ArbeidsgiverSykmelding::class,
                     )
-                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } returns Unit
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } returns Unit
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     null andThen
                     SykmeldingStatusEvent(
@@ -435,7 +435,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     mockkClass(
                         ArbeidsgiverSykmelding::class,
                     )
-                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
                     {
                         sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
                         sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
@@ -449,7 +449,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
                 coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
                 coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-                coVerify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 sykmeldingBekreftEvent shouldBeEqualTo
                     SykmeldingBekreftEvent(
                         sykmeldingId,
@@ -487,7 +487,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     mockkClass(
                         ArbeidsgiverSykmelding::class,
                     )
-                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
                     {
                         sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
                         sykmeldingStatusEvent = args[1] as SykmeldingStatusEvent
@@ -501,7 +501,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
                 coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
                 coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
-                coVerify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify(exactly = 1) { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 sykmeldingBekreftEvent shouldBeEqualTo
                     SykmeldingBekreftEvent(
                         sykmeldingId,
@@ -568,7 +568,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.tombstoneSykmelding(any()) }
                 coVerify(exactly = 0) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
                 coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-                coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 coVerify(exactly = 1) { sykmeldingStatusService.registrerSendt(any(), any()) }
                 sykmeldingSendEvent shouldBeEqualTo
                     SykmeldingSendEvent(
