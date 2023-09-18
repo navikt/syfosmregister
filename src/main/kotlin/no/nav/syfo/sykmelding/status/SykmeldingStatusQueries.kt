@@ -13,7 +13,9 @@ import no.nav.syfo.db.toList
 import no.nav.syfo.log
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.objectMapper
+import org.postgresql.util.PGobject
 
 suspend fun DatabaseInterface.hentSykmeldingStatuser(
     sykmeldingId: String
@@ -283,3 +285,9 @@ private fun tilStatusEvent(status: String): StatusEvent {
             )
     }
 }
+
+private fun TidligereArbeidsgiverDTO.toPGObject() =
+    PGobject().also {
+        it.type = "json"
+        it.value = objectMapper.writeValueAsString(this)
+    }

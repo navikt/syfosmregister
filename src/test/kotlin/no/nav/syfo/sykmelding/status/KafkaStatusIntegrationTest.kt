@@ -27,6 +27,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.createListener
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
 import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
@@ -246,6 +247,24 @@ class KafkaStatusIntegrationTest :
                 val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
                 sykmeldinger.size shouldBeEqualTo 0
             }
+
+            test("lagrer tidligereArbeidsgiver i databasen"){
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
+                        {
+                            callOriginal()
+                            applicationState.alive = false
+                            applicationState.ready = false
+                        }
+
+                val tidligereArbeidsgiver = TidligereArbeidsgiverDTO("orgNavn", "orgnummer", "1")
+                kafkaProducer.send(getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver), sykmelding.pasientFnr)
+                val bekreftetEvent = getSykmeldingBekreftEvent(sykmelding)
+                kafkaProducer.send(bekreftetEvent, sykmelding.pasientFnr)
+
+
+            }
+
+
         }
 
         context("Test Kafka -> DB -> status API") {
@@ -359,7 +378,8 @@ private fun publishSendAndWait(
 }
 
 private fun getSykmeldingBekreftEvent(
-    sykmelding: Sykmeldingsopplysninger
+    sykmelding: Sykmeldingsopplysninger,
+    tidligereArbeidsgiverDTO: TidligereArbeidsgiverDTO? = null
 ): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
@@ -370,6 +390,7 @@ private fun getSykmeldingBekreftEvent(
             listOf(
                 SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI")
             ),
+        tidligereArbeidsgiver = tidligereArbeidsgiverDTO
     )
 }
 

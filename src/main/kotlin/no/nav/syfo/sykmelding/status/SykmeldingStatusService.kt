@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.status
 
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.nullstilling.slettSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfall
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
