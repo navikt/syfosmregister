@@ -216,7 +216,11 @@ class MottattSykmeldingStatusService(
                 },
             )
 
-        sykmeldingStatusService.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent, tidligereArbeidsgiver)
+        sykmeldingStatusService.registrerBekreftet(
+            sykmeldingBekreftEvent,
+            sykmeldingStatusEvent,
+            tidligereArbeidsgiver
+        )
     }
 
     private suspend fun registrerStatus(

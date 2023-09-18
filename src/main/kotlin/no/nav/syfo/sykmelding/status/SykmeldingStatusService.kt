@@ -35,7 +35,11 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
             ),
         tidligereArbeidsgiver: TidligereArbeidsgiverDTO?
     ) {
-        database.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent, tidligereArbeidsgiver)
+        database.registrerBekreftet(
+            sykmeldingBekreftEvent,
+            sykmeldingStatusEvent,
+            tidligereArbeidsgiver
+        )
     }
 
     suspend fun getLatestSykmeldingStatus(sykmeldingId: String): SykmeldingStatusEvent? =

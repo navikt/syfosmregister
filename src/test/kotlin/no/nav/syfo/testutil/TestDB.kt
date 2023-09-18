@@ -3,11 +3,11 @@ package no.nav.syfo.testutil
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.syfo.Environment
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.DatabaseInterface
@@ -42,8 +42,6 @@ import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.sykmelding.db.Merknad
-import no.nav.syfo.sykmelding.db.SykmeldingDbModel
-import no.nav.syfo.sykmelding.db.toSykmeldingDbModel
 import org.testcontainers.containers.PostgreSQLContainer
 
 class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:14")
@@ -92,28 +90,30 @@ fun Connection.dropData() {
     }
 }
 
-suspend fun Connection.getTidligereArbeidsgiver(): List<TidligereArbeidsgiver>? =
+suspend fun Connection.getTidligereArbeidsgiver(): List<TidligereArbeidsgiver> =
     withContext(Dispatchers.IO) {
         prepareStatement(
-            """
-                    SELECT count(*)
+                """
+                    SELECT *
                     FROM tidligere_arbeidsgiver 
                     """,
-        )
-            .use {
-                it.executeQuery().toList { tilTidligereArbeidsgiverliste() }.firstOrNull()
-            }
+            )
+            .use { it.executeQuery().toList { tilTidligereArbeidsgiverliste() } }
     }
-
 
 data class TidligereArbeidsgiver(
     val sykmeldingId: String,
     val tidligereArbeidsgiver: TidligereArbeidsgiverDTO
 )
 
-private fun ResultSet.tilTidligereArbeidsgiverliste(): List<TidligereArbeidsgiver>? {
-    return getString("tidligere_arbeidsgiver")?.let { objectMapper.readValue<List<TidligereArbeidsgiver>>(it) }
-}
+private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
+    TidligereArbeidsgiver(
+        sykmeldingId = getString("sykmeldingId"),
+        tidligereArbeidsgiver =
+            getString("tidligere_arbeidsgiver").let {
+                objectMapper.readValue<TidligereArbeidsgiverDTO>(it)
+            }
+    )
 
 fun Connection.getMerknaderForId(id: String): List<Merknad>? =
     this.prepareStatement(

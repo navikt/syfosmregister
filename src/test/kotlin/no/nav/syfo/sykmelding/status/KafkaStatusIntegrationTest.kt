@@ -235,27 +235,27 @@ class KafkaStatusIntegrationTest :
                 sykmeldinger.size shouldBeEqualTo 0
             }
 
-            test("lagrer tidligereArbeidsgiver i databasen"){
+            test("lagrer tidligereArbeidsgiver i databasen") {
                 coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
-                        {
-                            callOriginal()
-                            applicationState.alive = false
-                            applicationState.ready = false
-                        }
+                    {
+                        callOriginal()
+                        applicationState.alive = false
+                        applicationState.ready = false
+                    }
 
                 kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
                 val tidligereArbeidsgiver = TidligereArbeidsgiverDTO("orgNavn", "orgnummer", "1")
-                kafkaProducer.send(getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver), sykmelding.pasientFnr)
+                kafkaProducer.send(
+                    getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver),
+                    sykmelding.pasientFnr
+                )
 
                 runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
 
                 val tidligereArbeidsgiverList = database.connection.getTidligereArbeidsgiver()
 
                 tidligereArbeidsgiverList?.size shouldBeEqualTo 1
-
             }
-
-
         }
 
         context("Test Kafka -> DB -> status API") {

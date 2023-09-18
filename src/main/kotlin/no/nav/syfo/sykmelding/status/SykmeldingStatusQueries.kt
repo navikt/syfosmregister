@@ -72,7 +72,10 @@ suspend fun DatabaseInterface.registrerBekreftet(
             }
             connection.registerStatus(sykmeldingStatusEvent)
             if (tidligereArbeidsgiver != null) {
-                connection.registerTidligereArbeidsgiver(sykmeldingStatusEvent.sykmeldingId ,tidligereArbeidsgiver)
+                connection.registerTidligereArbeidsgiver(
+                    sykmeldingStatusEvent.sykmeldingId,
+                    tidligereArbeidsgiver
+                )
             }
             connection.commit()
         }
@@ -167,13 +170,16 @@ suspend fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEve
             }
     }
 
-suspend fun Connection.registerTidligereArbeidsgiver(sykmeldingId: String, tidligereArbeidsgiver: TidligereArbeidsgiverDTO) =
+suspend fun Connection.registerTidligereArbeidsgiver(
+    sykmeldingId: String,
+    tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+) =
     withContext(Dispatchers.IO) {
         prepareStatement(
-            """
+                """
                 INSERT INTO tidligere_arbeidsgiver(sykmeldingId, tidligere_arbeidsgiver) VALUES (?, ?) ON CONFLICT DO NOTHING
                 """,
-        )
+            )
             .use {
                 it.setString(1, sykmeldingId)
                 it.setObject(2, tidligereArbeidsgiver.toPGObject())

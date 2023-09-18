@@ -181,7 +181,9 @@ class MottattSykmeldingStatusServiceTest :
                 assertFailsWith<RuntimeException> {
                     mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
                 }
-                coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
+                coVerify(exactly = 0) {
+                    sykmeldingStatusService.registrerBekreftet(any(), any(), any())
+                }
             }
             test("SLETTET") {
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
