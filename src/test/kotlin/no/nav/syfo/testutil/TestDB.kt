@@ -90,15 +90,19 @@ fun Connection.dropData() {
     }
 }
 
-suspend fun Connection.getTidligereArbeidsgiver(): List<TidligereArbeidsgiver> =
+suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<TidligereArbeidsgiver> =
     withContext(Dispatchers.IO) {
         prepareStatement(
                 """
                     SELECT *
                     FROM tidligere_arbeidsgiver 
+                    WHERE sykmelding_id = ?
                     """,
             )
-            .use { it.executeQuery().toList { tilTidligereArbeidsgiverliste() } }
+            .use {
+                it.setString(1, sykmeldingId)
+                it.executeQuery().toList { tilTidligereArbeidsgiverliste() }
+            }
     }
 
 data class TidligereArbeidsgiver(

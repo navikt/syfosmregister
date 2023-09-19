@@ -54,6 +54,19 @@ suspend fun DatabaseInterface.registrerSendt(
         }
     }
 
+private suspend fun Connection.slettTidligereArbeidsgiver(sykmeldingId: String) =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+                DELETE FROM tidligere_arbeidsgiver WHERE sykmelding_id=?;
+                """,
+            )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.executeUpdate()
+            }
+    }
+
 suspend fun DatabaseInterface.registrerBekreftet(
     sykmeldingBekreftEvent: SykmeldingBekreftEvent,
     sykmeldingStatusEvent: SykmeldingStatusEvent,
@@ -205,6 +218,8 @@ private suspend fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: Sykm
 
 private suspend fun Connection.slettAlleSvar(sykmeldingId: String) {
     this.slettArbeidsgiver(sykmeldingId)
+    val antall = this.slettTidligereArbeidsgiver(sykmeldingId)
+    log.info("sletta antall tidligere arbeidsgivere: $antall")
     this.slettSvar(sykmeldingId)
 }
 
