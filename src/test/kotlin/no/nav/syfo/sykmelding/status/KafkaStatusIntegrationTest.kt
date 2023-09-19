@@ -12,6 +12,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
 import io.mockk.*
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
@@ -298,17 +299,25 @@ class KafkaStatusIntegrationTest :
                         applicationState.alive = false
                         applicationState.ready = false
                     }
-
+                val apenEvent = getApenEvent(sykmelding)
                 kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
                 val tidligereArbeidsgiver1 = TidligereArbeidsgiverDTO("ag1", "orgnummer", "1")
                 kafkaProducer.send(
-                    getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver1),
+                    getSykmeldingBekreftEvent(
+                        sykmelding,
+                        tidligereArbeidsgiver1,
+                        timestamp = apenEvent.timestamp.plusMinutes(1)
+                    ),
                     sykmelding.pasientFnr
                 )
                 val tidligereArbeidsgiver2 = TidligereArbeidsgiverDTO("ag2", "orgnummer", "1")
 
                 kafkaProducer.send(
-                    getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver2),
+                    getSykmeldingBekreftEvent(
+                        sykmelding,
+                        tidligereArbeidsgiver2,
+                        apenEvent.timestamp.plusMinutes(1)
+                    ),
                     sykmelding.pasientFnr
                 )
                 runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
@@ -328,18 +337,28 @@ class KafkaStatusIntegrationTest :
                 coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
                     {
                         callOriginal()
+                    } andThenAnswer
+                    {
+                        callOriginal()
                         applicationState.alive = false
                         applicationState.ready = false
                     }
-
+                val apenEvent = getApenEvent(sykmelding)
                 kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
                 val tidligereArbeidsgiver1 = TidligereArbeidsgiverDTO("ag1", "orgnummer", "1")
                 kafkaProducer.send(
-                    getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver1),
+                    getSykmeldingBekreftEvent(
+                        sykmelding,
+                        tidligereArbeidsgiver1,
+                        apenEvent.timestamp.plusMinutes(1)
+                    ),
                     sykmelding.pasientFnr
                 )
 
-                kafkaProducer.send(getSykmeldingAvbruttEvent(sykmelding.id), sykmelding.pasientFnr)
+                kafkaProducer.send(
+                    getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(2)),
+                    sykmelding.pasientFnr
+                )
                 runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
 
                 val tidligereArbeidsgiverList =
@@ -442,7 +461,9 @@ private fun publishSendAndWait(
     applicationState: ApplicationState,
     kafkaProducer: SykmeldingStatusKafkaProducer,
     sykmelding: Sykmeldingsopplysninger,
-    sykmeldingStatusConsumerService: SykmeldingStatusConsumerService
+    sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
+    sendTimestamp: OffsetDateTime =
+        sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC)
 ): SykmeldingStatusKafkaEventDTO {
     coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers
         {
@@ -451,7 +472,7 @@ private fun publishSendAndWait(
             applicationState.ready = false
         }
     kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-    val sendtEvent = getSendtEvent(sykmelding)
+    val sendtEvent = getSendtEvent(sykmelding, sendTimestamp)
     kafkaProducer.send(sendtEvent, sykmelding.pasientFnr)
     val job = createListener(applicationState) { sykmeldingStatusConsumerService.start() }
     runBlocking { job.join() }
@@ -460,12 +481,13 @@ private fun publishSendAndWait(
 
 private fun getSykmeldingBekreftEvent(
     sykmelding: Sykmeldingsopplysninger,
-    tidligereArbeidsgiverDTO: TidligereArbeidsgiverDTO? = null
+    tidligereArbeidsgiverDTO: TidligereArbeidsgiverDTO? = null,
+    timestamp: OffsetDateTime = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
 ): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
         statusEvent = STATUS_BEKREFTET,
-        timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
+        timestamp = timestamp,
         arbeidsgiver = null,
         sporsmals =
             listOf(
@@ -475,19 +497,25 @@ private fun getSykmeldingBekreftEvent(
     )
 }
 
-fun getSykmeldingAvbruttEvent(id: String) =
+fun getSykmeldingAvbruttEvent(
+    id: String,
+    timestamp: OffsetDateTime = getNowTickMillisOffsetDateTime()
+) =
     SykmeldingStatusKafkaEventDTO(
         sykmeldingId = id,
-        timestamp = getNowTickMillisOffsetDateTime(),
+        timestamp = timestamp,
         arbeidsgiver = null,
         sporsmals = null,
         statusEvent = STATUS_AVBRUTT,
     )
 
-private fun getSendtEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
+private fun getSendtEvent(
+    sykmelding: Sykmeldingsopplysninger,
+    timestamp: OffsetDateTime = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC)
+): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
-        timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
+        timestamp = timestamp,
         arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
         statusEvent = STATUS_SENDT,
         sporsmals =
