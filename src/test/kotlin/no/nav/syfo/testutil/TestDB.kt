@@ -108,7 +108,7 @@ data class TidligereArbeidsgiver(
 
 private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
     TidligereArbeidsgiver(
-        sykmeldingId = getString("sykmeldingId"),
+        sykmeldingId = getString("sykmelding_id"),
         tidligereArbeidsgiver =
             getString("tidligere_arbeidsgiver").let {
                 objectMapper.readValue<TidligereArbeidsgiverDTO>(it)
