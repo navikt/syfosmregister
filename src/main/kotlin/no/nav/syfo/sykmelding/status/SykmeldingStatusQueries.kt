@@ -177,7 +177,7 @@ suspend fun Connection.registerTidligereArbeidsgiver(
     withContext(Dispatchers.IO) {
         prepareStatement(
                 """
-                INSERT INTO tidligere_arbeidsgiver(sykmeldingId, tidligere_arbeidsgiver) VALUES (?, ?) ON CONFLICT DO NOTHING
+                INSERT INTO tidligere_arbeidsgiver(sykmelding_id, tidligere_arbeidsgiver) VALUES (?, ?) ON CONFLICT DO NOTHING
                 """,
             )
             .use {
