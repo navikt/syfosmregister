@@ -35,6 +35,7 @@ class MottattSykmeldingStatusService(
 ) {
     suspend fun handleStatusEventForResentSykmelding(sykmeldingId: String, fnr: String) {
         val status = sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingId)
+        val tidligereArbeidsgiver = sykmeldingStatusService.getTidligereArbeidsgiver(sykmeldingId)
 
         requireNotNull(status) { "Could not find status for sykmeldingId $sykmeldingId" }
 
@@ -43,6 +44,7 @@ class MottattSykmeldingStatusService(
                 status,
                 getArbeidsgiverStatus(sykmeldingId, status.event),
                 getSporsmalOgSvar(sykmeldingId),
+                tidligereArbeidsgiver
             )
         val kafkaMetadata =
             KafkaMetadataDTO(

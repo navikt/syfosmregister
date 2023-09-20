@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.kafka.service
 
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
 import no.nav.syfo.model.sykmeldingstatus.STATUS_AVBRUTT
@@ -12,13 +13,7 @@ import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
 import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
-import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
-import no.nav.syfo.sykmelding.status.ShortName
-import no.nav.syfo.sykmelding.status.Sporsmal
-import no.nav.syfo.sykmelding.status.StatusEvent
-import no.nav.syfo.sykmelding.status.Svar
-import no.nav.syfo.sykmelding.status.Svartype
-import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
+import no.nav.syfo.sykmelding.status.*
 
 class KafkaModelMapper private constructor() {
     companion object {
@@ -59,6 +54,7 @@ class KafkaModelMapper private constructor() {
             status: SykmeldingStatusEvent,
             arbeidsgiverStatus: ArbeidsgiverDbModel?,
             sporsmal: List<Sporsmal>,
+            tidligereArbeidsgiver: TidligereArbeidsgiverDTO?
         ) =
             SykmeldingStatusKafkaEventDTO(
                 sykmeldingId = status.sykmeldingId,
@@ -66,6 +62,7 @@ class KafkaModelMapper private constructor() {
                 statusEvent = status.event.name,
                 arbeidsgiver = toArbeidsgiverStatusDto(arbeidsgiverStatus),
                 sporsmals = sporsmal.map { toSporsmalOgSvar(it) },
+                tidligereArbeidsgiver = tidligereArbeidsgiver
             )
 
         private fun toSvartype(svartype: SvartypeDTO): Svartype {

@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.status
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
@@ -22,6 +23,11 @@ suspend fun DatabaseInterface.hentSykmeldingStatuser(
 ): List<SykmeldingStatusEvent> =
     withContext(Dispatchers.IO) {
         connection.use { connection -> connection.getSykmeldingstatuser(sykmeldingId) }
+    }
+
+suspend fun DatabaseInterface.getTidligereArbeidsgiver(sykmeldingId: String) =
+    withContext(Dispatchers.IO) {
+        connection.use { connection -> connection.getTidligereArbeidsgiver(sykmeldingId) }
     }
 
 suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) =
@@ -110,6 +116,35 @@ private suspend fun Connection.hasNewerStatus(
                 it.executeQuery().next()
             }
     }
+
+suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<TidligereArbeidsgiver> =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+                    SELECT *
+                    FROM tidligere_arbeidsgiver 
+                    WHERE sykmelding_id = ?
+                    """,
+            )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.executeQuery().toList { tilTidligereArbeidsgiverliste() }
+            }
+    }
+
+data class TidligereArbeidsgiver(
+    val sykmeldingId: String,
+    val tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+)
+
+private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
+    TidligereArbeidsgiver(
+        sykmeldingId = getString("sykmelding_id"),
+        tidligereArbeidsgiver =
+            getString("tidligere_arbeidsgiver").let {
+                objectMapper.readValue<TidligereArbeidsgiverDTO>(it)
+            }
+    )
 
 private suspend fun Connection.getSykmeldingstatuser(
     sykmeldingId: String

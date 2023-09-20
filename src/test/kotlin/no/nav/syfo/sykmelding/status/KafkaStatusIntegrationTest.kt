@@ -86,6 +86,8 @@ class KafkaStatusIntegrationTest :
             TestDB.stop()
         }
 
+        afterTest { database.connection.dropData() }
+
         beforeTest {
             applicationState.alive = true
             applicationState.ready = true

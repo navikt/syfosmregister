@@ -270,6 +270,35 @@ class MottattSykmeldingStatusServiceTest :
                 coVerify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
             }
         }
+
+        context("Tester resending av tidligerearbeidsgiver sykmeldingStatusKafkaMessage") {
+            test("sender med tidligere arbeidsgiver på sykmelding som allerede er bekreftet") {
+                coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
+                    SykmeldingStatusEvent(
+                        sykmeldingId,
+                        getNowTickMillisOffsetDateTime(),
+                        StatusEvent.BEKREFTET,
+                    )
+
+                val tidligereArbeidsgiverDto =
+                    TidligereArbeidsgiverDTO("orgnamn", "orgnummer", sykmeldingId)
+                coEvery { sykmeldingStatusService.getTidligereArbeidsgiver(any()) } returns
+                    TidligereArbeidsgiverDTO("orgnamn", "orgnummer", sykmeldingId)
+
+                coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns emptyList()
+
+                mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
+                    sykmeldingId,
+                    "123"
+                )
+
+                coVerify {
+                    bekreftetSykmeldingKafkaProducer.sendSykmelding(
+                        match { it.event.tidligereArbeidsgiver == tidligereArbeidsgiverDto }
+                    )
+                }
+            }
+        }
     })
 
 val sykmeldingId = UUID.randomUUID().toString()

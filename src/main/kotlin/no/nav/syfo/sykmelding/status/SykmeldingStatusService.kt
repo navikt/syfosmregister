@@ -42,6 +42,9 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
         )
     }
 
+    suspend fun getTidligereArbeidsgiver(sykmeldingId: String) =
+        database.getTidligereArbeidsgiver(sykmeldingId).singleOrNull()?.tidligereArbeidsgiver
+
     suspend fun getLatestSykmeldingStatus(sykmeldingId: String): SykmeldingStatusEvent? =
         database.hentSykmeldingStatuser(sykmeldingId).maxByOrNull { it.timestamp }
 
