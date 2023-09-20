@@ -65,6 +65,7 @@ class MottattSykmeldingStatusService(
             }
             StatusEvent.BEKREFTET -> {
                 log.info("Status is bekreftet, need to resendt to bekreftet-sykmelding-topic")
+                log.info("sender med tidligere arbeidsgiver $sykmeldingStatusKafkaEventDTO")
                 bekreftetSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
             }
             else -> {
