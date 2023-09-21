@@ -251,7 +251,7 @@ class KafkaStatusIntegrationTest :
                 val tidligereArbeidsgiverList =
                     database.connection.getTidligereArbeidsgiver(sykmelding.id)
 
-                tidligereArbeidsgiverList?.size shouldBeEqualTo 1
+                tidligereArbeidsgiverList.size shouldBeEqualTo 1
             }
 
             test("sletter tidligere arbeidsgiver fra basen") {

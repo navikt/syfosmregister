@@ -12,6 +12,7 @@ import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
+import no.nav.syfo.securelog
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
@@ -65,7 +66,7 @@ class MottattSykmeldingStatusService(
             }
             StatusEvent.BEKREFTET -> {
                 log.info("Status is bekreftet, need to resendt to bekreftet-sykmelding-topic")
-                log.info("sender med tidligere arbeidsgiver $sykmeldingStatusKafkaEventDTO")
+                securelog.info("sender med tidligere arbeidsgiver $sykmeldingStatusKafkaEventDTO")
                 bekreftetSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
             }
             else -> {
