@@ -14,7 +14,7 @@ val postgresVersion = "42.6.0"
 val flywayVersion = "9.22.2"
 val hikariVersion = "5.0.1"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "1.0.19"
+val smCommonVersion = "2.0.0"
 val mockkVersion = "1.13.7"
 val nimbusdsVersion = "9.35"
 val testContainerKafkaVersion = "1.19.0"
@@ -35,18 +35,12 @@ application {
     mainClass.set("no.nav.syfo.BootstrapKt")
 }
 
-val githubUser: String by project
-val githubPassword: String by project
 
 repositories {
     mavenCentral()
     maven(url = "https://packages.confluent.io/maven/")
     maven {
-        url = uri("https://maven.pkg.github.com/navikt/syfosm-common")
-        credentials {
-            username = githubUser
-            password = githubPassword
-        }
+        url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
     }
 }
 
@@ -69,8 +63,11 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
-    implementation("commons-codec:commons-codec:$commonsCodecVersion")
-    // override transient version 1.10 from io.ktor:ktor-client-apache
+    constraints {
+        implementation("commons-codec:commons-codec:$commonsCodecVersion") {
+            because("override transient from io.ktor:ktor-client-apache")
+        }
+    }
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
