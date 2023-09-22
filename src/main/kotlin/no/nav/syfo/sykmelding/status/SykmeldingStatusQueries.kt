@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.status
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
@@ -13,13 +14,20 @@ import no.nav.syfo.db.toList
 import no.nav.syfo.log
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.objectMapper
+import org.postgresql.util.PGobject
 
 suspend fun DatabaseInterface.hentSykmeldingStatuser(
     sykmeldingId: String
 ): List<SykmeldingStatusEvent> =
     withContext(Dispatchers.IO) {
         connection.use { connection -> connection.getSykmeldingstatuser(sykmeldingId) }
+    }
+
+suspend fun DatabaseInterface.getTidligereArbeidsgiver(sykmeldingId: String) =
+    withContext(Dispatchers.IO) {
+        connection.use { connection -> connection.getTidligereArbeidsgiver(sykmeldingId) }
     }
 
 suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) =
@@ -52,9 +60,23 @@ suspend fun DatabaseInterface.registrerSendt(
         }
     }
 
+private suspend fun Connection.slettTidligereArbeidsgiver(sykmeldingId: String) =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+                DELETE FROM tidligere_arbeidsgiver WHERE sykmelding_id=?;
+                """,
+            )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.executeUpdate()
+            }
+    }
+
 suspend fun DatabaseInterface.registrerBekreftet(
     sykmeldingBekreftEvent: SykmeldingBekreftEvent,
-    sykmeldingStatusEvent: SykmeldingStatusEvent
+    sykmeldingStatusEvent: SykmeldingStatusEvent,
+    tidligereArbeidsgiver: TidligereArbeidsgiverDTO?,
 ) =
     withContext(Dispatchers.IO) {
         connection.use { connection ->
@@ -68,6 +90,12 @@ suspend fun DatabaseInterface.registrerBekreftet(
                 sykmeldingBekreftEvent.sporsmal?.forEach { connection.lagreSporsmalOgSvar(it) }
             }
             connection.registerStatus(sykmeldingStatusEvent)
+            if (tidligereArbeidsgiver != null) {
+                connection.registerTidligereArbeidsgiver(
+                    sykmeldingStatusEvent.sykmeldingId,
+                    tidligereArbeidsgiver
+                )
+            }
             connection.commit()
         }
     }
@@ -88,6 +116,35 @@ private suspend fun Connection.hasNewerStatus(
                 it.executeQuery().next()
             }
     }
+
+suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<TidligereArbeidsgiver> =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+                    SELECT *
+                    FROM tidligere_arbeidsgiver 
+                    WHERE sykmelding_id = ?
+                    """,
+            )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.executeQuery().toList { tilTidligereArbeidsgiverliste() }
+            }
+    }
+
+data class TidligereArbeidsgiver(
+    val sykmeldingId: String,
+    val tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+)
+
+private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
+    TidligereArbeidsgiver(
+        sykmeldingId = getString("sykmelding_id"),
+        tidligereArbeidsgiver =
+            getString("tidligere_arbeidsgiver").let {
+                objectMapper.readValue<TidligereArbeidsgiverDTO>(it)
+            }
+    )
 
 private suspend fun Connection.getSykmeldingstatuser(
     sykmeldingId: String
@@ -161,6 +218,23 @@ suspend fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEve
             }
     }
 
+suspend fun Connection.registerTidligereArbeidsgiver(
+    sykmeldingId: String,
+    tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+) =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+                INSERT INTO tidligere_arbeidsgiver(sykmelding_id, tidligere_arbeidsgiver) VALUES (?, ?) ON CONFLICT DO NOTHING
+                """,
+            )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.setObject(2, tidligereArbeidsgiver.toPGObject())
+                it.execute()
+            }
+    }
+
 private suspend fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: SykmeldingSendEvent) =
     withContext(Dispatchers.IO) {
         prepareStatement(
@@ -179,6 +253,8 @@ private suspend fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: Sykm
 
 private suspend fun Connection.slettAlleSvar(sykmeldingId: String) {
     this.slettArbeidsgiver(sykmeldingId)
+    val antall = this.slettTidligereArbeidsgiver(sykmeldingId)
+    log.info("sletta antall tidligere arbeidsgivere: $antall")
     this.slettSvar(sykmeldingId)
 }
 
@@ -283,3 +359,9 @@ private fun tilStatusEvent(status: String): StatusEvent {
             )
     }
 }
+
+private fun TidligereArbeidsgiverDTO.toPGObject() =
+    PGobject().also {
+        it.type = "json"
+        it.value = objectMapper.writeValueAsString(this)
+    }

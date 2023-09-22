@@ -11,13 +11,8 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplicationEngine
 import io.ktor.server.testing.handleRequest
-import io.mockk.clearAllMocks
-import io.mockk.coEvery
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.mockkClass
-import io.mockk.mockkStatic
-import io.mockk.spyk
+import io.mockk.*
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.delay
@@ -27,15 +22,8 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.createListener
-import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
-import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
-import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
-import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
-import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
-import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
+import no.nav.syfo.model.sykmeldingstatus.*
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.persistering.lagreMottattSykmelding
@@ -47,19 +35,13 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
+import no.nav.syfo.sykmelding.kafka.service.sykmeldingId
 import no.nav.syfo.sykmelding.model.SporsmalDTO
 import no.nav.syfo.sykmelding.model.SvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
-import no.nav.syfo.testutil.KafkaTest
-import no.nav.syfo.testutil.TestDB
-import no.nav.syfo.testutil.dropData
-import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
-import no.nav.syfo.testutil.setUpTestApplication
-import no.nav.syfo.testutil.testBehandlingsutfall
-import no.nav.syfo.testutil.testSykmeldingsdokument
-import no.nav.syfo.testutil.testSykmeldingsopplysninger
+import no.nav.syfo.testutil.*
 import org.amshove.kluent.shouldBeEqualTo
 
 @DelicateCoroutinesApi
@@ -103,6 +85,8 @@ class KafkaStatusIntegrationTest :
             applicationState.alive = false
             TestDB.stop()
         }
+
+        afterTest { database.connection.dropData() }
 
         beforeTest {
             applicationState.alive = true
@@ -171,7 +155,7 @@ class KafkaStatusIntegrationTest :
             }
 
             test("Should test APEN and BEKREFTET") {
-                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any()) } answers
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
                     {
                         callOriginal()
                         applicationState.alive = false
@@ -245,6 +229,143 @@ class KafkaStatusIntegrationTest :
 
                 val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
                 sykmeldinger.size shouldBeEqualTo 0
+            }
+
+            test("lagrer tidligereArbeidsgiver i databasen") {
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
+                    {
+                        callOriginal()
+                        applicationState.alive = false
+                        applicationState.ready = false
+                    }
+
+                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+                val tidligereArbeidsgiver = TidligereArbeidsgiverDTO("orgNavn", "orgnummer", "1")
+                kafkaProducer.send(
+                    getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver),
+                    sykmelding.pasientFnr
+                )
+
+                runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+
+                val tidligereArbeidsgiverList =
+                    database.connection.getTidligereArbeidsgiver(sykmelding.id)
+
+                tidligereArbeidsgiverList.size shouldBeEqualTo 1
+            }
+
+            test("sletter tidligere arbeidsgiver fra basen") {
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
+                    {
+                        callOriginal()
+                        applicationState.alive = false
+                        applicationState.ready = false
+                    }
+                coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers
+                    {
+                        callOriginal()
+                        applicationState.alive = false
+                        applicationState.ready = false
+                    }
+
+                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+                val tidligereArbeidsgiver = TidligereArbeidsgiverDTO("orgNavn", "orgnummer", "1")
+                kafkaProducer.send(
+                    getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver),
+                    sykmelding.pasientFnr
+                )
+
+                runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+                var tidligereArbeidsgiverList =
+                    database.connection.getTidligereArbeidsgiver(sykmelding.id)
+
+                tidligereArbeidsgiverList.size shouldBeEqualTo 1
+
+                kafkaProducer.send(getSendtEvent(sykmelding), sykmelding.pasientFnr)
+                applicationState.alive = true
+                applicationState.ready = true
+
+                runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+                tidligereArbeidsgiverList =
+                    database.connection.getTidligereArbeidsgiver(sykmelding.id)
+                tidligereArbeidsgiverList.size shouldBeEqualTo 0
+            }
+
+            test("sletter bekreftet etter bekreftet") {
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
+                    {
+                        callOriginal()
+                    } andThenAnswer
+                    {
+                        callOriginal()
+                        applicationState.alive = false
+                        applicationState.ready = false
+                    }
+                val apenEvent = getApenEvent(sykmelding)
+                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+                val tidligereArbeidsgiver1 = TidligereArbeidsgiverDTO("ag1", "orgnummer", "1")
+                kafkaProducer.send(
+                    getSykmeldingBekreftEvent(
+                        sykmelding,
+                        tidligereArbeidsgiver1,
+                        timestamp = apenEvent.timestamp.plusMinutes(1)
+                    ),
+                    sykmelding.pasientFnr
+                )
+                val tidligereArbeidsgiver2 = TidligereArbeidsgiverDTO("ag2", "orgnummer", "1")
+
+                kafkaProducer.send(
+                    getSykmeldingBekreftEvent(
+                        sykmelding,
+                        tidligereArbeidsgiver2,
+                        apenEvent.timestamp.plusMinutes(1)
+                    ),
+                    sykmelding.pasientFnr
+                )
+                runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+                val tidligereArbeidsgiverList =
+                    database.connection.getTidligereArbeidsgiver(sykmelding.id)
+
+                tidligereArbeidsgiverList.size shouldBeEqualTo 1
+                tidligereArbeidsgiverList.singleOrNull()?.tidligereArbeidsgiver shouldBeEqualTo
+                    tidligereArbeidsgiver2
+            }
+
+            test("sletter avbrutt etter bekreftet") {
+                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
+                    {
+                        callOriginal()
+                    }
+                coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
+                    {
+                        callOriginal()
+                    } andThenAnswer
+                    {
+                        callOriginal()
+                        applicationState.alive = false
+                        applicationState.ready = false
+                    }
+                val apenEvent = getApenEvent(sykmelding)
+                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+                val tidligereArbeidsgiver1 = TidligereArbeidsgiverDTO("ag1", "orgnummer", "1")
+                kafkaProducer.send(
+                    getSykmeldingBekreftEvent(
+                        sykmelding,
+                        tidligereArbeidsgiver1,
+                        apenEvent.timestamp.plusMinutes(1)
+                    ),
+                    sykmelding.pasientFnr
+                )
+
+                kafkaProducer.send(
+                    getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(2)),
+                    sykmelding.pasientFnr
+                )
+                runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+
+                val tidligereArbeidsgiverList =
+                    database.connection.getTidligereArbeidsgiver(sykmelding.id)
+                tidligereArbeidsgiverList.size shouldBeEqualTo 0
             }
         }
 
@@ -342,7 +463,9 @@ private fun publishSendAndWait(
     applicationState: ApplicationState,
     kafkaProducer: SykmeldingStatusKafkaProducer,
     sykmelding: Sykmeldingsopplysninger,
-    sykmeldingStatusConsumerService: SykmeldingStatusConsumerService
+    sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
+    sendTimestamp: OffsetDateTime =
+        sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC)
 ): SykmeldingStatusKafkaEventDTO {
     coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers
         {
@@ -351,7 +474,7 @@ private fun publishSendAndWait(
             applicationState.ready = false
         }
     kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-    val sendtEvent = getSendtEvent(sykmelding)
+    val sendtEvent = getSendtEvent(sykmelding, sendTimestamp)
     kafkaProducer.send(sendtEvent, sykmelding.pasientFnr)
     val job = createListener(applicationState) { sykmeldingStatusConsumerService.start() }
     runBlocking { job.join() }
@@ -359,24 +482,42 @@ private fun publishSendAndWait(
 }
 
 private fun getSykmeldingBekreftEvent(
-    sykmelding: Sykmeldingsopplysninger
+    sykmelding: Sykmeldingsopplysninger,
+    tidligereArbeidsgiverDTO: TidligereArbeidsgiverDTO? = null,
+    timestamp: OffsetDateTime = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
 ): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
         statusEvent = STATUS_BEKREFTET,
-        timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
+        timestamp = timestamp,
         arbeidsgiver = null,
         sporsmals =
             listOf(
                 SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI")
             ),
+        tidligereArbeidsgiver = tidligereArbeidsgiverDTO
     )
 }
 
-private fun getSendtEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {
+fun getSykmeldingAvbruttEvent(
+    id: String,
+    timestamp: OffsetDateTime = getNowTickMillisOffsetDateTime()
+) =
+    SykmeldingStatusKafkaEventDTO(
+        sykmeldingId = id,
+        timestamp = timestamp,
+        arbeidsgiver = null,
+        sporsmals = null,
+        statusEvent = STATUS_AVBRUTT,
+    )
+
+private fun getSendtEvent(
+    sykmelding: Sykmeldingsopplysninger,
+    timestamp: OffsetDateTime = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC)
+): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
-        timestamp = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
+        timestamp = timestamp,
         arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
         statusEvent = STATUS_SENDT,
         sporsmals =

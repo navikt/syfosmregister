@@ -65,6 +65,7 @@ val objectMapper: ObjectMapper =
     }
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
+val securelog = LoggerFactory.getLogger("securelog")
 
 @DelicateCoroutinesApi
 @ExperimentalTime

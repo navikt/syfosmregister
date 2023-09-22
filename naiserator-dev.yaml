@@ -105,6 +105,8 @@ spec:
     - "https://smregister.intern.dev.nav.no"
   webproxy: false
   leaderElection: true
+  secureLogs:
+    enabled: true
   env:
     - name: SYFOTILGANGSKONTROLL_SCOPE
       value: api://dev-gcp.teamsykefravr.syfo-tilgangskontroll/.default

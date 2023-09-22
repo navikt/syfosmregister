@@ -6,6 +6,8 @@ import io.mockk.mockk
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.syfo.Environment
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.DatabaseInterface
@@ -34,6 +36,7 @@ import no.nav.syfo.model.SvarRestriksjon
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
@@ -86,6 +89,35 @@ fun Connection.dropData() {
         connection.commit()
     }
 }
+
+suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<TidligereArbeidsgiver> =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+                    SELECT *
+                    FROM tidligere_arbeidsgiver 
+                    WHERE sykmelding_id = ?
+                    """,
+            )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.executeQuery().toList { tilTidligereArbeidsgiverliste() }
+            }
+    }
+
+data class TidligereArbeidsgiver(
+    val sykmeldingId: String,
+    val tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+)
+
+private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
+    TidligereArbeidsgiver(
+        sykmeldingId = getString("sykmelding_id"),
+        tidligereArbeidsgiver =
+            getString("tidligere_arbeidsgiver").let {
+                objectMapper.readValue<TidligereArbeidsgiverDTO>(it)
+            }
+    )
 
 fun Connection.getMerknaderForId(id: String): List<Merknad>? =
     this.prepareStatement(

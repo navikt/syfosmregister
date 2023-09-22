@@ -12,6 +12,7 @@ import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
+import no.nav.syfo.securelog
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
@@ -35,6 +36,7 @@ class MottattSykmeldingStatusService(
 ) {
     suspend fun handleStatusEventForResentSykmelding(sykmeldingId: String, fnr: String) {
         val status = sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingId)
+        val tidligereArbeidsgiver = sykmeldingStatusService.getTidligereArbeidsgiver(sykmeldingId)
 
         requireNotNull(status) { "Could not find status for sykmeldingId $sykmeldingId" }
 
@@ -43,6 +45,7 @@ class MottattSykmeldingStatusService(
                 status,
                 getArbeidsgiverStatus(sykmeldingId, status.event),
                 getSporsmalOgSvar(sykmeldingId),
+                tidligereArbeidsgiver
             )
         val kafkaMetadata =
             KafkaMetadataDTO(
@@ -63,6 +66,7 @@ class MottattSykmeldingStatusService(
             }
             StatusEvent.BEKREFTET -> {
                 log.info("Status is bekreftet, need to resendt to bekreftet-sykmelding-topic")
+                securelog.info("sender med tidligere arbeidsgiver $sykmeldingStatusKafkaEventDTO")
                 bekreftetSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
             }
             else -> {
@@ -202,6 +206,8 @@ class MottattSykmeldingStatusService(
     ) {
         val sykmeldingStatusEvent =
             KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)
+        val tidligereArbeidsgiver = sykmeldingStatusKafkaMessage.event.tidligereArbeidsgiver
+
         val sykmeldingBekreftEvent =
             SykmeldingBekreftEvent(
                 sykmeldingStatusKafkaMessage.event.sykmeldingId,
@@ -214,7 +220,11 @@ class MottattSykmeldingStatusService(
                 },
             )
 
-        sykmeldingStatusService.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
+        sykmeldingStatusService.registrerBekreftet(
+            sykmeldingBekreftEvent,
+            sykmeldingStatusEvent,
+            tidligereArbeidsgiver
+        )
     }
 
     private suspend fun registrerStatus(

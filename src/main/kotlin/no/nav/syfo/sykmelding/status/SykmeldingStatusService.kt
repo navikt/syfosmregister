@@ -2,6 +2,7 @@ package no.nav.syfo.sykmelding.status
 
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.nullstilling.slettSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfall
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
@@ -32,9 +33,17 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
                 sykmeldingBekreftEvent.timestamp,
                 StatusEvent.BEKREFTET
             ),
+        tidligereArbeidsgiver: TidligereArbeidsgiverDTO?
     ) {
-        database.registrerBekreftet(sykmeldingBekreftEvent, sykmeldingStatusEvent)
+        database.registrerBekreftet(
+            sykmeldingBekreftEvent,
+            sykmeldingStatusEvent,
+            tidligereArbeidsgiver
+        )
     }
+
+    suspend fun getTidligereArbeidsgiver(sykmeldingId: String) =
+        database.getTidligereArbeidsgiver(sykmeldingId).singleOrNull()?.tidligereArbeidsgiver
 
     suspend fun getLatestSykmeldingStatus(sykmeldingId: String): SykmeldingStatusEvent? =
         database.hentSykmeldingStatuser(sykmeldingId).maxByOrNull { it.timestamp }

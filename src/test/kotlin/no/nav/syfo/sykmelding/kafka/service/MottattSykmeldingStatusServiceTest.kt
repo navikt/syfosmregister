@@ -15,6 +15,7 @@ import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
 import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
 import no.nav.syfo.model.sykmelding.model.AdresseDTO
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
 import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
 import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
@@ -181,7 +182,9 @@ class MottattSykmeldingStatusServiceTest :
                 assertFailsWith<RuntimeException> {
                     mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
                 }
-                coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify(exactly = 0) {
+                    sykmeldingStatusService.registrerBekreftet(any(), any(), any())
+                }
             }
             test("SLETTET") {
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
@@ -211,7 +214,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
 
-                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 coVerify { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
             }
             test("Bekreft avvist sykmelding oppdaterer kun database") {
@@ -226,7 +229,7 @@ class MottattSykmeldingStatusServiceTest :
                     opprettBekreftStatusmeldingAvvistSykmelding()
                 )
 
-                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 coVerify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
             }
         }
@@ -266,6 +269,35 @@ class MottattSykmeldingStatusServiceTest :
 
                 coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
                 coVerify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
+            }
+        }
+
+        context("Tester resending av tidligerearbeidsgiver sykmeldingStatusKafkaMessage") {
+            test("sender med tidligere arbeidsgiver på sykmelding som allerede er bekreftet") {
+                coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
+                    SykmeldingStatusEvent(
+                        sykmeldingId,
+                        getNowTickMillisOffsetDateTime(),
+                        StatusEvent.BEKREFTET,
+                    )
+
+                val tidligereArbeidsgiverDto =
+                    TidligereArbeidsgiverDTO("orgnamn", "orgnummer", sykmeldingId)
+                coEvery { sykmeldingStatusService.getTidligereArbeidsgiver(any()) } returns
+                    TidligereArbeidsgiverDTO("orgnamn", "orgnummer", sykmeldingId)
+
+                coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns emptyList()
+
+                mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
+                    sykmeldingId,
+                    "123"
+                )
+
+                coVerify {
+                    bekreftetSykmeldingKafkaProducer.sendSykmelding(
+                        match { it.event.tidligereArbeidsgiver == tidligereArbeidsgiverDto }
+                    )
+                }
             }
         }
     })
