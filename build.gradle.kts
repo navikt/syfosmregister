@@ -24,6 +24,7 @@ val testContainerVersion = "1.19.0"
 val commonsCodecVersion = "1.16.0"
 val snakeyamlVersion= "2.2"
 val ktfmtVersion = "0.44"
+val snappyJavaVersion = "1.1.10.5"
 
 plugins {
     id("application")
@@ -75,8 +76,11 @@ dependencies {
     implementation("net.logstash.logback:logstash-logback-encoder:$logstashEncoderVersion")
 
     implementation("io.confluent:kafka-avro-serializer:$confluentVersion")
-    implementation("org.yaml:snakeyaml:$snakeyamlVersion")
-    // override transient version 1.32 from io.confluent:kafka-avro-serializer
+    constraints {
+        implementation("org.yaml:snakeyaml:$snakeyamlVersion") {
+            because("override transient version 1.32 from io.confluent:kafka-avro-serializer")
+        }
+    }
 
     implementation("com.fasterxml.jackson.module:jackson-module-jaxb-annotations:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -85,6 +89,11 @@ dependencies {
 
     implementation("no.nav.helse:syfosm-common-models:$smCommonVersion")
     implementation("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
+    constraints {
+        implementation("org.xerial.snappy:snappy-java:$snappyJavaVersion") {
+            because("override transient from org.apache.kafka:kafka_2.12")
+        }
+    }
     implementation("no.nav.helse:syfosm-common-diagnosis-codes:$smCommonVersion")
 
     //Database
