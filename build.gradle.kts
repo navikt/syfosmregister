@@ -19,7 +19,7 @@ val mockkVersion = "1.13.8"
 val nimbusdsVersion = "9.37"
 val testContainerKafkaVersion = "1.19.1"
 val caffeineVersion = "3.1.8"
-val kotlinVersion = "1.9.10"
+val kotlinVersion = "1.9.20"
 val testContainerVersion = "1.19.1"
 val commonsCodecVersion = "1.16.0"
 val snakeyamlVersion= "2.2"
@@ -30,7 +30,7 @@ val avroVersion = "1.11.3"
 plugins {
     id("application")
     id("com.diffplug.spotless") version "6.22.0"
-    kotlin("jvm") version "1.9.10"
+    kotlin("jvm") version "1.9.20"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 application {
