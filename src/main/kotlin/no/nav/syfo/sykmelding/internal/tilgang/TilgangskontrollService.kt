@@ -16,12 +16,11 @@ class TilgangskontrollService(
     private val azureAdV2Client: AzureAdV2Client,
     private val httpClient: HttpClient,
     url: String,
-    private val syfotilgangskontrollScope: String,
+    private val istilgangskontrollScope: String,
 ) {
     companion object {
         val log: Logger = LoggerFactory.getLogger(TilgangskontrollService::class.java)
-        const val TILGANGSKONTROLL_PERSON_PATH =
-            "/syfo-tilgangskontroll/api/tilgang/navident/person"
+        const val TILGANGSKONTROLL_PERSON_PATH = "/api/tilgang/navident/person"
     }
 
     private val tilgangskontrollPersonUrl: String
@@ -33,7 +32,7 @@ class TilgangskontrollService(
     suspend fun hasAccessToUserOboToken(fnr: String, accessToken: String): Boolean {
         val oboToken =
             azureAdV2Client
-                .getOnBehalfOfToken(scope = syfotilgangskontrollScope, token = accessToken)
+                .getOnBehalfOfToken(scope = istilgangskontrollScope, token = accessToken)
                 ?.accessToken
 
         return if (oboToken != null) {
@@ -53,14 +52,14 @@ class TilgangskontrollService(
                     headers.append(NAV_PERSONIDENT_HEADER, fnr)
                 }
                 .body<Tilgang>()
-                .harTilgang
+                .erGodkjent
         } catch (e: ResponseException) {
             log.info(
-                "Ingen tilgang, syfotilgangskontroll returnerte statuskode ${e.response.status.value}"
+                "Ingen tilgang, istilgangskontroll returnerte statuskode ${e.response.status.value}"
             )
             false
         } catch (e: Exception) {
-            log.error("Noe gikk galt ved sjekk mot syfotilgangskontroll", e)
+            log.error("Noe gikk galt ved sjekk mot istilgangskontroll", e)
             throw e
         }
     }

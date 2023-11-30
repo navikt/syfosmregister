@@ -150,8 +150,8 @@ fun main() {
         TilgangskontrollService(
             azureAdV2Client,
             httpClient,
-            environment.syfoTilgangskontrollUrl,
-            environment.syfotilgangskontrollScope
+            environment.istilgangskontrollUrl,
+            environment.istilgangskontrollScope
         )
 
     val pdlClient =
