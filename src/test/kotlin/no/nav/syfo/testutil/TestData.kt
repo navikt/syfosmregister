@@ -39,12 +39,12 @@ import no.nav.syfo.sykmelding.papir.db.PapirsykmeldingDbModel
 fun getEnvironment(): Environment {
     return Environment(
         cluster = "",
-        syfoTilgangskontrollUrl = "",
+        istilgangskontrollUrl = "",
         clientIdV2 = "clientid",
         clientSecretV2 = "",
         jwkKeysUrlV2 = "",
         jwtIssuerV2 = "assureissuer",
-        syfotilgangskontrollScope = "",
+        istilgangskontrollScope = "",
         azureTokenEndpoint = "",
         pdlGraphqlPath = "",
         pdlScope = "scope",

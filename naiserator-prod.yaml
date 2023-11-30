@@ -67,7 +67,7 @@ spec:
         - host: kafka-schema-registry.nais.adeo.no
         - host: pdl-api.prod-fss-pub.nais.io
       rules:
-        - application: syfo-tilgangskontroll
+        - application: istilgangskontroll
           namespace: teamsykefravr
           cluster: prod-gcp
     inbound:
@@ -103,8 +103,8 @@ spec:
   secureLogs:
     enabled: true
   env:
-    - name: SYFOTILGANGSKONTROLL_SCOPE
-      value: api://prod-gcp.teamsykefravr.syfo-tilgangskontroll/.default
+    - name: ISTILGANGSKONTROLL_SCOPE
+      value: api://prod-gcp.teamsykefravr.istilgangskontroll/.default
     - name: KAFKA_CLIENT_ID
       value: syfosmregister
     - name: PDL_GRAPHQL_PATH
