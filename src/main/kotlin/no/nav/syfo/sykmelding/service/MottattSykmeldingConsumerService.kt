@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import no.nav.syfo.Environment
 import no.nav.syfo.LoggingMeta
 import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.log
 import no.nav.syfo.model.ReceivedSykmelding
 import no.nav.syfo.objectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -17,20 +18,38 @@ class MottattSykmeldingConsumerService(
     private val kafkaAivenConsumer: KafkaConsumer<String, String>,
     private val mottattSykmeldingService: MottattSykmeldingService,
 ) {
+    companion object {
+        private val DELAY_START = 10_000L
+    }
+
     suspend fun start() {
-        kafkaAivenConsumer.subscribe(
-            listOf(
-                env.okSykmeldingTopic,
-                env.manuellSykmeldingTopic,
-                env.avvistSykmeldingTopic,
-            ),
-        )
+        while (applicationState.alive) {
+            try {
+                kafkaAivenConsumer.subscribe(
+                    listOf(
+                        env.okSykmeldingTopic,
+                        env.manuellSykmeldingTopic,
+                        env.avvistSykmeldingTopic,
+                    ),
+                )
+                run()
+            } catch (ex: Exception) {
+                log.error(
+                    "Error reading status from aiven topic, trying again in $DELAY_START milliseconds",
+                    ex,
+                )
+                kafkaAivenConsumer.unsubscribe()
+                delay(DELAY_START)
+            }
+        }
+    }
+
+    private suspend fun run() {
         while (applicationState.ready) {
             kafkaAivenConsumer
-                .poll(Duration.ofMillis(0))
+                .poll(Duration.ofMillis(10_000))
                 .filterNot { it.value() == null }
                 .forEach { handleMessageSykmelding(it) }
-            delay(100)
         }
     }
 
