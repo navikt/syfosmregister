@@ -236,7 +236,7 @@ fun KontaktMedPasient.toKontaktMedPasientDTO(): KontaktMedPasientDTO {
 }
 
 fun Arbeidsgiver.toArbeidsgiverDTO(): ArbeidsgiverDTO {
-    return ArbeidsgiverDTO(navn, stillingsprosent)
+    return ArbeidsgiverDTO(navn, stillingsprosent, yrkesbetegnelse)
 }
 
 fun Periode.toSykmeldingsperiodeDTO(sykmeldingId: String): SykmeldingsperiodeDTO {
