@@ -16,7 +16,7 @@ val hikariVersion = "5.1.0"
 val vaultJavaDriveVersion = "3.1.0"
 val smCommonVersion = "2.0.6"
 val mockkVersion = "1.13.8"
-val nimbusdsVersion = "9.37.1"
+val nimbusdsVersion = "9.37.2"
 val testContainerKafkaVersion = "1.19.3"
 val caffeineVersion = "3.1.8"
 val kotlinVersion = "1.9.21"
@@ -29,7 +29,7 @@ val avroVersion = "1.11.3"
 
 plugins {
     id("application")
-    id("com.diffplug.spotless") version "6.23.2"
+    id("com.diffplug.spotless") version "6.23.3"
     kotlin("jvm") version "1.9.21"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
