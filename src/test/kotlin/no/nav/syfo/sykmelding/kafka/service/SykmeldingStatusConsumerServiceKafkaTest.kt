@@ -67,7 +67,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 tombstoneKafkaProducer,
                 databaseInterface,
             )
-        val consumer = spyk(KafkaFactory.getKafkaStatusConsumerAiven(kafkaConfig, environment))
+        val consumer = spyk(KafkaFactory.getKafkaStatusConsumerAiven(environment, kafkaConfig))
         val sykmeldingStatusConsumerService =
             SykmeldingStatusConsumerService(
                 consumer,
@@ -95,7 +95,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
         context("Should retry on error") {
             test("Restart and continue from last offset") {
                 val kafkaProducer =
-                    KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                    KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                 val errors = 10
                 val messages = 10
                 var currentMessage = 0
@@ -143,7 +143,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     }
 
                 val kafkaProducer =
-                    KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                    KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                 kafkaProducer.send(sykmeldingApenEvent, fnr)
 
                 sykmeldingStatusConsumerService.start()
@@ -175,7 +175,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     }
 
                 val kafkaProducer =
-                    KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                    KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                 kafkaProducer.send(sykmeldingApenEvent, fnr)
 
                 sykmeldingStatusConsumerService.start()
@@ -242,7 +242,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     }
 
                 val kafkaProducer =
-                    KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                    KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                 kafkaProducer.send(sykmeldingApenEvent, fnr)
                 kafkaProducer.send(sykmeldingBekreftEvent, fnr)
                 kafkaProducer.send(sykmeldingApenEvent2, fnr)
@@ -301,7 +301,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         applicationState.ready = false
                     }
 
-                KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                     .send(sykmeldingSendKafkaEvent, fnr)
                 sykmeldingStatusConsumerService.start()
                 coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -366,7 +366,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     )
 
                 val producer =
-                    KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                    KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                 producer.send(sykmeldingSendtKafkaEvent, "fnr")
                 producer.send(sykmeldingSendtKafkaEvent, "fnr")
 
@@ -397,7 +397,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     }
 
                 val kafkaProducer =
-                    KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                    KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                 kafkaProducer.send(sykmeldingApenEvent, fnr)
 
                 sykmeldingStatusConsumerService.start()
@@ -444,7 +444,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         applicationState.ready = false
                     }
 
-                KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                     .send(sykmeldingBekreftKafkaEvent, fnr)
                 sykmeldingStatusConsumerService.start()
 
@@ -498,7 +498,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         applicationState.ready = false
                     }
 
-                KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                     .send(sykmeldingBekreftKafkaEvent, fnr)
                 sykmeldingStatusConsumerService.start()
 
@@ -566,7 +566,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         applicationState.ready = false
                     }
 
-                KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+                KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
                     .send(sykmeldingSendKafkaEvent, fnr)
                 sykmeldingStatusConsumerService.start()
 
