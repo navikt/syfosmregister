@@ -129,9 +129,9 @@ dependencies {
 tasks {
 
     shadowJar {
-mergeServiceFiles {
-     setPath("META-INF/services/org.flywaydb.core.extensibility.Plugin")
- }
+        mergeServiceFiles {
+             setPath("META-INF/services/org.flywaydb.core.extensibility.Plugin")
+         }
         archiveBaseName.set("app")
         archiveClassifier.set("")
         isZip64 = true
