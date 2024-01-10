@@ -28,11 +28,11 @@ import org.apache.kafka.common.serialization.StringDeserializer
 class KafkaFactory private constructor() {
     companion object {
         fun getSykmeldingStatusKafkaProducer(
-            kafkaBaseConfig: Properties,
-            environment: Environment
+            environment: Environment,
+            kafkaConfig: Properties = KafkaUtils.getAivenKafkaConfig("status-sykmelding-producer"),
         ): SykmeldingStatusKafkaProducer {
             val kafkaStatusProducerConfig =
-                kafkaBaseConfig.toProducerConfig(
+                kafkaConfig.toProducerConfig(
                     "${environment.applicationName}-gcp-producer",
                     JacksonKafkaSerializer::class,
                 )
@@ -45,8 +45,14 @@ class KafkaFactory private constructor() {
         }
 
         fun getKafkaStatusConsumerAiven(
-            kafkaConfig: Properties,
-            environment: Environment
+            environment: Environment,
+            kafkaConfig: Properties =
+                KafkaUtils.getAivenKafkaConfig("status-consumer").also {
+                    it.let {
+                        it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+                        it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+                    }
+                },
         ): SykmeldingStatusKafkaConsumer {
             val properties =
                 kafkaConfig.toConsumerConfig(
@@ -66,8 +72,8 @@ class KafkaFactory private constructor() {
         }
 
         fun getSendtSykmeldingKafkaProducer(
-            kafkaConfig: Properties,
-            environment: Environment
+            environment: Environment,
+            kafkaConfig: Properties = KafkaUtils.getAivenKafkaConfig("sendt-sykmelding-producer"),
         ): SendtSykmeldingKafkaProducer {
             val kafkaProducerProperties =
                 kafkaConfig.toProducerConfig(
@@ -80,8 +86,9 @@ class KafkaFactory private constructor() {
         }
 
         fun getBekreftetSykmeldingKafkaProducer(
-            kafkaConfig: Properties,
-            environment: Environment
+            environment: Environment,
+            kafkaConfig: Properties =
+                KafkaUtils.getAivenKafkaConfig("bekreftet-sykmelding-producer"),
         ): BekreftSykmeldingKafkaProducer {
             val kafkaProducerProperties =
                 kafkaConfig.toProducerConfig(
@@ -97,8 +104,8 @@ class KafkaFactory private constructor() {
         }
 
         fun getMottattSykmeldingKafkaProducer(
-            kafkaConfig: Properties,
-            environment: Environment
+            environment: Environment,
+            kafkaConfig: Properties = KafkaUtils.getAivenKafkaConfig("mottatt-sykmelding-producer"),
         ): MottattSykmeldingKafkaProducer {
             val kafkaProducerProperties =
                 kafkaConfig.toProducerConfig(
@@ -114,8 +121,8 @@ class KafkaFactory private constructor() {
         }
 
         fun getTombstoneProducer(
-            kafkaConfig: Properties,
-            environment: Environment
+            environment: Environment,
+            kafkaConfig: Properties = KafkaUtils.getAivenKafkaConfig("tombstone-producer"),
         ): SykmeldingTombstoneProducer {
             val kafkaProducerProperties =
                 kafkaConfig.toProducerConfig(
@@ -136,10 +143,11 @@ class KafkaFactory private constructor() {
         }
 
         fun getKafkaConsumerAivenPdlAktor(
-            environment: Environment
+            environment: Environment,
+            kafkaConfig: Properties = KafkaUtils.getAivenKafkaConfig("pdl-aktor-consumer"),
         ): KafkaConsumer<String, GenericRecord> {
             val consumerProperties =
-                KafkaUtils.getAivenKafkaConfig("pdl-aktor-consumer")
+                kafkaConfig
                     .apply {
                         setProperty(
                             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,

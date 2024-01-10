@@ -91,22 +91,19 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfigAiven =
-        KafkaUtils.getAivenKafkaConfig("syfosmregister-consumer").also {
-            it.let {
-                it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
-                it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
-            }
-        }
-
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
-    val sykmeldingStatusKafkaConsumerAiven =
-        getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
+    val sykmeldingStatusKafkaConsumerAiven = getKafkaStatusConsumerAiven(environment)
 
     val receivedSykmeldingKafkaConsumerAiven =
         KafkaConsumer<String, String>(
-            kafkaBaseConfigAiven
+            KafkaUtils.getAivenKafkaConfig("received-sykmelding-consumer")
+                .also {
+                    it.let {
+                        it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+                        it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+                    }
+                }
                 .toConsumerConfig(
                     "${environment.applicationName}-gcp-consumer",
                     valueDeserializer = StringDeserializer::class
@@ -116,7 +113,13 @@ fun main() {
 
     val behandlingsutfallKafkaConsumerAiven =
         KafkaConsumer<String, String>(
-            kafkaBaseConfigAiven
+            KafkaUtils.getAivenKafkaConfig("behandlingsutfall-consumer")
+                .also {
+                    it.let {
+                        it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+                        it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+                    }
+                }
                 .toConsumerConfig(
                     "${environment.applicationName}-gcp-consumer",
                     valueDeserializer = StringDeserializer::class
@@ -167,11 +170,10 @@ fun main() {
     val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
 
     val sykmeldingerService = SykmeldingerService(database)
-    val sendtSykmeldingKafkaProducer =
-        KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
+    val sendtSykmeldingKafkaProducer = KafkaFactory.getSendtSykmeldingKafkaProducer(environment)
     val bekreftSykmeldingKafkaProducer =
-        KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
-    val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaBaseConfigAiven, environment)
+        KafkaFactory.getBekreftetSykmeldingKafkaProducer(environment)
+    val tombstoneProducer = KafkaFactory.getTombstoneProducer(environment)
     val mottattSykmeldingStatusService =
         MottattSykmeldingStatusService(
             sykmeldingStatusService,
@@ -197,10 +199,8 @@ fun main() {
         MottattSykmeldingService(
             database = database,
             env = environment,
-            sykmeldingStatusKafkaProducer =
-                getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment),
-            mottattSykmeldingKafkaProducer =
-                getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment),
+            sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(environment),
+            mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(environment),
             mottattSykmeldingStatusService = mottattSykmeldingStatusService,
         )
     val sykmeldingStatusConsumerService =

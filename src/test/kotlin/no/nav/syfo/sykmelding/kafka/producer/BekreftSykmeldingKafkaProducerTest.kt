@@ -27,7 +27,7 @@ class BekreftSykmeldingKafkaProducerTest :
         every { environment.cluster } returns "localhost"
         val kafkaconfig = KafkaTest.setupKafkaConfig()
         val kafkaProducer =
-            KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaconfig, environment)
+            KafkaFactory.getBekreftetSykmeldingKafkaProducer(environment, kafkaconfig)
         val properties =
             kafkaconfig.toConsumerConfig(
                 "${environment.applicationName}-consumer",

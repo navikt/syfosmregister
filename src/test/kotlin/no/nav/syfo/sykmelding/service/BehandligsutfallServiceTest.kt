@@ -65,7 +65,7 @@ class BehandligsutfallServiceTest :
             every { environment.avvistSykmeldingTopic } returns "avvisttopicAiven"
             every { environment.manuellSykmeldingTopic } returns "manuelltopic"
         }
-        val tombstoneProducer = KafkaFactory.getTombstoneProducer(consumerProperties, environment)
+        val tombstoneProducer = KafkaFactory.getTombstoneProducer(environment, consumerProperties)
 
         afterTest { testDb.connection.dropData() }
 

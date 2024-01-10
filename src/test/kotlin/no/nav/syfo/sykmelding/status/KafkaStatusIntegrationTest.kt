@@ -62,15 +62,15 @@ class KafkaStatusIntegrationTest :
 
         val sykmelding = testSykmeldingsopplysninger
         val kafkaConfig = KafkaTest.setupKafkaConfig()
-        val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(kafkaConfig, environment)
+        val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
         val applicationState = ApplicationState(alive = true, ready = true)
         val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
-        val consumer = KafkaFactory.getKafkaStatusConsumerAiven(kafkaConfig, environment)
+        val consumer = KafkaFactory.getKafkaStatusConsumerAiven(environment, kafkaConfig)
         val sendtSykmeldingKafkaProducer =
-            spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaConfig, environment))
+            spyk(KafkaFactory.getSendtSykmeldingKafkaProducer(environment, kafkaConfig))
         val bekreftSykmeldingKafkaProducer =
-            spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaConfig, environment))
-        val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(kafkaConfig, environment))
+            spyk(KafkaFactory.getBekreftetSykmeldingKafkaProducer(environment, kafkaConfig))
+        val tombstoneProducer = spyk(KafkaFactory.getTombstoneProducer(environment, kafkaConfig))
         val mottattSykmeldingStatusService =
             MottattSykmeldingStatusService(
                 sykmeldingStatusService,
