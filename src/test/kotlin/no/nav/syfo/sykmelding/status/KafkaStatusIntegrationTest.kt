@@ -22,8 +22,6 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.createListener
-import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
-import no.nav.syfo.model.sykmeldingstatus.*
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.persistering.lagreMottattSykmelding
@@ -32,10 +30,20 @@ import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
+import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
+import no.nav.syfo.sykmelding.kafka.model.STATUS_AVBRUTT
+import no.nav.syfo.sykmelding.kafka.model.STATUS_BEKREFTET
+import no.nav.syfo.sykmelding.kafka.model.STATUS_SENDT
+import no.nav.syfo.sykmelding.kafka.model.STATUS_SLETTET
+import no.nav.syfo.sykmelding.kafka.model.ShortNameKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SporsmalOgSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
-import no.nav.syfo.sykmelding.kafka.service.sykmeldingId
 import no.nav.syfo.sykmelding.model.SporsmalDTO
 import no.nav.syfo.sykmelding.model.SvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
@@ -240,7 +248,8 @@ class KafkaStatusIntegrationTest :
                     }
 
                 kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-                val tidligereArbeidsgiver = TidligereArbeidsgiverDTO("orgNavn", "orgnummer", "1")
+                val tidligereArbeidsgiver =
+                    TidligereArbeidsgiverKafkaDTO("orgNavn", "orgnummer", "1")
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver),
                     sykmelding.pasientFnr
@@ -269,7 +278,8 @@ class KafkaStatusIntegrationTest :
                     }
 
                 kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-                val tidligereArbeidsgiver = TidligereArbeidsgiverDTO("orgNavn", "orgnummer", "1")
+                val tidligereArbeidsgiver =
+                    TidligereArbeidsgiverKafkaDTO("orgNavn", "orgnummer", "1")
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver),
                     sykmelding.pasientFnr
@@ -303,7 +313,7 @@ class KafkaStatusIntegrationTest :
                     }
                 val apenEvent = getApenEvent(sykmelding)
                 kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-                val tidligereArbeidsgiver1 = TidligereArbeidsgiverDTO("ag1", "orgnummer", "1")
+                val tidligereArbeidsgiver1 = TidligereArbeidsgiverKafkaDTO("ag1", "orgnummer", "1")
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(
                         sykmelding,
@@ -312,7 +322,7 @@ class KafkaStatusIntegrationTest :
                     ),
                     sykmelding.pasientFnr
                 )
-                val tidligereArbeidsgiver2 = TidligereArbeidsgiverDTO("ag2", "orgnummer", "1")
+                val tidligereArbeidsgiver2 = TidligereArbeidsgiverKafkaDTO("ag2", "orgnummer", "1")
 
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(
@@ -327,8 +337,18 @@ class KafkaStatusIntegrationTest :
                     database.connection.getTidligereArbeidsgiver(sykmelding.id)
 
                 tidligereArbeidsgiverList.size shouldBeEqualTo 1
-                tidligereArbeidsgiverList.singleOrNull()?.tidligereArbeidsgiver shouldBeEqualTo
-                    tidligereArbeidsgiver2
+                tidligereArbeidsgiverList
+                    .singleOrNull()
+                    ?.tidligereArbeidsgiver
+                    ?.orgNavn shouldBeEqualTo tidligereArbeidsgiver2.orgNavn
+                tidligereArbeidsgiverList
+                    .singleOrNull()
+                    ?.tidligereArbeidsgiver
+                    ?.orgnummer shouldBeEqualTo tidligereArbeidsgiver2.orgnummer
+                tidligereArbeidsgiverList
+                    .singleOrNull()
+                    ?.tidligereArbeidsgiver
+                    ?.sykmeldingsId shouldBeEqualTo tidligereArbeidsgiver2.sykmeldingsId
             }
 
             test("sletter avbrutt etter bekreftet") {
@@ -347,7 +367,7 @@ class KafkaStatusIntegrationTest :
                     }
                 val apenEvent = getApenEvent(sykmelding)
                 kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
-                val tidligereArbeidsgiver1 = TidligereArbeidsgiverDTO("ag1", "orgnummer", "1")
+                val tidligereArbeidsgiver1 = TidligereArbeidsgiverKafkaDTO("ag1", "orgnummer", "1")
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(
                         sykmelding,
@@ -483,7 +503,7 @@ private fun publishSendAndWait(
 
 private fun getSykmeldingBekreftEvent(
     sykmelding: Sykmeldingsopplysninger,
-    tidligereArbeidsgiverDTO: TidligereArbeidsgiverDTO? = null,
+    tidligereArbeidsgiverDTO: TidligereArbeidsgiverKafkaDTO? = null,
     timestamp: OffsetDateTime = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
 ): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
@@ -493,7 +513,12 @@ private fun getSykmeldingBekreftEvent(
         arbeidsgiver = null,
         sporsmals =
             listOf(
-                SporsmalOgSvarDTO("sporsmal", ShortNameDTO.FORSIKRING, SvartypeDTO.JA_NEI, "NEI")
+                SporsmalOgSvarKafkaDTO(
+                    "sporsmal",
+                    ShortNameKafkaDTO.FORSIKRING,
+                    SvartypeKafkaDTO.JA_NEI,
+                    "NEI"
+                )
             ),
         tidligereArbeidsgiver = tidligereArbeidsgiverDTO
     )
@@ -518,14 +543,14 @@ private fun getSendtEvent(
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
         timestamp = timestamp,
-        arbeidsgiver = ArbeidsgiverStatusDTO("org", "jorg", "navn"),
+        arbeidsgiver = ArbeidsgiverStatusKafkaDTO("org", "jorg", "navn"),
         statusEvent = STATUS_SENDT,
         sporsmals =
             listOf(
-                SporsmalOgSvarDTO(
+                SporsmalOgSvarKafkaDTO(
                     "din arbeidssituasjon?",
-                    ShortNameDTO.ARBEIDSSITUASJON,
-                    SvartypeDTO.ARBEIDSSITUASJON,
+                    ShortNameKafkaDTO.ARBEIDSSITUASJON,
+                    SvartypeKafkaDTO.ARBEIDSSITUASJON,
                     "ARBEIDSTAKER"
                 ),
             ),

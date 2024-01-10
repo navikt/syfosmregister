@@ -11,14 +11,14 @@ import no.nav.syfo.log
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.metrics.SYKMELDING_DUPLIKAT_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
-import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.updateMottattSykmelding
+import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
 import no.nav.syfo.sykmelding.kafka.model.MottattSykmeldingKafkaMessage
+import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer

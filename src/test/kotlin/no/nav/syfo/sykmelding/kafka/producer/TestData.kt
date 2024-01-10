@@ -5,9 +5,9 @@ import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
 import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
 import no.nav.syfo.model.sykmelding.model.AdresseDTO
-import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
-import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
+import no.nav.syfo.sykmelding.kafka.model.STATUS_BEKREFTET
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 
 fun getArbeidsgiverSykmelding(id: String): ArbeidsgiverSykmelding {

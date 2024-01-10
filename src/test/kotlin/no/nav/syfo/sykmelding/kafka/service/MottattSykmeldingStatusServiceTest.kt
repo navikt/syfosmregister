@@ -16,16 +16,17 @@ import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
 import no.nav.syfo.model.sykmelding.model.AdresseDTO
 import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
-import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
-import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
-import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
+import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
+import no.nav.syfo.sykmelding.kafka.model.ShortNameKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SporsmalOgSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
+import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
@@ -282,7 +283,7 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 val tidligereArbeidsgiverDto =
-                    TidligereArbeidsgiverDTO("orgnamn", "orgnummer", sykmeldingId)
+                    TidligereArbeidsgiverKafkaDTO("orgnamn", "orgnummer", sykmeldingId)
                 coEvery { sykmeldingStatusService.getTidligereArbeidsgiver(any()) } returns
                     TidligereArbeidsgiverDTO("orgnamn", "orgnummer", sykmeldingId)
 
@@ -316,12 +317,12 @@ private fun opprettSendtStatusmelding(erSvarOppdatering: Boolean = false) =
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "SENDT",
-            ArbeidsgiverStatusDTO("9999", null, "Arbeidsplassen AS"),
+            ArbeidsgiverStatusKafkaDTO("9999", null, "Arbeidsplassen AS"),
             listOf(
-                SporsmalOgSvarDTO(
+                SporsmalOgSvarKafkaDTO(
                     "tekst",
-                    ShortNameDTO.ARBEIDSSITUASJON,
-                    SvartypeDTO.ARBEIDSSITUASJON,
+                    ShortNameKafkaDTO.ARBEIDSSITUASJON,
+                    SvartypeKafkaDTO.ARBEIDSSITUASJON,
                     "svar"
                 )
             ),
