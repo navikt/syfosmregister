@@ -2,9 +2,9 @@ package no.nav.syfo.sykmelding.status
 
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
-import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.nullstilling.slettSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfall
+import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 
 class SykmeldingStatusService(private val database: DatabaseInterface) {
@@ -33,7 +33,7 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
                 sykmeldingBekreftEvent.timestamp,
                 StatusEvent.BEKREFTET
             ),
-        tidligereArbeidsgiver: TidligereArbeidsgiverDTO?
+        tidligereArbeidsgiver: TidligereArbeidsgiverKafkaDTO?
     ) {
         database.registrerBekreftet(
             sykmeldingBekreftEvent,

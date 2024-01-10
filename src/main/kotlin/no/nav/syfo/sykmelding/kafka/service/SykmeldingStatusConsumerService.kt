@@ -2,8 +2,8 @@ package no.nav.syfo.sykmelding.kafka.service
 
 import kotlinx.coroutines.delay
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
 import org.slf4j.LoggerFactory
 
 class SykmeldingStatusConsumerService(

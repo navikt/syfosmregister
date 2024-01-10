@@ -7,10 +7,10 @@ import no.nav.syfo.Environment
 import no.nav.syfo.kafka.aiven.KafkaUtils
 import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.kafka.toProducerConfig
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
 import no.nav.syfo.sykmelding.kafka.model.MottattSykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer

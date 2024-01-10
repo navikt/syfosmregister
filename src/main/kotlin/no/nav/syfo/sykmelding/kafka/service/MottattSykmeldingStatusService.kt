@@ -4,19 +4,19 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
-import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
-import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
 import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
 import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
 import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
-import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.securelog
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
+import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
+import no.nav.syfo.sykmelding.kafka.model.ShortNameKafkaDTO
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
@@ -254,12 +254,12 @@ class MottattSykmeldingStatusService(
     private suspend fun registrerSendt(
         sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO
     ) {
-        val arbeidsgiver: ArbeidsgiverStatusDTO =
+        val arbeidsgiver: ArbeidsgiverStatusKafkaDTO =
             sykmeldingStatusKafkaMessage.event.arbeidsgiver
                 ?: throw IllegalArgumentException("Arbeidsgiver er ikke oppgitt")
         if (
             sykmeldingStatusKafkaMessage.event.sporsmals?.first { sporsmal ->
-                sporsmal.shortName == ShortNameDTO.ARBEIDSSITUASJON
+                sporsmal.shortName == ShortNameKafkaDTO.ARBEIDSSITUASJON
             } == null
         ) {
             throw IllegalArgumentException("Mangler relevante spørsmål")
@@ -271,7 +271,7 @@ class MottattSykmeldingStatusService(
                 sykmeldingId,
                 timestamp,
                 KafkaModelMapper.toArbeidsgiverStatus(sykmeldingId, arbeidsgiver),
-                sykmeldingStatusKafkaMessage.event.sporsmals!!.map {
+                sykmeldingStatusKafkaMessage.event.sporsmals.map {
                     KafkaModelMapper.toSporsmal(it, sykmeldingId)
                 },
             )

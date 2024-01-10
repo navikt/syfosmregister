@@ -1,7 +1,7 @@
 package no.nav.syfo.sykmelding.kafka.consumer
 
 import java.time.Duration
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
 import org.apache.kafka.clients.consumer.KafkaConsumer
 
 class SykmeldingStatusKafkaConsumer(

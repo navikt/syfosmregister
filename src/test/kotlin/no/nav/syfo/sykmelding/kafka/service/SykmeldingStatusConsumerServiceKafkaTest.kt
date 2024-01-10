@@ -15,16 +15,16 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
-import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
-import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
-import no.nav.syfo.model.sykmeldingstatus.STATUS_AVBRUTT
-import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
-import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
-import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
+import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
+import no.nav.syfo.sykmelding.kafka.model.STATUS_AVBRUTT
+import no.nav.syfo.sykmelding.kafka.model.STATUS_BEKREFTET
+import no.nav.syfo.sykmelding.kafka.model.STATUS_SENDT
+import no.nav.syfo.sykmelding.kafka.model.ShortNameKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SporsmalOgSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
@@ -272,12 +272,12 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         sykmeldingId,
                         timestamp,
                         STATUS_SENDT,
-                        ArbeidsgiverStatusDTO("1", "2", "navn"),
+                        ArbeidsgiverStatusKafkaDTO("1", "2", "navn"),
                         listOf(
-                            SporsmalOgSvarDTO(
+                            SporsmalOgSvarKafkaDTO(
                                 "tekst",
-                                ShortNameDTO.ARBEIDSSITUASJON,
-                                SvartypeDTO.ARBEIDSSITUASJON,
+                                ShortNameKafkaDTO.ARBEIDSSITUASJON,
+                                SvartypeKafkaDTO.ARBEIDSSITUASJON,
                                 "svar",
                             ),
                         ),
@@ -330,12 +330,12 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         sykmeldingId,
                         getNowTickMillisOffsetDateTime().plusMonths(1),
                         STATUS_SENDT,
-                        ArbeidsgiverStatusDTO("1", "2", "navn"),
+                        ArbeidsgiverStatusKafkaDTO("1", "2", "navn"),
                         listOf(
-                            SporsmalOgSvarDTO(
+                            SporsmalOgSvarKafkaDTO(
                                 "sporsmal",
-                                ShortNameDTO.ARBEIDSSITUASJON,
-                                SvartypeDTO.ARBEIDSSITUASJON,
+                                ShortNameKafkaDTO.ARBEIDSSITUASJON,
+                                SvartypeKafkaDTO.ARBEIDSSITUASJON,
                                 "svar"
                             )
                         ),
@@ -531,18 +531,18 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         sykmeldingId,
                         timestamp,
                         STATUS_SENDT,
-                        ArbeidsgiverStatusDTO("1", "2", "navn"),
+                        ArbeidsgiverStatusKafkaDTO("1", "2", "navn"),
                         listOf(
-                            SporsmalOgSvarDTO(
+                            SporsmalOgSvarKafkaDTO(
                                 "tekst",
-                                ShortNameDTO.ARBEIDSSITUASJON,
-                                SvartypeDTO.ARBEIDSSITUASJON,
+                                ShortNameKafkaDTO.ARBEIDSSITUASJON,
+                                SvartypeKafkaDTO.ARBEIDSSITUASJON,
                                 "svar"
                             ),
-                            SporsmalOgSvarDTO(
+                            SporsmalOgSvarKafkaDTO(
                                 "Er det Din Leder som skal følge deg opp mens du er syk?",
-                                ShortNameDTO.NY_NARMESTE_LEDER,
-                                SvartypeDTO.JA_NEI,
+                                ShortNameKafkaDTO.NY_NARMESTE_LEDER,
+                                SvartypeKafkaDTO.JA_NEI,
                                 "JA",
                             ),
                         ),

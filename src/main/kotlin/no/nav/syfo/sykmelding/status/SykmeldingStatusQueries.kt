@@ -16,6 +16,7 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import org.postgresql.util.PGobject
 
 suspend fun DatabaseInterface.hentSykmeldingStatuser(
@@ -76,7 +77,7 @@ private suspend fun Connection.slettTidligereArbeidsgiver(sykmeldingId: String) 
 suspend fun DatabaseInterface.registrerBekreftet(
     sykmeldingBekreftEvent: SykmeldingBekreftEvent,
     sykmeldingStatusEvent: SykmeldingStatusEvent,
-    tidligereArbeidsgiver: TidligereArbeidsgiverDTO?,
+    tidligereArbeidsgiver: TidligereArbeidsgiverKafkaDTO?,
 ) =
     withContext(Dispatchers.IO) {
         connection.use { connection ->
@@ -220,7 +221,7 @@ suspend fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEve
 
 suspend fun Connection.registerTidligereArbeidsgiver(
     sykmeldingId: String,
-    tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+    tidligereArbeidsgiver: TidligereArbeidsgiverKafkaDTO
 ) =
     withContext(Dispatchers.IO) {
         prepareStatement(
@@ -360,7 +361,7 @@ private fun tilStatusEvent(status: String): StatusEvent {
     }
 }
 
-private fun TidligereArbeidsgiverDTO.toPGObject() =
+private fun TidligereArbeidsgiverKafkaDTO.toPGObject() =
     PGobject().also {
         it.type = "json"
         it.value = objectMapper.writeValueAsString(this)
