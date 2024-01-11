@@ -22,6 +22,7 @@ import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.status.getAlleSpm
 
 class IdentendringService(
     private val database: DatabaseInterface,
@@ -90,11 +91,12 @@ class IdentendringService(
         return true
     }
 
-    private fun getKafkaMessage(
+    private suspend fun getKafkaMessage(
         sykmelding: SykmeldingDbModelUtenBehandlingsutfall,
         nyttFnr: String
     ): SykmeldingKafkaMessage {
         val sendtSykmelding = sykmelding.toArbeidsgiverSykmelding()
+        val alleSpm = database.getAlleSpm(sykmelding.id)
         val metadata =
             KafkaMetadataDTO(
                 sykmeldingId = sykmelding.id,
@@ -120,6 +122,7 @@ class IdentendringService(
                         svar = "ARBEIDSTAKER",
                     ),
                 ),
+                brukerSvar = alleSpm
             )
         return SykmeldingKafkaMessage(sendtSykmelding, metadata, sendEvent)
     }

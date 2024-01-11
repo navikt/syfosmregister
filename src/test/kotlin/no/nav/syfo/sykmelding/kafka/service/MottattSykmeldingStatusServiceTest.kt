@@ -37,6 +37,7 @@ import no.nav.syfo.sykmelding.status.Svar
 import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
+import no.nav.syfo.testutil.createKomplettInnsendtSkjemaSvar
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 
 class MottattSykmeldingStatusServiceTest :
@@ -327,6 +328,7 @@ private fun opprettSendtStatusmelding(erSvarOppdatering: Boolean = false) =
                 )
             ),
             erSvarOppdatering = erSvarOppdatering,
+            brukerSvar = createKomplettInnsendtSkjemaSvar()
         ),
     )
 
@@ -344,6 +346,7 @@ private fun opprettBekreftStatusmelding() =
             "BEKREFTET",
             null,
             emptyList(),
+            brukerSvar = createKomplettInnsendtSkjemaSvar()
         ),
     )
 
@@ -361,6 +364,7 @@ private fun opprettBekreftStatusmeldingAvvistSykmelding() =
             "BEKREFTET",
             null,
             null,
+            brukerSvar = null
         ),
     )
 
@@ -378,6 +382,7 @@ private fun opprettSlettetStatusmelding() =
             "SLETTET",
             null,
             emptyList(),
+            brukerSvar = null
         ),
     )
 

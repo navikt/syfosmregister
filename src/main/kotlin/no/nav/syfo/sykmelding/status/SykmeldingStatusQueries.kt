@@ -16,6 +16,7 @@ import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
 import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import org.postgresql.util.PGobject
 
@@ -29,6 +30,11 @@ suspend fun DatabaseInterface.hentSykmeldingStatuser(
 suspend fun DatabaseInterface.getTidligereArbeidsgiver(sykmeldingId: String) =
     withContext(Dispatchers.IO) {
         connection.use { connection -> connection.getTidligereArbeidsgiver(sykmeldingId) }
+    }
+
+suspend fun DatabaseInterface.getAlleSpm(sykmeldingId: String) =
+    withContext(Dispatchers.IO) {
+        connection.use { connection -> connection.getAlleSpm(sykmeldingId) }
     }
 
 suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) =
@@ -56,6 +62,9 @@ suspend fun DatabaseInterface.registrerSendt(
             connection.slettGamleSvarHvisFinnesFraFor(sykmeldingSendEvent.sykmeldingId)
             connection.lagreArbeidsgiverStatus(sykmeldingSendEvent)
             sykmeldingSendEvent.sporsmal.forEach { connection.lagreSporsmalOgSvar(it) }
+            sykmeldingSendEvent.brukerSvar?.let {
+                connection.insertAlleSpm(it, sykmeldingSendEvent.sykmeldingId)
+            }
             connection.registerStatus(sykmeldingStatusEvent)
             connection.commit()
         }
@@ -89,17 +98,45 @@ suspend fun DatabaseInterface.registrerBekreftet(
             ) {
                 connection.slettGamleSvarHvisFinnesFraFor(sykmeldingBekreftEvent.sykmeldingId)
                 sykmeldingBekreftEvent.sporsmal?.forEach { connection.lagreSporsmalOgSvar(it) }
+                if (tidligereArbeidsgiver != null) {
+                    connection.registerTidligereArbeidsgiver(
+                        sykmeldingStatusEvent.sykmeldingId,
+                        tidligereArbeidsgiver
+                    )
+                }
+                sykmeldingBekreftEvent.brukerSvar?.let {
+                    connection.insertAlleSpm(it, sykmeldingBekreftEvent.sykmeldingId)
+                }
             }
             connection.registerStatus(sykmeldingStatusEvent)
-            if (tidligereArbeidsgiver != null) {
-                connection.registerTidligereArbeidsgiver(
-                    sykmeldingStatusEvent.sykmeldingId,
-                    tidligereArbeidsgiver
-                )
-            }
+
             connection.commit()
         }
     }
+
+private fun Connection.insertAlleSpm(alleSpm: KomplettInnsendtSkjemaSvar, sykmeldingId: String) {
+    prepareStatement(
+            """
+        insert into status_all_spm(sykmelding_id, alle_spm) 
+        values (?, ?) 
+        on conflict(sykmelding_id) do update 
+        set alle_spm = excluded.alle_spm
+    """
+        )
+        .use { ps ->
+            ps.setString(1, sykmeldingId)
+            ps.setObject(
+                2,
+                alleSpm.let {
+                    PGobject().apply {
+                        type = "json"
+                        value = objectMapper.writeValueAsString(it)
+                    }
+                }
+            )
+            ps.executeUpdate()
+        }
+}
 
 private suspend fun Connection.hasNewerStatus(
     sykmeldingId: String,
@@ -118,7 +155,9 @@ private suspend fun Connection.hasNewerStatus(
             }
     }
 
-suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<TidligereArbeidsgiver> =
+private suspend fun Connection.getTidligereArbeidsgiver(
+    sykmeldingId: String
+): List<TidligereArbeidsgiver> =
     withContext(Dispatchers.IO) {
         prepareStatement(
                 """
@@ -130,6 +169,27 @@ suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<Tidl
             .use {
                 it.setString(1, sykmeldingId)
                 it.executeQuery().toList { tilTidligereArbeidsgiverliste() }
+            }
+    }
+
+private suspend fun Connection.getAlleSpm(sykmeldingId: String) =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+        select alle_spm from status_all_spm where sykmelding_id = ?;
+    """
+            )
+            .use { ps ->
+                ps.setString(1, sykmeldingId)
+                ps.executeQuery().let {
+                    when (it.next()) {
+                        true ->
+                            objectMapper.readValue<KomplettInnsendtSkjemaSvar>(
+                                it.getString("alle_spm")
+                            )
+                        false -> null
+                    }
+                }
             }
     }
 
@@ -254,10 +314,29 @@ private suspend fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: Sykm
 
 private suspend fun Connection.slettAlleSvar(sykmeldingId: String) {
     this.slettArbeidsgiver(sykmeldingId)
-    val antall = this.slettTidligereArbeidsgiver(sykmeldingId)
-    log.info("sletta antall tidligere arbeidsgivere: $antall")
+    val antall = slettTidligereArbeidsgiver(sykmeldingId)
+    if (antall > 0) {
+        log.info("sletta antall tidligere arbeidsgivere: $antall")
+    }
+    val slettetBrukerSvar = slettBrukerSvar(sykmeldingId)
+    if (slettetBrukerSvar > 0) {
+        log.info("Slette gamle stauts_alle_spm for $sykmeldingId")
+    }
     this.slettSvar(sykmeldingId)
 }
+
+suspend fun Connection.slettBrukerSvar(sykmeldingId: String) =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+                DELETE FROM status_all_spm WHERE sykmelding_id=?;
+                """,
+            )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.executeUpdate()
+            }
+    }
 
 private suspend fun Connection.lagreSporsmalOgSvar(sporsmal: Sporsmal) {
     var spmId: Int?

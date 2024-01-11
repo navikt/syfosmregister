@@ -36,6 +36,7 @@ import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.registerStatus
 import no.nav.syfo.sykmelding.status.registrerSendt
 import no.nav.syfo.testutil.TestDB
+import no.nav.syfo.testutil.createKomplettInnsendtSkjemaSvar
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -229,6 +230,7 @@ suspend fun forberedTestsykmeldinger(
                     Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
                 )
             ),
+            brukerSvar = createKomplettInnsendtSkjemaSvar()
         ),
         SykmeldingStatusEvent(
             idSendtSykmelding,
@@ -283,6 +285,7 @@ suspend fun forberedTestsykmeldinger(
                     Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
                 )
             ),
+            brukerSvar = createKomplettInnsendtSkjemaSvar()
         ),
         SykmeldingStatusEvent(
             idGammelSendtSykmelding,

@@ -37,7 +37,7 @@ class MottattSykmeldingStatusService(
     suspend fun handleStatusEventForResentSykmelding(sykmeldingId: String, fnr: String) {
         val status = sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingId)
         val tidligereArbeidsgiver = sykmeldingStatusService.getTidligereArbeidsgiver(sykmeldingId)
-
+        val alleSpm = sykmeldingStatusService.getAlleSpm(sykmeldingId)
         requireNotNull(status) { "Could not find status for sykmeldingId $sykmeldingId" }
 
         val sykmeldingStatusKafkaEventDTO =
@@ -45,7 +45,8 @@ class MottattSykmeldingStatusService(
                 status,
                 getArbeidsgiverStatus(sykmeldingId, status.event),
                 getSporsmalOgSvar(sykmeldingId),
-                tidligereArbeidsgiver
+                tidligereArbeidsgiver,
+                alleSpm
             )
         val kafkaMetadata =
             KafkaMetadataDTO(
@@ -195,10 +196,13 @@ class MottattSykmeldingStatusService(
             sykmeldingStatusService.getArbeidsgiverSykmelding(
                 sykmeldingStatusKafkaMessage.event.sykmeldingId
             )
+                ?: throw RuntimeException(
+                    "Could not find sykmelding ${sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId}"
+                )
         val sendEvent = sykmeldingStatusKafkaMessage.event
         val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
 
-        return SykmeldingKafkaMessage(arbeidsgiverSykmelding!!, metadata, sendEvent)
+        return SykmeldingKafkaMessage(arbeidsgiverSykmelding, metadata, sendEvent)
     }
 
     private suspend fun registrerBekreftet(
@@ -218,6 +222,7 @@ class MottattSykmeldingStatusService(
                         sykmeldingStatusKafkaMessage.event.sykmeldingId,
                     )
                 },
+                brukerSvar = sykmeldingStatusKafkaMessage.event.brukerSvar
             )
 
         sykmeldingStatusService.registrerBekreftet(
@@ -274,6 +279,7 @@ class MottattSykmeldingStatusService(
                 sykmeldingStatusKafkaMessage.event.sporsmals.map {
                     KafkaModelMapper.toSporsmal(it, sykmeldingId)
                 },
+                brukerSvar = sykmeldingStatusKafkaMessage.event.brukerSvar
             )
         val sykmeldingStatusEvent =
             KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaMessage.event)

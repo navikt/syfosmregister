@@ -453,7 +453,8 @@ fun getSlettetEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaE
         getNowTickMillisOffsetDateTime().plusMonths(1),
         STATUS_SLETTET,
         null,
-        null
+        null,
+        brukerSvar = null,
     )
 }
 
@@ -520,7 +521,8 @@ private fun getSykmeldingBekreftEvent(
                     "NEI"
                 )
             ),
-        tidligereArbeidsgiver = tidligereArbeidsgiverDTO
+        tidligereArbeidsgiver = tidligereArbeidsgiverDTO,
+        brukerSvar = createKomplettInnsendtSkjemaSvar(),
     )
 }
 
@@ -534,6 +536,7 @@ fun getSykmeldingAvbruttEvent(
         arbeidsgiver = null,
         sporsmals = null,
         statusEvent = STATUS_AVBRUTT,
+        brukerSvar = createKomplettInnsendtSkjemaSvar(),
     )
 
 private fun getSendtEvent(
@@ -554,6 +557,7 @@ private fun getSendtEvent(
                     "ARBEIDSTAKER"
                 ),
             ),
+        brukerSvar = createKomplettInnsendtSkjemaSvar(),
     )
 }
 
@@ -562,5 +566,6 @@ private fun getApenEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusK
         sykmeldingId = sykmelding.id,
         timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
         statusEvent = STATUS_APEN,
+        brukerSvar = null
     )
 }
