@@ -8,7 +8,7 @@ data class SykmeldingStatusKafkaEventDTO(
     val statusEvent: String,
     val arbeidsgiver: ArbeidsgiverStatusKafkaDTO? = null,
     val sporsmals: List<SporsmalOgSvarKafkaDTO>? = null,
-    val brukerSvar: KomplettInnsendtSkjemaSvar? = null,
     val erSvarOppdatering: Boolean? = null,
     val tidligereArbeidsgiver: TidligereArbeidsgiverKafkaDTO? = null,
+    val brukerSvar: KomplettInnsendtSkjemaSvar?,
 )

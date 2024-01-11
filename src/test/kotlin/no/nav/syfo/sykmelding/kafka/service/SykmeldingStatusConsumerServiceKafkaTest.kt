@@ -39,6 +39,7 @@ import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.testutil.KafkaTest
+import no.nav.syfo.testutil.createKomplettInnsendtSkjemaSvar
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import org.amshove.kluent.shouldBeEqualTo
 
@@ -104,7 +105,12 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     val sykmelidngId = "" + it
                     val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
                     val sykmeldingApenEvent =
-                        SykmeldingStatusKafkaEventDTO(sykmelidngId, timestamp, STATUS_APEN)
+                        SykmeldingStatusKafkaEventDTO(
+                            sykmelidngId,
+                            timestamp,
+                            STATUS_APEN,
+                            brukerSvar = null
+                        )
                     kafkaProducer.send(sykmeldingApenEvent, fnr)
                 }
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns null
@@ -133,7 +139,14 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent =
-                    SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, STATUS_APEN, null, null)
+                    SykmeldingStatusKafkaEventDTO(
+                        sykmeldingId,
+                        timestamp,
+                        STATUS_APEN,
+                        null,
+                        null,
+                        brukerSvar = null
+                    )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns null
                 coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
                     {
@@ -160,7 +173,14 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent =
-                    SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, STATUS_APEN, null, null)
+                    SykmeldingStatusKafkaEventDTO(
+                        sykmeldingId,
+                        timestamp,
+                        STATUS_APEN,
+                        null,
+                        null,
+                        brukerSvar = null
+                    )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
                         sykmeldingId,
@@ -195,7 +215,14 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent =
-                    SykmeldingStatusKafkaEventDTO(sykmeldingId, timestamp, STATUS_APEN, null, null)
+                    SykmeldingStatusKafkaEventDTO(
+                        sykmeldingId,
+                        timestamp,
+                        STATUS_APEN,
+                        null,
+                        null,
+                        brukerSvar = null
+                    )
                 val sykmeldingBekreftEvent =
                     SykmeldingStatusKafkaEventDTO(
                         sykmeldingId,
@@ -203,6 +230,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_BEKREFTET,
                         null,
                         emptyList(),
+                        brukerSvar = null
                     )
                 val sykmeldingApenEvent2 =
                     SykmeldingStatusKafkaEventDTO(
@@ -210,7 +238,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         timestamp.plusSeconds(2),
                         STATUS_APEN,
                         null,
-                        null
+                        null,
+                        brukerSvar = null
                     )
                 coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns
                     mockkClass(
@@ -281,6 +310,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 "svar",
                             ),
                         ),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     )
                 coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns
                     mockkClass(
@@ -318,6 +348,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar"),
                             ),
                         ),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     )
                 sykmeldingStatusEvent shouldBeEqualTo
                     SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.SENDT)
@@ -339,6 +370,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 "svar"
                             )
                         ),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     )
                 var counter = 0
                 coEvery { consumer.poll() } answers
@@ -386,7 +418,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         timestamp,
                         STATUS_AVBRUTT,
                         null,
-                        null
+                        null,
+                        brukerSvar = null,
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns null
                 coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
@@ -425,6 +458,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_BEKREFTET,
                         null,
                         emptyList(),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
@@ -458,6 +492,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         sykmeldingId,
                         timestamp,
                         emptyList(),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     )
                 sykmeldingStatusEvent shouldBeEqualTo
                     SykmeldingStatusEvent(
@@ -479,6 +514,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_BEKREFTET,
                         null,
                         emptyList(),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
@@ -512,6 +548,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         sykmeldingId,
                         timestamp,
                         emptyList(),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     )
                 sykmeldingStatusEvent shouldBeEqualTo
                     SykmeldingStatusEvent(
@@ -546,6 +583,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 "JA",
                             ),
                         ),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
@@ -594,6 +632,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 Svar(sykmeldingId, null, Svartype.JA_NEI, "JA"),
                             ),
                         ),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 sykmeldingStatusEvent shouldBeEqualTo
                     SykmeldingStatusEvent(

@@ -22,6 +22,13 @@ import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.Sykmelding
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
+import no.nav.syfo.sykmelding.kafka.model.Arbeidssituasjon
+import no.nav.syfo.sykmelding.kafka.model.Blad
+import no.nav.syfo.sykmelding.kafka.model.FiskereSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.JaEllerNei
+import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
+import no.nav.syfo.sykmelding.kafka.model.LottOgHyre
+import no.nav.syfo.sykmelding.kafka.model.SporsmalSvar
 import no.nav.syfo.sykmelding.model.AdresseDTO
 import no.nav.syfo.sykmelding.model.AnnenFraversArsakDTO
 import no.nav.syfo.sykmelding.model.BehandlerDTO
@@ -385,3 +392,22 @@ fun getPapirsykmeldingDbModel(
             ),
     )
 }
+
+fun createKomplettInnsendtSkjemaSvar() =
+    KomplettInnsendtSkjemaSvar(
+        erOpplysningeneRiktige = SporsmalSvar("riktig", JaEllerNei.JA),
+        harForsikring = SporsmalSvar("har forsikring", JaEllerNei.JA),
+        arbeidsgiverOrgnummer = SporsmalSvar("orgnummer", "123456789"),
+        arbeidssituasjon = SporsmalSvar("Har arbeidsgiver", Arbeidssituasjon.ARBEIDSTAKER),
+        harBruktEgenmelding = SporsmalSvar("egenmelding?", JaEllerNei.NEI),
+        riktigNarmesteLeder = SporsmalSvar("RiktigNL", JaEllerNei.JA),
+        egenmeldingsdager = SporsmalSvar("egenmeldingsdager", emptyList()),
+        egenmeldingsperioder = null,
+        uriktigeOpplysninger = SporsmalSvar("hvilken?", emptyList()),
+        harBruktEgenmeldingsdager = SporsmalSvar("egenmeldingsdager?", JaEllerNei.JA),
+        fisker =
+            FiskereSvarKafkaDTO(
+                SporsmalSvar("Blad", Blad.A),
+                lottOgHyre = SporsmalSvar("logg og eller hyre?", LottOgHyre.HYRE),
+            ),
+    )

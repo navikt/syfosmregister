@@ -84,6 +84,8 @@ fun Connection.dropData() {
         connection.prepareStatement("DELETE FROM arbeidsgiver").executeUpdate()
         connection.prepareStatement("DELETE FROM svar").executeUpdate()
         connection.prepareStatement("DELETE FROM sporsmal").executeUpdate()
+        connection.prepareStatement("DELETE FROM tidligere_arbeidsgiver").executeUpdate()
+        connection.prepareStatement("DELETE FROM status_all_spm").executeUpdate()
         connection.prepareStatement("ALTER SEQUENCE svar_id_seq RESTART WITH 1").executeUpdate()
         connection.prepareStatement("ALTER SEQUENCE sporsmal_id_seq RESTART WITH 1").executeUpdate()
         connection.commit()
@@ -92,17 +94,19 @@ fun Connection.dropData() {
 
 suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<TidligereArbeidsgiver> =
     withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+        use {
+            it.prepareStatement(
+                    """
                     SELECT *
                     FROM tidligere_arbeidsgiver 
                     WHERE sykmelding_id = ?
                     """,
-            )
-            .use {
-                it.setString(1, sykmeldingId)
-                it.executeQuery().toList { tilTidligereArbeidsgiverliste() }
-            }
+                )
+                .use { preparedStatement ->
+                    preparedStatement.setString(1, sykmeldingId)
+                    preparedStatement.executeQuery().toList { tilTidligereArbeidsgiverliste() }
+                }
+        }
     }
 
 data class TidligereArbeidsgiver(
@@ -119,7 +123,7 @@ private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
             }
     )
 
-fun Connection.getMerknaderForId(id: String): List<Merknad>? =
+fun Connection.getMerknaderForId(id: String): List<Merknad>? = use {
     this.prepareStatement(
             """
                     SELECT merknader 
@@ -127,14 +131,16 @@ fun Connection.getMerknaderForId(id: String): List<Merknad>? =
                     where id = ?
             """,
         )
-        .use {
-            it.setString(1, id)
-            it.executeQuery().toList { tilMerknadliste() }.firstOrNull()
+        .use { ps ->
+            ps.setString(1, id)
+            ps.executeQuery().toList { tilMerknadliste() }.firstOrNull()
         }
+}
 
 fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? {
-    this.prepareStatement(
-            """
+    use {
+        prepareStatement(
+                """
             SELECT id,
                 pasient_fnr,
                 pasient_aktoer_id,
@@ -156,11 +162,12 @@ fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? 
             FROM SYKMELDINGSOPPLYSNINGER 
             WHERE id = ?;
         """,
-        )
-        .use {
-            it.setString(1, id)
-            return it.executeQuery().toList { toSykmeldingsopplysninger() }.firstOrNull()
-        }
+            )
+            .use {
+                it.setString(1, id)
+                return it.executeQuery().toList { toSykmeldingsopplysninger() }.firstOrNull()
+            }
+    }
 }
 
 private fun ResultSet.toSykmeldingsopplysninger(): Sykmeldingsopplysninger {

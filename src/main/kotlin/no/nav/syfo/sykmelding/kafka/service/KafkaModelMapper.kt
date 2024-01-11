@@ -3,6 +3,7 @@ package no.nav.syfo.sykmelding.kafka.service
 import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
 import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
 import no.nav.syfo.sykmelding.kafka.model.STATUS_AVBRUTT
 import no.nav.syfo.sykmelding.kafka.model.STATUS_BEKREFTET
@@ -58,7 +59,8 @@ class KafkaModelMapper private constructor() {
             status: SykmeldingStatusEvent,
             arbeidsgiverStatus: ArbeidsgiverDbModel?,
             sporsmal: List<Sporsmal>,
-            tidligereArbeidsgiver: TidligereArbeidsgiverDTO?
+            tidligereArbeidsgiver: TidligereArbeidsgiverDTO?,
+            alleSpm: KomplettInnsendtSkjemaSvar?,
         ) =
             SykmeldingStatusKafkaEventDTO(
                 sykmeldingId = status.sykmeldingId,
@@ -73,7 +75,8 @@ class KafkaModelMapper private constructor() {
                             orgnummer = it.orgnummer,
                             sykmeldingsId = it.sykmeldingsId
                         )
-                    }
+                    },
+                brukerSvar = alleSpm
             )
 
         private fun toSvartype(svartype: SvartypeKafkaDTO): Svartype {

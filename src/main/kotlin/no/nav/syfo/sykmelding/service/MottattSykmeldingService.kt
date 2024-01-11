@@ -88,6 +88,7 @@ class MottattSykmeldingService(
                             receivedSykmelding.sykmelding.id,
                             getMinTime(receivedSykmelding.mottattDato),
                             STATUS_APEN,
+                            brukerSvar = null
                         ),
                         receivedSykmelding.personNrPasient,
                     )

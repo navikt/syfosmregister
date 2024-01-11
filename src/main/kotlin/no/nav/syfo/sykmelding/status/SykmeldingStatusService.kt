@@ -4,6 +4,7 @@ import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
 import no.nav.syfo.nullstilling.slettSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfall
+import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
 import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 
@@ -53,5 +54,9 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
 
     suspend fun slettSykmelding(sykmeldingId: String) {
         database.slettSykmelding(sykmeldingId)
+    }
+
+    suspend fun getAlleSpm(sykmeldingId: String): KomplettInnsendtSkjemaSvar? {
+        return database.getAlleSpm(sykmeldingId)
     }
 }

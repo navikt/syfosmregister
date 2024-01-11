@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.status
 
 import java.time.OffsetDateTime
+import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
 
 data class SykmeldingStatusEvent(
     val sykmeldingId: String,
@@ -33,6 +34,7 @@ data class SykmeldingSendEvent(
     val timestamp: OffsetDateTime,
     val arbeidsgiver: ArbeidsgiverStatus,
     val sporsmal: List<Sporsmal>,
+    val brukerSvar: KomplettInnsendtSkjemaSvar?
 )
 
 data class ArbeidsgiverStatus(
@@ -75,4 +77,5 @@ data class SykmeldingBekreftEvent(
     val sykmeldingId: String,
     val timestamp: OffsetDateTime,
     val sporsmal: List<Sporsmal>?,
+    val brukerSvar: KomplettInnsendtSkjemaSvar?
 )

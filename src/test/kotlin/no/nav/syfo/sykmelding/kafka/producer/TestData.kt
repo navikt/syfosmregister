@@ -8,6 +8,7 @@ import no.nav.syfo.model.sykmelding.model.AdresseDTO
 import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
 import no.nav.syfo.sykmelding.kafka.model.STATUS_BEKREFTET
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.testutil.createKomplettInnsendtSkjemaSvar
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 
 fun getArbeidsgiverSykmelding(id: String): ArbeidsgiverSykmelding {
@@ -56,5 +57,6 @@ fun getSykmeldingStatusEvent(id: String): SykmeldingStatusKafkaEventDTO {
         arbeidsgiver = null,
         sporsmals = null,
         statusEvent = STATUS_BEKREFTET,
+        brukerSvar = createKomplettInnsendtSkjemaSvar()
     )
 }

@@ -11,6 +11,7 @@ import no.nav.syfo.persistering.opprettBehandlingsutfall
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.testutil.TestDB
+import no.nav.syfo.testutil.createKomplettInnsendtSkjemaSvar
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 import no.nav.syfo.testutil.testBehandlingsutfall
@@ -191,11 +192,14 @@ class SykmeldingStatusServiceSpek :
                             .atOffset(ZoneOffset.UTC)
                             .minusSeconds(1),
                         sporsmal,
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     ),
                     tidligereArbeidsgiver = null
                 )
                 val savedSporsmals = database.connection.use { it.hentSporsmalOgSvar("uuid") }
+                val alleSpm = database.getAlleSpm("uuid")
                 savedSporsmals.size shouldBeEqualTo 0
+                alleSpm shouldBeEqualTo null
             }
 
             test("registrer bekreft skal lagre spørsmål") {
@@ -214,11 +218,14 @@ class SykmeldingStatusServiceSpek :
                             .atOffset(ZoneOffset.UTC)
                             .plusSeconds(1),
                         sporsmal,
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     ),
                     tidligereArbeidsgiver = null
                 )
-                val savedSporsmals = database.connection.use { it.hentSporsmalOgSvar("uuid") }
+                val savedSporsmals = database.hentSporsmalOgSvar("uuid")
+                val alleSpm = database.getAlleSpm("uuid")
                 savedSporsmals shouldBeEqualTo sporsmal
+                alleSpm shouldBeEqualTo createKomplettInnsendtSkjemaSvar()
             }
 
             test("registrer APEN etter BEKREFTET skal slette sporsmal og svar") {
@@ -237,6 +244,7 @@ class SykmeldingStatusServiceSpek :
                             .atOffset(ZoneOffset.UTC)
                             .plusSeconds(1),
                         sporsmal,
+                        brukerSvar = null
                     ),
                     tidligereArbeidsgiver = null
                 )
@@ -285,6 +293,7 @@ class SykmeldingStatusServiceSpek :
                                 Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
                             ),
                         ),
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     ),
                     SykmeldingStatusEvent(
                         testSykmeldingsopplysninger.id,
@@ -329,6 +338,7 @@ class SykmeldingStatusServiceSpek :
                             "Bedrift"
                         ),
                         sporsmal,
+                        brukerSvar = createKomplettInnsendtSkjemaSvar()
                     ),
                     SykmeldingStatusEvent(
                         testSykmeldingsopplysninger.id,
