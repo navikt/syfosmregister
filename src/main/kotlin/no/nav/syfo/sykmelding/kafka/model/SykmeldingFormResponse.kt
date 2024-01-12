@@ -63,4 +63,5 @@ enum class Arbeidssituasjon {
     FISKER,
     ARBEIDSLEDIG,
     ANNET,
+    JORDBRUKER,
 }
