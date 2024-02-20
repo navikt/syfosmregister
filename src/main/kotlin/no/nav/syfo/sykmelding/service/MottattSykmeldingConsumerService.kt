@@ -62,6 +62,8 @@ class MottattSykmeldingConsumerService(
                 msgId = receivedSykmelding.msgId,
                 sykmeldingId = receivedSykmelding.sykmelding.id,
             )
+        if (receivedSykmelding.sykmelding.id == "88f6de03-d0ca-42f7-a036-bfb431629ad0") return
+
         mottattSykmeldingService.handleMessageSykmelding(
             receivedSykmelding,
             loggingMeta,
