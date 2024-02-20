@@ -23,6 +23,7 @@ import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper.Companion.toSykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.status.Sporsmal
 import no.nav.syfo.sykmelding.status.StatusEvent
+import no.nav.syfo.sykmelding.status.StatusEvent.APEN
 import no.nav.syfo.sykmelding.status.SykmeldingBekreftEvent
 import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
@@ -35,6 +36,11 @@ class MottattSykmeldingStatusService(
     private val databaseInterface: DatabaseInterface,
 ) {
     suspend fun handleStatusEventForResentSykmelding(sykmeldingId: String, fnr: String) {
+        val statusWithoutBehandlingsutfall = sykmeldingStatusService.getSykmeldingStatusWithoutBehandlingsutfall(sykmeldingId)
+        if (statusWithoutBehandlingsutfall?.event == APEN){
+            log.info("Does not need to resend sykmelding because statusevent is APEN. SykmeldingId: {}", sykmeldingId)
+            return
+        }
         val status = sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingId)
         val tidligereArbeidsgiver = sykmeldingStatusService.getTidligereArbeidsgiver(sykmeldingId)
         val alleSpm = sykmeldingStatusService.getAlleSpm(sykmeldingId)

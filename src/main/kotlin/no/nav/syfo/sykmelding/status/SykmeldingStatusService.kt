@@ -49,6 +49,9 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
     suspend fun getLatestSykmeldingStatus(sykmeldingId: String): SykmeldingStatusEvent? =
         database.hentSykmeldingStatuser(sykmeldingId).maxByOrNull { it.timestamp }
 
+    suspend fun getSykmeldingStatusWithoutBehandlingsutfall(sykmeldingId: String): SykmeldingStatus? =
+        database.sykmeldingStatusWithoutBehandlingsutfall(sykmeldingId).maxByOrNull { it.timestamp }
+
     suspend fun getArbeidsgiverSykmelding(sykmeldingId: String): ArbeidsgiverSykmelding? =
         database.getSykmeldingerMedIdUtenBehandlingsutfall(sykmeldingId)?.toArbeidsgiverSykmelding()
 

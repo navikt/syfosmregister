@@ -20,6 +20,13 @@ import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
 import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import org.postgresql.util.PGobject
 
+suspend fun DatabaseInterface.sykmeldingStatusWithoutBehandlingsutfall(
+    sykmeldingId: String
+): List<SykmeldingStatus> =
+    withContext(Dispatchers.IO) {
+        connection.use { connection -> connection.sykmeldingStatusWithoutBehandlingsutfall(sykmeldingId) }
+    }
+
 suspend fun DatabaseInterface.hentSykmeldingStatuser(
     sykmeldingId: String
 ): List<SykmeldingStatusEvent> =
@@ -207,6 +214,25 @@ private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
             }
     )
 
+private suspend fun Connection.sykmeldingStatusWithoutBehandlingsutfall(
+    sykmeldingId: String
+): List<SykmeldingStatus> =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+        SELECT status.sykmelding_id,
+        status.timestamp,
+        status.event
+        FROM sykmeldingstatus AS status 
+        WHERE status.sykmelding_id = ?
+    """,
+            )
+            .use {
+                it.setString(1, sykmeldingId)
+                it.executeQuery().toList { toSykmeldingStatusWithoutBehandlingsutfall() }
+            }
+    }
+
 private suspend fun Connection.getSykmeldingstatuser(
     sykmeldingId: String
 ): List<SykmeldingStatusEvent> =
@@ -240,6 +266,14 @@ private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
                 .readValue(getString("behandlingsutfall"), ValidationResult::class.java)
                 .status == Status.INVALID,
         erEgenmeldt = getString("epj_system_navn") == "Egenmeldt",
+    )
+}
+
+private fun ResultSet.toSykmeldingStatusWithoutBehandlingsutfall(): SykmeldingStatus {
+    return SykmeldingStatus(
+        event = tilStatusEvent(getString("event")),
+        sykmeldingId = getString("sykmelding_id"),
+        timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
     )
 }
 

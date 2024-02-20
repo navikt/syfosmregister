@@ -11,6 +11,12 @@ data class SykmeldingStatusEvent(
     val erEgenmeldt: Boolean? = null,
 )
 
+data class SykmeldingStatus(
+    val sykmeldingId: String,
+    val timestamp: OffsetDateTime,
+    val event: StatusEvent,
+)
+
 enum class StatusEvent {
     APEN,
     AVBRUTT,
