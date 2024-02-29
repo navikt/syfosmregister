@@ -3,10 +3,10 @@ package no.nav.syfo.sykmelding.model
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import no.nav.helse.diagnosekoder.Diagnosekoder
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.db.Adresse
 import no.nav.syfo.sykmelding.db.AktivitetIkkeMulig
 import no.nav.syfo.sykmelding.db.AnnenFraverGrunn

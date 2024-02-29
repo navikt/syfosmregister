@@ -3,11 +3,11 @@ package no.nav.syfo.sykmelding.model
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FunSpec
 import java.time.LocalDate
+import no.nav.helse.diagnosekoder.Diagnosekoder
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
-import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.db.AnnenFraverGrunn
 import no.nav.syfo.sykmelding.db.AnnenFraversArsak
 import no.nav.syfo.sykmelding.db.Diagnose
