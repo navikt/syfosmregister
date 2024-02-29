@@ -14,7 +14,6 @@ val postgresVersion = "42.7.2"
 val flywayVersion = "10.8.1"
 val hikariVersion = "5.1.0"
 val vaultJavaDriveVersion = "3.1.0"
-val smCommonVersion = "2.0.8"
 val mockkVersion = "1.13.9"
 val nimbusdsVersion = "9.37.3"
 val testContainerKafkaVersion = "1.19.6"
@@ -26,6 +25,7 @@ val snakeyamlVersion= "2.2"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.5"
 val avroVersion = "1.11.3"
+val diagnosekoderVersion = "1.2024.0"
 
 plugins {
     id("application")
@@ -93,15 +93,12 @@ dependencies {
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
-    implementation("no.nav.helse:syfosm-common-models:$smCommonVersion")
-    implementation("no.nav.helse:syfosm-common-kafka:$smCommonVersion")
     constraints {
         implementation("org.xerial.snappy:snappy-java:$snappyJavaVersion") {
             because("override transient from org.apache.kafka:kafka_2.12")
         }
     }
-    implementation("no.nav.helse:syfosm-common-diagnosis-codes:$smCommonVersion")
-
+    implementation("no.nav.helse:diagnosekoder:$diagnosekoderVersion")
     //Database
     implementation("org.postgresql:postgresql:$postgresVersion")
     implementation("com.zaxxer:HikariCP:$hikariVersion")

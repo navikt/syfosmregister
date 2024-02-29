@@ -2,10 +2,10 @@ package no.nav.syfo.testutil
 
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import no.nav.helse.diagnosekoder.Diagnosekoder
 import no.nav.syfo.Environment
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.db.Adresse
 import no.nav.syfo.sykmelding.db.AktivitetIkkeMulig
 import no.nav.syfo.sykmelding.db.Arbeidsgiver

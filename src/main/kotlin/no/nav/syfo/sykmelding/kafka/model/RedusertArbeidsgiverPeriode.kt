@@ -49,8 +49,7 @@ fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(
         return false
     }
     if (
-        hovedDiagnose != null &&
-            diagnoserSomGirRedusertArbgiverPeriode.contains(hovedDiagnose!!.kode)
+        hovedDiagnose != null && diagnoserSomGirRedusertArbgiverPeriode.contains(hovedDiagnose.kode)
     ) {
         return true
     } else if (
