@@ -16,6 +16,7 @@ spec:
             envVarPrefix: DB
             users:
               - name: macgyver
+              - name: tsm-migrator
         diskAutoresize: true
         highAvailability: false
         diskType: SSD
