@@ -5,10 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authentication
 import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.accept
-import io.ktor.server.routing.get
-import io.ktor.server.routing.route
+import io.ktor.server.routing.*
 import java.time.LocalDate
 import no.nav.syfo.application.BrukerPrincipal
 import no.nav.syfo.sykmelding.service.SykmeldingerService
@@ -29,18 +26,23 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     checkExcludeInclude(exclude, include) ->
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "Can not use both include and exclude"
+                            "Can not use both include and exclude",
                         )
+
                     checkFomAndTomDate(fom, tom) ->
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "FOM should be before or equal to TOM"
+                            "FOM should be before or equal to TOM",
                         )
+
                     hasInvalidStatus(exclude ?: include) ->
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "include or exclude can only contain ${StatusEventDTO.values().joinToString()}"
+                            "include or exclude can only contain ${
+                                StatusEventDTO.values().joinToString()
+                            }",
                         )
+
                     else ->
                         call.respond(
                             sykmeldingerService.getUserSykmelding(
@@ -49,8 +51,8 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                                 tom,
                                 include,
                                 exclude,
-                                fullBehandler = false
-                            )
+                                fullBehandler = false,
+                            ),
                         )
                 }
             }
@@ -67,6 +69,39 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     else -> call.respond(sykmelding)
                 }
             }
+
+            get("/sykmeldtStatus/{dato}") {
+                val principal: BrukerPrincipal = call.authentication.principal()!!
+                val fnr = principal.fnr
+                val datoParam = call.parameters["dato"]
+
+                if (datoParam == null) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Dato parameter is missing",
+                    )
+                    return@get
+                }
+
+                val parsedDate = try {
+                    LocalDate.parse(datoParam)
+                } catch (e: Exception) {
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        "Dato parameter is not a valid date",
+                    )
+                    return@get
+                }
+
+                call.respond(
+                    HttpStatusCode.OK,
+                    sykmeldingerService.getSykmeldtStatusForDato(
+                        fnr = fnr,
+                        dato = parsedDate,
+                    ),
+                )
+            }
+
         }
     }
 }

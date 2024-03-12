@@ -25,6 +25,7 @@ import no.nav.syfo.application.setupAuth
 import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.service.SykmeldingerService
+import no.nav.syfo.sykmelding.serviceuser.api.model.SykmeldtStatus
 import no.nav.syfo.testutil.generateJWT
 import no.nav.syfo.testutil.getEnvironment
 import no.nav.syfo.testutil.getSykmeldingDto
@@ -306,6 +307,35 @@ class SykmeldingApiV2KtTest :
                     ) {
                         response.status() shouldBeEqualTo HttpStatusCode.BadRequest
                         response.content!! shouldBeEqualTo "FOM should be before or equal to TOM"
+                    }
+                }
+
+                test("should get sykmeldingStatus for user") {
+                    coEvery {
+                        sykmeldingerService.getSykmeldtStatusForDato(
+                            "123",
+                            LocalDate.of(2020, 2, 2),
+                        )
+                    } returns SykmeldtStatus(
+                        erSykmeldt = true,
+                        gradert = false,
+                        fom = LocalDate.of(2020, 1, 20),
+                        tom = LocalDate.of(2020, 2, 10),
+                    )
+                    with(
+                        handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/sykmeldtStatus/2020-02-02") {
+                            call.authentication.principal(
+                                BrukerPrincipal("123", JWTPrincipal(mockPayload))
+                            )
+                        },
+                    ) {
+                        response.status() shouldBeEqualTo HttpStatusCode.OK
+                        val response = objectMapper.readValue<SykmeldtStatus>(response.content!!)
+
+                        response.erSykmeldt shouldBeEqualTo true
+                        response.gradert shouldBeEqualTo false
+                        response.fom shouldBeEqualTo LocalDate.of(2020, 1, 20)
+                        response.tom shouldBeEqualTo LocalDate.of(2020, 2, 10)
                     }
                 }
             }
