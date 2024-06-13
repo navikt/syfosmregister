@@ -3,7 +3,6 @@ package no.nav.syfo.application
 import com.auth0.jwk.JwkProvider
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.Principal
@@ -34,26 +33,27 @@ fun Application.setupAuth(
                         val app = environment.preAuthorizedApp.firstOrNull { it.clientId == appid }
                         if (app != null) {
                             APP_ID_PATH_COUNTER.labels(
-                                    app.team,
-                                    app.appName,
-                                    getLabel(this.request.path())
-                                )
+                                app.team,
+                                app.appName,
+                                getLabel(this.request.path()),
+                            )
                                 .inc()
                         } else {
                             log.warn("App not in pre authorized list: $appid")
                         }
                         JWTPrincipal(credentials.payload)
                     }
+
                     else -> unauthorized(credentials)
                 }
             }
         }
         jwt(name = "tokenx") {
             authHeader {
-                if (it.getToken() == null) {
-                    return@authHeader null
-                }
-                return@authHeader HttpAuthHeader.Single("Bearer", it.getToken()!!)
+                val token: String = it.request.header("Authorization")?.removePrefix("Bearer ")
+                    ?: return@authHeader null
+
+                return@authHeader HttpAuthHeader.Single("Bearer", token)
             }
             verifier(jwkProviderTokenX, tokenXIssuer)
             validate { credentials ->
@@ -66,18 +66,12 @@ fun Application.setupAuth(
                             principal = principal,
                         )
                     }
+
                     else -> unauthorized(credentials)
                 }
             }
         }
     }
-}
-
-fun ApplicationCall.getToken(): String? {
-    if (request.header("Authorization") != null) {
-        return request.header("Authorization")!!.removePrefix("Bearer ")
-    }
-    return request.cookies.get(name = "selvbetjening-idtoken")
 }
 
 fun harTilgang(credentials: JWTCredential, clientId: String): Boolean {
@@ -106,7 +100,7 @@ fun erNiva4(credentials: JWTCredential): Boolean {
 fun finnFnrFraToken(principal: JWTPrincipal): String {
     return if (
         principal.payload.getClaim("pid") != null &&
-            !principal.payload.getClaim("pid").asString().isNullOrEmpty()
+        !principal.payload.getClaim("pid").asString().isNullOrEmpty()
     ) {
         log.debug("Bruker fnr fra pid-claim")
         principal.payload.getClaim("pid").asString()
