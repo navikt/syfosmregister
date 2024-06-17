@@ -11,7 +11,8 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.apache.Apache
 import io.ktor.client.engine.apache.ApacheEngineConfig
 import io.prometheus.client.hotspot.DefaultExports
-import java.net.URL
+import java.net.URI
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
@@ -73,15 +74,15 @@ fun main() {
     val environment = Environment()
 
     val jwkProviderAadV2 =
-        JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
-            .cached(10, 24, TimeUnit.HOURS)
+        JwkProviderBuilder(URI.create(environment.jwkKeysUrlV2).toURL())
+            .cached(10, Duration.ofHours(24))
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
     val wellKnownTokenX = getWellKnownTokenX(environment.tokenXWellKnownUrl)
     val jwkProviderTokenX =
-        JwkProviderBuilder(URL(wellKnownTokenX.jwks_uri))
-            .cached(10, 24, TimeUnit.HOURS)
+        JwkProviderBuilder(URI.create(wellKnownTokenX.jwks_uri).toURL())
+            .cached(10, Duration.ofHours(24))
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 

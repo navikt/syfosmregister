@@ -13,9 +13,13 @@ Application for persisting sykmelding 2013 in database
 * Postgres
 * Docker
 
-#### Requirements
-
-* JDK 17
+### :scroll: Prerequisites
+* JDK 21
+  Make sure you have the Java JDK 21 installed
+  You can check which version you have installed using this command:
+``` shell
+java -version
+```
 
 ### Building the application
 #### Compile and package application
