@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.kafka.service
 
+import io.opentelemetry.api.trace.Span
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import no.nav.syfo.db.DatabaseInterface
@@ -86,6 +87,9 @@ class MottattSykmeldingStatusService(
             sykmeldingStatusKafkaMessage.event.statusEvent,
         )
         try {
+           val span = Span.current()
+            span.setAttribute("sykmeldingId", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
+
             when (sykmeldingStatusKafkaMessage.event.statusEvent) {
                 STATUS_SENDT -> {
                     handleSendtSykmelding(sykmeldingStatusKafkaMessage)

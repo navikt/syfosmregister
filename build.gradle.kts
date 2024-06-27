@@ -26,6 +26,7 @@ val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.5"
 val avroVersion = "1.11.3"
 val diagnosekoderVersion = "1.2024.0"
+val opentelemetryVersion = "2.3.0"
 
 plugins {
     id("application")
@@ -53,6 +54,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
     implementation("io.prometheus:simpleclient_hotspot:$prometheusVersion")
     implementation("io.prometheus:simpleclient_common:$prometheusVersion")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:$opentelemetryVersion")
 
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")

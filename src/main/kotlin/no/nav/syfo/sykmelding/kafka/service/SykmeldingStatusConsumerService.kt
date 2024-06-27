@@ -1,5 +1,6 @@
 package no.nav.syfo.sykmelding.kafka.service
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.delay
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
@@ -44,6 +45,7 @@ class SykmeldingStatusConsumerService(
         }
     }
 
+    @WithSpan
     private suspend fun handleStatusEvent(it: SykmeldingStatusKafkaMessageDTO) {
         log.info("Mottatt sykmelding status ${it.event.sykmeldingId}")
         mottattSykmeldingStatusService.handleStatusEvent(it)

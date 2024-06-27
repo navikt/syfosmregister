@@ -1,5 +1,7 @@
 package no.nav.syfo.sykmelding.status
 
+import io.opentelemetry.instrumentation.annotations.SpanAttribute
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
 import no.nav.syfo.nullstilling.slettSykmelding
@@ -46,7 +48,11 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
     suspend fun getTidligereArbeidsgiver(sykmeldingId: String) =
         database.getTidligereArbeidsgiver(sykmeldingId).singleOrNull()?.tidligereArbeidsgiver
 
-    suspend fun getLatestSykmeldingStatus(sykmeldingId: String): SykmeldingStatusEvent? =
+    @WithSpan
+    suspend fun getLatestSykmeldingStatus(
+        @SpanAttribute
+        sykmeldingId: String
+    ): SykmeldingStatusEvent? =
         database.hentSykmeldingStatuser(sykmeldingId).maxByOrNull { it.timestamp }
 
     suspend fun getArbeidsgiverSykmelding(sykmeldingId: String): ArbeidsgiverSykmelding? =
