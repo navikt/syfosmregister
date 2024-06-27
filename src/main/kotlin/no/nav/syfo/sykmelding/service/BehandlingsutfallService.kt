@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.Duration
 import kotlinx.coroutines.delay
 import net.logstash.logback.argument.StructuredArguments
@@ -56,6 +57,7 @@ class BehandlingsutfallService(
         }
     }
 
+    @WithSpan
     private suspend fun handleMessageBehandlingsutfall(
         validationResult: ValidationResult,
         sykmeldingsid: String,
