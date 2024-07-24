@@ -433,10 +433,6 @@ private fun tilStatusEvent(status: String): StatusEvent {
         "SENDT" -> StatusEvent.SENDT
         "AVBRUTT" -> StatusEvent.AVBRUTT
         "UTGATT" -> StatusEvent.UTGATT
-        "SLETTET" -> {
-            log.warn("Getting SLETTET status from database, should not happen")
-            StatusEvent.SLETTET
-        }
         else ->
             throw IllegalStateException(
                 "Sykmeldingen har ukjent status eller er slettet, skal ikke kunne skje"
