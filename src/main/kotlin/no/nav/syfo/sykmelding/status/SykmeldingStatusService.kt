@@ -50,8 +50,7 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
 
     @WithSpan
     suspend fun getLatestSykmeldingStatus(
-        @SpanAttribute
-        sykmeldingId: String
+        @SpanAttribute sykmeldingId: String
     ): SykmeldingStatusEvent? =
         database.hentSykmeldingStatuser(sykmeldingId).maxByOrNull { it.timestamp }
 

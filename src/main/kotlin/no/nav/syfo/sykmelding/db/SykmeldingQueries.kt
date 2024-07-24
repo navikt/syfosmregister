@@ -128,8 +128,7 @@ private suspend fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<Sy
                                                                                              WHERE sykmelding_id = opplysninger.id
                                                                                              ORDER BY timestamp DESC
                                                                                              LIMIT 1)
-                    where pasient_fnr = ?
-                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    where pasient_fnr = ?;
                     """,
             )
             .use {
@@ -164,8 +163,7 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForId(id: String): Syk
                                                                                              WHERE sykmelding_id = opplysninger.id
                                                                                              ORDER BY timestamp DESC
                                                                                              LIMIT 1)
-                    where opplysninger.id = ?
-                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    where opplysninger.id = ?;
                     """,
             )
             .use {
@@ -201,8 +199,7 @@ private suspend fun Connection.getSykmelding(id: String, fnr: String): Sykmeldin
                                                                                              ORDER BY timestamp DESC
                                                                                              LIMIT 1)
                     where opplysninger.id = ?
-                    and pasient_fnr = ?
-                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    and pasient_fnr = ?;
                     """,
             )
             .use {
@@ -238,8 +235,7 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsut
                                                                                              WHERE sykmelding_id = opplysninger.id
                                                                                              ORDER BY timestamp DESC
                                                                                              LIMIT 1)
-                    where opplysninger.id = ?
-                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    where opplysninger.id = ?;
                     """,
             )
             .use {
@@ -276,8 +272,7 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsut
                                                                                              WHERE sykmelding_id = opplysninger.id
                                                                                              ORDER BY timestamp DESC
                                                                                              LIMIT 1)
-                    where pasient_fnr = ?
-                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    where pasient_fnr = ?;
                     """,
             )
             .use {

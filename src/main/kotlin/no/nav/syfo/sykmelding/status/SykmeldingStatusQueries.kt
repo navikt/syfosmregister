@@ -37,7 +37,12 @@ suspend fun DatabaseInterface.getAlleSpm(sykmeldingId: String) =
         connection.use { connection -> connection.getAlleSpm(sykmeldingId) }
     }
 
-suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) =
+suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) {
+    if (sykmeldingStatusEvent.event == StatusEvent.SLETTET) {
+        throw IllegalArgumentException(
+            "Cannot insert slettet status in db sykmeldingId ${sykmeldingStatusEvent.sykmeldingId}"
+        )
+    }
     withContext(Dispatchers.IO) {
         connection.use { connection ->
             if (
@@ -52,6 +57,7 @@ suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingSt
             connection.commit()
         }
     }
+}
 
 suspend fun DatabaseInterface.registrerSendt(
     sykmeldingSendEvent: SykmeldingSendEvent,

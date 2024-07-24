@@ -87,8 +87,11 @@ class MottattSykmeldingStatusService(
             sykmeldingStatusKafkaMessage.event.statusEvent,
         )
         try {
-           val span = Span.current()
-            span.setAttribute("sykmeldingId", sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId)
+            val span = Span.current()
+            span.setAttribute(
+                "sykmeldingId",
+                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId
+            )
 
             when (sykmeldingStatusKafkaMessage.event.statusEvent) {
                 STATUS_SENDT -> {

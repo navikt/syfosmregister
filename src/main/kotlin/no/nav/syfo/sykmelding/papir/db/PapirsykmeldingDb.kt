@@ -17,8 +17,7 @@ fun DatabaseInterface.getPapirsykmelding(sykmeldingId: String): PapirsykmeldingD
                     opplysninger.pasient_fnr
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
-                    where opplysninger.id = ?
-                    and not exists(select 1 from sykmeldingstatus where sykmelding_id = opplysninger.id and event in ('SLETTET'));
+                    where opplysninger.id = ?;
                     """,
             )
             .use {

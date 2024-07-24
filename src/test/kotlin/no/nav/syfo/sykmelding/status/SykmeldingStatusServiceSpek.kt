@@ -56,57 +56,6 @@ class SykmeldingStatusServiceSpek :
                 savedSykmelding.sykmeldingStatus.timestamp shouldBeEqualTo confirmedDateTime
             }
 
-            test("Skal ikke hente sykmeldinger med status SLETTET") {
-                val confirmedDateTime = getNowTickMillisOffsetDateTime().plusMonths(1)
-                val status = SykmeldingStatusEvent("uuid", confirmedDateTime, StatusEvent.APEN)
-                val deletedStatus =
-                    SykmeldingStatusEvent(
-                        "uuid",
-                        confirmedDateTime.plusHours(1),
-                        StatusEvent.SLETTET
-                    )
-                sykmeldingStatusService.registrerStatus(status)
-                database.registerStatus(deletedStatus)
-
-                val sykmeldinger = sykmeldingerService.getUserSykmelding("pasientFnr", null, null)
-
-                sykmeldinger shouldBeEqualTo emptyList()
-            }
-
-            test("Skal kun hente sykmeldinger der status ikke er SLETTET") {
-                val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
-                val copySykmeldingopplysning =
-                    testSykmeldingsopplysninger.copy(
-                        id = "uuid2",
-                        pasientFnr = "pasientFnr",
-                    )
-                database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument)
-                database.registerStatus(
-                    SykmeldingStatusEvent(
-                        copySykmeldingopplysning.id,
-                        copySykmeldingopplysning.mottattTidspunkt.atOffset(ZoneOffset.UTC),
-                        StatusEvent.APEN,
-                    ),
-                )
-                database.connection.opprettBehandlingsutfall(
-                    testBehandlingsutfall.copy(id = "uuid2")
-                )
-
-                val confirmedDateTime = getNowTickMillisOffsetDateTime().plusMonths(1)
-                val deletedStatus =
-                    SykmeldingStatusEvent(
-                        "uuid",
-                        confirmedDateTime.plusHours(1),
-                        StatusEvent.SLETTET
-                    )
-                database.registerStatus(deletedStatus)
-
-                val sykmeldinger = sykmeldingerService.getUserSykmelding("pasientFnr", null, null)
-
-                sykmeldinger.size shouldBeEqualTo 1
-                sykmeldinger.first().id shouldBeEqualTo "uuid2"
-            }
-
             test("Skal hente siste status") {
                 database.registerStatus(
                     SykmeldingStatusEvent(
