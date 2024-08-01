@@ -1,5 +1,7 @@
 package no.nav.syfo.sykmelding.service
 
+import io.opentelemetry.api.trace.Span
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -50,6 +52,7 @@ class MottattSykmeldingService(
         mottattSykmeldingKafkaProducer.sendMottattSykmelding(message)
     }
 
+    @WithSpan
     suspend fun handleMessageSykmelding(
         receivedSykmelding: ReceivedSykmelding,
         loggingMeta: LoggingMeta,
@@ -57,6 +60,8 @@ class MottattSykmeldingService(
     ) =
         withContext(Dispatchers.IO) {
             wrapExceptions(loggingMeta) {
+                Span.current().setAttribute("sykmeldingId", receivedSykmelding.sykmelding.id)
+
                 log.info(
                     "Mottatt sykmelding SM2013 fra $topic, {}",
                     StructuredArguments.fields(loggingMeta)
