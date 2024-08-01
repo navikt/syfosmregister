@@ -33,25 +33,25 @@ fun Application.setupAuth(
                         val app = environment.preAuthorizedApp.firstOrNull { it.clientId == appid }
                         if (app != null) {
                             APP_ID_PATH_COUNTER.labels(
-                                app.team,
-                                app.appName,
-                                getLabel(this.request.path()),
-                            )
+                                    app.team,
+                                    app.appName,
+                                    getLabel(this.request.path()),
+                                )
                                 .inc()
                         } else {
                             log.warn("App not in pre authorized list: $appid")
                         }
                         JWTPrincipal(credentials.payload)
                     }
-
                     else -> unauthorized(credentials)
                 }
             }
         }
         jwt(name = "tokenx") {
             authHeader {
-                val token: String = it.request.header("Authorization")?.removePrefix("Bearer ")
-                    ?: return@authHeader null
+                val token: String =
+                    it.request.header("Authorization")?.removePrefix("Bearer ")
+                        ?: return@authHeader null
 
                 return@authHeader HttpAuthHeader.Single("Bearer", token)
             }
@@ -66,7 +66,6 @@ fun Application.setupAuth(
                             principal = principal,
                         )
                     }
-
                     else -> unauthorized(credentials)
                 }
             }
@@ -100,7 +99,7 @@ fun erNiva4(credentials: JWTCredential): Boolean {
 fun finnFnrFraToken(principal: JWTPrincipal): String {
     return if (
         principal.payload.getClaim("pid") != null &&
-        !principal.payload.getClaim("pid").asString().isNullOrEmpty()
+            !principal.payload.getClaim("pid").asString().isNullOrEmpty()
     ) {
         log.debug("Bruker fnr fra pid-claim")
         principal.payload.getClaim("pid").asString()

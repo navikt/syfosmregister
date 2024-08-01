@@ -1,6 +1,7 @@
 package no.nav.syfo.sykmelding.service
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.Duration
 import kotlinx.coroutines.delay
 import no.nav.syfo.Environment
@@ -53,6 +54,7 @@ class MottattSykmeldingConsumerService(
         }
     }
 
+    @WithSpan
     private suspend fun handleMessageSykmelding(it: ConsumerRecord<String, String>) {
         val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
         val loggingMeta =
