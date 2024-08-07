@@ -100,7 +100,7 @@ spec:
         - application: smoppslag
           namespace: risk
           cluster: dev-fss
-        - application: teamsykmelding-mock-backend
+        - application: teamsykmelding-mock
         - application: syfooppfolgingsplanservice
           namespace: team-esyfo
           cluster: dev-fss
