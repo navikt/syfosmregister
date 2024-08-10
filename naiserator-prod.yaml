@@ -56,11 +56,10 @@ spec:
         - id: elastic
   resources:
     limits:
-      cpu: 500m
-      memory: 750Mi
+      memory: 1000Mi
     requests:
       cpu: 100m
-      memory: 500Mi
+      memory: 600Mi
   kafka:
     pool: nav-prod
   azure:
