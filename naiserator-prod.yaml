@@ -106,7 +106,6 @@ spec:
         - application: macgyver
   ingresses:
     - "https://smregister.intern.nav.no"
-  webproxy: false
   leaderElection: true
   secureLogs:
     enabled: true
