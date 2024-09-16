@@ -26,7 +26,7 @@ val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.7"
 val avroVersion = "1.12.0"
 val diagnosekoderVersion = "1.2024.0"
-val opentelemetryVersion = "2.7.0"
+val opentelemetryVersion = "2.8.0"
 
 plugins {
     id("application")
