@@ -5,7 +5,7 @@ val coroutinesVersion = "1.9.0"
 val jacksonVersion = "2.17.2"
 val confluentVersion = "7.7.1"
 val kluentVersion = "1.73"
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.0"
 val logbackVersion = "1.5.8"
 val logstashEncoderVersion = "8.0"
 val prometheusVersion = "0.16.0"
@@ -18,7 +18,7 @@ val mockkVersion = "1.13.12"
 val nimbusdsVersion = "9.41.1"
 val testContainerKafkaVersion = "1.20.1"
 val caffeineVersion = "3.1.8"
-val kotlinVersion = "2.0.20"
+val kotlinVersion = "2.0.21"
 val testContainerVersion = "1.20.1"
 val commonsCodecVersion = "1.17.1"
 val snakeyamlVersion= "2.3"
@@ -31,8 +31,8 @@ val opentelemetryVersion = "2.8.0"
 plugins {
     id("application")
     id("com.diffplug.spotless") version "6.25.0"
-    kotlin("jvm") version "2.0.20"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    kotlin("jvm") version "2.0.21"
+    id("com.gradleup.shadow") version "8.3.3"
 }
 application {
     mainClass.set("no.nav.syfo.BootstrapKt")
