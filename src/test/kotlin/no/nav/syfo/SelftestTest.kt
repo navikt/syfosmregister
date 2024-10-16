@@ -10,7 +10,7 @@ import no.nav.syfo.application.api.registerNaisApi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-internal class ApplicationTest {
+internal class SelftestTest {
 
     @Test
     internal fun `Returns ok on is_alive`() {
@@ -84,4 +84,3 @@ internal class ApplicationTest {
         }
     }
 }
-

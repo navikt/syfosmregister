@@ -9,7 +9,6 @@ val ktorVersion = "3.0.0"
 val logbackVersion = "1.5.8"
 val logstashEncoderVersion = "8.0"
 val prometheusVersion = "0.16.0"
-val kotestVersion = "5.9.1"
 val postgresVersion = "42.7.4"
 val flywayVersion = "10.18.1"
 val hikariVersion = "6.0.0"
@@ -27,6 +26,7 @@ val snappyJavaVersion = "1.1.10.7"
 val avroVersion = "1.12.0"
 val diagnosekoderVersion = "1.2024.0"
 val opentelemetryVersion = "2.8.0"
+val junitJupiterVersion = "5.11.2"
 
 plugins {
     id("application")
@@ -112,7 +112,9 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
