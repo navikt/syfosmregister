@@ -39,14 +39,17 @@ import org.junit.jupiter.api.Test
 
 internal class SykmeldingApiV2IntegrationTest {
     val sykmeldingerV2Uri = "api/v3/sykmeldinger"
-
     val database = TestDB.database
     val sykmeldingerService = SykmeldingerService(database)
 
+    val path = "src/test/resources/jwkset.json"
+    val uri = Paths.get(path).toUri().toURL()
+    val jwkProvider = JwkProviderBuilder(uri).build()
+
     @BeforeEach
     fun beforeTest() {
+        database.connection.dropData()
         runBlocking {
-            database.connection.dropData()
             database.lagreMottattSykmelding(
                 testSykmeldingsopplysninger,
                 testSykmeldingsdokument,
@@ -63,9 +66,9 @@ internal class SykmeldingApiV2IntegrationTest {
     }
 
     companion object {
-        @JvmStatic
         @AfterAll
-        fun afterAll() {
+        @JvmStatic
+        internal fun tearDown() {
             TestDB.stop()
         }
     }
@@ -73,13 +76,10 @@ internal class SykmeldingApiV2IntegrationTest {
     @Disabled
     @Test
     internal fun `SykmeldingApiV2 integration test skal få unauthorized når credentials mangler`() {
+
         testApplication {
             setUpTestApplication()
             application {
-                val path = "src/test/resources/jwkset.json"
-                val uri = Paths.get(path).toUri().toURL()
-                val jwkProvider = JwkProviderBuilder(uri).build()
-
                 setupAuth(
                     jwkProvider,
                     "tokenXissuer",
@@ -109,10 +109,6 @@ internal class SykmeldingApiV2IntegrationTest {
         testApplication {
             setUpTestApplication()
             application {
-                val path = "src/test/resources/jwkset.json"
-                val uri = Paths.get(path).toUri().toURL()
-                val jwkProvider = JwkProviderBuilder(uri).build()
-
                 setupAuth(
                     jwkProvider,
                     "tokenXissuer",
@@ -159,10 +155,6 @@ internal class SykmeldingApiV2IntegrationTest {
         testApplication {
             setUpTestApplication()
             application {
-                val path = "src/test/resources/jwkset.json"
-                val uri = Paths.get(path).toUri().toURL()
-                val jwkProvider = JwkProviderBuilder(uri).build()
-
                 setupAuth(
                     jwkProvider,
                     "tokenXissuer",
@@ -205,10 +197,6 @@ internal class SykmeldingApiV2IntegrationTest {
         testApplication {
             setUpTestApplication()
             application {
-                val path = "src/test/resources/jwkset.json"
-                val uri = Paths.get(path).toUri().toURL()
-                val jwkProvider = JwkProviderBuilder(uri).build()
-
                 setupAuth(
                     jwkProvider,
                     "tokenXissuer",
@@ -252,10 +240,6 @@ internal class SykmeldingApiV2IntegrationTest {
         testApplication {
             setUpTestApplication()
             application {
-                val path = "src/test/resources/jwkset.json"
-                val uri = Paths.get(path).toUri().toURL()
-                val jwkProvider = JwkProviderBuilder(uri).build()
-
                 setupAuth(
                     jwkProvider,
                     "tokenXissuer",

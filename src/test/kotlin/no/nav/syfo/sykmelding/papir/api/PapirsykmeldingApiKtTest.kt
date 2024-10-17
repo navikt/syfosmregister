@@ -30,7 +30,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class PapirsykmeldingApiKtTest {
+internal class PapirsykmeldingApiKtTest {
     val database = TestDB.database
     val sykmeldingerService = PapirsykmeldingService(database)
 
