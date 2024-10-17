@@ -6,7 +6,7 @@ import io.ktor.client.request.*
 import io.ktor.client.request.headers
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.*
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.*
@@ -28,6 +28,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
 class SykmeldingApiV2KtTest {
+    val path = "src/test/resources/jwkset.json"
+    val uri = Paths.get(path).toUri().toURL()
+    val jwkProvider = JwkProviderBuilder(uri).build()
+
     val sykmeldingerV2Uri = "api/v3/sykmeldinger"
 
     val sykmeldingerService = mockkClass(SykmeldingerService::class)
@@ -39,12 +43,21 @@ class SykmeldingApiV2KtTest {
 
     @Test
     internal fun `Test sykmeldingApiV2 Should get sykmeldinger for user with exclude filter`() {
+
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -65,13 +78,7 @@ class SykmeldingApiV2KtTest {
                     headers {
                         append(
                             HttpHeaders.Authorization,
-                            "Bearer ${
-                                generateJWT(
-                                    "syfosoknad",
-                                    "clientid",
-                                    subject = "123",
-                                )
-                            }",
+                            "Bearer ${generateJWT("2", "clientid")}",
                         )
                     }
                 }
@@ -84,9 +91,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -125,9 +140,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -167,9 +190,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -203,9 +234,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -238,9 +277,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -273,9 +320,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -314,9 +369,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -368,9 +431,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -421,9 +492,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -475,9 +554,17 @@ class SykmeldingApiV2KtTest {
         testApplication {
             setUpTestApplication()
             application {
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
                 routing {
                     route("/api/v3") {
-                        registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
                     }
                 }
             }
@@ -505,9 +592,6 @@ class SykmeldingApiV2KtTest {
     @Test
     internal fun `Test with autentication get sykmeldinger OK`() {
         testApplication {
-            val path = "src/test/resources/jwkset.json"
-            val uri = Paths.get(path).toUri().toURL()
-            val jwkProvider = JwkProviderBuilder(uri).build()
             setUpTestApplication()
             application {
                 setupAuth(
