@@ -56,6 +56,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 
 @DelicateCoroutinesApi
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -131,9 +132,9 @@ internal class KafkaStatusIntegrationTest {
             testSykmeldingsopplysninger.pasientFnr,
         )
 
-        runBlocking {
-            sykmeldingStatusConsumerService.start()
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
 
+        runBlocking {
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
             sykmeldinger[0].status shouldBeEqualTo
@@ -423,19 +424,12 @@ internal class KafkaStatusIntegrationTest {
     }
 
     @Disabled
+    @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     @Test
     internal fun `Test Kafka  DB  status API test get sykmelding with latest status SENDT`() {
         // TODO why this no work?
         testApplication {
             setUpTestApplication()
-            val sendtEvent =
-                publishSendAndWait(
-                    sykmeldingStatusService,
-                    applicationState,
-                    kafkaProducer,
-                    sykmelding,
-                    sykmeldingStatusConsumerService
-                )
             application {
                 setupAuth(
                     jwkProvider,
@@ -451,6 +445,15 @@ internal class KafkaStatusIntegrationTest {
                     }
                 }
             }
+
+            val sendtEvent =
+                publishSendAndWait(
+                    sykmeldingStatusService,
+                    applicationState,
+                    kafkaProducer,
+                    sykmelding,
+                    sykmeldingStatusConsumerService
+                )
 
             val response =
                 client.get("/api/v3/sykmeldinger") {
@@ -491,8 +494,6 @@ internal class KafkaStatusIntegrationTest {
                         ),
                     statusEvent = "SENDT",
                 )
-
-
         }
     }
 }
