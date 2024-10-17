@@ -12,6 +12,7 @@ import no.nav.syfo.objectMapper
 import no.nav.syfo.testutil.HttpClientTest
 import no.nav.syfo.testutil.ResponseData
 import org.amshove.kluent.shouldBeEqualTo
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class TilgangskontrollServiceTest {
@@ -25,11 +26,15 @@ class TilgangskontrollServiceTest {
             "clientId",
         )
 
-    @Test
-    internal fun `Test TilgangskontrollService Should get false when user not have access`() {
+    @BeforeEach
+    fun beforeEach() {
         coEvery { azureadClient.getOnBehalfOfToken(any(), any()) } returns
             AzureAdV2Token("token", OffsetDateTime.now().plusSeconds(3599))
         mockkStatic("io.ktor.client.request.BuildersKt")
+    }
+
+    @Test
+    internal fun `Test TilgangskontrollService Should get false when user not have access`() {
         httpClientTest.responseData =
             ResponseData(HttpStatusCode.OK, objectMapper.writeValueAsString(Tilgang(false)))
         runBlocking {
@@ -40,9 +45,6 @@ class TilgangskontrollServiceTest {
 
     @Test
     internal fun `Test TilgangskontrollService Should get true when user have access`() {
-        coEvery { azureadClient.getOnBehalfOfToken(any(), any()) } returns
-            AzureAdV2Token("token", OffsetDateTime.now().plusSeconds(3599))
-        mockkStatic("io.ktor.client.request.BuildersKt")
         httpClientTest.responseData =
             ResponseData(HttpStatusCode.OK, objectMapper.writeValueAsString(Tilgang(true)))
         runBlocking {
@@ -53,9 +55,7 @@ class TilgangskontrollServiceTest {
 
     @Test
     internal fun `Test TilgangskontrollService Should get false when services returns 401 Unauthorized`() {
-        coEvery { azureadClient.getOnBehalfOfToken(any(), any()) } returns
-            AzureAdV2Token("token", OffsetDateTime.now().plusSeconds(3599))
-        mockkStatic("io.ktor.client.request.BuildersKt")
+
         httpClientTest.responseData = ResponseData(HttpStatusCode.Unauthorized, "Unauthorized")
         runBlocking {
             val tilgang = tilgangskontrollService.hasAccessToUserOboToken("123", "Bearer 123")
@@ -65,9 +65,6 @@ class TilgangskontrollServiceTest {
 
     @Test
     internal fun `Test TilgangskontrollService Should get false when service returns 403 forbidden`() {
-        coEvery { azureadClient.getOnBehalfOfToken(any(), any()) } returns
-            AzureAdV2Token("token", OffsetDateTime.now().plusSeconds(3599))
-        mockkStatic("io.ktor.client.request.BuildersKt")
         httpClientTest.responseData = ResponseData(HttpStatusCode.Forbidden, "Forbidden")
         runBlocking {
             tilgangskontrollService.hasAccessToUserOboToken("123", "Bearer 123") shouldBeEqualTo
@@ -77,9 +74,6 @@ class TilgangskontrollServiceTest {
 
     @Test
     internal fun `Test TilgangskontrollService Should get false when service returns 500 internal servver error`() {
-        coEvery { azureadClient.getOnBehalfOfToken(any(), any()) } returns
-            AzureAdV2Token("token", OffsetDateTime.now().plusSeconds(3599))
-        mockkStatic("io.ktor.client.request.BuildersKt")
         runBlocking {
             httpClientTest.responseData =
                 ResponseData(HttpStatusCode.InternalServerError, "Internal Server Errror")
