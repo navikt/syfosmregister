@@ -49,6 +49,14 @@ import org.junit.jupiter.api.Test
 class SykmeldingStatusConsumerServiceKafkaTest {
     val environment = mockkClass(Environment::class)
 
+    init {
+        every { environment.applicationName } returns
+            "${SykmeldingStatusConsumerServiceKafkaTest::class.simpleName}"
+        every { environment.sykmeldingStatusAivenTopic } returns
+            "${environment.applicationName}-topic"
+        every { environment.cluster } returns "localhost"
+    }
+
     val fnr = "12345678901"
     val kafkaConfig = KafkaTest.setupKafkaConfig()
     val applicationState = ApplicationState(alive = true, ready = true)
@@ -68,11 +76,7 @@ class SykmeldingStatusConsumerServiceKafkaTest {
         )
     val consumer = spyk(KafkaFactory.getKafkaStatusConsumerAiven(environment, kafkaConfig))
     val sykmeldingStatusConsumerService =
-        SykmeldingStatusConsumerService(
-            consumer,
-            applicationState,
-            mottattSykmeldingStatusService,
-        )
+        SykmeldingStatusConsumerService(consumer, applicationState, mottattSykmeldingStatusService)
 
     @AfterEach
     fun afterTest() {
@@ -97,11 +101,6 @@ class SykmeldingStatusConsumerServiceKafkaTest {
 
     @Test
     internal fun `Should retry on error Restart and continue from last offset`() {
-        every { environment.applicationName } returns
-            "${SykmeldingStatusConsumerServiceKafkaTest::class.simpleName}"
-        every { environment.sykmeldingStatusAivenTopic } returns
-            "${environment.applicationName}-topic"
-        every { environment.cluster } returns "localhost"
 
         val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
         val errors = 10

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 class HttpRequestMonitorInterceptorSpek {
     @Test
-    internal fun `Test av at bytting av UUID i path fungerer som forventet UUID byttes ut"`() {
+    internal fun `Test av at bytting av UUID i path fungerer som forventet UUID byttes ut`() {
         val uuid = UUID.randomUUID().toString()
         val pathMedUuid = "/api/v1/sykmelding/$uuid"
 
@@ -28,7 +28,7 @@ class HttpRequestMonitorInterceptorSpek {
     }
 
     @Test
-    internal fun `Test av at bytting av UUID i path fungerer som forventet String som er annen tilfeldig id byttes ut"`() {
+    internal fun `Test av at bytting av UUID i path fungerer som forventet String som er annen tilfeldig id byttes ut`() {
         val pathMedAnnenId =
             "/api/v2/sykmeldinger/ID:414d51204d504c5343303320202020201fe12e5705285310"
 

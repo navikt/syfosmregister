@@ -1,4 +1,4 @@
-package service
+package no.nav.syfo.pdl.service
 
 import io.mockk.coEvery
 import io.mockk.mockkClass
@@ -13,7 +13,6 @@ import no.nav.syfo.pdl.client.model.Identliste
 import no.nav.syfo.pdl.client.model.PdlResponse
 import no.nav.syfo.pdl.error.PersonNotFoundException
 import no.nav.syfo.pdl.model.GraphQLResponse
-import no.nav.syfo.pdl.service.PdlPersonService
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 

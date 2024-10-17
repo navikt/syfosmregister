@@ -193,7 +193,7 @@ class KafkaStatusIntegrationTest {
     }
 
     @Test
-    internal fun `Read from status topic and save in DB Should test APEN and SLETTET"`() {
+    internal fun `Read from status topic and save in DB Should test APEN and SLETTET`() {
         coEvery { sykmeldingStatusService.slettSykmelding(any()) } answers
             {
                 callOriginal()

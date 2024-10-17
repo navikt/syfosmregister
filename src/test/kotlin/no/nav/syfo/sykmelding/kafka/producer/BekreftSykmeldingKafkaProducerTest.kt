@@ -16,41 +16,46 @@ import org.amshove.kluent.shouldNotBe
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class BekreftSykmeldingKafkaProducerTest {
-    val environment = mockkClass(Environment::class)
-    // TODO FIX THIS TEST
 
-    @Test
-    internal fun `Test kafka Should bekreft value to topic`() {
+internal class BekreftSykmeldingKafkaProducerTest {
+    val environment = mockkClass(Environment::class)
+
+    init {
         every { environment.applicationName } returns
-            "${
-                BehandligsutfallServiceTest::
-                class.simpleName
-            }-application"
+            "${BehandligsutfallServiceTest::class.simpleName}-application"
         every { environment.bekreftSykmeldingKafkaTopic } returns
             "${environment.applicationName}-syfo-bekreft-sykmelding"
         every { environment.cluster } returns "localhost"
-        val kafkaconfig = KafkaTest.setupKafkaConfig()
-        val kafkaProducer =
-            KafkaFactory.getBekreftetSykmeldingKafkaProducer(environment, kafkaconfig)
-        val properties =
-            kafkaconfig.toConsumerConfig(
+    }
+
+    val kafkaconfig = KafkaTest.setupKafkaConfig()
+    val kafkaProducer = KafkaFactory.getBekreftetSykmeldingKafkaProducer(environment, kafkaconfig)
+    val properties =
+        kafkaconfig
+            .toConsumerConfig(
                 "${environment.applicationName}-consumer",
-                JacksonKafkaDeserializer::class,
+                JacksonKafkaDeserializer::class
             )
-        properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
+            .also { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
+    val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
+    val kafkaConsumer =
+        KafkaConsumer(
+            properties,
+            StringDeserializer(),
+            JacksonKafkaDeserializer(SykmeldingKafkaMessage::class)
+        )
 
-        val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
-        val kafkaConsumer =
-            KafkaConsumer(
-                properties,
-                StringDeserializer(),
-                JacksonKafkaDeserializer(SykmeldingKafkaMessage::class),
-            )
+    @BeforeEach
+    fun setup() {
         kafkaConsumer.subscribe(listOf("${environment.applicationName}-syfo-bekreft-sykmelding"))
+    }
 
+
+    @Test
+    internal fun `Test kafka Should bekreft value to topic`() {
         runBlocking {
             kafkaProducer.sendSykmelding(
                 SykmeldingKafkaMessage(
@@ -66,32 +71,6 @@ class BekreftSykmeldingKafkaProducerTest {
 
     @Test
     internal fun `Test kafka Should tombstone`() {
-        every { environment.applicationName } returns
-            "${
-                BehandligsutfallServiceTest::
-                class.simpleName
-            }-application"
-        every { environment.bekreftSykmeldingKafkaTopic } returns
-            "${environment.applicationName}-syfo-bekreft-sykmelding"
-        every { environment.cluster } returns "localhost"
-        val kafkaconfig = KafkaTest.setupKafkaConfig()
-        val kafkaProducer =
-            KafkaFactory.getBekreftetSykmeldingKafkaProducer(environment, kafkaconfig)
-        val properties =
-            kafkaconfig.toConsumerConfig(
-                "${environment.applicationName}-consumer",
-                JacksonKafkaDeserializer::class,
-            )
-        properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
-        val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
-        val kafkaConsumer =
-            KafkaConsumer(
-                properties,
-                StringDeserializer(),
-                JacksonKafkaDeserializer(SykmeldingKafkaMessage::class),
-            )
-        kafkaConsumer.subscribe(listOf("${environment.applicationName}-syfo-bekreft-sykmelding"))
-
         runBlocking {
             kafkaProducer.tombstoneSykmelding("1")
             val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
@@ -102,32 +81,6 @@ class BekreftSykmeldingKafkaProducerTest {
 
     @Test
     internal fun `Test kafka should send Bekreft then tombstone`() {
-        every { environment.applicationName } returns
-            "${
-                BehandligsutfallServiceTest::
-                class.simpleName
-            }-application"
-        every { environment.bekreftSykmeldingKafkaTopic } returns
-            "${environment.applicationName}-syfo-bekreft-sykmelding"
-        every { environment.cluster } returns "localhost"
-        val kafkaconfig = KafkaTest.setupKafkaConfig()
-        val kafkaProducer =
-            KafkaFactory.getBekreftetSykmeldingKafkaProducer(environment, kafkaconfig)
-        val properties =
-            kafkaconfig.toConsumerConfig(
-                "${environment.applicationName}-consumer",
-                JacksonKafkaDeserializer::class,
-            )
-        properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
-        val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
-        val kafkaConsumer =
-            KafkaConsumer(
-                properties,
-                StringDeserializer(),
-                JacksonKafkaDeserializer(SykmeldingKafkaMessage::class),
-            )
-        kafkaConsumer.subscribe(listOf("${environment.applicationName}-syfo-bekreft-sykmelding"))
-
         runBlocking {
             kafkaProducer.sendSykmelding(
                 SykmeldingKafkaMessage(

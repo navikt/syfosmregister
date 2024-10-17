@@ -29,7 +29,7 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -52,9 +52,12 @@ class AuthenticateSpek {
         }
     }
 
-    @AfterEach
-    fun afterTest() {
-        TestDB.stop()
+    companion object {
+        @JvmStatic
+        @AfterAll
+        fun afterAll(): Unit {
+            TestDB.stop()
+        }
     }
 
     @Test

@@ -14,7 +14,7 @@ import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
 class SykmeldingStatusConsumerServiceTest {
@@ -22,10 +22,13 @@ class SykmeldingStatusConsumerServiceTest {
     val sykmeldingStatusKafkaConsumer = mockkClass(SykmeldingStatusKafkaConsumer::class)
     val applicationState = ApplicationState(alive = true, ready = true)
 
-    @BeforeEach
-    fun beforeTest() {
-        mockkStatic("kotlinx.coroutines.DelayKt")
-        coEvery { delay(any<Long>()) } returns Unit
+    companion object {
+        @BeforeAll
+        @JvmStatic
+        internal fun beforeTest() {
+            mockkStatic("kotlinx.coroutines.DelayKt")
+            coEvery { delay(any<Long>()) } returns Unit
+        }
     }
 
     val sendtSykmeldingKafkaProducer = mockkClass(SendtSykmeldingKafkaProducer::class)
