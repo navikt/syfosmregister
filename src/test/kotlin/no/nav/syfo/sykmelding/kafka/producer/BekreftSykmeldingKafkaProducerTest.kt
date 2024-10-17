@@ -1,8 +1,29 @@
 package no.nav.syfo.sykmelding.kafka.producer
 
+import io.mockk.every
+import io.mockk.mockkClass
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import no.nav.syfo.Environment
+import no.nav.syfo.kafka.toConsumerConfig
+import no.nav.syfo.sykmelding.kafka.KafkaFactory
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
+import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
+import no.nav.syfo.sykmelding.service.BehandligsutfallServiceTest
+import no.nav.syfo.testutil.KafkaTest
+import no.nav.syfo.testutil.KafkaTestReader
+import org.amshove.kluent.shouldBe
+import org.amshove.kluent.shouldNotBe
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.common.serialization.StringDeserializer
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class BekreftSykmeldingKafkaProducerTest {
-    // TODO Why is this blocking??
-    /*
+
     val environment = mockkClass(Environment::class)
 
     init {
@@ -19,7 +40,7 @@ internal class BekreftSykmeldingKafkaProducerTest {
         kafkaconfig
             .toConsumerConfig(
                 "${environment.applicationName}-consumer",
-                JacksonKafkaDeserializer::class
+                JacksonKafkaDeserializer::class,
             )
             .also { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
     val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
@@ -27,7 +48,7 @@ internal class BekreftSykmeldingKafkaProducerTest {
         KafkaConsumer(
             properties,
             StringDeserializer(),
-            JacksonKafkaDeserializer(SykmeldingKafkaMessage::class)
+            JacksonKafkaDeserializer(SykmeldingKafkaMessage::class),
         )
 
     @BeforeEach
@@ -35,8 +56,10 @@ internal class BekreftSykmeldingKafkaProducerTest {
         kafkaConsumer.subscribe(listOf("${environment.applicationName}-syfo-bekreft-sykmelding"))
     }
 
+    @ExperimentalCoroutinesApi
     @Test
     internal fun `Test kafka Should bekreft value to topic`() {
+
         runBlocking {
             kafkaProducer.sendSykmelding(
                 SykmeldingKafkaMessage(
@@ -45,19 +68,19 @@ internal class BekreftSykmeldingKafkaProducerTest {
                     getSykmeldingStatusEvent("1"),
                 ),
             )
-            val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
-            messages["1"] shouldNotBe null
         }
+
+        val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
+        messages["1"] shouldNotBe null
     }
 
     @Test
     internal fun `Test kafka Should tombstone`() {
-        runBlocking {
-            kafkaProducer.tombstoneSykmelding("1")
-            val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
-            messages.containsKey("1") shouldBe true
-            messages["1"] shouldBe null
-        }
+        runBlocking { kafkaProducer.tombstoneSykmelding("1") }
+
+        val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
+        messages.containsKey("1") shouldBe true
+        messages["1"] shouldBe null
     }
 
     @Test
@@ -71,11 +94,10 @@ internal class BekreftSykmeldingKafkaProducerTest {
                 ),
             )
             kafkaProducer.tombstoneSykmelding("2")
-            val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 2)
-            messages.containsKey("2") shouldBe true
-            messages["2"] shouldBe null
         }
-    }
 
-     */
+        val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 2)
+        messages.containsKey("2") shouldBe true
+        messages["2"] shouldBe null
+    }
 }

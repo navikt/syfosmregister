@@ -1,18 +1,35 @@
 package no.nav.syfo.sykmelding.status
 
+import com.auth0.jwk.JwkProviderBuilder
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.HttpHeaders.Authorization
+import io.ktor.server.auth.*
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
 import io.ktor.server.testing.*
 import io.mockk.*
+import java.nio.file.Paths
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.application.setupAuth
 import no.nav.syfo.createListener
+import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
+import no.nav.syfo.persistering.lagreMottattSykmelding
+import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
+import no.nav.syfo.sykmelding.db.StatusDbModel
+import no.nav.syfo.sykmelding.db.getSykmeldinger
+import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
 import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
 import no.nav.syfo.sykmelding.kafka.model.STATUS_AVBRUTT
@@ -25,13 +42,27 @@ import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
+import no.nav.syfo.sykmelding.model.SporsmalDTO
+import no.nav.syfo.sykmelding.model.SvarDTO
+import no.nav.syfo.sykmelding.model.SykmeldingDTO
+import no.nav.syfo.sykmelding.service.SykmeldingerService
+import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
 import no.nav.syfo.testutil.*
+import org.amshove.kluent.shouldBeEqualTo
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 
 @DelicateCoroutinesApi
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class KafkaStatusIntegrationTest {
-    // TODO Why is this blocking??
-    /*
+    val path = "src/test/resources/jwkset.json"
+    val uri = Paths.get(path).toUri().toURL()
+    val jwkProvider = JwkProviderBuilder(uri).build()
+
     val database = TestDB.database
 
     val environment = mockkClass(Environment::class)
@@ -65,6 +96,8 @@ internal class KafkaStatusIntegrationTest {
 
     @AfterEach
     fun afterTest() {
+        applicationState.alive = false
+        applicationState.ready = false
         database.connection.dropData()
     }
 
@@ -78,18 +111,8 @@ internal class KafkaStatusIntegrationTest {
         coEvery { delay(any<Long>()) } returns Unit
         database.connection.dropData()
         runBlocking {
-            this.launch {
-                database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)
-                database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-            }
-        }
-    }
-
-    companion object {
-        @JvmStatic
-        @AfterAll
-        fun afterSpec(): Unit {
-            TestDB.stop()
+            database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)
+            database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
         }
     }
 
@@ -108,7 +131,7 @@ internal class KafkaStatusIntegrationTest {
         )
 
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
+            sykmeldingStatusConsumerService.start()
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
@@ -136,7 +159,7 @@ internal class KafkaStatusIntegrationTest {
         kafkaProducer.send(sendEvent, sykmelding.pasientFnr)
 
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
+            sykmeldingStatusConsumerService.start()
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
@@ -166,7 +189,7 @@ internal class KafkaStatusIntegrationTest {
         kafkaProducer.send(bekreftetEvent, sykmelding.pasientFnr)
 
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
+            sykmeldingStatusConsumerService.start()
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
@@ -194,7 +217,7 @@ internal class KafkaStatusIntegrationTest {
         kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
 
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
+            sykmeldingStatusConsumerService.start()
 
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
@@ -213,9 +236,8 @@ internal class KafkaStatusIntegrationTest {
         kafkaProducer.send(getSendtEvent(sykmelding), sykmelding.pasientFnr)
         kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
 
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
-
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
             database.finnSvarForSykmelding(sykmelding.id).size shouldBeEqualTo 0
@@ -234,9 +256,8 @@ internal class KafkaStatusIntegrationTest {
         kafkaProducer.send(getSykmeldingBekreftEvent(sykmelding), sykmelding.pasientFnr)
         kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
 
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
-
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
         }
@@ -258,9 +279,9 @@ internal class KafkaStatusIntegrationTest {
             sykmelding.pasientFnr
         )
 
-        runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
 
+        runBlocking {
             val tidligereArbeidsgiverList =
                 database.connection.getTidligereArbeidsgiver(sykmelding.id)
 
@@ -290,8 +311,9 @@ internal class KafkaStatusIntegrationTest {
             sykmelding.pasientFnr
         )
 
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
             var tidligereArbeidsgiverList =
                 database.connection.getTidligereArbeidsgiver(sykmelding.id)
 
@@ -301,7 +323,7 @@ internal class KafkaStatusIntegrationTest {
             applicationState.alive = true
             applicationState.ready = true
 
-            runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+            runBlocking { sykmeldingStatusConsumerService.start() }
             tidligereArbeidsgiverList = database.connection.getTidligereArbeidsgiver(sykmelding.id)
             tidligereArbeidsgiverList.size shouldBeEqualTo 0
         }
@@ -340,8 +362,9 @@ internal class KafkaStatusIntegrationTest {
             ),
             sykmelding.pasientFnr
         )
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
             val tidligereArbeidsgiverList =
                 database.connection.getTidligereArbeidsgiver(sykmelding.id)
 
@@ -390,9 +413,8 @@ internal class KafkaStatusIntegrationTest {
             getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(2)),
             sykmelding.pasientFnr
         )
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
         runBlocking {
-            this.launch { sykmeldingStatusConsumerService.start() }
-
             val tidligereArbeidsgiverList =
                 database.connection.getTidligereArbeidsgiver(sykmelding.id)
             tidligereArbeidsgiverList.size shouldBeEqualTo 0
@@ -404,8 +426,21 @@ internal class KafkaStatusIntegrationTest {
         testApplication {
             setUpTestApplication()
             application {
-                routing { route("/api/v3") { registrerSykmeldingApiV2(sykmeldingerService) } }
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
+                routing {
+                    route("/api/v3") {
+                        authenticate("tokenx") {
+                            registrerSykmeldingApiV2(sykmeldingerService = sykmeldingerService)
+                        }
+                    }
+                }
             }
+
             val sendtEvent =
                 publishSendAndWait(
                     sykmeldingStatusService,
@@ -420,7 +455,7 @@ internal class KafkaStatusIntegrationTest {
                     headers {
                         append(
                             Authorization,
-                            "Bearer ${generateJWT("2", "clientid")}",
+                            "Bearer ${generateJWT("", "clientid", subject = "pasientFnr")}",
                         )
                     }
                 }
@@ -455,8 +490,6 @@ internal class KafkaStatusIntegrationTest {
                 )
         }
     }
-
-     */
 }
 
 fun getSlettetEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusKafkaEventDTO {

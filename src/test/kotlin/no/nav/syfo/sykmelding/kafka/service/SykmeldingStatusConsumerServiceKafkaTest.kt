@@ -1,8 +1,55 @@
 package no.nav.syfo.sykmelding.kafka.service
 
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkClass
+import io.mockk.mockkStatic
+import io.mockk.spyk
+import java.util.UUID
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import no.nav.syfo.Environment
+import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
+import no.nav.syfo.sykmelding.kafka.KafkaFactory
+import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
+import no.nav.syfo.sykmelding.kafka.model.STATUS_AVBRUTT
+import no.nav.syfo.sykmelding.kafka.model.STATUS_BEKREFTET
+import no.nav.syfo.sykmelding.kafka.model.STATUS_SENDT
+import no.nav.syfo.sykmelding.kafka.model.ShortNameKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SporsmalOgSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
+import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
+import no.nav.syfo.sykmelding.status.ShortName
+import no.nav.syfo.sykmelding.status.Sporsmal
+import no.nav.syfo.sykmelding.status.StatusEvent
+import no.nav.syfo.sykmelding.status.Svar
+import no.nav.syfo.sykmelding.status.Svartype
+import no.nav.syfo.sykmelding.status.SykmeldingBekreftEvent
+import no.nav.syfo.sykmelding.status.SykmeldingSendEvent
+import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
+import no.nav.syfo.sykmelding.status.SykmeldingStatusService
+import no.nav.syfo.testutil.KafkaTest
+import no.nav.syfo.testutil.createKomplettInnsendtSkjemaSvar
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
+import org.amshove.kluent.shouldBeEqualTo
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class SykmeldingStatusConsumerServiceKafkaTest {
-    // TODO Why is this blocking??
-    /*
+
     val environment = mockkClass(Environment::class)
 
     init {
@@ -623,6 +670,4 @@ internal class SykmeldingStatusConsumerServiceKafkaTest {
                 )
         }
     }
-
-     */
 }
