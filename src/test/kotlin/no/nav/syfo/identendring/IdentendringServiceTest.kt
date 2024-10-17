@@ -1,6 +1,5 @@
 package no.nav.syfo.identendring
 
-import io.kotest.core.spec.style.FunSpec
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -9,6 +8,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.runBlocking
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.identendring.model.Ident
 import no.nav.syfo.identendring.model.IdentType
@@ -43,147 +43,166 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 
-class IdentendringServiceTest :
-    FunSpec({
-        val sendtSykmeldingKafkaProducer = mockk<SendtSykmeldingKafkaProducer>(relaxed = true)
-        val database = TestDB.database
-        val pdlService = mockk<PdlPersonService>(relaxed = true)
-        val identendringService =
-            IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
+class IdentendringServiceTest {
+    val sendtSykmeldingKafkaProducer = mockk<SendtSykmeldingKafkaProducer>(relaxed = true)
+    val database = TestDB.database
+    val pdlService = mockk<PdlPersonService>(relaxed = true)
+    val identendringService =
+        IdentendringService(database, sendtSykmeldingKafkaProducer, pdlService)
 
-        afterTest {
-            database.connection.dropData()
-            clearMocks(sendtSykmeldingKafkaProducer)
+    @AfterEach
+    fun afterEach() {
+        database.connection.dropData()
+        clearMocks(sendtSykmeldingKafkaProducer)
+    }
+
+    @Test
+    internal fun `IdentendringService Endrer ingenting hvis det ikke er endring i fnr`() {
+        val identListeUtenEndringIFnr =
+            listOf(
+                Ident(
+                    idnummer = "1234",
+                    gjeldende = true,
+                    type = IdentType.FOLKEREGISTERIDENT,
+                ),
+                Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
+                Ident(idnummer = "2222", gjeldende = false, type = IdentType.AKTORID),
+            )
+
+        runBlocking {
+            identendringService.oppdaterIdent(identListeUtenEndringIFnr) shouldBeEqualTo 0
+            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
         }
-        afterSpec { TestDB.stop() }
+    }
 
-        context("IdentendringService") {
-            test("Endrer ingenting hvis det ikke er endring i fnr") {
-                val identListeUtenEndringIFnr =
-                    listOf(
-                        Ident(
-                            idnummer = "1234",
-                            gjeldende = true,
-                            type = IdentType.FOLKEREGISTERIDENT
-                        ),
-                        Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
-                        Ident(idnummer = "2222", gjeldende = false, type = IdentType.AKTORID),
-                    )
+    @Test
+    internal fun `IdentendringService Endrer ingenting hvis det ikke finnes sykmeldinger på gammelt fnr`() {
+        val identListeMedEndringIFnr =
+            listOf(
+                Ident(
+                    idnummer = "1234",
+                    gjeldende = true,
+                    type = IdentType.FOLKEREGISTERIDENT,
+                ),
+                Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
+                Ident(
+                    idnummer = "2222",
+                    gjeldende = false,
+                    type = IdentType.FOLKEREGISTERIDENT,
+                ),
+            )
 
-                identendringService.oppdaterIdent(identListeUtenEndringIFnr) shouldBeEqualTo 0
-                coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+        coEvery { pdlService.getPdlPerson(any()) } returns
+            PdlPerson(listOf(IdentInformasjon("1234", false, "FOLKEREGISTERIDENT")))
+        runBlocking {
+            identendringService.oppdaterIdent(identListeMedEndringIFnr) shouldBeEqualTo 0
+            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+        }
+    }
+
+    @Test
+    internal fun `IdentendringService Kaster feil hvis nytt fnr ikke stemmer med fnr fra PDL`() {
+        val gammeltFnr = "2222"
+        val identListeMedEndringIFnr =
+            listOf(
+                Ident(
+                    idnummer = "1234",
+                    gjeldende = true,
+                    type = IdentType.FOLKEREGISTERIDENT,
+                ),
+                Ident(
+                    idnummer = gammeltFnr,
+                    gjeldende = false,
+                    type = IdentType.FOLKEREGISTERIDENT,
+                ),
+            )
+
+        val idNySykmelding = UUID.randomUUID().toString()
+        val idSendtSykmelding = UUID.randomUUID().toString()
+        val idGammelSendtSykmelding = UUID.randomUUID().toString()
+        runBlocking {
+            forberedTestsykmeldinger(
+                database = database,
+                gammeltFnr = gammeltFnr,
+                idNySykmelding = idNySykmelding,
+                idSendtSykmelding = idSendtSykmelding,
+                idGammelSendtSykmelding = idGammelSendtSykmelding,
+            )
+
+            coEvery { pdlService.getPdlPerson(any()) } returns
+                PdlPerson(listOf(IdentInformasjon(gammeltFnr, false, "FOLKEREGISTERIDENT")))
+
+            assertFailsWith<InactiveIdentException> {
+                identendringService.oppdaterIdent(identListeMedEndringIFnr)
             }
-            test("Endrer ingenting hvis det ikke finnes sykmeldinger på gammelt fnr") {
-                val identListeMedEndringIFnr =
-                    listOf(
-                        Ident(
-                            idnummer = "1234",
-                            gjeldende = true,
-                            type = IdentType.FOLKEREGISTERIDENT
-                        ),
-                        Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
-                        Ident(
-                            idnummer = "2222",
-                            gjeldende = false,
-                            type = IdentType.FOLKEREGISTERIDENT
-                        ),
-                    )
+            coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
+        }
+    }
 
-                coEvery { pdlService.getPdlPerson(any()) } returns
-                    PdlPerson(listOf(IdentInformasjon("1234", false, "FOLKEREGISTERIDENT")))
+    @Test
+    internal fun `IdentendringService Oppdaterer i databasen og resender sendte sykmeldinger fra de siste 4 mnd ved nytt fnr`() {
 
-                identendringService.oppdaterIdent(identListeMedEndringIFnr) shouldBeEqualTo 0
-                coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-            }
-
-            test("Kaster feil hvis nytt fnr ikke stemmer med fnr fra PDL") {
-                val gammeltFnr = "2222"
-                val identListeMedEndringIFnr =
-                    listOf(
-                        Ident(
-                            idnummer = "1234",
-                            gjeldende = true,
-                            type = IdentType.FOLKEREGISTERIDENT
-                        ),
-                        Ident(
-                            idnummer = gammeltFnr,
-                            gjeldende = false,
-                            type = IdentType.FOLKEREGISTERIDENT
-                        ),
-                    )
-
-                val idNySykmelding = UUID.randomUUID().toString()
-                val idSendtSykmelding = UUID.randomUUID().toString()
-                val idGammelSendtSykmelding = UUID.randomUUID().toString()
-                forberedTestsykmeldinger(
-                    database = database,
-                    gammeltFnr = gammeltFnr,
-                    idNySykmelding = idNySykmelding,
-                    idSendtSykmelding = idSendtSykmelding,
-                    idGammelSendtSykmelding = idGammelSendtSykmelding
+        val gammeltFnr = "12345678910"
+        val nyttFnr = "10987654321"
+        val idNySykmelding = UUID.randomUUID().toString()
+        val idSendtSykmelding = UUID.randomUUID().toString()
+        val idGammelSendtSykmelding = UUID.randomUUID().toString()
+        runBlocking {
+            forberedTestsykmeldinger(
+                database = database,
+                gammeltFnr = gammeltFnr,
+                idNySykmelding = idNySykmelding,
+                idSendtSykmelding = idSendtSykmelding,
+                idGammelSendtSykmelding = idGammelSendtSykmelding,
+            )
+            val identListe =
+                listOf(
+                    Ident(
+                        idnummer = nyttFnr,
+                        gjeldende = true,
+                        type = IdentType.FOLKEREGISTERIDENT,
+                    ),
+                    Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
+                    Ident(
+                        idnummer = gammeltFnr,
+                        gjeldende = false,
+                        type = IdentType.FOLKEREGISTERIDENT,
+                    ),
                 )
 
-                coEvery { pdlService.getPdlPerson(any()) } returns
-                    PdlPerson(listOf(IdentInformasjon(gammeltFnr, false, "FOLKEREGISTERIDENT")))
-
-                assertFailsWith<InactiveIdentException> {
-                    identendringService.oppdaterIdent(identListeMedEndringIFnr)
-                }
-                coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
-            }
-
-            test(
-                "Oppdaterer i databasen og resender sendte sykmeldinger fra de siste 4 mnd ved nytt fnr"
-            ) {
-                val gammeltFnr = "12345678910"
-                val nyttFnr = "10987654321"
-                val idNySykmelding = UUID.randomUUID().toString()
-                val idSendtSykmelding = UUID.randomUUID().toString()
-                val idGammelSendtSykmelding = UUID.randomUUID().toString()
-                forberedTestsykmeldinger(
-                    database = database,
-                    gammeltFnr = gammeltFnr,
-                    idNySykmelding = idNySykmelding,
-                    idSendtSykmelding = idSendtSykmelding,
-                    idGammelSendtSykmelding = idGammelSendtSykmelding
+            coEvery { pdlService.getPdlPerson(any()) } returns
+                PdlPerson(listOf(IdentInformasjon("10987654321", false, "FOLKEREGISTERIDENT")))
+            identendringService.oppdaterIdent(identListe) shouldBeEqualTo 3
+            coVerify(exactly = 1) {
+                sendtSykmeldingKafkaProducer.sendSykmelding(
+                    match {
+                        it.kafkaMetadata.sykmeldingId == idSendtSykmelding &&
+                            it.kafkaMetadata.fnr == nyttFnr
+                    },
                 )
-                val identListe =
-                    listOf(
-                        Ident(
-                            idnummer = nyttFnr,
-                            gjeldende = true,
-                            type = IdentType.FOLKEREGISTERIDENT
-                        ),
-                        Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
-                        Ident(
-                            idnummer = gammeltFnr,
-                            gjeldende = false,
-                            type = IdentType.FOLKEREGISTERIDENT
-                        ),
-                    )
-
-                coEvery { pdlService.getPdlPerson(any()) } returns
-                    PdlPerson(listOf(IdentInformasjon("10987654321", false, "FOLKEREGISTERIDENT")))
-                identendringService.oppdaterIdent(identListe) shouldBeEqualTo 3
-                coVerify(exactly = 1) {
-                    sendtSykmeldingKafkaProducer.sendSykmelding(
-                        match {
-                            it.kafkaMetadata.sykmeldingId == idSendtSykmelding &&
-                                it.kafkaMetadata.fnr == nyttFnr
-                        }
-                    )
-                }
-                coVerify(exactly = 0) {
-                    sendtSykmeldingKafkaProducer.sendSykmelding(
-                        match { it.kafkaMetadata.sykmeldingId != idSendtSykmelding }
-                    )
-                }
-                database.getSykmeldinger(gammeltFnr).size shouldBeEqualTo 0
-                database.getSykmeldinger(nyttFnr).size shouldBeEqualTo 3
             }
+            coVerify(exactly = 0) {
+                sendtSykmeldingKafkaProducer.sendSykmelding(
+                    match { it.kafkaMetadata.sykmeldingId != idSendtSykmelding },
+                )
+            }
+            database.getSykmeldinger(gammeltFnr).size shouldBeEqualTo 0
+            database.getSykmeldinger(nyttFnr).size shouldBeEqualTo 3
         }
-    })
+    }
+
+    companion object {
+        @JvmStatic
+        @AfterAll
+        fun afterTest(): Unit {
+            TestDB.stop()
+        }
+    }
+}
 
 suspend fun forberedTestsykmeldinger(
     database: DatabaseInterface,
@@ -194,7 +213,7 @@ suspend fun forberedTestsykmeldinger(
 ) {
     database.lagreMottattSykmelding(
         testSykmeldingsopplysninger.copy(id = idNySykmelding, pasientFnr = gammeltFnr),
-        testSykmeldingsdokument.copy(id = idNySykmelding)
+        testSykmeldingsdokument.copy(id = idNySykmelding),
     )
     database.registerStatus(
         SykmeldingStatusEvent(
@@ -209,7 +228,7 @@ suspend fun forberedTestsykmeldinger(
 
     database.lagreMottattSykmelding(
         testSykmeldingsopplysninger.copy(id = idSendtSykmelding, pasientFnr = gammeltFnr),
-        testSykmeldingsdokument.copy(id = idSendtSykmelding)
+        testSykmeldingsdokument.copy(id = idSendtSykmelding),
     )
     database.registerStatus(
         SykmeldingStatusEvent(
@@ -227,15 +246,15 @@ suspend fun forberedTestsykmeldinger(
                 Sporsmal(
                     "Arbeidssituasjon",
                     ShortName.ARBEIDSSITUASJON,
-                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
-                )
+                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                ),
             ),
-            brukerSvar = createKomplettInnsendtSkjemaSvar()
+            brukerSvar = createKomplettInnsendtSkjemaSvar(),
         ),
         SykmeldingStatusEvent(
             idSendtSykmelding,
             getNowTickMillisOffsetDateTime(),
-            StatusEvent.SENDT
+            StatusEvent.SENDT,
         ),
     )
     database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idSendtSykmelding))
@@ -282,18 +301,18 @@ suspend fun forberedTestsykmeldinger(
                 Sporsmal(
                     "Arbeidssituasjon",
                     ShortName.ARBEIDSSITUASJON,
-                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
-                )
+                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                ),
             ),
-            brukerSvar = createKomplettInnsendtSkjemaSvar()
+            brukerSvar = createKomplettInnsendtSkjemaSvar(),
         ),
         SykmeldingStatusEvent(
             idGammelSendtSykmelding,
             getNowTickMillisOffsetDateTime().minusMonths(6),
-            StatusEvent.SENDT
+            StatusEvent.SENDT,
         ),
     )
     database.connection.opprettBehandlingsutfall(
-        testBehandlingsutfall.copy(id = idGammelSendtSykmelding)
+        testBehandlingsutfall.copy(id = idGammelSendtSykmelding),
     )
 }

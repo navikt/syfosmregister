@@ -5,20 +5,18 @@ val coroutinesVersion = "1.9.0"
 val jacksonVersion = "2.17.2"
 val confluentVersion = "7.7.1"
 val kluentVersion = "1.73"
-val ktorVersion = "2.3.12"
+val ktorVersion = "3.0.0"
 val logbackVersion = "1.5.8"
 val logstashEncoderVersion = "8.0"
 val prometheusVersion = "0.16.0"
-val kotestVersion = "5.9.1"
 val postgresVersion = "42.7.4"
 val flywayVersion = "10.18.1"
 val hikariVersion = "6.0.0"
-val vaultJavaDriveVersion = "3.1.0"
 val mockkVersion = "1.13.12"
 val nimbusdsVersion = "9.41.1"
 val testContainerKafkaVersion = "1.20.1"
 val caffeineVersion = "3.1.8"
-val kotlinVersion = "2.0.20"
+val kotlinVersion = "2.0.21"
 val testContainerVersion = "1.20.1"
 val commonsCodecVersion = "1.17.1"
 val snakeyamlVersion= "2.3"
@@ -27,12 +25,13 @@ val snappyJavaVersion = "1.1.10.7"
 val avroVersion = "1.12.0"
 val diagnosekoderVersion = "1.2024.0"
 val opentelemetryVersion = "2.8.0"
+val junitJupiterVersion = "5.11.2"
 
 plugins {
     id("application")
     id("com.diffplug.spotless") version "6.25.0"
-    kotlin("jvm") version "2.0.20"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    kotlin("jvm") version "2.0.21"
+    id("com.gradleup.shadow") version "8.3.3"
 }
 application {
     mainClass.set("no.nav.syfo.BootstrapKt")
@@ -112,7 +111,9 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("org.amshove.kluent:kluent:$kluentVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
@@ -147,7 +148,8 @@ tasks {
     test {
         useJUnitPlatform {}
         testLogging {
-            events("skipped", "failed")
+            events("passed", "skipped", "failed")
+            showStandardStreams = true
             showStackTraces = true
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         }

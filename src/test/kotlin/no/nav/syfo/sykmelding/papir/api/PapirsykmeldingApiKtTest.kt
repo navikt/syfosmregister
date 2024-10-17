@@ -1,16 +1,16 @@
 package no.nav.syfo.sykmelding.papir.api
 
 import com.auth0.jwk.JwkProviderBuilder
-import io.kotest.core.spec.style.FunSpec
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.request.*
+import io.ktor.client.request.headers
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.server.auth.authenticate
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.server.testing.TestApplicationEngine
-import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.*
 import java.nio.file.Paths
+import kotlinx.coroutines.runBlocking
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.model.AvsenderSystem
 import no.nav.syfo.objectMapper
@@ -26,70 +26,120 @@ import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBe
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
-class PapirsykmeldingApiKtTest :
-    FunSpec({
-        val database = TestDB.database
-        val sykmeldingerService = PapirsykmeldingService(database)
+internal class PapirsykmeldingApiKtTest {
+    val database = TestDB.database
+    val sykmeldingerService = PapirsykmeldingService(database)
 
-        beforeTest {
-            database.connection.dropData()
-            val sykmelding = testSykmeldingsdokument.sykmelding
+    @BeforeEach
+    fun beforeTest() {
+        database.connection.dropData()
+        val sykmelding = testSykmeldingsdokument.sykmelding
+        runBlocking {
             database.lagreMottattSykmelding(
                 testSykmeldingsopplysninger,
                 testSykmeldingsdokument.copy(
                     sykmelding =
-                        sykmelding.copy(avsenderSystem = AvsenderSystem("Papirsykmelding", "1.0"))
-                )
+                        sykmelding.copy(
+                            avsenderSystem = AvsenderSystem("Papirsykmelding", "1.0"),
+                        ),
+                ),
             )
         }
-        afterSpec { TestDB.stop() }
+    }
 
-        context("SykmeldingApiV2 papirsykmelding integration test") {
-            val sykmeldingerV2Uri = "api/v2/papirsykmelding"
-            with(TestApplicationEngine()) {
+    companion object {
+        @AfterAll
+        @JvmStatic
+        internal fun tearDown() {
+            TestDB.stop()
+        }
+    }
+
+    @Test
+    internal fun `SykmeldingApiV2 papirsykmelding integration test Skal få unauthorized når credentials mangler`() {
+        val sykmeldingerV2Uri = "api/v2/papirsykmelding"
+        testApplication {
+            setUpTestApplication()
+            application {
                 val path = "src/test/resources/jwkset.json"
                 val uri = Paths.get(path).toUri().toURL()
                 val jwkProvider = JwkProviderBuilder(uri).build()
-                setUpTestApplication()
-                application.setupAuth(
+                setupAuth(
                     jwkProvider,
                     "tokenXissuer",
                     jwkProvider,
                     getEnvironment(),
                 )
-                application.routing {
+                routing {
                     route("/api/v2") {
                         authenticate("azureadv2") {
                             registrerServiceuserPapirsykmeldingApi(
-                                papirsykmeldingService = sykmeldingerService
+                                papirsykmeldingService = sykmeldingerService,
                             )
                         }
                     }
                 }
+            }
 
-                test("Skal få unauthorized når credentials mangler") {
-                    with(handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {}) {
-                        response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
-                    }
-                }
+            val response = client.get("$sykmeldingerV2Uri/uuid")
+            response.status shouldBeEqualTo HttpStatusCode.Unauthorized
+        }
+    }
 
-                test("Skal returnere papirsykmelding") {
-                    with(
-                        handleRequest(HttpMethod.Get, "$sykmeldingerV2Uri/uuid") {
-                            addHeader(
-                                HttpHeaders.Authorization,
-                                "Bearer ${generateJWT("syfosoknad", "clientid", issuer = "assureissuer")}",
+    @Test
+    internal fun `SykmeldingApiV2 papirsykmelding integration test Skal returnere papirsykmelding`() {
+        val sykmeldingerV2Uri = "api/v2/papirsykmelding"
+        testApplication {
+            setUpTestApplication()
+            application {
+                val path = "src/test/resources/jwkset.json"
+                val uri = Paths.get(path).toUri().toURL()
+                val jwkProvider = JwkProviderBuilder(uri).build()
+                setupAuth(
+                    jwkProvider,
+                    "tokenXissuer",
+                    jwkProvider,
+                    getEnvironment(),
+                )
+                routing {
+                    route("/api/v2") {
+                        authenticate("azureadv2") {
+                            registrerServiceuserPapirsykmeldingApi(
+                                papirsykmeldingService = sykmeldingerService,
                             )
-                        },
-                    ) {
-                        response.status() shouldBeEqualTo HttpStatusCode.OK
-                        val sykmelding =
-                            objectMapper.readValue(response.content, PapirsykmeldingDTO::class.java)
-                        sykmelding shouldNotBe null
-                        sykmelding.sykmelding.id shouldBeEqualTo "uuid"
+                        }
                     }
                 }
             }
+
+            val response =
+                client.get("$sykmeldingerV2Uri/uuid") {
+                    headers {
+                        append(
+                            HttpHeaders.Authorization,
+                            "Bearer ${
+                                generateJWT(
+                                    "syfosoknad",
+                                    "clientid",
+                                    issuer = "assureissuer",
+                                )
+                            }",
+                        )
+                    }
+                }
+
+            response.status shouldBeEqualTo HttpStatusCode.OK
+            val sykmelding =
+                objectMapper.readValue(
+                    response.bodyAsText(),
+                    PapirsykmeldingDTO::class.java,
+                )
+            sykmelding shouldNotBe null
+            sykmelding.sykmelding.id shouldBeEqualTo "uuid"
         }
-    })
+    }
+}

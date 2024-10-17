@@ -2,7 +2,6 @@ package no.nav.syfo.sykmelding.user.api
 
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.auth.authentication
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
