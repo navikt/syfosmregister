@@ -56,7 +56,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable
 
 @DelicateCoroutinesApi
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -160,9 +159,9 @@ internal class KafkaStatusIntegrationTest {
         val sendEvent = getSendtEvent(sykmelding)
         kafkaProducer.send(sendEvent, sykmelding.pasientFnr)
 
-        runBlocking {
-            sykmeldingStatusConsumerService.start()
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
 
+        runBlocking {
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
             val sykmeldingstatus = sykmeldinger[0].status
@@ -190,9 +189,9 @@ internal class KafkaStatusIntegrationTest {
         val bekreftetEvent = getSykmeldingBekreftEvent(sykmelding)
         kafkaProducer.send(bekreftetEvent, sykmelding.pasientFnr)
 
-        runBlocking {
-            sykmeldingStatusConsumerService.start()
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
 
+        runBlocking {
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 1
             val sykmeldingStatus = sykmeldinger[0].status
@@ -218,9 +217,9 @@ internal class KafkaStatusIntegrationTest {
         kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
         kafkaProducer.send(getSlettetEvent(sykmelding), sykmelding.pasientFnr)
 
-        runBlocking {
-            sykmeldingStatusConsumerService.start()
+        runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
 
+        runBlocking {
             val sykmeldinger = database.getSykmeldinger(sykmelding.pasientFnr)
             sykmeldinger.size shouldBeEqualTo 0
         }
@@ -424,7 +423,6 @@ internal class KafkaStatusIntegrationTest {
     }
 
     @Disabled
-    @DisabledIfEnvironmentVariable(named = "CI", matches = "true")
     @Test
     internal fun `Test Kafka  DB  status API test get sykmelding with latest status SENDT`() {
         // TODO why this no work?
