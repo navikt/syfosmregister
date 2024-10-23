@@ -34,7 +34,6 @@ import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 internal class SykmeldingApiV2IntegrationTest {
@@ -73,7 +72,6 @@ internal class SykmeldingApiV2IntegrationTest {
         }
     }
 
-    @Disabled
     @Test
     internal fun `SykmeldingApiV2 integration test skal få unauthorized når credentials mangler`() {
 
@@ -103,7 +101,6 @@ internal class SykmeldingApiV2IntegrationTest {
         }
     }
 
-    @Disabled
     @Test
     internal fun `SykmeldingApiV2 integration test henter sykmelding når fnr stemmer med sykmeldingen`() {
         testApplication {
@@ -149,7 +146,6 @@ internal class SykmeldingApiV2IntegrationTest {
         }
     }
 
-    @Disabled
     @Test
     internal fun `SykmeldingApiV2 integration test Får NotFound med feil fnr, hvor sykmelding finnes i db`() {
         testApplication {
@@ -191,7 +187,6 @@ internal class SykmeldingApiV2IntegrationTest {
         }
     }
 
-    @Disabled
     @Test
     internal fun `SykmeldingApiV2 integration test Får NotFound med id som ikke finnes i databasen`() {
         testApplication {
@@ -234,7 +229,6 @@ internal class SykmeldingApiV2IntegrationTest {
         }
     }
 
-    @Disabled
     @Test
     internal fun `SykmeldingApiV2 integration test Skal hente utenlandsk sykmelding`() {
         testApplication {

@@ -53,7 +53,6 @@ import no.nav.syfo.testutil.*
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -422,10 +421,8 @@ internal class KafkaStatusIntegrationTest {
         }
     }
 
-    @Disabled
     @Test
     internal fun `Test Kafka  DB  status API test get sykmelding with latest status SENDT`() {
-        // TODO why this no work?
         testApplication {
             setUpTestApplication()
             application {
