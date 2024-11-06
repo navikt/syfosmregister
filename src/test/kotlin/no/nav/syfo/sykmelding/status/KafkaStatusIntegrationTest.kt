@@ -1,17 +1,18 @@
 package no.nav.syfo.sykmelding.status
 
-import com.auth0.jwt.interfaces.Payload
+import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FunSpec
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.auth.authentication
-import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.server.testing.TestApplicationEngine
-import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.*
 import io.mockk.*
+import java.nio.file.Paths
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -20,7 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.application.BrukerPrincipal
+import no.nav.syfo.application.setupAuth
 import no.nav.syfo.createListener
 import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
@@ -86,7 +87,6 @@ class KafkaStatusIntegrationTest :
                 mottattSykmeldingStatusService
             )
         val sykmeldingerService = SykmeldingerService(database)
-        val mockPayload = mockk<Payload>()
 
         afterSpec {
             applicationState.ready = false
@@ -390,12 +390,25 @@ class KafkaStatusIntegrationTest :
         }
 
         context("Test Kafka -> DB -> status API") {
-            with(TestApplicationEngine()) {
-                setUpTestApplication()
-                application.routing {
-                    route("/api/v3") { registrerSykmeldingApiV2(sykmeldingerService) }
-                }
-                test("test get sykmelding with latest status SENDT") {
+            test("test get sykmelding with latest status SENDT") {
+                testApplication {
+                    val path = "src/test/resources/jwkset.json"
+                    val uri = Paths.get(path).toUri().toURL()
+                    val jwkProvider = JwkProviderBuilder(uri).build()
+                    setUpTestApplication()
+                    application {
+                        setupAuth(
+                            jwkProvider,
+                            "tokenXissuer",
+                            jwkProvider,
+                            getEnvironment(),
+                        )
+                        routing {
+                            authenticate("tokenx") {
+                                route("/api/v3") { registrerSykmeldingApiV2(sykmeldingerService) }
+                            }
+                        }
+                    }
                     val sendtEvent =
                         publishSendAndWait(
                             sykmeldingStatusService,
@@ -404,44 +417,53 @@ class KafkaStatusIntegrationTest :
                             sykmelding,
                             sykmeldingStatusConsumerService
                         )
-                    with(
-                        handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
-                            call.authentication.principal(
-                                BrukerPrincipal("pasientFnr", JWTPrincipal(mockPayload))
-                            )
-                        },
-                    ) {
-                        response.status() shouldBeEqualTo HttpStatusCode.OK
-                        val sykmeldingDTO =
-                            objectMapper.readValue<List<SykmeldingDTO>>(response.content!!)[0]
-                        val latestSykmeldingStatus = sykmeldingDTO.sykmeldingStatus
-                        latestSykmeldingStatus shouldBeEqualTo
-                            no.nav.syfo.sykmelding.model.SykmeldingStatusDTO(
-                                timestamp = sendtEvent.timestamp,
-                                sporsmalOgSvarListe =
-                                    listOf(
-                                        SporsmalDTO(
-                                            tekst = "din arbeidssituasjon?",
-                                            svar =
-                                                SvarDTO(
-                                                    no.nav.syfo.sykmelding.model.SvartypeDTO
-                                                        .ARBEIDSSITUASJON,
-                                                    "ARBEIDSTAKER",
-                                                ),
-                                            shortName =
-                                                no.nav.syfo.sykmelding.model.ShortNameDTO
+                    val response =
+                        client.get("/api/v3/sykmeldinger") {
+                            headers {
+                                append(
+                                    HttpHeaders.Authorization,
+                                    "Bearer ${
+                                        generateJWT(
+                                            "syfosoknad",
+                                            "clientid",
+                                            subject = "pasientFnr"
+                                        )
+                                    }",
+                                )
+                            }
+                        }
+
+                    response.status shouldBeEqualTo HttpStatusCode.OK
+
+                    val sykmeldingDTO =
+                        objectMapper.readValue<List<SykmeldingDTO>>(response.bodyAsText())[0]
+                    val latestSykmeldingStatus = sykmeldingDTO.sykmeldingStatus
+                    latestSykmeldingStatus shouldBeEqualTo
+                        no.nav.syfo.sykmelding.model.SykmeldingStatusDTO(
+                            timestamp = sendtEvent.timestamp,
+                            sporsmalOgSvarListe =
+                                listOf(
+                                    SporsmalDTO(
+                                        tekst = "din arbeidssituasjon?",
+                                        svar =
+                                            SvarDTO(
+                                                no.nav.syfo.sykmelding.model.SvartypeDTO
                                                     .ARBEIDSSITUASJON,
-                                        ),
+                                                "ARBEIDSTAKER",
+                                            ),
+                                        shortName =
+                                            no.nav.syfo.sykmelding.model.ShortNameDTO
+                                                .ARBEIDSSITUASJON,
                                     ),
-                                arbeidsgiver =
-                                    no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO(
-                                        "org",
-                                        "jorg",
-                                        "navn"
-                                    ),
-                                statusEvent = "SENDT",
-                            )
-                    }
+                                ),
+                            arbeidsgiver =
+                                no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO(
+                                    "org",
+                                    "jorg",
+                                    "navn"
+                                ),
+                            statusEvent = "SENDT",
+                        )
                 }
             }
         }

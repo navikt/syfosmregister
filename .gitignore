@@ -13,3 +13,6 @@ package-lock.json
 node_modules/
 # OS specific
 .DS_Store
+
+# Kotlin 2.0
+.kotlin/
