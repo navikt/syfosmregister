@@ -104,6 +104,9 @@ spec:
           namespace: team-esyfo
           cluster: prod-fss
         - application: macgyver
+        - application: syk-inn-api
+          namespace: tsm
+          cluster: prod-gcp
   ingresses:
     - "https://smregister.intern.nav.no"
   leaderElection: true
