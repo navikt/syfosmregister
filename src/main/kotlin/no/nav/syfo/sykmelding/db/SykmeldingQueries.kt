@@ -189,14 +189,6 @@ private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForId(
                     sykmelding
                     FROM sykmeldingsopplysninger AS opplysninger
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
-                        INNER JOIN behandlingsutfall AS utfall ON opplysninger.id = utfall.id
-                        LEFT OUTER JOIN arbeidsgiver as arbeidsgiver on arbeidsgiver.sykmelding_id = opplysninger.id
-                        LEFT OUTER JOIN sykmeldingstatus AS status ON opplysninger.id = status.sykmelding_id AND
-                                                                   status.timestamp = (SELECT timestamp
-                                                                                             FROM sykmeldingstatus
-                                                                                             WHERE sykmelding_id = opplysninger.id
-                                                                                             ORDER BY timestamp DESC
-                                                                                             LIMIT 1)
                     where opplysninger.id = ?;
                     """,
             )
