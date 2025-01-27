@@ -356,7 +356,10 @@ fun ResultSet.toSykInnSykmeldingDbModel(): SykInnSykmeldingDTO {
                 code = sykmeldingsDokument.medisinskVurdering.hovedDiagnose!!.kode,
                 system = sykmeldingsDokument.medisinskVurdering.hovedDiagnose.system,
                 text = sykmeldingsDokument.medisinskVurdering.hovedDiagnose.tekst ?: "",
-            )
+            ),
+        behandler = no.nav.syfo.sykmelding.model.sykinn.Behandler(
+            hprNummer = sykmeldingsDokument.behandler.hpr!!,
+        ),
     )
 }
 
