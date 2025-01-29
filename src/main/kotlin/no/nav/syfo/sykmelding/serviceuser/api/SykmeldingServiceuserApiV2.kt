@@ -29,6 +29,16 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                     call.respond(sykmelding)
                 }
             }
+            get("/sykinn/{sykmeldingId}") {
+                val sykmeldingId = call.parameters["sykmeldingId"]!!
+                val sykmelding = sykmeldingerService.getSykInnSykmeldingMedId(sykmeldingId)
+                if (sykmelding == null) {
+                    log.info("Fant ikke sykmelding med id {}", sykmeldingId)
+                    call.respond(HttpStatusCode.NotFound)
+                } else {
+                    call.respond(sykmelding)
+                }
+            }
             get("/sykmeldinger") {
                 val fnr = getFnrFromHeader()
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
