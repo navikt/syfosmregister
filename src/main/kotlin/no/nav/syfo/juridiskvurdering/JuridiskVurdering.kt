@@ -67,7 +67,10 @@ data class TilbakedateringInputs(
 )
 
 fun Map<String, Any>.toTilbakedateringInputs(): TilbakedateringInputs {
-    val hoveddiag = this["hoveddiagnose"] as Map<String, String>?
+    val hoveddiag = when(this["hoveddiagnose"]) {
+        is Map<*, *>? -> this["hoveddiagnose"] as Map<String, String>?
+        else -> null
+    }
     return TilbakedateringInputs(
         fom = LocalDate.parse(this["fom"] as String),
         tom = (this["tom"] as String?)?.let { LocalDate.parse(it) },
@@ -81,6 +84,6 @@ fun Map<String, Any>.toTilbakedateringInputs(): TilbakedateringInputs {
             (this["syketilfelletStartdato"] as String?)?.let { LocalDate.parse(it) },
         arbeidsgiverperiode = this["arbeidsgiverperiode"] as Boolean?,
         diagnoseSystem = hoveddiag?.let { it["system"] },
-        diagnoseKode =  hoveddiag?.let { it["kode"] },
+        diagnoseKode = hoveddiag?.let { it["kode"] },
     )
 }

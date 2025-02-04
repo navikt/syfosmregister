@@ -1,6 +1,7 @@
 package no.nav.syfo.juridiskvurdering
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.ktor.utils.io.tryCopyException
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import kotlinx.coroutines.coroutineScope
@@ -26,6 +27,7 @@ class JuridiskVurderingKafkaConsumer(
                 startConsumeMessages()
             } catch (ex: Exception) {
                 log.error("Error consuming juridisk vurdering topic, delaying 60seconds", ex)
+                kafkaConsumer.unsubscribe()
                 delay(60_000)
             }
         }
@@ -42,20 +44,25 @@ class JuridiskVurderingKafkaConsumer(
 
     private fun processRecords(records: ConsumerRecords<String, String>) {
         records.forEach { record ->
-            val juridiskVurderingResult =
-                objectMapper.readValue<JuridiskVurderingResult>(record.value())
-            juridiskVurderingResult.juridiskeVurderinger
-                .filter {
-                    it.juridiskHenvisning.lovverk == Lovverk.FOLKETRYGDLOVEN &&
-                        it.juridiskHenvisning.paragraf == "8-7" &&
-                        it.juridiskHenvisning.ledd == 2
-                }
-                .forEach { vurdering ->
-                    juridiskVurderingDB.insertOrUpdate(
-                        vurdering,
-                        vurdering.input.toTilbakedateringInputs()
-                    )
-                }
+            try {
+                val juridiskVurderingResult =
+                    objectMapper.readValue<JuridiskVurderingResult>(record.value())
+                juridiskVurderingResult.juridiskeVurderinger
+                    .filter {
+                        it.juridiskHenvisning.lovverk == Lovverk.FOLKETRYGDLOVEN &&
+                                it.juridiskHenvisning.paragraf == "8-7" &&
+                                it.juridiskHenvisning.ledd == 2
+                    }
+                    .forEach { vurdering ->
+                        juridiskVurderingDB.insertOrUpdate(
+                            vurdering,
+                            vurdering.input.toTilbakedateringInputs()
+                        )
+                    }
+            } catch (ex: Exception) {
+                log.error("Error processing record with offset: ${record.offset()}, on partition: ${record.partition()}", ex)
+                throw ex
+            }
         }
     }
 }

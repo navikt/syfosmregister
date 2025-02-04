@@ -98,10 +98,8 @@ class SykmeldingerService(private val database: DatabaseInterface) {
     suspend fun getSykInnSykmeldingMedId(sykmeldingId: String): SykInnSykmeldingDTO? =
         withContext(Dispatchers.IO) { database.getSykInnSykmeldingerMedId(sykmeldingId) }
 
-
     suspend fun getSykInnSykmeldingForIdent(ident: String): List<SykInnSykmeldingDTO?> =
         withContext(Dispatchers.IO) { database.getSykInnSykmeldingForIdent(ident) }
-
 
     suspend fun getSykmelding(
         sykmeldingId: String,
