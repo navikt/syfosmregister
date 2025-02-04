@@ -60,6 +60,14 @@ suspend fun DatabaseInterface.getSykInnSykmeldingerMedId(id: String): SykInnSykm
         connection.use { connection -> connection.getSykInnSykmeldingMedSisteStatusForId(id) }
     }
 
+suspend fun DatabaseInterface.getSykInnSykmeldingForIdent(
+    ident: String
+): List<SykInnSykmeldingDTO?> =
+    withContext(Dispatchers.IO) {
+        connection.use { connection -> connection.getSykInnSykmeldingMedSisteStatusForIdent(ident) }
+    }
+
+
 suspend fun DatabaseInterface.getSykmelding(sykmeldingId: String, fnr: String): SykmeldingDbModel? =
     withContext(Dispatchers.IO) {
         connection.use { connection -> connection.getSykmelding(sykmeldingId, fnr) }
@@ -177,6 +185,27 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForId(id: String): Syk
                 it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
             }
     }
+
+private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForIdent(
+    ident: String
+): List<SykInnSykmeldingDTO?> =
+    withContext(Dispatchers.IO) {
+        prepareStatement(
+                """
+                    SELECT opplysninger.id,
+                    pasient_fnr,
+                    sykmelding
+                    FROM sykmeldingsopplysninger AS opplysninger
+                        INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
+                    where pasient_fnr = ?;
+                    """,
+            )
+            .use {
+                it.setString(1, ident)
+                it.executeQuery().toList { toSykInnSykmeldingDbModel() }
+            }
+    }
+
 
 private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForId(
     id: String
@@ -349,6 +378,7 @@ fun ResultSet.toSykInnSykmeldingDbModel(): SykInnSykmeldingDTO {
                 system = sykmeldingsDokument.medisinskVurdering.hovedDiagnose.system,
                 text = sykmeldingsDokument.medisinskVurdering.hovedDiagnose.tekst ?: "",
             ),
+
         behandler = no.nav.syfo.sykmelding.model.sykinn.Behandler(
             hprNummer = sykmeldingsDokument.behandler.hpr!!,
         ),
