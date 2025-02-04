@@ -67,6 +67,7 @@ suspend fun DatabaseInterface.getSykInnSykmeldingForIdent(
         connection.use { connection -> connection.getSykInnSykmeldingMedSisteStatusForIdent(ident) }
     }
 
+
 suspend fun DatabaseInterface.getSykmelding(sykmeldingId: String, fnr: String): SykmeldingDbModel? =
     withContext(Dispatchers.IO) {
         connection.use { connection -> connection.getSykmelding(sykmeldingId, fnr) }
@@ -204,6 +205,7 @@ private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForIdent(
                 it.executeQuery().toList { toSykInnSykmeldingDbModel() }
             }
     }
+
 
 private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForId(
     id: String
@@ -376,10 +378,10 @@ fun ResultSet.toSykInnSykmeldingDbModel(): SykInnSykmeldingDTO {
                 system = sykmeldingsDokument.medisinskVurdering.hovedDiagnose.system,
                 text = sykmeldingsDokument.medisinskVurdering.hovedDiagnose.tekst ?: "",
             ),
-        behandler =
-            no.nav.syfo.sykmelding.model.sykinn.Behandler(
-                hprNummer = sykmeldingsDokument.behandler.hpr!!,
-            ),
+
+        behandler = no.nav.syfo.sykmelding.model.sykinn.Behandler(
+            hprNummer = sykmeldingsDokument.behandler.hpr!!,
+        ),
     )
 }
 

@@ -51,6 +51,7 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                 }
             }
 
+
             get("/sykmeldinger") {
                 val fnr = getFnrFromHeader()
                 val fom = call.parameters["fom"]?.let { LocalDate.parse(it) }
