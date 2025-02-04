@@ -21,6 +21,11 @@ class JuridiskVurderingDBTest :
                 val vurdering = objectMapper.readValue<JuridiskVurdering>(jsonVurdering)
                 val minimalVurdering =
                     objectMapper.readValue<JuridiskVurdering>(jsonVurderingMinimal)
+                val withINcorrectTime = objectMapper.readValue<JuridiskVurdering>(jsonVurderingNotCorretTime)
+                juridiskVurderingDb.insertOrUpdate(
+                    withINcorrectTime,
+                    withINcorrectTime.input.toTilbakedateringInputs()
+                )
                 juridiskVurderingDb.insertOrUpdate(
                     minimalVurdering,
                     minimalVurdering.input.toTilbakedateringInputs()
@@ -32,6 +37,36 @@ class JuridiskVurderingDBTest :
             }
         },
     )
+
+
+val jsonVurderingNotCorretTime =
+    """
+    {
+      "id": "dfa3e87a-17e8-4819-9bee-24a7ce722f67",
+      "eventName": "subsumsjon",
+      "version": "1.0.0",
+      "kilde": "syfosmregler",
+      "versjonAvKode": "https://github.com/navikt/syfosmregler/tree/151a7363f680608b8bed824b5600d9553372295d",
+      "fodselsnummer": "123",
+      "juridiskHenvisning": {
+        "lovverk": "FOLKETRYGDLOVEN",
+        "paragraf": "8-7",
+        "ledd": 2,
+        "punktum": null,
+        "bokstav": null
+      },
+      "sporing": {
+        "sykmelding": "12345"
+      },
+      "input": {
+        "fom": "2025-01-05",
+        "genereringstidspunkt": "2025-02-04"
+      },
+      "tidsstempel": "2023-08-21T11:48:34.280790096",
+      "utfall": "VILKAR_OPPFYLT"
+    }
+"""
+        .trimIndent()
 
 val jsonVurderingMinimal =
     """

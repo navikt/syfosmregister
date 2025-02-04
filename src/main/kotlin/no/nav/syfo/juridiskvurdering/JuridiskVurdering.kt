@@ -1,7 +1,28 @@
 package no.nav.syfo.juridiskvurdering
 
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
+
+class ZonedDateTimeDeserializer : JsonDeserializer<ZonedDateTime>() {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ZonedDateTime {
+        val timestamp = p.text
+        return try {
+            ZonedDateTime.parse(timestamp)
+        } catch (e: Exception) {
+            val localDateTime = LocalDateTime.parse(timestamp)
+            localDateTime.atZone(ZoneId.of("UTC"))
+        }
+    }
+}
 
 data class JuridiskVurderingResult(
     val juridiskeVurderinger: List<JuridiskVurdering>,
@@ -50,6 +71,7 @@ data class JuridiskVurdering(
     val juridiskHenvisning: JuridiskHenvisning,
     val sporing: Map<String, String>,
     val input: Map<String, Any>,
+    @JsonDeserialize(using = ZonedDateTimeDeserializer::class)
     val tidsstempel: ZonedDateTime,
     val utfall: JuridiskUtfall
 )
