@@ -231,6 +231,7 @@ fun main() {
         )
 
     pdlAktorConsumer.startConsumer()
+
     launchListeners(
         applicationState = applicationState,
         sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
