@@ -378,7 +378,8 @@ fun ResultSet.toSykInnSykmeldingDbModel(): SykInnSykmeldingDTO {
             ),
         behandler =
             no.nav.syfo.sykmelding.model.sykinn.Behandler(
-                hprNummer = sykmeldingsDokument.behandler.hpr!!,
+                fnr = sykmeldingsDokument.behandler.fnr,
+                hpr = sykmeldingsDokument.behandler.hpr,
             ),
     )
 }
