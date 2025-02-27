@@ -24,6 +24,10 @@ spec:
         insights:
           enabled: true
         flags:
+          - name: cloudsql.enable_pgaudit
+            value: "true"
+          - name: pgaudit.log
+            value: 'write'
           - name: cloudsql.logical_decoding
             value: "on"
   image: {{ image }}
@@ -104,6 +108,9 @@ spec:
           namespace: team-esyfo
           cluster: prod-fss
         - application: macgyver
+        - application: syk-inn-api
+          namespace: tsm
+          cluster: prod-gcp
   ingresses:
     - "https://smregister.intern.nav.no"
   leaderElection: true

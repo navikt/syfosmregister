@@ -378,7 +378,7 @@ class KafkaStatusIntegrationTest :
                 )
 
                 kafkaProducer.send(
-                    getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(2)),
+                    getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(20)),
                     sykmelding.pasientFnr
                 )
                 runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }

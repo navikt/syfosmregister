@@ -23,6 +23,7 @@ import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.juridiskvurdering.createAndStartConsumer
 import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
@@ -109,5 +110,8 @@ private fun Application.setup(
             authenticate("tokenx") { registrerSykmeldingApiV2(sykmeldingerService) }
         }
     }
+
+    createAndStartConsumer(env, database, applicationState)
+
     intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())
 }

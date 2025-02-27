@@ -15,4 +15,5 @@ node_modules/
 .DS_Store
 
 # Kotlin 2.0
-.kotlin/
+.kotlin
+

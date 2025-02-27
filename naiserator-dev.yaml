@@ -23,6 +23,10 @@ spec:
         insights:
           enabled: true
         flags:
+          - name: cloudsql.enable_pgaudit
+            value: "true"
+          - name: pgaudit.log
+            value: 'write'
           - name: cloudsql.logical_decoding
             value: "on"
         tier: db-f1-micro
@@ -107,6 +111,9 @@ spec:
           cluster: dev-fss
         - application: macgyver
           namespace: teamsykmelding
+          cluster: dev-gcp
+        - application: syk-inn-api
+          namespace: tsm
           cluster: dev-gcp
   ingresses:
     - "https://smregister.intern.dev.nav.no"
