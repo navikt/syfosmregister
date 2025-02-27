@@ -14,9 +14,6 @@ data class Periode(val fom: LocalDate, val tom: LocalDate)
 
 data class Pasient(val fnr: String)
 
-data class Behandler(
-    val fnr: String,
-    val hpr: String?
-)
+data class Behandler(val fnr: String, val hpr: String?)
 
 data class Diagnose(val code: String, val system: String, val text: String)

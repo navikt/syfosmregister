@@ -43,9 +43,6 @@ class JuridiskVurderingDB(val databaseInterface: DatabaseInterface) {
                     val sykmeldingId =
                         vurdering.sporing["sykmelding"] ?: error("SykmeldingId mangler")
 
-
-
-
                     ps.setString(1, sykmeldingId)
                     ps.setDate(2, Date.valueOf(tilbakedateringInputs.fom))
                     ps.setDate(3, tilbakedateringInputs.tom?.let { Date.valueOf(it) })
