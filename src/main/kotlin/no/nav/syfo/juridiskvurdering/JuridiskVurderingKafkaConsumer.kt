@@ -1,7 +1,6 @@
 package no.nav.syfo.juridiskvurdering
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.ktor.utils.io.tryCopyException
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import kotlinx.coroutines.coroutineScope
@@ -50,8 +49,8 @@ class JuridiskVurderingKafkaConsumer(
                 juridiskVurderingResult.juridiskeVurderinger
                     .filter {
                         it.juridiskHenvisning.lovverk == Lovverk.FOLKETRYGDLOVEN &&
-                                it.juridiskHenvisning.paragraf == "8-7" &&
-                                it.juridiskHenvisning.ledd == 2
+                            it.juridiskHenvisning.paragraf == "8-7" &&
+                            it.juridiskHenvisning.ledd == 2
                     }
                     .forEach { vurdering ->
                         juridiskVurderingDB.insertOrUpdate(
@@ -60,7 +59,10 @@ class JuridiskVurderingKafkaConsumer(
                         )
                     }
             } catch (ex: Exception) {
-                log.error("Error processing record with offset: ${record.offset()}, on partition: ${record.partition()}", ex)
+                log.error(
+                    "Error processing record with offset: ${record.offset()}, on partition: ${record.partition()}",
+                    ex
+                )
                 throw ex
             }
         }

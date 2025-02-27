@@ -4,13 +4,10 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-
 
 class ZonedDateTimeDeserializer : JsonDeserializer<ZonedDateTime>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ZonedDateTime {
@@ -71,8 +68,7 @@ data class JuridiskVurdering(
     val juridiskHenvisning: JuridiskHenvisning,
     val sporing: Map<String, String>,
     val input: Map<String, Any>,
-    @JsonDeserialize(using = ZonedDateTimeDeserializer::class)
-    val tidsstempel: ZonedDateTime,
+    @JsonDeserialize(using = ZonedDateTimeDeserializer::class) val tidsstempel: ZonedDateTime,
     val utfall: JuridiskUtfall
 )
 
@@ -89,10 +85,11 @@ data class TilbakedateringInputs(
 )
 
 fun Map<String, Any>.toTilbakedateringInputs(): TilbakedateringInputs {
-    val hoveddiag = when(this["hoveddiagnose"]) {
-        is Map<*, *>? -> this["hoveddiagnose"] as Map<String, String>?
-        else -> null
-    }
+    val hoveddiag =
+        when (this["hoveddiagnose"]) {
+            is Map<*, *>? -> this["hoveddiagnose"] as Map<String, String>?
+            else -> null
+        }
     return TilbakedateringInputs(
         fom = LocalDate.parse(this["fom"] as String),
         tom = (this["tom"] as String?)?.let { LocalDate.parse(it) },
