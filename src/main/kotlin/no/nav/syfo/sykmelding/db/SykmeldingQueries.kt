@@ -12,6 +12,7 @@ import no.nav.syfo.db.toList
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
+import no.nav.syfo.sykmelding.model.sykinn.Aktivitet
 import no.nav.syfo.sykmelding.model.sykinn.SykInnSykmeldingDTO
 import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
@@ -356,16 +357,49 @@ suspend fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> 
             }
     }
 
+fun finnPeriodetype(sykmeldingsDokument: Sykmelding): Periodetype =
+    when {
+        sykmeldingsDokument.perioder.first().aktivitetIkkeMulig != null ->
+            Periodetype.AKTIVITET_IKKE_MULIG
+        sykmeldingsDokument.perioder.first().gradert != null -> Periodetype.GRADERT
+        else -> throw RuntimeException("Kunne ikke bestemme typen til periode")
+    }
+
 fun ResultSet.toSykInnSykmeldingDbModel(): SykInnSykmeldingDTO {
     val sykmeldingsDokument =
         objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java)
+
     return SykInnSykmeldingDTO(
         sykmeldingId = getString("id"),
-        periode =
-            no.nav.syfo.sykmelding.model.sykinn.Periode(
-                fom = sykmeldingsDokument.perioder.first().fom,
-                tom = sykmeldingsDokument.perioder.first().tom,
-            ),
+        aktivitet =
+            when (finnPeriodetype(sykmeldingsDokument)) {
+                Periodetype.AKTIVITET_IKKE_MULIG ->
+                    Aktivitet.AktivitetIkkeMulig(
+                        fom = sykmeldingsDokument.perioder.first().fom,
+                        tom = sykmeldingsDokument.perioder.first().tom,
+                    )
+                Periodetype.GRADERT ->
+                    Aktivitet.Gradert(
+                        grad = sykmeldingsDokument.perioder.first().gradert!!.grad,
+                        fom = sykmeldingsDokument.perioder.first().fom,
+                        tom = sykmeldingsDokument.perioder.first().tom,
+                    )
+                Periodetype.AVVENTENDE ->
+                    Aktivitet.Avvetende(
+                        fom = sykmeldingsDokument.perioder.first().fom,
+                        tom = sykmeldingsDokument.perioder.first().tom,
+                    )
+                Periodetype.BEHANDLINGSDAGER ->
+                    Aktivitet.Behandlingsdager(
+                        fom = sykmeldingsDokument.perioder.first().fom,
+                        tom = sykmeldingsDokument.perioder.first().tom,
+                    )
+                Periodetype.REISETILSKUDD ->
+                    Aktivitet.Reisetilskudd(
+                        fom = sykmeldingsDokument.perioder.first().fom,
+                        tom = sykmeldingsDokument.perioder.first().tom,
+                    )
+            },
         pasient =
             no.nav.syfo.sykmelding.model.sykinn.Pasient(
                 fnr = getString("pasient_fnr"),
