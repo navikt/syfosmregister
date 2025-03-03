@@ -21,7 +21,8 @@ class JuridiskVurderingDBTest :
                 val vurdering = objectMapper.readValue<JuridiskVurdering>(jsonVurdering)
                 val minimalVurdering =
                     objectMapper.readValue<JuridiskVurdering>(jsonVurderingMinimal)
-                val withINcorrectTime = objectMapper.readValue<JuridiskVurdering>(jsonVurderingNotCorretTime)
+                val withINcorrectTime =
+                    objectMapper.readValue<JuridiskVurdering>(jsonVurderingNotCorretTime)
                 juridiskVurderingDb.insertOrUpdate(
                     withINcorrectTime,
                     withINcorrectTime.input.toTilbakedateringInputs()
@@ -37,7 +38,6 @@ class JuridiskVurderingDBTest :
             }
         },
     )
-
 
 val jsonVurderingNotCorretTime =
     """
