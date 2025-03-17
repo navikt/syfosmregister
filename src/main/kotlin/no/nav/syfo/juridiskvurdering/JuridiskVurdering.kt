@@ -94,15 +94,38 @@ fun Map<String, Any>.toTilbakedateringInputs(): TilbakedateringInputs {
         fom = LocalDate.parse(this["fom"] as String),
         tom = (this["tom"] as String?)?.let { LocalDate.parse(it) },
         genereringstidspunkt = LocalDate.parse(this["genereringstidspunkt"] as String),
-        ettersendingAv = this["ettersendingAv"] as String?,
-        forlengelseAv =
-            (this["forlengelseAv"] as List<Map<String, String>>?)?.let {
-                it.first()["sykmeldingId"] as String
-            },
+        ettersendingAv = getEttersending(),
+        forlengelseAv = getForlengelseAV(),
         syketilfelletStartdato =
             (this["syketilfelletStartdato"] as String?)?.let { LocalDate.parse(it) },
         arbeidsgiverperiode = this["arbeidsgiverperiode"] as Boolean?,
         diagnoseSystem = hoveddiag?.let { it["system"] },
         diagnoseKode = hoveddiag?.let { it["kode"] },
     )
+}
+
+private fun Map<String, Any>.getEttersending(): String? {
+    val ettersending = this["ettersending"]
+    return when (ettersending) {
+        is Boolean -> if (ettersending) this["ettersendingAv"]?.toString() else null
+        is Map<*, *> -> ettersending["sykmeldingId"] as? String
+        else -> null
+    }
+}
+
+private fun Map<String, Any>.getForlengelseAV(): String? {
+    val forlengelse = this["forlengelse"]
+    return when (forlengelse) {
+        is Boolean -> {
+            if (forlengelse) {
+                (this["forlengelseAv"] as List<Map<String, String>>?)?.let {
+                    it.first()["sykmeldingId"] as String
+                }
+            } else {
+                null
+            }
+        }
+        is Map<*, *> -> forlengelse["sykmeldingId"] as? String
+        else -> null
+    }
 }
