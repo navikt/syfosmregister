@@ -99,7 +99,7 @@ fun Map<String, Any>.toTilbakedateringInputs(): TilbakedateringInputs {
         syketilfelletStartdato =
             (this["syketilfelletStartdato"] as String?)?.let { LocalDate.parse(it) },
         arbeidsgiverperiode = this["arbeidsgiverperiode"] as Boolean?,
-        diagnoseSystem = hoveddiag?.let { it["system"] },
+        diagnoseSystem = hoveddiag?.let { it["system"] } ?: this["diagnosesystem"] as? String,
         diagnoseKode = hoveddiag?.let { it["kode"] },
     )
 }
