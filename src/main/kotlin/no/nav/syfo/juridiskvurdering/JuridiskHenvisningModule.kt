@@ -43,5 +43,5 @@ fun Application.createAndStartConsumer(
 
     val job = GlobalScope.launch(Dispatchers.IO) { juridiskVurderingKafkaConsumer.start() }
 
-    environment.monitor.subscribe(ApplicationStopping) { job.cancel() }
+    monitor.subscribe(ApplicationStopping) { job.cancel() }
 }

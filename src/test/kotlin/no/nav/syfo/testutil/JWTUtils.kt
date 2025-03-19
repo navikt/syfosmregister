@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
+import io.ktor.server.auth.jwt.*
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -45,6 +46,38 @@ fun generateJWT(
         .withClaim("iat", now)
         .withClaim("acr", level)
         .withClaim("exp", Date.from(expiry?.atZone(ZoneId.systemDefault())?.toInstant()))
+        .sign(alg)
+}
+
+fun generateJWTTokenx(
+    consumerClientId: String,
+    audience: String,
+    expiry: LocalDateTime? = LocalDateTime.now().plusHours(1),
+    subject: String = "subject",
+    issuer: String = "tokenXissuer",
+    level: String = "Level4",
+    pid: String = "1321313",
+): String? {
+    val now = Date()
+    val key = getDefaultRSAKey()
+    val alg = Algorithm.RSA256(key.toRSAPublicKey(), key.toRSAPrivateKey())
+
+    return JWT.create()
+        .withKeyId(keyId)
+        .withSubject(subject)
+        .withIssuer(issuer)
+        .withAudience(audience)
+        .withJWTId(UUID.randomUUID().toString())
+        .withClaim("ver", "1.0")
+        .withClaim("nonce", "myNonce")
+        .withClaim("auth_time", now)
+        .withClaim("nbf", now)
+        .withClaim("azp", consumerClientId)
+        .withClaim("appid", consumerClientId)
+        .withClaim("iat", now)
+        .withClaim("acr", level)
+        .withClaim("exp", Date.from(expiry?.atZone(ZoneId.systemDefault())?.toInstant()))
+        .withClaim("pid", pid)
         .sign(alg)
 }
 
