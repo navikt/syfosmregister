@@ -63,8 +63,8 @@ spec:
       cpu: 500m
       memory: 1Gi
     requests:
-      cpu: 100m
-      memory: 768Mi
+      cpu: 30m
+      memory: 420Mi
   kafka:
     pool: nav-dev
   azure:
