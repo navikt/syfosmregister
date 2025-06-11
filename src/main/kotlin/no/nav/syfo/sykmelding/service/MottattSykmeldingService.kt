@@ -13,9 +13,14 @@ import no.nav.syfo.log
 import no.nav.syfo.metrics.MESSAGE_STORED_IN_DB_COUNTER
 import no.nav.syfo.metrics.SYKMELDING_DUPLIKAT_COUNTER
 import no.nav.syfo.model.ReceivedSykmelding
+import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
+import no.nav.syfo.persistering.Sykmeldingsopplysninger
+import no.nav.syfo.persistering.erBehandlingsutfallLagret
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.persistering.lagreMottattSykmelding
+import no.nav.syfo.persistering.opprettBehandlingsutfall
+import no.nav.syfo.persistering.updateBehandlingsutfall
 import no.nav.syfo.persistering.updateMottattSykmelding
 import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
 import no.nav.syfo.sykmelding.kafka.model.MottattSykmeldingKafkaMessage
@@ -82,6 +87,11 @@ class MottattSykmeldingService(
                         receivedSykmelding.sykmelding.id,
                         StructuredArguments.fields(loggingMeta)
                     )
+                    insertOrUpdateBehandlingsutfall(
+                        sykmeldingsopplysninger,
+                        loggingMeta,
+                        receivedSykmelding
+                    )
                     database.updateMottattSykmelding(sykmeldingsopplysninger, sykmeldingsdokument)
                     mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                         sykmeldingId = sykmeldingsopplysninger.id,
@@ -102,7 +112,11 @@ class MottattSykmeldingService(
                         sykmeldingsopplysninger,
                         sykmeldingsdokument,
                     )
-
+                    insertOrUpdateBehandlingsutfall(
+                        sykmeldingsopplysninger,
+                        loggingMeta,
+                        receivedSykmelding
+                    )
                     log.info(
                         "Sykmelding SM2013 lagret i databasen, {}",
                         StructuredArguments.fields(loggingMeta)
@@ -115,4 +129,35 @@ class MottattSykmeldingService(
                 }
             }
         }
+
+    private suspend fun insertOrUpdateBehandlingsutfall(
+        sykmeldingsopplysninger: Sykmeldingsopplysninger,
+        loggingMeta: LoggingMeta,
+        receivedSykmelding: ReceivedSykmelding
+    ) {
+        if (database.connection.erBehandlingsutfallLagret(sykmeldingsopplysninger.id)) {
+            log.warn(
+                "Behandlingsutfall for sykmelding med id {} er allerede lagret i databasen, {}",
+                sykmeldingsopplysninger.id,
+                StructuredArguments.fields(loggingMeta),
+            )
+            database.connection.updateBehandlingsutfall(
+                Behandlingsutfall(
+                    id = sykmeldingsopplysninger.id,
+                    behandlingsutfall = receivedSykmelding.validationResult,
+                ),
+            )
+        } else {
+            database.connection.opprettBehandlingsutfall(
+                Behandlingsutfall(
+                    id = sykmeldingsopplysninger.id,
+                    behandlingsutfall = receivedSykmelding.validationResult,
+                ),
+            )
+            log.info(
+                "Behandlingsutfall lagret i databasen, {}",
+                StructuredArguments.fields(loggingMeta),
+            )
+        }
+    }
 }
