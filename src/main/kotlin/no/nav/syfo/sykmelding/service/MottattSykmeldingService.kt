@@ -80,7 +80,13 @@ class MottattSykmeldingService(
                         id = receivedSykmelding.sykmelding.id,
                         sykmelding = receivedSykmelding.sykmelding,
                     )
-
+                val sykmeldingStatusKafkaEventDTO =
+                    SykmeldingStatusKafkaEventDTO(
+                        receivedSykmelding.sykmelding.id,
+                        getMinTime(receivedSykmelding.mottattDato),
+                        STATUS_APEN,
+                        brukerSvar = null
+                    )
                 if (
                     database.connection.erSykmeldingsopplysningerLagret(sykmeldingsopplysninger.id)
                 ) {
@@ -95,20 +101,16 @@ class MottattSykmeldingService(
                         loggingMeta,
                         receivedSykmelding
                     )
-
+                    sykmeldingStatusService.registrerStatus(
+                        KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaEventDTO)
+                    )
                     database.updateMottattSykmelding(sykmeldingsopplysninger, sykmeldingsdokument)
                     mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                         sykmeldingId = sykmeldingsopplysninger.id,
                         fnr = sykmeldingsopplysninger.pasientFnr
                     )
                 } else {
-                    val sykmeldingStatusKafkaEventDTO =
-                        SykmeldingStatusKafkaEventDTO(
-                            receivedSykmelding.sykmelding.id,
-                            getMinTime(receivedSykmelding.mottattDato),
-                            STATUS_APEN,
-                            brukerSvar = null
-                        )
+
                     sykmeldingStatusService.registrerStatus(
                         KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaEventDTO)
                     )
