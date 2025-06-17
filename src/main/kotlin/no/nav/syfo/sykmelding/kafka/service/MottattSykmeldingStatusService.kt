@@ -89,7 +89,7 @@ class MottattSykmeldingStatusService(
         source: String = "on-prem",
     ) {
         log.info(
-            "Got status update from $source kafka topic, sykmeldingId: {}, status: {}",
+            "Got status update kafka topic, sykmeldingId: {}, status: {}",
             sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
             sykmeldingStatusKafkaMessage.event.statusEvent,
         )

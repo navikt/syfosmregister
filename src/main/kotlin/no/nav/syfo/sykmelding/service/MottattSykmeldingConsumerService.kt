@@ -36,7 +36,7 @@ class MottattSykmeldingConsumerService(
                 run()
             } catch (ex: Exception) {
                 log.error(
-                    "Error reading status from aiven topic, trying again in $DELAY_START milliseconds",
+                    "Error reading sykmelding from topic, trying again in $DELAY_START milliseconds",
                     ex,
                 )
                 kafkaAivenConsumer.unsubscribe()
@@ -48,7 +48,7 @@ class MottattSykmeldingConsumerService(
     private suspend fun run() {
         while (applicationState.ready) {
             kafkaAivenConsumer
-                .poll(Duration.ofMillis(10_000))
+                .poll(Duration.ofMillis(1000))
                 .filterNot { it.value() == null }
                 .forEach { handleMessageSykmelding(it) }
         }

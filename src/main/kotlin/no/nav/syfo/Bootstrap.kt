@@ -203,6 +203,7 @@ fun main() {
             sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(environment),
             mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(environment),
             mottattSykmeldingStatusService = mottattSykmeldingStatusService,
+            sykmeldingStatusService = sykmeldingStatusService,
         )
     val sykmeldingStatusConsumerService =
         SykmeldingStatusConsumerService(

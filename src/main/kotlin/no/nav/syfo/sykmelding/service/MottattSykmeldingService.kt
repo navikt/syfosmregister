@@ -29,7 +29,9 @@ import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
+import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
+import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.sykmelding.util.mapToSykmeldingsopplysninger
 import no.nav.syfo.util.TimestampUtil.Companion.getMinTime
 import no.nav.syfo.wrapExceptions
@@ -40,6 +42,7 @@ class MottattSykmeldingService(
     private val sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     private val mottattSykmeldingKafkaProducer: MottattSykmeldingKafkaProducer,
     private val mottattSykmeldingStatusService: MottattSykmeldingStatusService,
+    private val sykmeldingStatusService: SykmeldingStatusService,
 ) {
     private suspend fun sendtToMottattSykmeldingTopic(receivedSykmelding: ReceivedSykmelding) {
         val sykmelding = receivedSykmelding.toArbeidsgiverSykmelding()
@@ -92,19 +95,25 @@ class MottattSykmeldingService(
                         loggingMeta,
                         receivedSykmelding
                     )
+
                     database.updateMottattSykmelding(sykmeldingsopplysninger, sykmeldingsdokument)
                     mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                         sykmeldingId = sykmeldingsopplysninger.id,
                         fnr = sykmeldingsopplysninger.pasientFnr
                     )
                 } else {
-                    sykmeldingStatusKafkaProducer.send(
+                    val sykmeldingStatusKafkaEventDTO =
                         SykmeldingStatusKafkaEventDTO(
                             receivedSykmelding.sykmelding.id,
                             getMinTime(receivedSykmelding.mottattDato),
                             STATUS_APEN,
                             brukerSvar = null
-                        ),
+                        )
+                    sykmeldingStatusService.registrerStatus(
+                        KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaEventDTO)
+                    )
+                    sykmeldingStatusKafkaProducer.send(
+                        sykmeldingStatusKafkaEventDTO,
                         receivedSykmelding.personNrPasient,
                     )
 

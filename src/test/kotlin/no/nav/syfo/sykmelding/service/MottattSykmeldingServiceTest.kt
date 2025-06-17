@@ -15,6 +15,7 @@ import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
+import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getMerknaderForId
@@ -33,6 +34,7 @@ class MottattSykmeldingServiceTest :
         val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
         val sykmeldingStatusKafkaProducer = mockk<SykmeldingStatusKafkaProducer>(relaxed = true)
         val mottattSykmeldingStatusService = mockk<MottattSykmeldingStatusService>(relaxed = true)
+        val sykmeldingStatusService = mockk<SykmeldingStatusService>(relaxed = true)
         val mottattSykmeldingService =
             MottattSykmeldingService(
                 env = environment,
@@ -40,6 +42,7 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
                 sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
                 mottattSykmeldingStatusService = mottattSykmeldingStatusService,
+                sykmeldingStatusService = sykmeldingStatusService
             )
         val loggingMeta =
             LoggingMeta(
