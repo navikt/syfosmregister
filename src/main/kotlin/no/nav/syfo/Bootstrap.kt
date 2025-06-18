@@ -43,7 +43,6 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingK
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
-import no.nav.syfo.sykmelding.service.BehandlingsutfallService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingConsumerService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
@@ -110,29 +109,6 @@ fun main() {
                     valueDeserializer = StringDeserializer::class
                 )
                 .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
-        )
-
-    val behandlingsutfallKafkaConsumerAiven =
-        KafkaConsumer<String, String>(
-            KafkaUtils.getAivenKafkaConfig("behandlingsutfall-consumer")
-                .also {
-                    it.let {
-                        it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
-                        it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
-                    }
-                }
-                .toConsumerConfig(
-                    "${environment.applicationName}-gcp-consumer",
-                    valueDeserializer = StringDeserializer::class
-                )
-                .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
-        )
-    val behandlingsutfallService =
-        BehandlingsutfallService(
-            applicationState = applicationState,
-            kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven,
-            env = environment,
-            database = database,
         )
 
     val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
@@ -237,7 +213,6 @@ fun main() {
         applicationState = applicationState,
         sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
         mottattSykmeldingConsumerService = mottattSykmeldingConsumerService,
-        behandlingsutfallService = behandlingsutfallService,
     )
 
     ApplicationServer(applicationEngine, applicationState).start()
@@ -270,9 +245,7 @@ fun launchListeners(
     applicationState: ApplicationState,
     sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
     mottattSykmeldingConsumerService: MottattSykmeldingConsumerService,
-    behandlingsutfallService: BehandlingsutfallService,
 ) {
     createListener(applicationState) { mottattSykmeldingConsumerService.start() }
-    createListener(applicationState) { behandlingsutfallService.start() }
     createListener(applicationState) { sykmeldingStatusConsumerService.start() }
 }
