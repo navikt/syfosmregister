@@ -469,8 +469,6 @@ private fun setUpEnvironment(environment: Environment) {
         "KafkaStatusIntegrationTest-syfo-mottatt-sykmelding"
     every { environment.cluster } returns "localhost"
     every { environment.okSykmeldingTopic } returns "KafkaStatusIntegrationTestoksykmeldingtopic"
-    every { environment.behandlingsUtfallTopic } returns
-        "KafkaStatusIntegrationTestbehandlingsutfallAiven"
     every { environment.avvistSykmeldingTopic } returns
         "KafkaStatusIntegrationTestavvisttopiclAiven"
     every { environment.manuellSykmeldingTopic } returns "KafkaStatusIntegrationTestmanuelltopic"

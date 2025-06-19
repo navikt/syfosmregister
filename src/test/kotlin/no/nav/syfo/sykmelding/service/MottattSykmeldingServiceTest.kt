@@ -196,8 +196,6 @@ private fun mockEnvironment(environment: Environment) {
         "${environment.applicationName}-statustopic"
     every { environment.okSykmeldingTopic } returns
         "${environment.applicationName}-oksykmeldingtopic"
-    every { environment.behandlingsUtfallTopic } returns
-        "${environment.applicationName}-behandlingsutfallAiven"
     every { environment.avvistSykmeldingTopic } returns
         "${environment.applicationName}-avvisttopiclAiven"
     every { environment.manuellSykmeldingTopic } returns
