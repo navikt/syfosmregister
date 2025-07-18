@@ -34,7 +34,9 @@ spec:
   replicas:
     min: 3
     max: 7
-    cpuThresholdPercentage: 80
+    scalingStrategy:
+      cpu:
+        thresholdPercentage: 90
   port: 8080
   liveness:
     path: /internal/is_alive
