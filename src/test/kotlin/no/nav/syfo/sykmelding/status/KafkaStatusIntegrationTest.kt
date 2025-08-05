@@ -366,7 +366,7 @@ class KafkaStatusIntegrationTest :
                         applicationState.ready = false
                     }
                 val apenEvent = getApenEvent(sykmelding)
-                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+                kafkaProducer.send(apenEvent, sykmelding.pasientFnr)
                 val tidligereArbeidsgiver1 = TidligereArbeidsgiverKafkaDTO("ag1", "orgnummer", "1")
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(
@@ -381,7 +381,7 @@ class KafkaStatusIntegrationTest :
                     getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(20)),
                     sykmelding.pasientFnr
                 )
-                runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+                runBlocking { sykmeldingStatusConsumerService.start() }
 
                 val tidligereArbeidsgiverList =
                     database.connection.getTidligereArbeidsgiver(sykmelding.id)
