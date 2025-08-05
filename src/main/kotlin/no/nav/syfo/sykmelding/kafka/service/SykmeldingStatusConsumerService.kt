@@ -37,9 +37,11 @@ class SykmeldingStatusConsumerService(
     private suspend fun run() {
         sykmeldingStatusKafkaConsumer.subscribe()
         while (applicationState.ready) {
+
             val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
             kafkaEvents.forEach { handleStatusEvent(it) }
             if (kafkaEvents.isNotEmpty()) {
+
                 sykmeldingStatusKafkaConsumer.commitSync()
             }
         }

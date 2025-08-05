@@ -86,7 +86,6 @@ class MottattSykmeldingStatusService(
 
     suspend fun handleStatusEvent(
         sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO,
-        source: String = "on-prem",
     ) {
         log.info(
             "Got status update kafka topic, sykmeldingId: {}, status: {}",
@@ -263,7 +262,10 @@ class MottattSykmeldingStatusService(
                 sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
             )
 
-        if (lastStatus?.event == StatusEvent.BEKREFTET) {
+        if (
+            lastStatus?.event == StatusEvent.BEKREFTET &&
+                lastStatus.timestamp.isBefore(sykmeldingStatusKafkaMessage.event.timestamp)
+        ) {
             bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(
                 sykmeldingStatusKafkaMessage.event.sykmeldingId,
             )
