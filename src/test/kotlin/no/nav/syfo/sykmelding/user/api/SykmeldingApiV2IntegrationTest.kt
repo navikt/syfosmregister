@@ -51,7 +51,7 @@ class SykmeldingApiV2IntegrationTest :
                     StatusEvent.APEN
                 )
             )
-            database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+            database.opprettBehandlingsutfall(testBehandlingsutfall)
         }
         afterSpec { TestDB.stop() }
 

@@ -42,7 +42,7 @@ class AuthenticateSpek :
         beforeTest {
             database.connection.dropData()
             database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
-            database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+            database.opprettBehandlingsutfall(testBehandlingsutfall)
         }
 
         afterSpec { TestDB.stop() }

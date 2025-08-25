@@ -1,8 +1,6 @@
 package no.nav.syfo.sykmelding.service
 
 import java.time.LocalDate
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
 import no.nav.syfo.sykmelding.db.getSykInnSykmeldingForIdent
@@ -85,36 +83,32 @@ class SykmeldingerService(private val database: DatabaseInterface) {
     }
 
     suspend fun getSykmeldingMedId(sykmeldingId: String): SykmeldingDTO? =
-        withContext(Dispatchers.IO) {
-            database.getSykmeldingerMedId(sykmeldingId)?.let {
-                it.toSykmeldingDTO(
-                    sporsmal = getSporsmal(it),
-                    isPasient = false,
-                    ikkeTilgangTilDiagnose = true
-                )
-            }
+        database.getSykmeldingerMedId(sykmeldingId)?.let {
+            it.toSykmeldingDTO(
+                sporsmal = getSporsmal(it),
+                isPasient = false,
+                ikkeTilgangTilDiagnose = true
+            )
         }
 
     suspend fun getSykInnSykmeldingMedId(sykmeldingId: String): SykInnSykmeldingDTO? =
-        withContext(Dispatchers.IO) { database.getSykInnSykmeldingerMedId(sykmeldingId) }
+        database.getSykInnSykmeldingerMedId(sykmeldingId)
 
     suspend fun getSykInnSykmeldingForIdent(ident: String): List<SykInnSykmeldingDTO?> =
-        withContext(Dispatchers.IO) { database.getSykInnSykmeldingForIdent(ident) }
+        database.getSykInnSykmeldingForIdent(ident)
 
     suspend fun getSykmelding(
         sykmeldingId: String,
         fnr: String,
         fullBehandler: Boolean = false
     ): SykmeldingDTO? =
-        withContext(Dispatchers.IO) {
-            database.getSykmelding(sykmeldingId, fnr)?.let {
-                it.toSykmeldingDTO(
-                    sporsmal = getSporsmal(it),
-                    isPasient = true,
-                    ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient,
-                    fullBehandler = fullBehandler
-                )
-            }
+        database.getSykmelding(sykmeldingId, fnr)?.let {
+            it.toSykmeldingDTO(
+                sporsmal = getSporsmal(it),
+                isPasient = true,
+                ikkeTilgangTilDiagnose = it.sykmeldingsDokument.skjermesForPasient,
+                fullBehandler = fullBehandler
+            )
         }
 
     private suspend fun getSykmeldingerWithSporsmal(
@@ -122,28 +116,22 @@ class SykmeldingerService(private val database: DatabaseInterface) {
         isPasient: Boolean = false,
         fullBehandler: Boolean = true
     ): List<SykmeldingDTO> {
-        return withContext(Dispatchers.IO) {
-            database.getSykmeldinger(fnr).map {
-                it.toSykmeldingDTO(
-                    sporsmal = getSporsmal(it),
-                    isPasient = isPasient,
-                    ikkeTilgangTilDiagnose = false,
-                    fullBehandler = fullBehandler
-                )
-            }
+        return database.getSykmeldinger(fnr).map {
+            it.toSykmeldingDTO(
+                sporsmal = getSporsmal(it),
+                isPasient = isPasient,
+                ikkeTilgangTilDiagnose = false,
+                fullBehandler = fullBehandler
+            )
         }
     }
 
     private suspend fun getSporsmal(sykmelding: SykmeldingDbModel): List<Sporsmal> {
-        return withContext(Dispatchers.IO) {
-            val sporsmal =
-                when {
-                    sykmelding.status.statusEvent == "SENDT" ||
-                        sykmelding.status.statusEvent == "BEKREFTET" ->
-                        database.hentSporsmalOgSvar(sykmelding.id)
-                    else -> emptyList()
-                }
-            sporsmal
+        return when {
+            sykmelding.status.statusEvent == "SENDT" ||
+                sykmelding.status.statusEvent == "BEKREFTET" ->
+                database.hentSporsmalOgSvar(sykmelding.id)
+            else -> emptyList()
         }
     }
 

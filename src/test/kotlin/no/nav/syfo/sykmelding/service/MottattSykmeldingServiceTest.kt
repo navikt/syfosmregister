@@ -100,7 +100,7 @@ class MottattSykmeldingServiceTest :
                     environment.okSykmeldingTopic
                 )
 
-                val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
+                val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
                 lagretSykmelding shouldBe true
                 coVerify(exactly = 1) {
                     mottattSykmeldingKafkaProducer.sendMottattSykmelding(any())
@@ -139,7 +139,7 @@ class MottattSykmeldingServiceTest :
                     environment.manuellSykmeldingTopic
                 )
 
-                val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
+                val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
                 lagretSykmelding shouldBe true
                 coVerify(exactly = 1) {
                     mottattSykmeldingKafkaProducer.sendMottattSykmelding(any())
@@ -155,7 +155,7 @@ class MottattSykmeldingServiceTest :
                     environment.avvistSykmeldingTopic
                 )
 
-                val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
+                val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
                 lagretSykmelding shouldBe true
                 coVerify(exactly = 0) {
                     mottattSykmeldingKafkaProducer.sendMottattSykmelding(any())

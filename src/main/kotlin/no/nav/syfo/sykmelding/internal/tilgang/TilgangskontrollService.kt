@@ -23,11 +23,7 @@ class TilgangskontrollService(
         const val TILGANGSKONTROLL_PERSON_PATH = "/api/tilgang/navident/person"
     }
 
-    private val tilgangskontrollPersonUrl: String
-
-    init {
-        tilgangskontrollPersonUrl = "$url$TILGANGSKONTROLL_PERSON_PATH"
-    }
+    private val tilgangskontrollPersonUrl: String = "$url$TILGANGSKONTROLL_PERSON_PATH"
 
     suspend fun hasAccessToUserOboToken(fnr: String, accessToken: String): Boolean {
         val oboToken =

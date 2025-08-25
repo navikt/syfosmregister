@@ -68,7 +68,7 @@ data class JuridiskVurdering(
     val juridiskHenvisning: JuridiskHenvisning,
     val sporing: Map<String, String>,
     val input: Map<String, Any>,
-    @JsonDeserialize(using = ZonedDateTimeDeserializer::class) val tidsstempel: ZonedDateTime,
+    @param:JsonDeserialize(using = ZonedDateTimeDeserializer::class) val tidsstempel: ZonedDateTime,
     val utfall: JuridiskUtfall
 )
 

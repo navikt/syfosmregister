@@ -205,7 +205,7 @@ suspend fun forberedTestsykmeldinger(
             StatusEvent.APEN,
         ),
     )
-    database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idNySykmelding))
+    database.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idNySykmelding))
 
     database.lagreMottattSykmelding(
         testSykmeldingsopplysninger.copy(id = idSendtSykmelding, pasientFnr = gammeltFnr),
@@ -238,7 +238,7 @@ suspend fun forberedTestsykmeldinger(
             StatusEvent.SENDT
         ),
     )
-    database.connection.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idSendtSykmelding))
+    database.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idSendtSykmelding))
 
     database.lagreMottattSykmelding(
         testSykmeldingsopplysninger.copy(id = idGammelSendtSykmelding, pasientFnr = gammeltFnr),
@@ -293,7 +293,5 @@ suspend fun forberedTestsykmeldinger(
             StatusEvent.SENDT
         ),
     )
-    database.connection.opprettBehandlingsutfall(
-        testBehandlingsutfall.copy(id = idGammelSendtSykmelding)
-    )
+    database.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idGammelSendtSykmelding))
 }

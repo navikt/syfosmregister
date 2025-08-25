@@ -2,6 +2,8 @@ package no.nav.syfo.sykmelding.kafka.producer
 
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.syfo.log
 import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
@@ -13,8 +15,7 @@ class SykmeldingStatusKafkaProducer(
     private val kafkaProducer: KafkaProducer<String, SykmeldingStatusKafkaMessageDTO>,
     private val topicName: String
 ) {
-    fun send(sykmeldingStatusKafkaEventDTO: SykmeldingStatusKafkaEventDTO, fnr: String) {
-        log.info("Sending status to kafka topic $topicName")
+    suspend fun send(sykmeldingStatusKafkaEventDTO: SykmeldingStatusKafkaEventDTO, fnr: String) {
         val sykmeldingStatusKafkaMessageDTO =
             SykmeldingStatusKafkaMessageDTO(
                 KafkaMetadataDTO(
@@ -26,15 +27,17 @@ class SykmeldingStatusKafkaProducer(
                 sykmeldingStatusKafkaEventDTO,
             )
         try {
-            kafkaProducer
-                .send(
-                    ProducerRecord(
-                        topicName,
-                        sykmeldingStatusKafkaEventDTO.sykmeldingId,
-                        sykmeldingStatusKafkaMessageDTO
+            withContext(Dispatchers.IO) {
+                kafkaProducer
+                    .send(
+                        ProducerRecord(
+                            topicName,
+                            sykmeldingStatusKafkaEventDTO.sykmeldingId,
+                            sykmeldingStatusKafkaMessageDTO
+                        )
                     )
-                )
-                .get()
+                    .get()
+            }
         } catch (e: Exception) {
             log.error(
                 "Kunne ikke skrive til status-topic for sykmeldingid ${sykmeldingStatusKafkaEventDTO.sykmeldingId}: {}",

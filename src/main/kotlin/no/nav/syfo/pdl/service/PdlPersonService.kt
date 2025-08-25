@@ -22,9 +22,7 @@ class PdlPersonService(
                 ?: throw RuntimeException("Klarte ikke hente accessToken for PDL")
         val pdlResponse = pdlClient.getPerson(fnr, token)
 
-        if (pdlResponse.errors != null) {
-            pdlResponse.errors.forEach { log.warn("PDL kastet error: {} ", it) }
-        }
+        pdlResponse.errors?.forEach { log.warn("PDL kastet error: {} ", it) }
         if (
             pdlResponse.data.hentIdenter == null || pdlResponse.data.hentIdenter.identer.isEmpty()
         ) {
