@@ -356,10 +356,14 @@ class KafkaStatusIntegrationTest :
                     {
                         callOriginal()
                     }
-                coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
-                    {
-                        callOriginal()
-                    } andThenAnswer
+                coEvery {
+                    sykmeldingStatusService.registrerStatus(match { it.event == StatusEvent.APEN })
+                } answers { callOriginal() }
+                coEvery {
+                    sykmeldingStatusService.registrerStatus(
+                        match { it.event == StatusEvent.AVBRUTT }
+                    )
+                } answers
                     {
                         callOriginal()
                         applicationState.alive = false
