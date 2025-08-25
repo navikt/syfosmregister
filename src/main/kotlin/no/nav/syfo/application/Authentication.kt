@@ -5,7 +5,6 @@ import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.Principal
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
@@ -79,7 +78,7 @@ fun harTilgang(credentials: JWTCredential, clientId: String): Boolean {
     return credentials.payload.audience.contains(clientId)
 }
 
-fun unauthorized(credentials: JWTCredential): Principal? {
+fun unauthorized(credentials: JWTCredential): Unit? {
     log.warn(
         "Auth: Unexpected audience for jwt {}, {}",
         StructuredArguments.keyValue("issuer", credentials.payload.issuer),
@@ -112,4 +111,4 @@ fun finnFnrFraToken(principal: JWTPrincipal): String {
 data class BrukerPrincipal(
     val fnr: String,
     val principal: JWTPrincipal,
-) : Principal
+)
