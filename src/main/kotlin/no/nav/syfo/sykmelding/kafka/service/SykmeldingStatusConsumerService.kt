@@ -37,8 +37,9 @@ class SykmeldingStatusConsumerService(
     private suspend fun run() {
         sykmeldingStatusKafkaConsumer.subscribe()
         while (applicationState.ready) {
+
             val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
-            kafkaEvents.forEach { handleStatusEvent(it) }
+            kafkaEvents.forEach { handleStatusEvent(it.first, it.second) }
             if (kafkaEvents.isNotEmpty()) {
                 sykmeldingStatusKafkaConsumer.commitSync()
             }
@@ -46,8 +47,11 @@ class SykmeldingStatusConsumerService(
     }
 
     @WithSpan
-    private suspend fun handleStatusEvent(it: SykmeldingStatusKafkaMessageDTO) {
-        log.info("Mottatt sykmelding status ${it.event.sykmeldingId}")
-        mottattSykmeldingStatusService.handleStatusEvent(it)
+    private suspend fun handleStatusEvent(
+        sykmeldingId: String,
+        event: SykmeldingStatusKafkaMessageDTO?
+    ) {
+        log.info("Mottatt sykmelding status $sykmeldingId")
+        mottattSykmeldingStatusService.handleStatusEvent(sykmeldingId, event)
     }
 }

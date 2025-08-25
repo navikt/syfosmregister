@@ -85,22 +85,20 @@ class MottattSykmeldingStatusService(
     }
 
     suspend fun handleStatusEvent(
-        sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO,
-        source: String = "on-prem",
+        sykmeldingId: String,
+        sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO?,
     ) {
         log.info(
-            "Got status update from $source kafka topic, sykmeldingId: {}, status: {}",
-            sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
-            sykmeldingStatusKafkaMessage.event.statusEvent,
+            "Got status update kafka topic, sykmeldingId: $sykmeldingId, status: ${sykmeldingStatusKafkaMessage?.event?.statusEvent}",
         )
         try {
             val span = Span.current()
             span.setAttribute(
                 "sykmeldingId",
-                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
+                sykmeldingId,
             )
 
-            when (sykmeldingStatusKafkaMessage.event.statusEvent) {
+            when (sykmeldingStatusKafkaMessage?.event?.statusEvent) {
                 STATUS_SENDT -> {
                     handleSendtSykmelding(sykmeldingStatusKafkaMessage)
                 }
@@ -111,51 +109,36 @@ class MottattSykmeldingStatusService(
                     registrerBekreftet(sykmeldingStatusKafkaMessage)
                 }
                 STATUS_SLETTET -> {
-                    slettSykmelding(sykmeldingStatusKafkaMessage)
+                    slettSykmelding(sykmeldingId)
+                }
+                null -> {
+                    slettSykmelding(sykmeldingId)
                 }
                 else -> registrerStatus(sykmeldingStatusKafkaMessage)
             }
         } catch (e: Exception) {
             log.error(
-                "Kunne ikke prosessere statusendring {} for sykmeldingid {} fordi {}",
-                sykmeldingStatusKafkaMessage.event.statusEvent,
-                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
+                "Kunne ikke prosessere statusendring ${sykmeldingStatusKafkaMessage?.event?.statusEvent}} for sykmeldingid $sykmeldingId",
                 e.message,
             )
             throw e
         }
     }
 
-    private suspend fun slettSykmelding(
-        sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO
-    ) {
-        val latestStatus =
-            sykmeldingStatusService.getLatestSykmeldingStatus(
-                sykmeldingStatusKafkaMessage.event.sykmeldingId,
-            )
+    private suspend fun slettSykmelding(sykmeldingId: String) {
+        val latestStatus = sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingId)
 
         if (latestStatus == null) {
             log.warn(
-                "Sykmelding med id ${sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId} er allerede slettet",
+                "Sykmelding med id $sykmeldingId er allerede slettet",
             )
         }
 
-        when (latestStatus?.event) {
-            StatusEvent.SENDT ->
-                sendtSykmeldingKafkaProducer.tombstoneSykmelding(
-                    sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
-                )
-            StatusEvent.BEKREFTET ->
-                bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(
-                    sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
-                )
-            else -> {}
-        }
         tombstoneProducer.tombstoneSykmelding(
-            sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
+            sykmeldingId,
         )
         sykmeldingStatusService.slettSykmelding(
-            sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
+            sykmeldingId,
         )
     }
 
@@ -263,7 +246,10 @@ class MottattSykmeldingStatusService(
                 sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
             )
 
-        if (lastStatus?.event == StatusEvent.BEKREFTET) {
+        if (
+            lastStatus?.event == StatusEvent.BEKREFTET &&
+                lastStatus.timestamp.isBefore(sykmeldingStatusKafkaMessage.event.timestamp)
+        ) {
             bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(
                 sykmeldingStatusKafkaMessage.event.sykmeldingId,
             )

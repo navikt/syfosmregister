@@ -19,7 +19,7 @@ suspend fun DatabaseInterface.lagreMottattSykmelding(
 
 suspend fun DatabaseInterface.updateMottattSykmelding(
     sykmeldingsopplysninger: Sykmeldingsopplysninger,
-    sykmeldingsdokument: Sykmeldingsdokument
+    sykmeldingsdokument: Sykmeldingsdokument,
 ) =
     withContext(Dispatchers.IO) {
         connection.use { connection ->

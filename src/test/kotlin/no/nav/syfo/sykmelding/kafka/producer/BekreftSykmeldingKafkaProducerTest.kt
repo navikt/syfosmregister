@@ -8,7 +8,6 @@ import no.nav.syfo.kafka.toConsumerConfig
 import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
-import no.nav.syfo.sykmelding.service.BehandligsutfallServiceTest
 import no.nav.syfo.testutil.KafkaTest
 import no.nav.syfo.testutil.KafkaTestReader
 import org.amshove.kluent.shouldBe
@@ -20,8 +19,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 class BekreftSykmeldingKafkaProducerTest :
     FunSpec({
         val environment = mockkClass(Environment::class)
-        every { environment.applicationName } returns
-            "${BehandligsutfallServiceTest::class.simpleName}-application"
+        every { environment.applicationName } returns "application"
         every { environment.bekreftSykmeldingKafkaTopic } returns
             "${environment.applicationName}-syfo-bekreft-sykmelding"
         every { environment.cluster } returns "localhost"

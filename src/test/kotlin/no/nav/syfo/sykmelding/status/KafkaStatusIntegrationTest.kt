@@ -356,17 +356,21 @@ class KafkaStatusIntegrationTest :
                     {
                         callOriginal()
                     }
-                coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
-                    {
-                        callOriginal()
-                    } andThenAnswer
+                coEvery {
+                    sykmeldingStatusService.registrerStatus(match { it.event == StatusEvent.APEN })
+                } answers { callOriginal() }
+                coEvery {
+                    sykmeldingStatusService.registrerStatus(
+                        match { it.event == StatusEvent.AVBRUTT }
+                    )
+                } answers
                     {
                         callOriginal()
                         applicationState.alive = false
                         applicationState.ready = false
                     }
                 val apenEvent = getApenEvent(sykmelding)
-                kafkaProducer.send(getApenEvent(sykmelding), sykmelding.pasientFnr)
+                kafkaProducer.send(apenEvent, sykmelding.pasientFnr)
                 val tidligereArbeidsgiver1 = TidligereArbeidsgiverKafkaDTO("ag1", "orgnummer", "1")
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(
@@ -381,7 +385,7 @@ class KafkaStatusIntegrationTest :
                     getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(20)),
                     sykmelding.pasientFnr
                 )
-                runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
+                runBlocking { sykmeldingStatusConsumerService.start() }
 
                 val tidligereArbeidsgiverList =
                     database.connection.getTidligereArbeidsgiver(sykmelding.id)
@@ -491,8 +495,6 @@ private fun setUpEnvironment(environment: Environment) {
         "KafkaStatusIntegrationTest-syfo-mottatt-sykmelding"
     every { environment.cluster } returns "localhost"
     every { environment.okSykmeldingTopic } returns "KafkaStatusIntegrationTestoksykmeldingtopic"
-    every { environment.behandlingsUtfallTopic } returns
-        "KafkaStatusIntegrationTestbehandlingsutfallAiven"
     every { environment.avvistSykmeldingTopic } returns
         "KafkaStatusIntegrationTestavvisttopiclAiven"
     every { environment.manuellSykmeldingTopic } returns "KafkaStatusIntegrationTestmanuelltopic"

@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.spyk
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlinx.coroutines.delay
 import no.nav.syfo.Environment
@@ -184,7 +185,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
                         sykmeldingId,
-                        getNowTickMillisOffsetDateTime().plusMonths(1),
+                        timestamp.minus(1, ChronoUnit.DAYS),
                         StatusEvent.BEKREFTET,
                     )
                 coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
@@ -519,7 +520,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
                         sykmeldingId,
-                        timestamp,
+                        timestamp.minus(1, ChronoUnit.HOURS),
                         StatusEvent.BEKREFTET,
                     )
                 coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns
@@ -588,7 +589,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
                         sykmeldingId,
-                        timestamp,
+                        timestamp.minus(1, ChronoUnit.HOURS),
                         StatusEvent.BEKREFTET,
                     )
 
