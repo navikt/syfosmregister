@@ -167,7 +167,10 @@ class MottattSykmeldingStatusServiceTest :
                     RuntimeException("Noe gikk galt")
 
                 assertFailsWith<RuntimeException> {
-                    mottattSykmeldingStatusService.handleStatusEvent(opprettSendtStatusmelding())
+                    mottattSykmeldingStatusService.handleStatusEvent(
+                        sykmeldingId,
+                        opprettSendtStatusmelding()
+                    )
                 }
                 coVerify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
             }
@@ -182,7 +185,10 @@ class MottattSykmeldingStatusServiceTest :
                     RuntimeException("Noe gikk galt")
 
                 assertFailsWith<RuntimeException> {
-                    mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
+                    mottattSykmeldingStatusService.handleStatusEvent(
+                        sykmeldingId,
+                        opprettBekreftStatusmelding()
+                    )
                 }
                 coVerify(exactly = 0) {
                     sykmeldingStatusService.registrerBekreftet(any(), any(), any())
@@ -199,7 +205,10 @@ class MottattSykmeldingStatusServiceTest :
                     RuntimeException("Noe gikk galt")
 
                 assertFailsWith<RuntimeException> {
-                    mottattSykmeldingStatusService.handleStatusEvent(opprettSlettetStatusmelding())
+                    mottattSykmeldingStatusService.handleStatusEvent(
+                        sykmeldingId,
+                        opprettSlettetStatusmelding()
+                    )
                 }
                 coVerify(exactly = 0) { sykmeldingStatusService.slettSykmelding(any()) }
             }
@@ -214,7 +223,10 @@ class MottattSykmeldingStatusServiceTest :
                         StatusEvent.APEN,
                     )
 
-                mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
+                mottattSykmeldingStatusService.handleStatusEvent(
+                    sykmeldingId,
+                    opprettBekreftStatusmelding()
+                )
 
                 coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 coVerify { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -228,6 +240,7 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 mottattSykmeldingStatusService.handleStatusEvent(
+                    sykmeldingId,
                     opprettBekreftStatusmeldingAvvistSykmelding()
                 )
 
@@ -248,6 +261,7 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 mottattSykmeldingStatusService.handleStatusEvent(
+                    sykmeldingId,
                     opprettSendtStatusmelding(erSvarOppdatering = true)
                 )
 
@@ -266,6 +280,7 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 mottattSykmeldingStatusService.handleStatusEvent(
+                    sykmeldingId,
                     opprettSendtStatusmelding(erSvarOppdatering = false)
                 )
 

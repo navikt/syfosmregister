@@ -12,8 +12,8 @@ class SykmeldingStatusKafkaConsumer(
         kafkaConsumer.subscribe(topics)
     }
 
-    fun poll(): List<SykmeldingStatusKafkaMessageDTO> {
-        return kafkaConsumer.poll(Duration.ofMillis(10_000)).mapNotNull { it.value() }
+    fun poll(): List<Pair<String, SykmeldingStatusKafkaMessageDTO?>> {
+        return kafkaConsumer.poll(Duration.ofMillis(10_000)).map { it.key() to it.value() }
     }
 
     fun commitSync() {

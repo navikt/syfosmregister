@@ -137,6 +137,8 @@ class KafkaFactory private constructor() {
                     environment.manuellSykmeldingTopic,
                     environment.avvistSykmeldingTopic,
                     environment.mottattSykmeldingKafkaTopic,
+                    environment.bekreftSykmeldingKafkaTopic,
+                    environment.sendSykmeldingKafkaTopic,
                 ),
             )
         }
