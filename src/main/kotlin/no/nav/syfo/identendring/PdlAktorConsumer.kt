@@ -8,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.leaderelection.LeaderElection
 import no.nav.syfo.identendring.model.Ident
@@ -76,11 +75,9 @@ class PdlAktorConsumer(
         kafkaConsumerAiven.subscribe(listOf(aivenTopic))
         log.info("Starting consuming topic $aivenTopic")
         while (applicationState.ready && leaderElection.isLeader()) {
-            withContext(Dispatchers.IO) {
-                kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
-                    if (it.value() != null) {
-                        handleIdent(it)
-                    }
+            kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
+                if (it.value() != null) {
+                    handleIdent(it)
                 }
             }
         }

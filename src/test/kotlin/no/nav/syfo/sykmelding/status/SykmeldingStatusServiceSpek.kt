@@ -37,7 +37,7 @@ class SykmeldingStatusServiceSpek :
                     StatusEvent.APEN,
                 ),
             )
-            database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+            database.opprettBehandlingsutfall(testBehandlingsutfall)
         }
 
         afterTest { database.connection.dropData() }
@@ -85,7 +85,7 @@ class SykmeldingStatusServiceSpek :
                         StatusEvent.APEN,
                     ),
                 )
-                database.connection.opprettBehandlingsutfall(
+                database.opprettBehandlingsutfall(
                     Behandlingsutfall(
                         id = "uuid2",
                         behandlingsutfall =
@@ -116,9 +116,7 @@ class SykmeldingStatusServiceSpek :
                         StatusEvent.APEN,
                     ),
                 )
-                database.connection.opprettBehandlingsutfall(
-                    testBehandlingsutfall.copy(id = "uuid2")
-                )
+                database.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
                 val sykmeldingstatuser = sykmeldingStatusService.getLatestSykmeldingStatus("uuid2")
 

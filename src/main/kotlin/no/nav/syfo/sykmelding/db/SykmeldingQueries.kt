@@ -5,6 +5,7 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlin.io.use
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
@@ -20,30 +21,28 @@ import no.nav.syfo.sykmelding.status.StatusEvent
 import no.nav.syfo.sykmelding.status.Svar
 import no.nav.syfo.sykmelding.status.Svartype
 
-suspend fun DatabaseInterface.getArbeidsgiverStatus(sykmeldingId: String): ArbeidsgiverDbModel? =
-    withContext(Dispatchers.IO) {
-        connection.use { connection ->
-            connection
-                .prepareStatement(
-                    """
+fun DatabaseInterface.getArbeidsgiverStatus(sykmeldingId: String): ArbeidsgiverDbModel? =
+    connection.use { connection ->
+        connection
+            .prepareStatement(
+                """
            Select * from arbeidsgiver where sykmelding_id = ? 
         """,
-                )
-                .use { ps ->
-                    ps.setString(1, sykmeldingId)
-                    ps.executeQuery().use {
-                        when (it.next()) {
-                            true ->
-                                ArbeidsgiverDbModel(
-                                    orgnummer = it.getString("orgnummer"),
-                                    juridiskOrgnummer = it.getString("juridisk_orgnummer"),
-                                    orgNavn = it.getString("navn"),
-                                )
-                            else -> null
-                        }
+            )
+            .use { ps ->
+                ps.setString(1, sykmeldingId)
+                ps.executeQuery().use {
+                    when (it.next()) {
+                        true ->
+                            ArbeidsgiverDbModel(
+                                orgnummer = it.getString("orgnummer"),
+                                juridiskOrgnummer = it.getString("juridisk_orgnummer"),
+                                orgNavn = it.getString("navn"),
+                            )
+                        else -> null
                     }
                 }
-        }
+            }
     }
 
 suspend fun DatabaseInterface.getSykmeldinger(fnr: String): List<SykmeldingDbModel> =
@@ -73,9 +72,7 @@ suspend fun DatabaseInterface.getSykmelding(sykmeldingId: String, fnr: String): 
         connection.use { connection -> connection.getSykmelding(sykmeldingId, fnr) }
     }
 
-suspend fun DatabaseInterface.getSykmeldingerMedIdUtenBehandlingsutfall(
-    id: String
-): SykmeldingDbModelUtenBehandlingsutfall? =
+suspend fun DatabaseInterface.getSykmeldingerMedIdUtenBehandlingsutfall(id: String) =
     withContext(Dispatchers.IO) {
         connection.use { connection ->
             connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(id)
@@ -116,10 +113,9 @@ suspend fun DatabaseInterface.updateFnr(fnr: String, nyttFnr: String): Int =
         }
     }
 
-private suspend fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<SykmeldingDbModel> =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+private fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<SykmeldingDbModel> =
+    prepareStatement(
+            """
                     SELECT opplysninger.id,
                     mottatt_tidspunkt,
                     behandlingsutfall,
@@ -144,17 +140,15 @@ private suspend fun Connection.getSykmeldingMedSisteStatus(fnr: String): List<Sy
                                                                                              LIMIT 1)
                     where pasient_fnr = ?;
                     """,
-            )
-            .use {
-                it.setString(1, fnr)
-                it.executeQuery().toList { toSykmeldingDbModel() }
-            }
-    }
+        )
+        .use {
+            it.setString(1, fnr)
+            it.executeQuery().toList { toSykmeldingDbModel() }
+        }
 
-private suspend fun Connection.getSykmeldingMedSisteStatusForId(id: String): SykmeldingDbModel? =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+private fun Connection.getSykmeldingMedSisteStatusForId(id: String): SykmeldingDbModel? =
+    prepareStatement(
+            """
                     SELECT opplysninger.id,
                     mottatt_tidspunkt,
                     behandlingsutfall,
@@ -179,19 +173,17 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForId(id: String): Syk
                                                                                              LIMIT 1)
                     where opplysninger.id = ?;
                     """,
-            )
-            .use {
-                it.setString(1, id)
-                it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
-            }
-    }
+        )
+        .use {
+            it.setString(1, id)
+            it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
+        }
 
-private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForIdent(
+private fun Connection.getSykInnSykmeldingMedSisteStatusForIdent(
     ident: String
 ): List<SykInnSykmeldingDTO?> =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+    prepareStatement(
+            """
                     SELECT opplysninger.id,
                     pasient_fnr,
                     sykmelding
@@ -199,19 +191,15 @@ private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForIdent(
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                     where pasient_fnr = ?;
                     """,
-            )
-            .use {
-                it.setString(1, ident)
-                it.executeQuery().toList { toSykInnSykmeldingDbModel() }
-            }
-    }
+        )
+        .use {
+            it.setString(1, ident)
+            it.executeQuery().toList { toSykInnSykmeldingDbModel() }
+        }
 
-private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForId(
-    id: String
-): SykInnSykmeldingDTO? =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+private fun Connection.getSykInnSykmeldingMedSisteStatusForId(id: String): SykInnSykmeldingDTO? =
+    prepareStatement(
+            """
                     SELECT opplysninger.id,
                     pasient_fnr,
                     sykmelding
@@ -219,17 +207,15 @@ private suspend fun Connection.getSykInnSykmeldingMedSisteStatusForId(
                         INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
                     where opplysninger.id = ?;
                     """,
-            )
-            .use {
-                it.setString(1, id)
-                it.executeQuery().toList { toSykInnSykmeldingDbModel() }.firstOrNull()
-            }
-    }
+        )
+        .use {
+            it.setString(1, id)
+            it.executeQuery().toList { toSykInnSykmeldingDbModel() }.firstOrNull()
+        }
 
-private suspend fun Connection.getSykmelding(id: String, fnr: String): SykmeldingDbModel? =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+private fun Connection.getSykmelding(id: String, fnr: String): SykmeldingDbModel? =
+    prepareStatement(
+            """
                     SELECT opplysninger.id,
                     mottatt_tidspunkt,
                     behandlingsutfall,
@@ -255,20 +241,18 @@ private suspend fun Connection.getSykmelding(id: String, fnr: String): Sykmeldin
                     where opplysninger.id = ?
                     and pasient_fnr = ?;
                     """,
-            )
-            .use {
-                it.setString(1, id)
-                it.setString(2, fnr)
-                it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
-            }
-    }
+        )
+        .use {
+            it.setString(1, id)
+            it.setString(2, fnr)
+            it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
+        }
 
-private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(
+private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfall(
     id: String
 ): SykmeldingDbModelUtenBehandlingsutfall? =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+    prepareStatement(
+            """
                     SELECT opplysninger.id,
                     mottatt_tidspunkt,
                     legekontor_org_nr,
@@ -291,21 +275,17 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsut
                                                                                              LIMIT 1)
                     where opplysninger.id = ?;
                     """,
-            )
-            .use {
-                it.setString(1, id)
-                it.executeQuery()
-                    .toList { toSykmeldingDbModelUtenBehandlingsutfall() }
-                    .firstOrNull()
-            }
-    }
+        )
+        .use {
+            it.setString(1, id)
+            it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }.firstOrNull()
+        }
 
-private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfallForFnr(
+private fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsutfallForFnr(
     fnr: String
 ): List<SykmeldingDbModelUtenBehandlingsutfall> =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+    prepareStatement(
+            """
                     SELECT opplysninger.id,
                     mottatt_tidspunkt,
                     legekontor_org_nr,
@@ -328,17 +308,15 @@ private suspend fun Connection.getSykmeldingMedSisteStatusForIdUtenBehandlingsut
                                                                                              LIMIT 1)
                     where pasient_fnr = ?;
                     """,
-            )
-            .use {
-                it.setString(1, fnr)
-                it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }
-            }
-    }
+        )
+        .use {
+            it.setString(1, fnr)
+            it.executeQuery().toList { toSykmeldingDbModelUtenBehandlingsutfall() }
+        }
 
-suspend fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> =
+    prepareStatement(
+            """
                 SELECT sporsmal.shortname,
                        sporsmal.tekst,
                        svar.sporsmal_id,
@@ -350,12 +328,11 @@ suspend fun Connection.hentSporsmalOgSvar(sykmeldingId: String): List<Sporsmal> 
                                     ON sporsmal.id = svar.sporsmal_id
                 WHERE svar.sykmelding_id = ? order by sporsmal.id;
             """,
-            )
-            .use {
-                it.setString(1, sykmeldingId)
-                it.executeQuery().toList { tilSporsmal() }
-            }
-    }
+        )
+        .use {
+            it.setString(1, sykmeldingId)
+            it.executeQuery().toList { tilSporsmal() }
+        }
 
 fun finnPeriodetype(sykmeldingsDokument: Sykmelding): Periodetype =
     when {

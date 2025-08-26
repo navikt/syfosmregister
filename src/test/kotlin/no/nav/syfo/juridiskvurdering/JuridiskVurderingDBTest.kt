@@ -2,7 +2,6 @@ package no.nav.syfo.juridiskvurdering
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FunSpec
-import java.util.UUID
 import no.nav.syfo.objectMapper
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
@@ -18,7 +17,6 @@ class JuridiskVurderingDBTest :
             afterSpec { TestDB.stop() }
 
             context("Test at JuridiskVurdering persisteres og hentes ut riktig") {
-                val sykmeldingsId = UUID.randomUUID().toString()
                 val vurdering = objectMapper.readValue<JuridiskVurdering>(jsonVurdering)
                 val minimalVurdering =
                     objectMapper.readValue<JuridiskVurdering>(jsonVurderingMinimal)

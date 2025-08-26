@@ -38,14 +38,12 @@ class AuthenticateSpek :
             val database = TestDB.database
             val sykmeldingerService = SykmeldingerService(database)
 
-            beforeTest {
-                database.connection.dropData()
-                database.lagreMottattSykmelding(
-                    testSykmeldingsopplysninger,
-                    testSykmeldingsdokument,
-                )
-                database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-            }
+        beforeTest {
+            database.connection.dropData()
+            database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
+            database.opprettBehandlingsutfall(testBehandlingsutfall)
+        }
+       
 
             afterSpec { TestDB.stop() }
 
@@ -59,6 +57,7 @@ class AuthenticateSpek :
                                 jwkProvider,
                                 getEnvironment(),
                             )
+                            database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
                             routing {
                                 route("/api/v3") {
                                     authenticate("tokenx") {

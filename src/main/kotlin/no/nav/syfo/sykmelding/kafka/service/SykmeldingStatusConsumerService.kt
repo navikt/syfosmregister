@@ -1,7 +1,10 @@
 package no.nav.syfo.sykmelding.kafka.service
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
@@ -37,7 +40,6 @@ class SykmeldingStatusConsumerService(
     private suspend fun run() {
         sykmeldingStatusKafkaConsumer.subscribe()
         while (applicationState.ready) {
-
             val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
             kafkaEvents.forEach { handleStatusEvent(it.first, it.second) }
             if (kafkaEvents.isNotEmpty()) {
@@ -51,7 +53,10 @@ class SykmeldingStatusConsumerService(
         sykmeldingId: String,
         event: SykmeldingStatusKafkaMessageDTO?
     ) {
-        log.info("Mottatt sykmelding status $sykmeldingId")
-        mottattSykmeldingStatusService.handleStatusEvent(sykmeldingId, event)
+        coroutineScope {
+            launch(Dispatchers.IO) {
+                mottattSykmeldingStatusService.handleStatusEvent(sykmeldingId, event)
+            }
+        }
     }
 }

@@ -53,9 +53,10 @@ class SykmeldingApiV2IntegrationTest :
                         testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC),
                         StatusEvent.APEN,
                     ),
-                )
-                database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
-            }
+            )
+            
+        }
+        
             afterSpec { TestDB.stop() }
 
             context("SykmeldingApiV2 integration test") {
@@ -73,6 +74,7 @@ class SykmeldingApiV2IntegrationTest :
                                 getEnvironment(),
                             )
                         }
+                        database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
                         routing {
                             route("/api/v3") {
                                 authenticate("tokenx") {

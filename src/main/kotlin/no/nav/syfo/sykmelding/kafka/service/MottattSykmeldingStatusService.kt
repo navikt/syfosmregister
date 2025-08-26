@@ -5,6 +5,8 @@ import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.log
 import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
@@ -43,19 +45,22 @@ class MottattSykmeldingStatusService(
         @SpanAttribute sykmeldingId: String,
         fnr: String
     ) {
-        val status = sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingId)
-        val tidligereArbeidsgiver = sykmeldingStatusService.getTidligereArbeidsgiver(sykmeldingId)
-        val alleSpm = sykmeldingStatusService.getAlleSpm(sykmeldingId)
-        requireNotNull(status) { "Could not find status for sykmeldingId $sykmeldingId" }
-
         val sykmeldingStatusKafkaEventDTO =
-            toSykmeldingStatusKafkaEventDTO(
-                status,
-                getArbeidsgiverStatus(sykmeldingId, status.event),
-                getSporsmalOgSvar(sykmeldingId),
-                tidligereArbeidsgiver,
-                alleSpm,
-            )
+            withContext(Dispatchers.IO) {
+                val status = sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingId)
+                val tidligereArbeidsgiver =
+                    sykmeldingStatusService.getTidligereArbeidsgiver(sykmeldingId)
+                val alleSpm = sykmeldingStatusService.getAlleSpm(sykmeldingId)
+                requireNotNull(status) { "Could not find status for sykmeldingId $sykmeldingId" }
+                toSykmeldingStatusKafkaEventDTO(
+                    status,
+                    getArbeidsgiverStatus(sykmeldingId, status.event),
+                    getSporsmalOgSvar(sykmeldingId),
+                    tidligereArbeidsgiver,
+                    alleSpm,
+                )
+            }
+
         val kafkaMetadata =
             KafkaMetadataDTO(
                 sykmeldingId,
@@ -68,18 +73,20 @@ class MottattSykmeldingStatusService(
                 kafkaMetadata = kafkaMetadata,
                 event = sykmeldingStatusKafkaEventDTO,
             )
-        when (status.event) {
-            StatusEvent.SENDT -> {
+        when (sykmeldingStatusKafkaEventDTO.statusEvent) {
+            STATUS_SENDT -> {
                 log.info("Status is sendt, need to resendt to sendt-sykmelding-topic")
                 sendtSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
             }
-            StatusEvent.BEKREFTET -> {
+            STATUS_BEKREFTET -> {
                 log.info("Status is bekreftet, need to resendt to bekreftet-sykmelding-topic")
                 securelog.info("sender med tidligere arbeidsgiver $sykmeldingStatusKafkaEventDTO")
                 bekreftetSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
             }
             else -> {
-                log.info("Does not need to resend sykmelding")
+                log.info(
+                    "Does not need to resend sykmelding ${sykmeldingStatusKafkaEventDTO.statusEvent}"
+                )
             }
         }
     }
@@ -291,7 +298,7 @@ class MottattSykmeldingStatusService(
         return databaseInterface.hentSporsmalOgSvar(sykmeldingId)
     }
 
-    private suspend fun getArbeidsgiverStatus(
+    private fun getArbeidsgiverStatus(
         sykmeldingId: String,
         event: StatusEvent
     ): ArbeidsgiverDbModel? {

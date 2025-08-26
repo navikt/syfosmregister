@@ -20,7 +20,7 @@ class MottattSykmeldingConsumerService(
     private val mottattSykmeldingService: MottattSykmeldingService,
 ) {
     companion object {
-        private val DELAY_START = 10_000L
+        private const val DELAY_START = 10_000L
     }
 
     suspend fun start() {

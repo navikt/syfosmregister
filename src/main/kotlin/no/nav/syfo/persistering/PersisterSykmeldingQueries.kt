@@ -9,13 +9,14 @@ import no.nav.syfo.db.DatabaseInterface
 suspend fun DatabaseInterface.lagreMottattSykmelding(
     sykmeldingsopplysninger: Sykmeldingsopplysninger,
     sykmeldingsdokument: Sykmeldingsdokument
-) {
-    connection.use { connection ->
-        connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger)
-        connection.opprettSykmeldingsdokument(sykmeldingsdokument)
-        connection.commit()
+) =
+    withContext(Dispatchers.IO) {
+        connection.use { connection ->
+            connection.opprettSykmeldingsopplysninger(sykmeldingsopplysninger)
+            connection.opprettSykmeldingsdokument(sykmeldingsdokument)
+            connection.commit()
+        }
     }
-}
 
 suspend fun DatabaseInterface.updateMottattSykmelding(
     sykmeldingsopplysninger: Sykmeldingsopplysninger,
@@ -29,27 +30,24 @@ suspend fun DatabaseInterface.updateMottattSykmelding(
         }
     }
 
-private suspend fun Connection.updateSykmeldingsdokument(sykmeldingsdokument: Sykmeldingsdokument) =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+private fun Connection.updateSykmeldingsdokument(sykmeldingsdokument: Sykmeldingsdokument) =
+    prepareStatement(
+            """
             update SYKMELDINGSDOKUMENT set id = ?, sykmelding = ? where id = ?;
             """,
-            )
-            .use {
-                it.setString(1, sykmeldingsdokument.id)
-                it.setObject(2, sykmeldingsdokument.sykmelding.toPGObject())
-                it.setString(3, sykmeldingsdokument.id)
-                it.executeUpdate()
-            }
-    }
+        )
+        .use {
+            it.setString(1, sykmeldingsdokument.id)
+            it.setObject(2, sykmeldingsdokument.sykmelding.toPGObject())
+            it.setString(3, sykmeldingsdokument.id)
+            it.executeUpdate()
+        }
 
-private suspend fun Connection.updateSykmeldingsopplysninger(
+private fun Connection.updateSykmeldingsopplysninger(
     sykmeldingsopplysninger: Sykmeldingsopplysninger
 ) =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+    prepareStatement(
+            """
         update sykmeldingsopplysninger set 
             pasient_fnr = ?,
             pasient_aktoer_id = ?,
@@ -70,37 +68,35 @@ private suspend fun Connection.updateSykmeldingsopplysninger(
             utenlandsk_sykmelding = ?
         where id = ?;
     """,
-            )
-            .use {
-                var i = 1
-                it.setString(i++, sykmeldingsopplysninger.pasientFnr)
-                it.setString(i++, sykmeldingsopplysninger.pasientAktoerId)
-                it.setString(i++, sykmeldingsopplysninger.legeFnr)
-                it.setString(i++, sykmeldingsopplysninger.legeHpr)
-                it.setString(i++, sykmeldingsopplysninger.legeHelsepersonellkategori)
-                it.setString(i++, sykmeldingsopplysninger.legeAktoerId)
-                it.setString(i++, sykmeldingsopplysninger.mottakId)
-                it.setString(i++, sykmeldingsopplysninger.legekontorOrgNr)
-                it.setString(i++, sykmeldingsopplysninger.legekontorHerId)
-                it.setString(i++, sykmeldingsopplysninger.legekontorReshId)
-                it.setString(i++, sykmeldingsopplysninger.epjSystemNavn)
-                it.setString(i++, sykmeldingsopplysninger.epjSystemVersjon)
-                it.setTimestamp(i++, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
-                it.setString(i++, sykmeldingsopplysninger.tssid)
-                it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
-                it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
-                it.setObject(i++, sykmeldingsopplysninger.utenlandskSykmelding?.toPGObject())
-                it.setString(i, sykmeldingsopplysninger.id)
-                it.executeUpdate()
-            }
-    }
+        )
+        .use {
+            var i = 1
+            it.setString(i++, sykmeldingsopplysninger.pasientFnr)
+            it.setString(i++, sykmeldingsopplysninger.pasientAktoerId)
+            it.setString(i++, sykmeldingsopplysninger.legeFnr)
+            it.setString(i++, sykmeldingsopplysninger.legeHpr)
+            it.setString(i++, sykmeldingsopplysninger.legeHelsepersonellkategori)
+            it.setString(i++, sykmeldingsopplysninger.legeAktoerId)
+            it.setString(i++, sykmeldingsopplysninger.mottakId)
+            it.setString(i++, sykmeldingsopplysninger.legekontorOrgNr)
+            it.setString(i++, sykmeldingsopplysninger.legekontorHerId)
+            it.setString(i++, sykmeldingsopplysninger.legekontorReshId)
+            it.setString(i++, sykmeldingsopplysninger.epjSystemNavn)
+            it.setString(i++, sykmeldingsopplysninger.epjSystemVersjon)
+            it.setTimestamp(i++, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
+            it.setString(i++, sykmeldingsopplysninger.tssid)
+            it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
+            it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
+            it.setObject(i++, sykmeldingsopplysninger.utenlandskSykmelding?.toPGObject())
+            it.setString(i, sykmeldingsopplysninger.id)
+            it.executeUpdate()
+        }
 
-private suspend fun Connection.opprettSykmeldingsopplysninger(
+private fun Connection.opprettSykmeldingsopplysninger(
     sykmeldingsopplysninger: Sykmeldingsopplysninger
 ) =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+    prepareStatement(
+            """
             INSERT INTO SYKMELDINGSOPPLYSNINGER(
                 id,
                 pasient_fnr,
@@ -122,50 +118,45 @@ private suspend fun Connection.opprettSykmeldingsopplysninger(
                 utenlandsk_sykmelding)
             VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            )
-            .use {
-                var i = 1
-                it.setString(i++, sykmeldingsopplysninger.id)
-                it.setString(i++, sykmeldingsopplysninger.pasientFnr)
-                it.setString(i++, sykmeldingsopplysninger.pasientAktoerId)
-                it.setString(i++, sykmeldingsopplysninger.legeFnr)
-                it.setString(i++, sykmeldingsopplysninger.legeHpr)
-                it.setString(i++, sykmeldingsopplysninger.legeHelsepersonellkategori)
-                it.setString(i++, sykmeldingsopplysninger.legeAktoerId)
-                it.setString(i++, sykmeldingsopplysninger.mottakId)
-                it.setString(i++, sykmeldingsopplysninger.legekontorOrgNr)
-                it.setString(i++, sykmeldingsopplysninger.legekontorHerId)
-                it.setString(i++, sykmeldingsopplysninger.legekontorReshId)
-                it.setString(i++, sykmeldingsopplysninger.epjSystemNavn)
-                it.setString(i++, sykmeldingsopplysninger.epjSystemVersjon)
-                it.setTimestamp(i++, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
-                it.setString(i++, sykmeldingsopplysninger.tssid)
-                it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
-                it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
-                it.setObject(i, sykmeldingsopplysninger.utenlandskSykmelding?.toPGObject())
-                it.executeUpdate()
-            }
-    }
+        )
+        .use {
+            var i = 1
+            it.setString(i++, sykmeldingsopplysninger.id)
+            it.setString(i++, sykmeldingsopplysninger.pasientFnr)
+            it.setString(i++, sykmeldingsopplysninger.pasientAktoerId)
+            it.setString(i++, sykmeldingsopplysninger.legeFnr)
+            it.setString(i++, sykmeldingsopplysninger.legeHpr)
+            it.setString(i++, sykmeldingsopplysninger.legeHelsepersonellkategori)
+            it.setString(i++, sykmeldingsopplysninger.legeAktoerId)
+            it.setString(i++, sykmeldingsopplysninger.mottakId)
+            it.setString(i++, sykmeldingsopplysninger.legekontorOrgNr)
+            it.setString(i++, sykmeldingsopplysninger.legekontorHerId)
+            it.setString(i++, sykmeldingsopplysninger.legekontorReshId)
+            it.setString(i++, sykmeldingsopplysninger.epjSystemNavn)
+            it.setString(i++, sykmeldingsopplysninger.epjSystemVersjon)
+            it.setTimestamp(i++, Timestamp.valueOf(sykmeldingsopplysninger.mottattTidspunkt))
+            it.setString(i++, sykmeldingsopplysninger.tssid)
+            it.setObject(i++, sykmeldingsopplysninger.merknader?.toPGObject())
+            it.setString(i++, sykmeldingsopplysninger.partnerreferanse)
+            it.setObject(i, sykmeldingsopplysninger.utenlandskSykmelding?.toPGObject())
+            it.executeUpdate()
+        }
 
-private suspend fun Connection.opprettSykmeldingsdokument(
-    sykmeldingsdokument: Sykmeldingsdokument
-) =
-    withContext(Dispatchers.IO) {
-        prepareStatement(
-                """
+private fun Connection.opprettSykmeldingsdokument(sykmeldingsdokument: Sykmeldingsdokument) =
+    prepareStatement(
+            """
             INSERT INTO SYKMELDINGSDOKUMENT(id, sykmelding) VALUES  (?, ?)
             """,
-            )
-            .use {
-                it.setString(1, sykmeldingsdokument.id)
-                it.setObject(2, sykmeldingsdokument.sykmelding.toPGObject())
-                it.executeUpdate()
-            }
-    }
+        )
+        .use {
+            it.setString(1, sykmeldingsdokument.id)
+            it.setObject(2, sykmeldingsdokument.sykmelding.toPGObject())
+            it.executeUpdate()
+        }
 
-suspend fun Connection.updateBehandlingsutfall(behandlingsutfall: Behandlingsutfall) =
+suspend fun DatabaseInterface.updateBehandlingsutfall(behandlingsutfall: Behandlingsutfall) =
     withContext(Dispatchers.IO) {
-        use { connection ->
+        connection.use { connection ->
             connection
                 .prepareStatement(
                     """
@@ -181,9 +172,9 @@ suspend fun Connection.updateBehandlingsutfall(behandlingsutfall: Behandlingsutf
         }
     }
 
-suspend fun Connection.opprettBehandlingsutfall(behandlingsutfall: Behandlingsutfall) =
+suspend fun DatabaseInterface.opprettBehandlingsutfall(behandlingsutfall: Behandlingsutfall) =
     withContext(Dispatchers.IO) {
-        use { connection ->
+        connection.use { connection ->
             connection
                 .prepareStatement(
                     """
@@ -200,9 +191,9 @@ suspend fun Connection.opprettBehandlingsutfall(behandlingsutfall: Behandlingsut
         }
     }
 
-suspend fun Connection.erSykmeldingsopplysningerLagret(sykmeldingsid: String) =
+suspend fun DatabaseInterface.erSykmeldingsopplysningerLagret(sykmeldingsid: String) =
     withContext(Dispatchers.IO) {
-        use { connection ->
+        connection.use { connection ->
             connection
                 .prepareStatement(
                     """
@@ -218,9 +209,9 @@ suspend fun Connection.erSykmeldingsopplysningerLagret(sykmeldingsid: String) =
         }
     }
 
-suspend fun Connection.erBehandlingsutfallLagret(sykmeldingsid: String) =
+suspend fun DatabaseInterface.erBehandlingsutfallLagret(sykmeldingsid: String) =
     withContext(Dispatchers.IO) {
-        use { connection ->
+        connection.use { connection ->
             connection
                 .prepareStatement(
                     """

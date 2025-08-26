@@ -18,87 +18,72 @@ suspend fun DatabaseInterface.slettSykmelding(sykmeldingId: String) =
         }
     }
 
-private suspend fun deleteSykmeldingsopplysninger(
-    connection: Connection,
-    sykmeldingId: String
-): Boolean =
-    withContext(Dispatchers.IO) {
-        connection
-            .prepareStatement(
-                """
+private fun deleteSykmeldingsopplysninger(connection: Connection, sykmeldingId: String): Boolean =
+    connection
+        .prepareStatement(
+            """
             delete from sykmeldingsopplysninger where id = ? 
         """,
-            )
-            .use {
-                it.setString(1, sykmeldingId)
-                it.execute()
-            }
-    }
+        )
+        .use {
+            it.setString(1, sykmeldingId)
+            it.execute()
+        }
 
-private suspend fun deleteSykmeldingsdokument(connection: Connection, sykmeldingId: String) =
-    withContext(Dispatchers.IO) {
-        connection
-            .prepareStatement(
-                """
+private fun deleteSykmeldingsdokument(connection: Connection, sykmeldingId: String) =
+    connection
+        .prepareStatement(
+            """
             delete from sykmeldingsdokument where id = ? 
         """,
-            )
-            .use {
-                it.setString(1, sykmeldingId)
-                it.execute()
-            }
-    }
+        )
+        .use {
+            it.setString(1, sykmeldingId)
+            it.execute()
+        }
 
-private suspend fun deleteSykmeldingstatus(connection: Connection, sykmeldingId: String) =
-    withContext(Dispatchers.IO) {
-        connection
-            .prepareStatement(
-                """
+private fun deleteSykmeldingstatus(connection: Connection, sykmeldingId: String) =
+    connection
+        .prepareStatement(
+            """
             delete from sykmeldingstatus where sykmelding_id = ? 
         """,
-            )
-            .use {
-                it.setString(1, sykmeldingId)
-                it.execute()
-            }
-    }
+        )
+        .use {
+            it.setString(1, sykmeldingId)
+            it.execute()
+        }
 
-private suspend fun deleteSvar(connection: Connection, sykmeldingId: String) =
-    withContext(Dispatchers.IO) {
-        connection
-            .prepareStatement(
-                """
+private fun deleteSvar(connection: Connection, sykmeldingId: String) =
+    connection
+        .prepareStatement(
+            """
             delete from svar where sykmelding_id = ? 
         """,
-            )
-            .use {
-                it.setString(1, sykmeldingId)
-                it.execute()
-            }
-    }
+        )
+        .use {
+            it.setString(1, sykmeldingId)
+            it.execute()
+        }
 
-private suspend fun deleteArbeidsgiver(connection: Connection, sykmeldingId: String) =
-    withContext(Dispatchers.IO) {
-        connection
-            .prepareStatement(
-                """
+private fun deleteArbeidsgiver(connection: Connection, sykmeldingId: String) =
+    connection
+        .prepareStatement(
+            """
             delete from arbeidsgiver where sykmelding_id = ?
         """,
-            )
-            .use {
-                it.setString(1, sykmeldingId)
-                it.execute()
-            }
-    }
+        )
+        .use {
+            it.setString(1, sykmeldingId)
+            it.execute()
+        }
 
-private suspend fun deleteBehandlingsutfall(connection: Connection, sykmeldingId: String) =
-    withContext(Dispatchers.IO) {
-        connection
-            .prepareStatement(
-                """delete from behandlingsutfall where id = ?""",
-            )
-            .use {
-                it.setString(1, sykmeldingId)
-                it.execute()
-            }
-    }
+private fun deleteBehandlingsutfall(connection: Connection, sykmeldingId: String) =
+    connection
+        .prepareStatement(
+            """delete from behandlingsutfall where id = ?""",
+        )
+        .use {
+            it.setString(1, sykmeldingId)
+            it.execute()
+        }

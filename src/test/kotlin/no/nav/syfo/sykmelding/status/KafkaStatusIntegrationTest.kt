@@ -105,7 +105,7 @@ class KafkaStatusIntegrationTest :
             coEvery { delay(any<Long>()) } returns Unit
             database.connection.dropData()
             database.lagreMottattSykmelding(sykmelding, testSykmeldingsdokument)
-            database.connection.opprettBehandlingsutfall(testBehandlingsutfall)
+            database.opprettBehandlingsutfall(testBehandlingsutfall)
         }
 
         context("Read from status topic and save in DB") {
@@ -352,16 +352,38 @@ class KafkaStatusIntegrationTest :
             }
 
             test("sletter avbrutt etter bekreftet") {
-                coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
-                    {
-                        callOriginal()
-                    }
+                val apenEvent = getApenEvent(sykmelding)
+                val tidligereArbeidsgiver1 = TidligereArbeidsgiverKafkaDTO("ag1", "orgnummer", "1")
+                val bekreftEvent =
+                    getSykmeldingBekreftEvent(
+                        sykmelding,
+                        tidligereArbeidsgiver1,
+                        apenEvent.timestamp.plusMinutes(1)
+                    )
+                val sykmeldingAvbruttEvent =
+                    getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(20))
                 coEvery {
-                    sykmeldingStatusService.registrerStatus(match { it.event == StatusEvent.APEN })
+                    sykmeldingStatusService.registrerBekreftet(
+                        match { it.timestamp.toString() == bekreftEvent.timestamp.toString() },
+                        match { true },
+                        match { true }
+                    )
                 } answers { callOriginal() }
                 coEvery {
                     sykmeldingStatusService.registrerStatus(
-                        match { it.event == StatusEvent.AVBRUTT }
+                        match {
+                            it.event == StatusEvent.APEN &&
+                                it.timestamp.toString() == apenEvent.timestamp.toString()
+                        }
+                    )
+                } answers { callOriginal() }
+                coEvery {
+                    sykmeldingStatusService.registrerStatus(
+                        match {
+                            it.event == StatusEvent.AVBRUTT &&
+                                it.timestamp.toString() ==
+                                    sykmeldingAvbruttEvent.timestamp.toString()
+                        }
                     )
                 } answers
                     {
@@ -369,22 +391,10 @@ class KafkaStatusIntegrationTest :
                         applicationState.alive = false
                         applicationState.ready = false
                     }
-                val apenEvent = getApenEvent(sykmelding)
-                kafkaProducer.send(apenEvent, sykmelding.pasientFnr)
-                val tidligereArbeidsgiver1 = TidligereArbeidsgiverKafkaDTO("ag1", "orgnummer", "1")
-                kafkaProducer.send(
-                    getSykmeldingBekreftEvent(
-                        sykmelding,
-                        tidligereArbeidsgiver1,
-                        apenEvent.timestamp.plusMinutes(1)
-                    ),
-                    sykmelding.pasientFnr
-                )
 
-                kafkaProducer.send(
-                    getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(20)),
-                    sykmelding.pasientFnr
-                )
+                kafkaProducer.send(apenEvent, sykmelding.pasientFnr)
+                kafkaProducer.send(bekreftEvent, sykmelding.pasientFnr)
+                kafkaProducer.send(sykmeldingAvbruttEvent, sykmelding.pasientFnr)
                 runBlocking { sykmeldingStatusConsumerService.start() }
 
                 val tidligereArbeidsgiverList =
@@ -503,7 +513,7 @@ private fun setUpEnvironment(environment: Environment) {
 }
 
 @DelicateCoroutinesApi
-private fun publishSendAndWait(
+private suspend fun publishSendAndWait(
     sykmeldingStatusService: SykmeldingStatusService,
     applicationState: ApplicationState,
     kafkaProducer: SykmeldingStatusKafkaProducer,
@@ -522,7 +532,7 @@ private fun publishSendAndWait(
     val sendtEvent = getSendtEvent(sykmelding, sendTimestamp)
     kafkaProducer.send(sendtEvent, sykmelding.pasientFnr)
     val job = createListener(applicationState) { sykmeldingStatusConsumerService.start() }
-    runBlocking { job.join() }
+    job.join()
     return sendtEvent
 }
 

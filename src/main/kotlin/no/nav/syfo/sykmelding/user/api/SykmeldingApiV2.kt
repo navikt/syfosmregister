@@ -39,7 +39,7 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     hasInvalidStatus(exclude ?: include) ->
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "include or exclude can only contain ${StatusEventDTO.values().joinToString()}"
+                            "include or exclude can only contain ${StatusEventDTO.entries.joinToString()}"
                         )
                     else ->
                         call.respond(
@@ -73,7 +73,7 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
 
 private fun hasInvalidStatus(statusFilter: List<String>?): Boolean {
     return !statusFilter.isNullOrEmpty() &&
-        !StatusEventDTO.values().map { it.name }.containsAll(statusFilter)
+        !StatusEventDTO.entries.map { it.name }.containsAll(statusFilter)
 }
 
 private fun checkExcludeInclude(exclude: List<String>?, include: List<String>?): Boolean {
