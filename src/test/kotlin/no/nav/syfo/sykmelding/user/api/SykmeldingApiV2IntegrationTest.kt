@@ -54,6 +54,7 @@ class SykmeldingApiV2IntegrationTest :
                         StatusEvent.APEN,
                     ),
                 )
+                database.opprettBehandlingsutfall(testBehandlingsutfall)
             }
 
             afterSpec { TestDB.stop() }
@@ -73,7 +74,6 @@ class SykmeldingApiV2IntegrationTest :
                                 getEnvironment(),
                             )
                         }
-                        database.opprettBehandlingsutfall(testBehandlingsutfall)
                         routing {
                             route("/api/v3") {
                                 authenticate("tokenx") {
