@@ -5,17 +5,15 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.kotest.core.spec.style.FunSpec
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.server.testing.TestApplicationEngine
-import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.*
 import java.nio.file.Paths
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.persistering.lagreMottattSykmelding
@@ -32,81 +30,150 @@ import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
 
 class AuthenticateSpek :
-    FunSpec({
-        val path = "src/test/resources/jwkset.json"
-        val uri = Paths.get(path).toUri().toURL()
-        val jwkProvider = JwkProviderBuilder(uri).build()
-        val database = TestDB.database
-        val sykmeldingerService = SykmeldingerService(database)
+    FunSpec(
+        {
+            val path = "src/test/resources/jwkset.json"
+            val uri = Paths.get(path).toUri().toURL()
+            val jwkProvider = JwkProviderBuilder(uri).build()
+            val database = TestDB.database
+            val sykmeldingerService = SykmeldingerService(database)
 
-        beforeTest {
-            database.connection.dropData()
-            database.lagreMottattSykmelding(testSykmeldingsopplysninger, testSykmeldingsdokument)
-            database.opprettBehandlingsutfall(testBehandlingsutfall)
-        }
-
-        afterSpec { TestDB.stop() }
-
-        context("Authenticate basicauth") {
-            with(TestApplicationEngine()) {
-                start()
-                application.setupAuth(
-                    jwkProvider,
-                    "tokenXissuer",
-                    jwkProvider,
-                    getEnvironment(),
+            beforeTest {
+                database.connection.dropData()
+                database.lagreMottattSykmelding(
+                    testSykmeldingsopplysninger,
+                    testSykmeldingsdokument
                 )
-                application.routing {
-                    route("/api/v3") {
-                        authenticate("tokenx") { registrerSykmeldingApiV2(sykmeldingerService) }
-                    }
-                }
-                application.install(ContentNegotiation) {
-                    jackson {
-                        registerKotlinModule()
-                        registerModule(JavaTimeModule())
-                        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                    }
-                }
+                database.opprettBehandlingsutfall(testBehandlingsutfall)
+            }
 
+            afterSpec { TestDB.stop() }
+
+            context("Authenticate basicauth") {
                 test("Aksepterer gyldig JWT med riktig audience") {
-                    with(
-                        handleRequest(HttpMethod.Get, "api/v3/sykmeldinger") {
-                            addHeader(
-                                HttpHeaders.Authorization,
-                                "Bearer ${generateJWT("2", "clientid")}",
+                    testApplication {
+                        application {
+                            setupAuth(
+                                jwkProvider,
+                                "tokenXissuer",
+                                jwkProvider,
+                                getEnvironment(),
                             )
-                        },
-                    ) {
-                        response.status() shouldBeEqualTo HttpStatusCode.OK
+                            routing {
+                                route("/api/v3") {
+                                    authenticate("tokenx") {
+                                        registrerSykmeldingApiV2(
+                                            sykmeldingerService,
+                                        )
+                                    }
+                                }
+                            }
+                            install(ContentNegotiation) {
+                                jackson {
+                                    registerKotlinModule()
+                                    registerModule(JavaTimeModule())
+                                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                                }
+                            }
+                        }
+                        val response =
+                            client.get("api/v3/sykmeldinger") {
+                                headers {
+                                    append("Content-Type", "application/json")
+                                    append(
+                                        HttpHeaders.Authorization,
+                                        "Bearer ${generateJWT("2", "clientid")}",
+                                    )
+                                }
+                            }
+                        response.status shouldBeEqualTo HttpStatusCode.OK
                     }
                 }
 
                 test("Gyldig JWT med feil audience gir Unauthorized") {
-                    with(
-                        handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
-                            addHeader(
-                                HttpHeaders.Authorization,
-                                "Bearer ${generateJWT("2", "annenClientId")}",
+                    testApplication {
+                        application {
+                            setupAuth(
+                                jwkProvider,
+                                "tokenXissuer",
+                                jwkProvider,
+                                getEnvironment(),
                             )
-                        },
-                    ) {
-                        response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                            routing {
+                                route("/api/v3") {
+                                    authenticate("tokenx") {
+                                        registrerSykmeldingApiV2(
+                                            sykmeldingerService,
+                                        )
+                                    }
+                                }
+                            }
+                            install(ContentNegotiation) {
+                                jackson {
+                                    registerKotlinModule()
+                                    registerModule(JavaTimeModule())
+                                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                                }
+                            }
+                        }
+
+                        val response =
+                            client.get("api/v3/sykmeldinger") {
+                                headers {
+                                    append(
+                                        HttpHeaders.Authorization,
+                                        "Bearer ${generateJWT("2", "annenClientId")}",
+                                    )
+                                }
+                            }
+                        response.status shouldBeEqualTo HttpStatusCode.Unauthorized
                     }
                 }
 
                 test("Gyldig JWT med feil issuer gir Unauthorized") {
-                    with(
-                        handleRequest(HttpMethod.Get, "/api/v3/sykmeldinger") {
-                            addHeader(
-                                HttpHeaders.Authorization,
-                                "Bearer ${generateJWT("2", "clientid", issuer = "microsoft")}",
+                    testApplication {
+                        application {
+                            setupAuth(
+                                jwkProvider,
+                                "tokenXissuer",
+                                jwkProvider,
+                                getEnvironment(),
                             )
-                        },
-                    ) {
-                        response.status() shouldBeEqualTo HttpStatusCode.Unauthorized
+                            routing {
+                                route("/api/v3") {
+                                    authenticate("tokenx") {
+                                        registrerSykmeldingApiV2(
+                                            sykmeldingerService,
+                                        )
+                                    }
+                                }
+                            }
+                            install(ContentNegotiation) {
+                                jackson {
+                                    registerKotlinModule()
+                                    registerModule(JavaTimeModule())
+                                    configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                                }
+                            }
+                        }
+                        val response =
+                            client.get("api/v3/sykmeldinger") {
+                                headers {
+                                    append(
+                                        HttpHeaders.Authorization,
+                                        "Bearer ${
+                                            generateJWT(
+                                                "2",
+                                                "clientid",
+                                                issuer = "microsoft",
+                                            )
+                                        }",
+                                    )
+                                }
+                            }
+                        response.status shouldBeEqualTo HttpStatusCode.Unauthorized
                     }
                 }
             }
-        }
-    })
+        },
+    )

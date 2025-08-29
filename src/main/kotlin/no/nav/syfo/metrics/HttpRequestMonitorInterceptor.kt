@@ -1,8 +1,8 @@
 package no.nav.syfo.metrics
 
-import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.*
 import io.ktor.server.request.path
-import io.ktor.util.pipeline.PipelineContext
+import io.ktor.util.pipeline.*
 
 val REGEX =
     """[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""".toRegex()
@@ -11,7 +11,7 @@ val REGEX_MOTTAKID = """[0-9]{10}[a-z]{4}[0-9]{5}.1""".toRegex()
 
 val REGEX_GAMMEL_ID = """ID:[0-9a-z]{48}""".toRegex()
 
-fun monitorHttpRequests(): suspend PipelineContext<Unit, ApplicationCall>.(Unit) -> Unit {
+fun monitorHttpRequests(): PipelineInterceptor<Unit, PipelineCall> {
     return {
         val path = context.request.path()
         val label = getLabel(path)
