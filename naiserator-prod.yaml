@@ -33,7 +33,7 @@ spec:
   image: {{ image }}
   replicas:
     min: 3
-    max: 7
+    max: 8
     scalingStrategy:
       cpu:
         thresholdPercentage: 90
@@ -65,7 +65,7 @@ spec:
       memory: 2000Mi
     requests:
       cpu: 50m
-      memory: 800Mi
+      memory: 850Mi
   kafka:
     pool: nav-prod
   azure:
