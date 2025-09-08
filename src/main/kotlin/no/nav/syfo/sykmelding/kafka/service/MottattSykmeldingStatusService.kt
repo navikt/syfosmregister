@@ -73,15 +73,20 @@ class MottattSykmeldingStatusService(
                 kafkaMetadata = kafkaMetadata,
                 event = sykmeldingStatusKafkaEventDTO,
             )
+        val sykmeldingKafkaMessage =
+            getKafkaMessage(sykmeldingStatus)
+                ?: throw IllegalStateException(
+                    "Could not find sykmelding for sykmeldingId $sykmeldingId"
+                )
         when (sykmeldingStatusKafkaEventDTO.statusEvent) {
             STATUS_SENDT -> {
                 log.info("Status is sendt, need to resendt to sendt-sykmelding-topic")
-                sendtSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
+                sendtSykmeldingKafkaProducer.sendSykmelding(sykmeldingKafkaMessage)
             }
             STATUS_BEKREFTET -> {
                 log.info("Status is bekreftet, need to resendt to bekreftet-sykmelding-topic")
                 securelog.info("sender med tidligere arbeidsgiver $sykmeldingStatusKafkaEventDTO")
-                bekreftetSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(sykmeldingStatus))
+                bekreftetSykmeldingKafkaProducer.sendSykmelding(sykmeldingKafkaMessage)
             }
             else -> {
                 log.info(
@@ -182,6 +187,12 @@ class MottattSykmeldingStatusService(
         sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO
     ) {
         val sendtSykmeldingKafkaMessage = getKafkaMessage(sykmeldingStatusKafkaMessage)
+        if (sendtSykmeldingKafkaMessage == null) {
+            log.warn(
+                "Could not find BEKREFTET sykmelding with id ${sykmeldingStatusKafkaMessage.event.sykmeldingId}, will not send to syfo-bekreftet-sykmelding topic yet"
+            )
+            return
+        }
         sjekkStatusOgTombstone(sykmeldingStatusKafkaMessage)
         bekreftetSykmeldingKafkaProducer.sendSykmelding(sendtSykmeldingKafkaMessage)
     }
@@ -190,23 +201,27 @@ class MottattSykmeldingStatusService(
         sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO
     ) {
         val sendtSykmeldingKafkaMessage = getKafkaMessage(sykmeldingStatusKafkaMessage)
+        if (sendtSykmeldingKafkaMessage == null) {
+            log.warn(
+                "Could not find sykmelding for SENDT sykmelding with id ${sykmeldingStatusKafkaMessage.event.sykmeldingId}, will not send to syfo-sendt-sykmelding yet"
+            )
+            return
+        }
         sendtSykmeldingKafkaProducer.sendSykmelding(sendtSykmeldingKafkaMessage)
     }
 
     private suspend fun getKafkaMessage(
         sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO
-    ): SykmeldingKafkaMessage {
-        val arbeidsgiverSykmelding =
-            sykmeldingStatusService.getArbeidsgiverSykmelding(
+    ): SykmeldingKafkaMessage? {
+        return sykmeldingStatusService
+            .getArbeidsgiverSykmelding(
                 sykmeldingStatusKafkaMessage.event.sykmeldingId,
             )
-                ?: throw RuntimeException(
-                    "Could not find sykmelding ${sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId}",
-                )
-        val sendEvent = sykmeldingStatusKafkaMessage.event
-        val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
-
-        return SykmeldingKafkaMessage(arbeidsgiverSykmelding, metadata, sendEvent)
+            ?.let {
+                val sendEvent = sykmeldingStatusKafkaMessage.event
+                val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
+                SykmeldingKafkaMessage(it, metadata, sendEvent)
+            }
     }
 
     private suspend fun registrerBekreftet(
