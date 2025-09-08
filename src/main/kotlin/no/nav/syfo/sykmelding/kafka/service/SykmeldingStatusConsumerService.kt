@@ -27,9 +27,8 @@ class SykmeldingStatusConsumerService(
                 run()
             } catch (ex: Exception) {
                 log.error(
-                    "Error reading status from aiven topic, trying again in {} milliseconds, error {}",
-                    DELAY_START,
-                    ex.message,
+                    "Error reading status from aiven topic, trying again in $DELAY_START milliseconds",
+                    ex
                 )
                 sykmeldingStatusKafkaConsumer.unsubscribe()
             }

@@ -126,7 +126,7 @@ class MottattSykmeldingStatusService(
         } catch (e: Exception) {
             log.error(
                 "Kunne ikke prosessere statusendring ${sykmeldingStatusKafkaMessage?.event?.statusEvent}} for sykmeldingid $sykmeldingId",
-                e.message,
+                e,
             )
             throw e
         }
