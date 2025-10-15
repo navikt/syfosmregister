@@ -26,7 +26,9 @@ spec:
           - name: cloudsql.enable_pgaudit
             value: "true"
           - name: pgaudit.log
-            value: 'write'
+            value: "write,ddl,role"
+          - name: pgaudit.log_parameter
+            value: "on"
           - name: cloudsql.logical_decoding
             value: "on"
         tier: db-f1-micro
