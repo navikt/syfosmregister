@@ -6,6 +6,9 @@ import io.mockk.mockk
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.syfo.Environment
@@ -218,7 +221,9 @@ val testSykmeldingsopplysninger =
         legekontorReshId = "legekontorReshId",
         epjSystemNavn = "epjSystemNavn",
         epjSystemVersjon = "epjSystemVersjon",
-        mottattTidspunkt = getNowTickMillisLocalDateTime().plusMonths(1),
+        mottattTidspunkt =
+            OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
+                .toLocalDateTime(),
         tssid = "13455",
         merknader = emptyList(),
         partnerreferanse = null,

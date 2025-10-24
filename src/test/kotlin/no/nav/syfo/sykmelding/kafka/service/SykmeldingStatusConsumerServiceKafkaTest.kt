@@ -9,6 +9,9 @@ import io.mockk.mockk
 import io.mockk.mockkClass
 import io.mockk.mockkStatic
 import io.mockk.spyk
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlinx.coroutines.delay
@@ -104,7 +107,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 var currentError = 0
                 0.until(messages).forEach {
                     val sykmelidngId = "" + it
-                    val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                    val timestamp =
+                        OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                     val sykmeldingApenEvent =
                         SykmeldingStatusKafkaEventDTO(
                             sykmelidngId,
@@ -137,7 +141,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
         context("SykmeldingStatusConsumerService read from statustopic") {
             test("Test APEN status") {
                 val sykmeldingId = UUID.randomUUID().toString()
-                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                val timestamp =
+                    OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent =
                     SykmeldingStatusKafkaEventDTO(
@@ -171,7 +176,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
             test("tombstone with APEN status") {
                 val sykmeldingId = UUID.randomUUID().toString()
-                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                val timestamp =
+                    OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent =
                     SykmeldingStatusKafkaEventDTO(
@@ -213,7 +219,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
             test("test tombstone with apen -> bekreft -> apen") {
                 val sykmeldingId = UUID.randomUUID().toString()
-                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                val timestamp =
+                    OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent =
                     SykmeldingStatusKafkaEventDTO(
@@ -252,12 +259,12 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     null andThen
                     SykmeldingStatusEvent(
                         sykmeldingId,
-                        getNowTickMillisOffsetDateTime().plusMonths(1),
+                        timestamp,
                         StatusEvent.APEN,
                     ) andThen
                     SykmeldingStatusEvent(
                         sykmeldingId,
-                        getNowTickMillisOffsetDateTime().plusMonths(1),
+                        timestamp,
                         StatusEvent.BEKREFTET,
                     )
 
@@ -294,7 +301,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
             test("Test SENDT status") {
                 val sykmeldingId = UUID.randomUUID().toString()
-                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                val timestamp =
+                    OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 var sykmeldingSendEvent: SykmeldingSendEvent? = null
                 val sykmeldingSendKafkaEvent =
@@ -411,7 +419,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
             test("test AVBRUTT status") {
                 val sykmeldingId = UUID.randomUUID().toString()
-                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                val timestamp =
+                    OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 val sykmeldingApenEvent =
                     SykmeldingStatusKafkaEventDTO(
@@ -449,7 +458,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
             test("Test BEREFTET status") {
                 val sykmeldingId = "BEKREFT"
-                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                val timestamp =
+                    OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 var sykmeldingBekreftEvent: SykmeldingBekreftEvent? = null
                 val sykmeldingBekreftKafkaEvent =
@@ -505,7 +515,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
             test("Test BEKREFTET til BEKREFTET") {
                 val sykmeldingId = "BEKREFT"
-                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                val timestamp =
+                    OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 var sykmeldingBekreftEvent: SykmeldingBekreftEvent? = null
                 val sykmeldingBekreftKafkaEvent =
@@ -561,7 +572,8 @@ class SykmeldingStatusConsumerServiceKafkaTest :
 
             test("Test BEKREFTET til SENDT") {
                 val sykmeldingId = "SENDT"
-                val timestamp = getNowTickMillisOffsetDateTime().plusMonths(1)
+                val timestamp =
+                    OffsetDateTime.of(LocalDateTime.of(2025, 10, 1, 0, 0), ZoneOffset.UTC)
                 var sykmeldingStatusEvent: SykmeldingStatusEvent? = null
                 var sykmeldingSendEvent: SykmeldingSendEvent? = null
                 val sykmeldingSendKafkaEvent =
