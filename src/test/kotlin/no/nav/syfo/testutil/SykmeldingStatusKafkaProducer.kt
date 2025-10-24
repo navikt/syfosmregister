@@ -1,15 +1,18 @@
-package no.nav.syfo.sykmelding.kafka.producer
+package no.nav.syfo.testutil
 
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.Properties
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import no.nav.syfo.Environment
+import no.nav.syfo.kafka.aiven.KafkaUtils
+import no.nav.syfo.kafka.toProducerConfig
 import no.nav.syfo.log
 import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
-import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
+import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -18,22 +21,6 @@ class SykmeldingStatusKafkaProducer(
     private val topicName: String
 ) {
     suspend fun send(sykmeldingStatusKafkaEventDTO: SykmeldingStatusKafkaEventDTO, fnr: String) {
-
-        if (sykmeldingStatusKafkaEventDTO.statusEvent == STATUS_APEN) {
-            val timestamp = sykmeldingStatusKafkaEventDTO.timestamp
-            val timecutoff =
-                OffsetDateTime.of(LocalDateTime.of(2025, 10, 24, 8, 35), ZoneOffset.UTC)
-            if (timestamp.isAfter(timecutoff)) {
-                log.info(
-                    "Do not send ${sykmeldingStatusKafkaEventDTO.statusEvent} for sykmelding ${sykmeldingStatusKafkaEventDTO.sykmeldingId} since $timestamp is after $timecutoff"
-                )
-                return
-            } else {
-                log.info(
-                    "Sending ${sykmeldingStatusKafkaEventDTO.statusEvent} for sykmelding ${sykmeldingStatusKafkaEventDTO.sykmeldingId} since $timestamp is before $timecutoff"
-                )
-            }
-        }
 
         val sykmeldingStatusKafkaMessageDTO =
             SykmeldingStatusKafkaMessageDTO(
@@ -65,4 +52,18 @@ class SykmeldingStatusKafkaProducer(
             throw e
         }
     }
+}
+
+fun getSykmeldingStatusKafkaProducer(
+    environment: Environment,
+    kafkaConfig: Properties = KafkaUtils.getAivenKafkaConfig("status-sykmelding-producer"),
+): SykmeldingStatusKafkaProducer {
+    val kafkaStatusProducerConfig =
+        kafkaConfig.toProducerConfig(
+            "${environment.applicationName}-gcp-producer",
+            JacksonKafkaSerializer::class,
+        )
+    val kafkaProducer =
+        KafkaProducer<String, SykmeldingStatusKafkaMessageDTO>(kafkaStatusProducerConfig)
+    return SykmeldingStatusKafkaProducer(kafkaProducer, environment.sykmeldingStatusAivenTopic)
 }

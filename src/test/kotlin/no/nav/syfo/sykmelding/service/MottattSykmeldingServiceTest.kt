@@ -13,7 +13,6 @@ import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
@@ -32,7 +31,6 @@ class MottattSykmeldingServiceTest :
         val applicationState = ApplicationState(alive = true, ready = true)
 
         val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
-        val sykmeldingStatusKafkaProducer = mockk<SykmeldingStatusKafkaProducer>(relaxed = true)
         val mottattSykmeldingStatusService = mockk<MottattSykmeldingStatusService>(relaxed = true)
         val sykmeldingStatusService = mockk<SykmeldingStatusService>(relaxed = true)
         val mottattSykmeldingService =
@@ -40,7 +38,6 @@ class MottattSykmeldingServiceTest :
                 env = environment,
                 database = database,
                 mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
-                sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
                 mottattSykmeldingStatusService = mottattSykmeldingStatusService,
                 sykmeldingStatusService = sykmeldingStatusService
             )

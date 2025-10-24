@@ -3,15 +3,21 @@ package no.nav.syfo.sykmelding.status
 import com.auth0.jwk.JwkProviderBuilder
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FunSpec
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
+import io.ktor.client.request.get
+import io.ktor.client.request.headers
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.authenticate
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import io.ktor.server.testing.*
-import io.mockk.*
+import io.ktor.server.testing.testApplication
+import io.mockk.clearAllMocks
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockkClass
+import io.mockk.mockkStatic
+import io.mockk.spyk
 import java.nio.file.Paths
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -42,7 +48,6 @@ import no.nav.syfo.sykmelding.kafka.model.SporsmalOgSvarKafkaDTO
 import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmelding.model.SporsmalDTO
@@ -50,7 +55,20 @@ import no.nav.syfo.sykmelding.model.SvarDTO
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.user.api.registrerSykmeldingApiV2
-import no.nav.syfo.testutil.*
+import no.nav.syfo.testutil.KafkaTest
+import no.nav.syfo.testutil.SykmeldingStatusKafkaProducer
+import no.nav.syfo.testutil.TestDB
+import no.nav.syfo.testutil.createKomplettInnsendtSkjemaSvar
+import no.nav.syfo.testutil.dropData
+import no.nav.syfo.testutil.generateJWT
+import no.nav.syfo.testutil.getEnvironment
+import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
+import no.nav.syfo.testutil.getSykmeldingStatusKafkaProducer
+import no.nav.syfo.testutil.getTidligereArbeidsgiver
+import no.nav.syfo.testutil.setUpTestApplication
+import no.nav.syfo.testutil.testBehandlingsutfall
+import no.nav.syfo.testutil.testSykmeldingsdokument
+import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
 
 @DelicateCoroutinesApi
@@ -63,7 +81,7 @@ class KafkaStatusIntegrationTest :
 
         val sykmelding = testSykmeldingsopplysninger
         val kafkaConfig = KafkaTest.setupKafkaConfig()
-        val kafkaProducer = KafkaFactory.getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
+        val kafkaProducer = getSykmeldingStatusKafkaProducer(environment, kafkaConfig)
         val applicationState = ApplicationState(alive = true, ready = true)
         val sykmeldingStatusService = spyk(SykmeldingStatusService(database))
         val consumer = KafkaFactory.getKafkaStatusConsumerAiven(environment, kafkaConfig)

@@ -40,7 +40,6 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerAivenPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumerAiven
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingConsumerService
@@ -176,7 +175,6 @@ fun main() {
         MottattSykmeldingService(
             database = database,
             env = environment,
-            sykmeldingStatusKafkaProducer = getSykmeldingStatusKafkaProducer(environment),
             mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(environment),
             mottattSykmeldingStatusService = mottattSykmeldingStatusService,
             sykmeldingStatusService = sykmeldingStatusService,

@@ -26,7 +26,6 @@ import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.KafkaModelMapper
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
@@ -37,7 +36,6 @@ import no.nav.syfo.wrapExceptions
 class MottattSykmeldingService(
     private val database: DatabaseInterface,
     private val env: Environment,
-    private val sykmeldingStatusKafkaProducer: SykmeldingStatusKafkaProducer,
     private val mottattSykmeldingKafkaProducer: MottattSykmeldingKafkaProducer,
     private val mottattSykmeldingStatusService: MottattSykmeldingStatusService,
     private val sykmeldingStatusService: SykmeldingStatusService,
@@ -109,11 +107,6 @@ class MottattSykmeldingService(
                 sykmeldingStatusService.registrerStatus(
                     KafkaModelMapper.toSykmeldingStatusEvent(sykmeldingStatusKafkaEventDTO)
                 )
-                sykmeldingStatusKafkaProducer.send(
-                    sykmeldingStatusKafkaEventDTO,
-                    receivedSykmelding.personNrPasient,
-                )
-
                 database.lagreMottattSykmelding(
                     sykmeldingsopplysninger,
                     sykmeldingsdokument,

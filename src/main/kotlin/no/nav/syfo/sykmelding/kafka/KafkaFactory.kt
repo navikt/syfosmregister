@@ -14,10 +14,8 @@ import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
 import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaDeserializer
-import no.nav.syfo.sykmelding.kafka.util.JacksonKafkaSerializer
 import no.nav.syfo.sykmelding.kafka.util.JacksonNullableKafkaSerializer
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerConfig
@@ -27,22 +25,6 @@ import org.apache.kafka.common.serialization.StringDeserializer
 
 class KafkaFactory private constructor() {
     companion object {
-        fun getSykmeldingStatusKafkaProducer(
-            environment: Environment,
-            kafkaConfig: Properties = KafkaUtils.getAivenKafkaConfig("status-sykmelding-producer"),
-        ): SykmeldingStatusKafkaProducer {
-            val kafkaStatusProducerConfig =
-                kafkaConfig.toProducerConfig(
-                    "${environment.applicationName}-gcp-producer",
-                    JacksonKafkaSerializer::class,
-                )
-            val kafkaProducer =
-                KafkaProducer<String, SykmeldingStatusKafkaMessageDTO>(kafkaStatusProducerConfig)
-            return SykmeldingStatusKafkaProducer(
-                kafkaProducer,
-                environment.sykmeldingStatusAivenTopic
-            )
-        }
 
         fun getKafkaStatusConsumerAiven(
             environment: Environment,
