@@ -114,9 +114,6 @@ spec:
         - application: macgyver
           namespace: teamsykmelding
           cluster: dev-gcp
-        - application: syk-inn-api
-          namespace: tsm
-          cluster: dev-gcp
   ingresses:
     - "https://smregister.intern.dev.nav.no"
   leaderElection: true
