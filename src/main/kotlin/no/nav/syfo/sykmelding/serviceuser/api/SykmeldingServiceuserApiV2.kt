@@ -12,7 +12,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import java.time.LocalDate
 import no.nav.syfo.log
-import no.nav.syfo.securelog
 import no.nav.syfo.sykmelding.service.SykmeldingerService
 import no.nav.syfo.sykmelding.serviceuser.api.model.StatusRequest
 import no.nav.syfo.util.getFnrFromHeader
@@ -28,26 +27,6 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                     call.respond(HttpStatusCode.NotFound)
                 } else {
                     call.respond(sykmelding)
-                }
-            }
-            get("/sykinn/{sykmeldingId}") {
-                val sykmeldingId = call.parameters["sykmeldingId"]!!
-                val sykmelding = sykmeldingerService.getSykInnSykmeldingMedId(sykmeldingId)
-                if (sykmelding == null) {
-                    log.info("Fant ikke sykmelding med id {}", sykmeldingId)
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    call.respond(sykmelding)
-                }
-            }
-            get("/sykinn/ident") {
-                val ident = call.request.headers["X-IDENT"]!!
-                val sykmeldinger = sykmeldingerService.getSykInnSykmeldingForIdent(ident)
-                if (sykmeldinger.isEmpty()) {
-                    securelog.info("Fant ikke sykmelding for ident {}", ident)
-                    call.respond(HttpStatusCode.NotFound)
-                } else {
-                    call.respond(sykmeldinger)
                 }
             }
 
