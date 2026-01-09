@@ -3,15 +3,12 @@ package no.nav.syfo.sykmelding.service
 import java.time.LocalDate
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
-import no.nav.syfo.sykmelding.db.getSykInnSykmeldingForIdent
-import no.nav.syfo.sykmelding.db.getSykInnSykmeldingerMedId
 import no.nav.syfo.sykmelding.db.getSykmelding
 import no.nav.syfo.sykmelding.db.getSykmeldinger
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedId
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
 import no.nav.syfo.sykmelding.model.SykmeldingDTO
 import no.nav.syfo.sykmelding.model.SykmeldingsperiodeDTO
-import no.nav.syfo.sykmelding.model.sykinn.SykInnSykmeldingDTO
 import no.nav.syfo.sykmelding.model.toSykmeldingDTO
 import no.nav.syfo.sykmelding.serviceuser.api.model.SykmeldtStatus
 import no.nav.syfo.sykmelding.status.Sporsmal
@@ -90,12 +87,6 @@ class SykmeldingerService(private val database: DatabaseInterface) {
                 ikkeTilgangTilDiagnose = true
             )
         }
-
-    suspend fun getSykInnSykmeldingMedId(sykmeldingId: String): SykInnSykmeldingDTO? =
-        database.getSykInnSykmeldingerMedId(sykmeldingId)
-
-    suspend fun getSykInnSykmeldingForIdent(ident: String): List<SykInnSykmeldingDTO?> =
-        database.getSykInnSykmeldingForIdent(ident)
 
     suspend fun getSykmelding(
         sykmeldingId: String,

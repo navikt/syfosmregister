@@ -5,7 +5,6 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.io.use
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
@@ -13,8 +12,6 @@ import no.nav.syfo.db.toList
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.objectMapper
-import no.nav.syfo.sykmelding.model.sykinn.Aktivitet
-import no.nav.syfo.sykmelding.model.sykinn.SykInnSykmeldingDTO
 import no.nav.syfo.sykmelding.status.ShortName
 import no.nav.syfo.sykmelding.status.Sporsmal
 import no.nav.syfo.sykmelding.status.StatusEvent
@@ -53,18 +50,6 @@ suspend fun DatabaseInterface.getSykmeldinger(fnr: String): List<SykmeldingDbMod
 suspend fun DatabaseInterface.getSykmeldingerMedId(id: String): SykmeldingDbModel? =
     withContext(Dispatchers.IO) {
         connection.use { connection -> connection.getSykmeldingMedSisteStatusForId(id) }
-    }
-
-suspend fun DatabaseInterface.getSykInnSykmeldingerMedId(id: String): SykInnSykmeldingDTO? =
-    withContext(Dispatchers.IO) {
-        connection.use { connection -> connection.getSykInnSykmeldingMedSisteStatusForId(id) }
-    }
-
-suspend fun DatabaseInterface.getSykInnSykmeldingForIdent(
-    ident: String
-): List<SykInnSykmeldingDTO?> =
-    withContext(Dispatchers.IO) {
-        connection.use { connection -> connection.getSykInnSykmeldingMedSisteStatusForIdent(ident) }
     }
 
 suspend fun DatabaseInterface.getSykmelding(sykmeldingId: String, fnr: String): SykmeldingDbModel? =
@@ -177,40 +162,6 @@ private fun Connection.getSykmeldingMedSisteStatusForId(id: String): SykmeldingD
         .use {
             it.setString(1, id)
             it.executeQuery().toList { toSykmeldingDbModel() }.firstOrNull()
-        }
-
-private fun Connection.getSykInnSykmeldingMedSisteStatusForIdent(
-    ident: String
-): List<SykInnSykmeldingDTO?> =
-    prepareStatement(
-            """
-                    SELECT opplysninger.id,
-                    pasient_fnr,
-                    sykmelding
-                    FROM sykmeldingsopplysninger AS opplysninger
-                        INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
-                    where pasient_fnr = ?;
-                    """,
-        )
-        .use {
-            it.setString(1, ident)
-            it.executeQuery().toList { toSykInnSykmeldingDbModel() }
-        }
-
-private fun Connection.getSykInnSykmeldingMedSisteStatusForId(id: String): SykInnSykmeldingDTO? =
-    prepareStatement(
-            """
-                    SELECT opplysninger.id,
-                    pasient_fnr,
-                    sykmelding
-                    FROM sykmeldingsopplysninger AS opplysninger
-                        INNER JOIN sykmeldingsdokument AS dokument ON opplysninger.id = dokument.id
-                    where opplysninger.id = ?;
-                    """,
-        )
-        .use {
-            it.setString(1, id)
-            it.executeQuery().toList { toSykInnSykmeldingDbModel() }.firstOrNull()
         }
 
 private fun Connection.getSykmelding(id: String, fnr: String): SykmeldingDbModel? =
@@ -341,59 +292,6 @@ fun finnPeriodetype(sykmeldingsDokument: Sykmelding): Periodetype =
         sykmeldingsDokument.perioder.first().gradert != null -> Periodetype.GRADERT
         else -> throw RuntimeException("Kunne ikke bestemme typen til periode")
     }
-
-fun ResultSet.toSykInnSykmeldingDbModel(): SykInnSykmeldingDTO {
-    val sykmeldingsDokument =
-        objectMapper.readValue(getString("sykmelding"), Sykmelding::class.java)
-
-    return SykInnSykmeldingDTO(
-        sykmeldingId = getString("id"),
-        aktivitet =
-            when (finnPeriodetype(sykmeldingsDokument)) {
-                Periodetype.AKTIVITET_IKKE_MULIG ->
-                    Aktivitet.AktivitetIkkeMulig(
-                        fom = sykmeldingsDokument.perioder.first().fom,
-                        tom = sykmeldingsDokument.perioder.first().tom,
-                    )
-                Periodetype.GRADERT ->
-                    Aktivitet.Gradert(
-                        grad = sykmeldingsDokument.perioder.first().gradert!!.grad,
-                        fom = sykmeldingsDokument.perioder.first().fom,
-                        tom = sykmeldingsDokument.perioder.first().tom,
-                    )
-                Periodetype.AVVENTENDE ->
-                    Aktivitet.Avvetende(
-                        fom = sykmeldingsDokument.perioder.first().fom,
-                        tom = sykmeldingsDokument.perioder.first().tom,
-                    )
-                Periodetype.BEHANDLINGSDAGER ->
-                    Aktivitet.Behandlingsdager(
-                        fom = sykmeldingsDokument.perioder.first().fom,
-                        tom = sykmeldingsDokument.perioder.first().tom,
-                    )
-                Periodetype.REISETILSKUDD ->
-                    Aktivitet.Reisetilskudd(
-                        fom = sykmeldingsDokument.perioder.first().fom,
-                        tom = sykmeldingsDokument.perioder.first().tom,
-                    )
-            },
-        pasient =
-            no.nav.syfo.sykmelding.model.sykinn.Pasient(
-                fnr = getString("pasient_fnr"),
-            ),
-        hovedDiagnose =
-            no.nav.syfo.sykmelding.model.sykinn.Diagnose(
-                code = sykmeldingsDokument.medisinskVurdering.hovedDiagnose!!.kode,
-                system = sykmeldingsDokument.medisinskVurdering.hovedDiagnose.system,
-                text = sykmeldingsDokument.medisinskVurdering.hovedDiagnose.tekst ?: "",
-            ),
-        behandler =
-            no.nav.syfo.sykmelding.model.sykinn.Behandler(
-                fnr = sykmeldingsDokument.behandler.fnr,
-                hpr = sykmeldingsDokument.behandler.hpr,
-            ),
-    )
-}
 
 fun ResultSet.toSykmeldingDbModel(): SykmeldingDbModel {
     val mottattTidspunkt = getTimestamp("mottatt_tidspunkt").toInstant().atOffset(ZoneOffset.UTC)
