@@ -84,6 +84,8 @@ spec:
         - host: kafka-schema-registry.nais-q.adeo.no
         - host: pdl-api.dev-fss-pub.nais.io
       rules:
+        - application: logging
+          namespace: nais-system
         - application: istilgangskontroll
           namespace: teamsykefravr
           cluster: dev-gcp
@@ -117,8 +119,6 @@ spec:
   ingresses:
     - "https://smregister.intern.dev.nav.no"
   leaderElection: true
-  secureLogs:
-    enabled: true
   env:
     - name: ISTILGANGSKONTROLL_SCOPE
       value: api://dev-gcp.teamsykefravr.istilgangskontroll/.default
