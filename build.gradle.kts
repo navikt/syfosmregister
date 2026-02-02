@@ -2,10 +2,10 @@ group = "no.nav.syfo"
 version = "1.0.0"
 
 val coroutinesVersion = "1.9.0"
-val jacksonVersion = "2.17.2"
-val confluentVersion = "7.7.1"
+val jacksonVersion = "2.20.2"
+val confluentVersion = "8.1.1"
 val kluentVersion = "1.73"
-val ktorVersion = "3.3.0"
+val ktorVersion = "3.4.0"
 val logbackVersion = "1.5.8"
 val logstashEncoderVersion = "8.0"
 val prometheusVersion = "0.16.0"
@@ -20,7 +20,6 @@ val testContainerKafkaVersion = "1.20.1"
 val caffeineVersion = "3.1.8"
 val kotlinVersion = "2.1.10"
 val testContainerVersion = "1.21.3"
-val commonsCodecVersion = "1.17.1"
 val snakeyamlVersion= "2.3"
 val ktfmtVersion = "0.44"
 val snappyJavaVersion = "1.1.10.7"
@@ -31,7 +30,7 @@ val opentelemetryVersion = "2.8.0"
 plugins {
     id("application")
     id("com.diffplug.spotless") version "6.25.0"
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.2.20"
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 application {
@@ -67,11 +66,6 @@ dependencies {
 
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
-    constraints {
-        implementation("commons-codec:commons-codec:$commonsCodecVersion") {
-            because("override transient from io.ktor:ktor-client-apache")
-        }
-    }
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 
@@ -82,11 +76,6 @@ dependencies {
     constraints {
         implementation("org.yaml:snakeyaml:$snakeyamlVersion") {
             because("override transient version 1.32 from io.confluent:kafka-avro-serializer")
-        }
-    }
-    constraints {
-        implementation("org.apache.avro:avro:$avroVersion") {
-            because("override transient from io.confluent:kafka-avro-serializer")
         }
     }
 
