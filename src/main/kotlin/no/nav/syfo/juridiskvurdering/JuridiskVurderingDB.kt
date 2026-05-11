@@ -41,7 +41,7 @@ class JuridiskVurderingDB(val databaseInterface: DatabaseInterface) {
                 )
                 .use { ps ->
                     val sykmeldingId =
-                        vurdering.sporing["sykmelding"] ?: error("SykmeldingId mangler")
+                        vurdering.sporing["sykmelding"] ?: vurdering.sporing["sykmeldingId"] ?: error("SykmeldingId mangler")
 
                     ps.setString(1, sykmeldingId)
                     ps.setDate(2, Date.valueOf(tilbakedateringInputs.fom))
