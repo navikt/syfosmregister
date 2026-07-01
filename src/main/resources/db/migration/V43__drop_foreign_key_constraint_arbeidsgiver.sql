@@ -1,0 +1,1 @@
+alter table arbeidsgiver drop constraint arbeidsgiver_sykmelding_id_fkey;
