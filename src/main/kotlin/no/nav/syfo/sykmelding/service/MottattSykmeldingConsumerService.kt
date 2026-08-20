@@ -49,7 +49,7 @@ class MottattSykmeldingConsumerService(
         while (applicationState.ready) {
             kafkaAivenConsumer
                 .poll(Duration.ofMillis(1000))
-                .filterNot { it.value() == null }
+                .filterNot { it.value() == null || it.value() == "null" }
                 .forEach { handleMessageSykmelding(it) }
         }
     }
