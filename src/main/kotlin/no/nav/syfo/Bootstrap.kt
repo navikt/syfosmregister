@@ -52,11 +52,7 @@ import org.slf4j.LoggerFactory
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.jacksonMapperBuilder
 
-val jsonMapper: JsonMapper =
-    jacksonMapperBuilder()
-        // .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
-        // .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        .build()
+val jsonMapper: JsonMapper = jacksonMapperBuilder().build()
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 val securelog: Logger = LoggerFactory.getLogger("securelog")
