@@ -1,15 +1,10 @@
 package no.nav.syfo
 
 import com.auth0.jwk.JwkProviderBuilder
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.engine.apache5.Apache5
+import io.ktor.client.engine.apache5.Apache5EngineConfig
 import io.prometheus.client.hotspot.DefaultExports
 import java.net.URI
 import java.time.Duration
@@ -54,14 +49,14 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 
-val objectMapper: ObjectMapper =
-    ObjectMapper().apply {
-        registerKotlinModule()
-        registerModule(JavaTimeModule())
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-    }
+val jsonMapper: JsonMapper =
+    jacksonMapperBuilder()
+        // .enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
+        // .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .build()
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 val securelog: Logger = LoggerFactory.getLogger("securelog")
@@ -105,32 +100,32 @@ fun main() {
                 }
                 .toConsumerConfig(
                     "${environment.applicationName}-gcp-consumer",
-                    valueDeserializer = StringDeserializer::class
+                    valueDeserializer = StringDeserializer::class,
                 )
-                .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
+                .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
         )
 
-    val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+    val config: HttpClientConfig<Apache5EngineConfig>.() -> Unit = {
         setupJacksonSerialization()
         handleResponseException()
         setupRetry()
         expectSuccess = true
     }
 
-    val httpClient = HttpClient(Apache, config)
+    val httpClient = HttpClient(Apache5, config)
     val azureAdV2Client =
         AzureAdV2Client(
             environment.clientIdV2,
             environment.clientSecretV2,
             environment.azureTokenEndpoint,
-            httpClient
+            httpClient,
         )
     val tilgangskontrollService =
         TilgangskontrollService(
             azureAdV2Client,
             httpClient,
             environment.istilgangskontrollUrl,
-            environment.istilgangskontrollScope
+            environment.istilgangskontrollScope,
         )
 
     val pdlClient =
@@ -156,7 +151,7 @@ fun main() {
             sendtSykmeldingKafkaProducer,
             bekreftSykmeldingKafkaProducer,
             tombstoneProducer,
-            database
+            database,
         )
 
     val leaderElection = LeaderElection(httpClient, environment.electorPath)
@@ -219,7 +214,7 @@ fun main() {
 @DelicateCoroutinesApi
 fun createListener(
     applicationState: ApplicationState,
-    action: suspend CoroutineScope.() -> Unit
+    action: suspend CoroutineScope.() -> Unit,
 ): Job =
     GlobalScope.launch(Dispatchers.IO) {
         try {
@@ -228,7 +223,7 @@ fun createListener(
             log.error(
                 "En uhåndtert feil oppstod, applikasjonen restarter {}",
                 fields(e.loggingMeta),
-                e.cause
+                e.cause,
             )
         } catch (ex: Exception) {
             log.error("Noe gikk galt", ex.cause)

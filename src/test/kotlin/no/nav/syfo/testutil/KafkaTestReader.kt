@@ -6,7 +6,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 class KafkaTestReader<T> {
     fun getMessagesFromTopic(
         kafkaConsumer: KafkaConsumer<String, T>,
-        messagesToRead: Int
+        messagesToRead: Int,
     ): Map<String, T?> {
         val map = hashMapOf<String, T?>()
         var messages = 0

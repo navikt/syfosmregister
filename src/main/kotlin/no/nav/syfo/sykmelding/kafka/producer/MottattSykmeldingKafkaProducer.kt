@@ -9,7 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 
 class MottattSykmeldingKafkaProducer(
     private val kafkaProducer: KafkaProducer<String, MottattSykmeldingKafkaMessage?>,
-    private val topic: String
+    private val topic: String,
 ) {
     suspend fun sendMottattSykmelding(sykmeldingKafkaMessage: MottattSykmeldingKafkaMessage) {
         withContext(Dispatchers.IO) {
@@ -19,14 +19,14 @@ class MottattSykmeldingKafkaProducer(
                         ProducerRecord(
                             topic,
                             sykmeldingKafkaMessage.sykmelding.id,
-                            sykmeldingKafkaMessage
+                            sykmeldingKafkaMessage,
                         )
                     )
                     .get()
             } catch (e: Exception) {
                 log.error(
                     "Kunne ikke skrive til mottatt-topic for sykmeldingid ${sykmeldingKafkaMessage.sykmelding.id}: {}",
-                    e.message
+                    e.message,
                 )
                 throw e
             }

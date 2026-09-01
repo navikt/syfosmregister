@@ -2,10 +2,7 @@ package no.nav.syfo.sykmelding.kafka.model
 
 import java.time.LocalDate
 
-data class SporsmalSvar<T>(
-    val sporsmaltekst: String,
-    val svar: T,
-)
+data class SporsmalSvar<T>(val sporsmaltekst: String, val svar: T)
 
 data class SykmeldingFormResponse(
     val erOpplysningeneRiktige: SporsmalSvar<JaEllerNei>,
@@ -21,10 +18,7 @@ data class SykmeldingFormResponse(
     val fisker: FiskerSvar?,
 )
 
-data class FiskerSvar(
-    val blad: SporsmalSvar<Blad>,
-    val lottOgHyre: SporsmalSvar<LottOgHyre>,
-)
+data class FiskerSvar(val blad: SporsmalSvar<Blad>, val lottOgHyre: SporsmalSvar<LottOgHyre>)
 
 enum class Blad {
     A,
@@ -37,10 +31,7 @@ enum class LottOgHyre {
     BEGGE,
 }
 
-data class Egenmeldingsperiode(
-    val fom: LocalDate,
-    val tom: LocalDate,
-)
+data class Egenmeldingsperiode(val fom: LocalDate, val tom: LocalDate)
 
 enum class JaEllerNei {
     JA,

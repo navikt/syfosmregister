@@ -1,19 +1,15 @@
 package no.nav.syfo.util
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.*
-import io.ktor.client.engine.apache.*
+import io.ktor.client.engine.apache5.Apache5EngineConfig
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.network.sockets.*
-import io.ktor.serialization.jackson.*
+import io.ktor.serialization.jackson3.jackson
 import no.nav.syfo.application.exception.ServiceUnavailableException
 import no.nav.syfo.log
 
-fun HttpClientConfig<ApacheEngineConfig>.handleResponseException() {
+fun HttpClientConfig<Apache5EngineConfig>.handleResponseException() {
     HttpResponseValidator {
         handleResponseExceptionWithRequest { exception, _ ->
             when (exception) {
@@ -23,18 +19,11 @@ fun HttpClientConfig<ApacheEngineConfig>.handleResponseException() {
     }
 }
 
-fun HttpClientConfig<ApacheEngineConfig>.setupJacksonSerialization() {
-    install(ContentNegotiation) {
-        jackson {
-            registerKotlinModule()
-            registerModule(JavaTimeModule())
-            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        }
-    }
+fun HttpClientConfig<Apache5EngineConfig>.setupJacksonSerialization() {
+    install(ContentNegotiation) { jackson {} }
 }
 
-fun HttpClientConfig<ApacheEngineConfig>.setupRetry() {
+fun HttpClientConfig<Apache5EngineConfig>.setupRetry() {
     install(HttpRequestRetry) {
         constantDelay(100, 0, false)
         retryOnExceptionIf(3) { request, throwable ->

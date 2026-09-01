@@ -60,10 +60,7 @@ fun Application.setupAuth(
                     hasClientIdAudience(credentials, environment.clientIdTokenX) &&
                         erNiva4(credentials) -> {
                         val principal = JWTPrincipal(credentials.payload)
-                        BrukerPrincipal(
-                            fnr = finnFnrFraToken(principal),
-                            principal = principal,
-                        )
+                        BrukerPrincipal(fnr = finnFnrFraToken(principal), principal = principal)
                     }
                     else -> unauthorized(credentials)
                 }
@@ -108,7 +105,4 @@ fun finnFnrFraToken(principal: JWTPrincipal): String {
     }
 }
 
-data class BrukerPrincipal(
-    val fnr: String,
-    val principal: JWTPrincipal,
-)
+data class BrukerPrincipal(val fnr: String, val principal: JWTPrincipal)

@@ -1,10 +1,6 @@
 package no.nav.syfo.sykmelding.model
 
-data class SporsmalDTO(
-    val tekst: String,
-    val shortName: ShortNameDTO,
-    val svar: SvarDTO,
-)
+data class SporsmalDTO(val tekst: String, val shortName: ShortNameDTO, val svar: SvarDTO)
 
 enum class ShortNameDTO {
     ARBEIDSSITUASJON,
@@ -12,17 +8,14 @@ enum class ShortNameDTO {
     FRAVAER,
     PERIODE,
     FORSIKRING,
-    EGENMELDINGSDAGER
+    EGENMELDINGSDAGER,
 }
 
-data class SvarDTO(
-    val svarType: SvartypeDTO,
-    val svar: String,
-)
+data class SvarDTO(val svarType: SvartypeDTO, val svar: String)
 
 enum class SvartypeDTO {
     ARBEIDSSITUASJON,
     PERIODER,
     JA_NEI,
-    DAGER
+    DAGER,
 }

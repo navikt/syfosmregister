@@ -17,7 +17,7 @@ enum class StatusEvent {
     UTGATT,
     SENDT,
     BEKREFTET,
-    SLETTET
+    SLETTET,
 }
 
 enum class StatusEventDTO {
@@ -26,7 +26,7 @@ enum class StatusEventDTO {
     UTGATT,
     SENDT,
     BEKREFTET,
-    SLETTET
+    SLETTET,
 }
 
 data class SykmeldingSendEvent(
@@ -34,7 +34,7 @@ data class SykmeldingSendEvent(
     val timestamp: OffsetDateTime,
     val arbeidsgiver: ArbeidsgiverStatus,
     val sporsmal: List<Sporsmal>,
-    val brukerSvar: KomplettInnsendtSkjemaSvar?
+    val brukerSvar: KomplettInnsendtSkjemaSvar?,
 )
 
 data class ArbeidsgiverStatus(
@@ -44,11 +44,7 @@ data class ArbeidsgiverStatus(
     val orgnavn: String,
 )
 
-data class Sporsmal(
-    val tekst: String,
-    val shortName: ShortName,
-    val svar: Svar,
-)
+data class Sporsmal(val tekst: String, val shortName: ShortName, val svar: Svar)
 
 data class Svar(
     val sykmeldingId: String,
@@ -63,7 +59,7 @@ enum class ShortName {
     FRAVAER,
     PERIODE,
     FORSIKRING,
-    EGENMELDINGSDAGER
+    EGENMELDINGSDAGER,
 }
 
 enum class Svartype {
@@ -77,5 +73,5 @@ data class SykmeldingBekreftEvent(
     val sykmeldingId: String,
     val timestamp: OffsetDateTime,
     val sporsmal: List<Sporsmal>?,
-    val brukerSvar: KomplettInnsendtSkjemaSvar?
+    val brukerSvar: KomplettInnsendtSkjemaSvar?,
 )

@@ -28,7 +28,7 @@ class SykmeldingStatusConsumerService(
             } catch (ex: Exception) {
                 log.error(
                     "Error reading status from aiven topic, trying again in $DELAY_START milliseconds",
-                    ex
+                    ex,
                 )
                 sykmeldingStatusKafkaConsumer.unsubscribe()
             }
@@ -50,7 +50,7 @@ class SykmeldingStatusConsumerService(
     @WithSpan
     private suspend fun handleStatusEvent(
         sykmeldingId: String,
-        event: SykmeldingStatusKafkaMessageDTO?
+        event: SykmeldingStatusKafkaMessageDTO?,
     ) {
         coroutineScope {
             launch(Dispatchers.IO) {

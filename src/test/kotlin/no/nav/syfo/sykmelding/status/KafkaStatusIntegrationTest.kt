@@ -1,7 +1,6 @@
 package no.nav.syfo.sykmelding.status
 
 import com.auth0.jwk.JwkProviderBuilder
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FunSpec
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
@@ -29,7 +28,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.setupAuth
 import no.nav.syfo.createListener
-import no.nav.syfo.objectMapper
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.persistering.lagreMottattSykmelding
 import no.nav.syfo.persistering.opprettBehandlingsutfall
@@ -70,6 +69,7 @@ import no.nav.syfo.testutil.testBehandlingsutfall
 import no.nav.syfo.testutil.testSykmeldingsdokument
 import no.nav.syfo.testutil.testSykmeldingsopplysninger
 import org.amshove.kluent.shouldBeEqualTo
+import tools.jackson.module.kotlin.readValue
 
 @DelicateCoroutinesApi
 class KafkaStatusIntegrationTest :
@@ -96,13 +96,13 @@ class KafkaStatusIntegrationTest :
                 sendtSykmeldingKafkaProducer,
                 bekreftSykmeldingKafkaProducer,
                 tombstoneProducer,
-                database
+                database,
             )
         val sykmeldingStatusConsumerService =
             SykmeldingStatusConsumerService(
                 consumer,
                 applicationState,
-                mottattSykmeldingStatusService
+                mottattSykmeldingStatusService,
             )
         val sykmeldingerService = SykmeldingerService(database)
 
@@ -135,10 +135,7 @@ class KafkaStatusIntegrationTest :
                         applicationState.ready = false
                     }
 
-                kafkaProducer.send(
-                    getApenEvent(sykmelding),
-                    testSykmeldingsopplysninger.pasientFnr,
-                )
+                kafkaProducer.send(getApenEvent(sykmelding), testSykmeldingsopplysninger.pasientFnr)
 
                 runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
 
@@ -270,7 +267,7 @@ class KafkaStatusIntegrationTest :
                     TidligereArbeidsgiverKafkaDTO("orgNavn", "orgnummer", "1")
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver),
-                    sykmelding.pasientFnr
+                    sykmelding.pasientFnr,
                 )
 
                 runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
@@ -300,7 +297,7 @@ class KafkaStatusIntegrationTest :
                     TidligereArbeidsgiverKafkaDTO("orgNavn", "orgnummer", "1")
                 kafkaProducer.send(
                     getSykmeldingBekreftEvent(sykmelding, tidligereArbeidsgiver),
-                    sykmelding.pasientFnr
+                    sykmelding.pasientFnr,
                 )
 
                 runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
@@ -336,9 +333,9 @@ class KafkaStatusIntegrationTest :
                     getSykmeldingBekreftEvent(
                         sykmelding,
                         tidligereArbeidsgiver1,
-                        timestamp = apenEvent.timestamp.plusMinutes(1)
+                        timestamp = apenEvent.timestamp.plusMinutes(1),
                     ),
-                    sykmelding.pasientFnr
+                    sykmelding.pasientFnr,
                 )
                 val tidligereArbeidsgiver2 = TidligereArbeidsgiverKafkaDTO("ag2", "orgnummer", "1")
 
@@ -346,9 +343,9 @@ class KafkaStatusIntegrationTest :
                     getSykmeldingBekreftEvent(
                         sykmelding,
                         tidligereArbeidsgiver2,
-                        apenEvent.timestamp.plusMinutes(1)
+                        apenEvent.timestamp.plusMinutes(1),
                     ),
-                    sykmelding.pasientFnr
+                    sykmelding.pasientFnr,
                 )
                 runBlocking { this.launch { sykmeldingStatusConsumerService.start() } }
                 val tidligereArbeidsgiverList =
@@ -376,7 +373,7 @@ class KafkaStatusIntegrationTest :
                     getSykmeldingBekreftEvent(
                         sykmelding,
                         tidligereArbeidsgiver1,
-                        apenEvent.timestamp.plusMinutes(1)
+                        apenEvent.timestamp.plusMinutes(1),
                     )
                 val sykmeldingAvbruttEvent =
                     getSykmeldingAvbruttEvent(sykmelding.id, apenEvent.timestamp.plusMinutes(20))
@@ -384,7 +381,7 @@ class KafkaStatusIntegrationTest :
                     sykmeldingStatusService.registrerBekreftet(
                         match { it.timestamp.toString() == bekreftEvent.timestamp.toString() },
                         match { true },
-                        match { true }
+                        match { true },
                     )
                 } answers { callOriginal() }
                 coEvery {
@@ -429,12 +426,7 @@ class KafkaStatusIntegrationTest :
                     val jwkProvider = JwkProviderBuilder(uri).build()
                     setUpTestApplication()
                     application {
-                        setupAuth(
-                            jwkProvider,
-                            "tokenXissuer",
-                            jwkProvider,
-                            getEnvironment(),
-                        )
+                        setupAuth(jwkProvider, "tokenXissuer", jwkProvider, getEnvironment())
                         routing {
                             authenticate("tokenx") {
                                 route("/api/v3") { registrerSykmeldingApiV2(sykmeldingerService) }
@@ -447,7 +439,7 @@ class KafkaStatusIntegrationTest :
                             applicationState,
                             kafkaProducer,
                             sykmelding,
-                            sykmeldingStatusConsumerService
+                            sykmeldingStatusConsumerService,
                         )
                     val response =
                         client.get("/api/v3/sykmeldinger") {
@@ -458,7 +450,7 @@ class KafkaStatusIntegrationTest :
                                         generateJWT(
                                             "syfosoknad",
                                             "clientid",
-                                            subject = "pasientFnr"
+                                            subject = "pasientFnr",
                                         )
                                     }",
                                 )
@@ -468,7 +460,7 @@ class KafkaStatusIntegrationTest :
                     response.status shouldBeEqualTo HttpStatusCode.OK
 
                     val sykmeldingDTO =
-                        objectMapper.readValue<List<SykmeldingDTO>>(response.bodyAsText())[0]
+                        jsonMapper.readValue<List<SykmeldingDTO>>(response.bodyAsText())[0]
                     val latestSykmeldingStatus = sykmeldingDTO.sykmeldingStatus
                     latestSykmeldingStatus shouldBeEqualTo
                         no.nav.syfo.sykmelding.model.SykmeldingStatusDTO(
@@ -486,13 +478,13 @@ class KafkaStatusIntegrationTest :
                                         shortName =
                                             no.nav.syfo.sykmelding.model.ShortNameDTO
                                                 .ARBEIDSSITUASJON,
-                                    ),
+                                    )
                                 ),
                             arbeidsgiver =
                                 no.nav.syfo.sykmelding.status.api.ArbeidsgiverStatusDTO(
                                     "org",
                                     "jorg",
-                                    "navn"
+                                    "navn",
                                 ),
                             statusEvent = "SENDT",
                         )
@@ -538,7 +530,7 @@ private suspend fun publishSendAndWait(
     sykmelding: Sykmeldingsopplysninger,
     sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
     sendTimestamp: OffsetDateTime =
-        sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC)
+        sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
 ): SykmeldingStatusKafkaEventDTO {
     coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers
         {
@@ -570,7 +562,7 @@ private fun getSykmeldingBekreftEvent(
                     "sporsmal",
                     ShortNameKafkaDTO.FORSIKRING,
                     SvartypeKafkaDTO.JA_NEI,
-                    "NEI"
+                    "NEI",
                 )
             ),
         tidligereArbeidsgiver = tidligereArbeidsgiverDTO,
@@ -580,7 +572,7 @@ private fun getSykmeldingBekreftEvent(
 
 fun getSykmeldingAvbruttEvent(
     id: String,
-    timestamp: OffsetDateTime = getNowTickMillisOffsetDateTime()
+    timestamp: OffsetDateTime = getNowTickMillisOffsetDateTime(),
 ) =
     SykmeldingStatusKafkaEventDTO(
         sykmeldingId = id,
@@ -593,7 +585,7 @@ fun getSykmeldingAvbruttEvent(
 
 private fun getSendtEvent(
     sykmelding: Sykmeldingsopplysninger,
-    timestamp: OffsetDateTime = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC)
+    timestamp: OffsetDateTime = sykmelding.mottattTidspunkt.plusMinutes(1).atOffset(ZoneOffset.UTC),
 ): SykmeldingStatusKafkaEventDTO {
     return SykmeldingStatusKafkaEventDTO(
         sykmeldingId = sykmelding.id,
@@ -606,8 +598,8 @@ private fun getSendtEvent(
                     "din arbeidssituasjon?",
                     ShortNameKafkaDTO.ARBEIDSSITUASJON,
                     SvartypeKafkaDTO.ARBEIDSSITUASJON,
-                    "ARBEIDSTAKER"
-                ),
+                    "ARBEIDSTAKER",
+                )
             ),
         brukerSvar = createKomplettInnsendtSkjemaSvar(),
     )
@@ -618,6 +610,6 @@ private fun getApenEvent(sykmelding: Sykmeldingsopplysninger): SykmeldingStatusK
         sykmeldingId = sykmelding.id,
         timestamp = sykmelding.mottattTidspunkt.atOffset(ZoneOffset.UTC),
         statusEvent = STATUS_APEN,
-        brukerSvar = null
+        brukerSvar = null,
     )
 }

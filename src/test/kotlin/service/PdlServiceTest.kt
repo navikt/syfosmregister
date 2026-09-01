@@ -26,10 +26,7 @@ class PdlServiceTest :
         context("Test PdlPersonService") {
             test("Skal kunne hent person fra pdl") {
                 coEvery { accessTokenClientV2.getAccessToken(any()) } returns
-                    AzureAdV2Token(
-                        "token",
-                        OffsetDateTime.now().plusHours(1),
-                    )
+                    AzureAdV2Token("token", OffsetDateTime.now().plusHours(1))
                 coEvery { pdlClient.getPerson(any(), any()) } returns
                     GraphQLResponse(
                         data =
@@ -40,10 +37,10 @@ class PdlServiceTest :
                                             IdentInformasjon(
                                                 ident = "01245678901",
                                                 gruppe = "FOLKEREGISTERIDENT",
-                                                historisk = false
-                                            ),
-                                        ),
-                                    ),
+                                                historisk = false,
+                                            )
+                                        )
+                                    )
                             ),
                         errors = null,
                     )
@@ -54,15 +51,10 @@ class PdlServiceTest :
 
             test("Skal feile når person ikke finnes") {
                 coEvery { accessTokenClientV2.getAccessToken(any()) } returns
-                    AzureAdV2Token(
-                        "token",
-                        OffsetDateTime.now().plusHours(1),
-                    )
+                    AzureAdV2Token("token", OffsetDateTime.now().plusHours(1))
                 coEvery { pdlClient.getPerson(any(), any()) } returns
                     GraphQLResponse(
-                        PdlResponse(
-                            hentIdenter = Identliste(emptyList()),
-                        ),
+                        PdlResponse(hentIdenter = Identliste(emptyList())),
                         errors = null,
                     )
                 val exception =

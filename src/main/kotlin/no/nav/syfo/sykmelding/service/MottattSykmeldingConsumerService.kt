@@ -1,17 +1,17 @@
 package no.nav.syfo.sykmelding.service
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import java.time.Duration
 import kotlinx.coroutines.delay
 import no.nav.syfo.Environment
 import no.nav.syfo.LoggingMeta
 import no.nav.syfo.application.ApplicationState
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.log
 import no.nav.syfo.model.ReceivedSykmelding
-import no.nav.syfo.objectMapper
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import tools.jackson.module.kotlin.readValue
 
 class MottattSykmeldingConsumerService(
     private val applicationState: ApplicationState,
@@ -31,7 +31,7 @@ class MottattSykmeldingConsumerService(
                         env.okSykmeldingTopic,
                         env.manuellSykmeldingTopic,
                         env.avvistSykmeldingTopic,
-                    ),
+                    )
                 )
                 run()
             } catch (ex: Exception) {
@@ -56,7 +56,7 @@ class MottattSykmeldingConsumerService(
 
     @WithSpan
     private suspend fun handleMessageSykmelding(it: ConsumerRecord<String, String>) {
-        val receivedSykmelding: ReceivedSykmelding = objectMapper.readValue(it.value())
+        val receivedSykmelding: ReceivedSykmelding = jsonMapper.readValue(it.value())
         val loggingMeta =
             LoggingMeta(
                 mottakId = receivedSykmelding.navLogId,
@@ -67,7 +67,7 @@ class MottattSykmeldingConsumerService(
         mottattSykmeldingService.handleMessageSykmelding(
             receivedSykmelding,
             loggingMeta,
-            it.topic()
+            it.topic(),
         )
     }
 }

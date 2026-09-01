@@ -41,7 +41,7 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                 } else {
                     call.respond(
                         HttpStatusCode.OK,
-                        sykmeldingerService.getInternalSykmeldinger(fnr, fom, tom)
+                        sykmeldingerService.getInternalSykmeldinger(fnr, fom, tom),
                     )
                 }
             }
@@ -51,8 +51,8 @@ fun Route.registrerSykmeldingServiceuserApiV2(sykmeldingerService: SykmeldingerS
                     HttpStatusCode.OK,
                     sykmeldingerService.getSykmeldtStatusForDato(
                         statusRequest.fnr,
-                        statusRequest.dato
-                    )
+                        statusRequest.dato,
+                    ),
                 )
             }
         }

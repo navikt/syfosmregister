@@ -1,10 +1,10 @@
 package no.nav.syfo.persistering
 
 import java.time.LocalDateTime
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.UtenlandskSykmelding
-import no.nav.syfo.objectMapper
 import org.postgresql.util.PGobject
 
 data class Sykmeldingsopplysninger(
@@ -28,25 +28,22 @@ data class Sykmeldingsopplysninger(
     val utenlandskSykmelding: UtenlandskSykmelding?,
 )
 
-data class Sykmeldingsdokument(
-    val id: String,
-    val sykmelding: Sykmelding,
-)
+data class Sykmeldingsdokument(val id: String, val sykmelding: Sykmelding)
 
 fun Sykmelding.toPGObject() =
     PGobject().also {
         it.type = "json"
-        it.value = objectMapper.writeValueAsString(this)
+        it.value = jsonMapper.writeValueAsString(this)
     }
 
 fun List<Merknad>.toPGObject() =
     PGobject().also {
         it.type = "json"
-        it.value = objectMapper.writeValueAsString(this)
+        it.value = jsonMapper.writeValueAsString(this)
     }
 
 fun UtenlandskSykmelding.toPGObject() =
     PGobject().also {
         it.type = "json"
-        it.value = objectMapper.writeValueAsString(this)
+        it.value = jsonMapper.writeValueAsString(this)
     }

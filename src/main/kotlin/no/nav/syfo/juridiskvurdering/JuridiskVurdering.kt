@@ -1,15 +1,15 @@
 package no.nav.syfo.juridiskvurdering
 
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationContext
-import com.fasterxml.jackson.databind.JsonDeserializer
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import tools.jackson.core.JsonParser
+import tools.jackson.databind.DeserializationContext
+import tools.jackson.databind.ValueDeserializer
+import tools.jackson.databind.annotation.JsonDeserialize
 
-class ZonedDateTimeDeserializer : JsonDeserializer<ZonedDateTime>() {
+class ZonedDateTimeDeserializer : ValueDeserializer<ZonedDateTime>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ZonedDateTime {
         val timestamp = p.text
         return try {
@@ -21,33 +21,31 @@ class ZonedDateTimeDeserializer : JsonDeserializer<ZonedDateTime>() {
     }
 }
 
-data class JuridiskVurderingResult(
-    val juridiskeVurderinger: List<JuridiskVurdering>,
-)
+data class JuridiskVurderingResult(val juridiskeVurderinger: List<JuridiskVurdering>)
 
 enum class JuridiskUtfall {
     VILKAR_OPPFYLT,
     VILKAR_IKKE_OPPFYLT,
     VILKAR_UAVKLART,
-    VILKAR_BEREGNET
+    VILKAR_BEREGNET,
 }
 
 enum class Lovverk(val navn: String, val kortnavn: String, val lovverksversjon: LocalDate) {
     FOLKETRYGDLOVEN(
         navn = "Lov om folketrygd",
         kortnavn = "Folketrygdloven",
-        lovverksversjon = LocalDate.of(2022, 1, 1)
+        lovverksversjon = LocalDate.of(2022, 1, 1),
     ),
     FORVALTNINGSLOVEN(
         navn = "Lov om behandlingsmåten i forvaltningssaker",
         kortnavn = "Forvaltningsloven",
-        lovverksversjon = LocalDate.of(2022, 1, 1)
+        lovverksversjon = LocalDate.of(2022, 1, 1),
     ),
     HELSEPERSONELLOVEN(
         navn = "Lov om helsepersonell m.v.",
         kortnavn = "Helsepersonelloven",
-        lovverksversjon = LocalDate.of(2022, 1, 1)
-    )
+        lovverksversjon = LocalDate.of(2022, 1, 1),
+    ),
 }
 
 data class JuridiskHenvisning(
@@ -69,7 +67,7 @@ data class JuridiskVurdering(
     val sporing: Map<String, String>,
     val input: Map<String, Any>,
     @param:JsonDeserialize(using = ZonedDateTimeDeserializer::class) val tidsstempel: ZonedDateTime,
-    val utfall: JuridiskUtfall
+    val utfall: JuridiskUtfall,
 )
 
 data class TilbakedateringInputs(

@@ -22,7 +22,7 @@ fun getArbeidsgiverSykmelding(id: String): ArbeidsgiverSykmelding {
                 "etternavn",
                 "hpr",
                 AdresseDTO(null, null, null, null, null),
-                null
+                null,
             ),
         behandletTidspunkt = getNowTickMillisOffsetDateTime(),
         prognose = null,
@@ -57,6 +57,6 @@ fun getSykmeldingStatusEvent(id: String): SykmeldingStatusKafkaEventDTO {
         arbeidsgiver = null,
         sporsmals = null,
         statusEvent = STATUS_BEKREFTET,
-        brukerSvar = createKomplettInnsendtSkjemaSvar()
+        brukerSvar = createKomplettInnsendtSkjemaSvar(),
     )
 }

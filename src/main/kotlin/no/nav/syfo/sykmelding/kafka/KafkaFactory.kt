@@ -39,17 +39,17 @@ class KafkaFactory private constructor() {
             val properties =
                 kafkaConfig.toConsumerConfig(
                     "${environment.applicationName}-gcp-consumer",
-                    JacksonKafkaDeserializer::class
+                    JacksonKafkaDeserializer::class,
                 )
             val kafkaConsumer =
                 KafkaConsumer(
                     properties,
                     StringDeserializer(),
-                    JacksonKafkaDeserializer(SykmeldingStatusKafkaMessageDTO::class)
+                    JacksonKafkaDeserializer(SykmeldingStatusKafkaMessageDTO::class),
                 )
             return SykmeldingStatusKafkaConsumer(
                 kafkaConsumer,
-                listOf(environment.sykmeldingStatusAivenTopic)
+                listOf(environment.sykmeldingStatusAivenTopic),
             )
         }
 
@@ -81,7 +81,7 @@ class KafkaFactory private constructor() {
                 KafkaProducer<String, SykmeldingKafkaMessage?>(kafkaProducerProperties)
             return BekreftSykmeldingKafkaProducer(
                 kafkaProducer,
-                environment.bekreftSykmeldingKafkaTopic
+                environment.bekreftSykmeldingKafkaTopic,
             )
         }
 
@@ -98,7 +98,7 @@ class KafkaFactory private constructor() {
                 KafkaProducer<String, MottattSykmeldingKafkaMessage?>(kafkaProducerProperties)
             return MottattSykmeldingKafkaProducer(
                 kafkaProducer,
-                environment.mottattSykmeldingKafkaTopic
+                environment.mottattSykmeldingKafkaTopic,
             )
         }
 
@@ -134,15 +134,15 @@ class KafkaFactory private constructor() {
                     .apply {
                         setProperty(
                             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG,
-                            environment.schemaRegistryUrl
+                            environment.schemaRegistryUrl,
                         )
                         setProperty(
                             KafkaAvroSerializerConfig.USER_INFO_CONFIG,
-                            "${environment.kafkaSchemaRegistryUsername}:${environment.kafkaSchemaRegistryPassword}"
+                            "${environment.kafkaSchemaRegistryUsername}:${environment.kafkaSchemaRegistryPassword}",
                         )
                         setProperty(
                             KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE,
-                            "USER_INFO"
+                            "USER_INFO",
                         )
                     }
                     .toConsumerConfig(

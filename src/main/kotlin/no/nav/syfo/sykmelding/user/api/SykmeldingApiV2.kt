@@ -29,17 +29,17 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                     checkExcludeInclude(exclude, include) ->
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "Can not use both include and exclude"
+                            "Can not use both include and exclude",
                         )
                     checkFomAndTomDate(fom, tom) ->
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "FOM should be before or equal to TOM"
+                            "FOM should be before or equal to TOM",
                         )
                     hasInvalidStatus(exclude ?: include) ->
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "include or exclude can only contain ${StatusEventDTO.entries.joinToString()}"
+                            "include or exclude can only contain ${StatusEventDTO.entries.joinToString()}",
                         )
                     else ->
                         call.respond(
@@ -49,7 +49,7 @@ fun Route.registrerSykmeldingApiV2(sykmeldingerService: SykmeldingerService) {
                                 tom,
                                 include,
                                 exclude,
-                                fullBehandler = false
+                                fullBehandler = false,
                             )
                         )
                 }

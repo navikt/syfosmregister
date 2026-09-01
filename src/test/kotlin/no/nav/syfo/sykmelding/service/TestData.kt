@@ -18,7 +18,7 @@ import no.nav.syfo.testutil.getNowTickMillisLocalDateTime
 
 fun getReceivedSykmelding(
     merknader: List<Merknad>? = null,
-    utenlandskSykmelding: UtenlandskSykmelding? = null
+    utenlandskSykmelding: UtenlandskSykmelding? = null,
 ): ReceivedSykmelding {
     return ReceivedSykmelding(
         sykmelding =
@@ -48,7 +48,7 @@ fun getReceivedSykmelding(
                         svangerskap = false,
                         yrkesskade = false,
                         yrkesskadeDato = null,
-                        annenFraversArsak = null
+                        annenFraversArsak = null,
                     ),
                 meldingTilArbeidsgiver = null,
                 meldingTilNAV = null,
@@ -83,6 +83,6 @@ fun getReceivedSykmelding(
         partnerreferanse = "123456",
         vedlegg = null,
         utenlandskSykmelding = utenlandskSykmelding,
-        validationResult = ValidationResult(status = Status.OK, emptyList())
+        validationResult = ValidationResult(status = Status.OK, emptyList()),
     )
 }

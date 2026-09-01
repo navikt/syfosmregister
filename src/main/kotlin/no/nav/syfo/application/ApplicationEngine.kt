@@ -2,13 +2,9 @@ package no.nav.syfo.application
 
 import com.auth0.jwk.JwkProvider
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson3.jackson
 import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.*
@@ -52,7 +48,7 @@ fun createApplicationEngine(
             applicationState,
             sykmeldingerService,
             tilgangskontrollService,
-            database
+            database,
         )
     }
 
@@ -64,15 +60,11 @@ private fun Application.setup(
     applicationState: ApplicationState,
     sykmeldingerService: SykmeldingerService,
     tilgangskontrollService: TilgangskontrollService,
-    database: DatabaseInterface
+    database: DatabaseInterface,
 ) {
     install(ContentNegotiation) {
         jackson {
-            registerKotlinModule()
-            registerModule(JavaTimeModule())
-            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            changeDefaultPropertyInclusion { it.withValueInclusion(JsonInclude.Include.NON_NULL) }
         }
     }
     setupAuth(
@@ -102,7 +94,7 @@ private fun Application.setup(
                 registrerSykmeldingServiceuserApiV2(sykmeldingerService)
                 registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
                 registrerServiceuserPapirsykmeldingApi(
-                    papirsykmeldingService = PapirsykmeldingService(database),
+                    papirsykmeldingService = PapirsykmeldingService(database)
                 )
             }
         }

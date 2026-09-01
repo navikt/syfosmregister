@@ -39,15 +39,10 @@ class MottattSykmeldingServiceTest :
                 database = database,
                 mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
                 mottattSykmeldingStatusService = mottattSykmeldingStatusService,
-                sykmeldingStatusService = sykmeldingStatusService
+                sykmeldingStatusService = sykmeldingStatusService,
             )
         val loggingMeta =
-            LoggingMeta(
-                sykmeldingId = "123",
-                msgId = "123",
-                mottakId = "123",
-                orgNr = "123",
-            )
+            LoggingMeta(sykmeldingId = "123", msgId = "123", mottakId = "123", orgNr = "123")
         afterTest {
             clearAllMocks()
             database.connection.dropData()
@@ -67,12 +62,12 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
 
                 coVerify(exactly = 2) {
@@ -81,7 +76,7 @@ class MottattSykmeldingServiceTest :
                 coVerify(exactly = 1) {
                     mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                         receivedSykmelding.sykmelding.id,
-                        receivedSykmelding.personNrPasient
+                        receivedSykmelding.personNrPasient,
                     )
                 }
             }
@@ -94,7 +89,7 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
 
                 val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
@@ -115,7 +110,7 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
 
                 val merknader = database.connection.getMerknaderForId("1")
@@ -133,7 +128,7 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.manuellSykmeldingTopic
+                    environment.manuellSykmeldingTopic,
                 )
 
                 val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
@@ -149,7 +144,7 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.avvistSykmeldingTopic
+                    environment.avvistSykmeldingTopic,
                 )
 
                 val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
@@ -167,7 +162,7 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
 
                 val lagretSykmelding = database.connection.getSykmeldingsopplysninger("1")

@@ -12,14 +12,14 @@ const val STATUS_SLETTET = "SLETTET"
 data class ArbeidsgiverStatusKafkaDTO(
     val orgnummer: String,
     val juridiskOrgnummer: String? = null,
-    val orgNavn: String
+    val orgNavn: String,
 )
 
 data class SporsmalOgSvarKafkaDTO(
     val tekst: String,
     val shortName: ShortNameKafkaDTO,
     val svartype: SvartypeKafkaDTO,
-    val svar: String
+    val svar: String,
 )
 
 enum class ShortNameKafkaDTO {

@@ -76,24 +76,15 @@ class MottattSykmeldingStatusServiceTest :
                         Sporsmal(
                             "ARBEIDSGIVER",
                             ShortName.ARBEIDSSITUASJON,
-                            Svar(
-                                sykmeldingId,
-                                null,
-                                Svartype.ARBEIDSSITUASJON,
-                                "ARBEIDSTAKER",
-                            ),
-                        ),
+                            Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                        )
                     )
                 coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns
-                    ArbeidsgiverDbModel(
-                        "orgnummer",
-                        "juridisk",
-                        "orgnavn",
-                    )
+                    ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
 
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                     sykmeldingId,
-                    "123"
+                    "123",
                 )
 
                 coVerify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -108,28 +99,19 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns
-                    ArbeidsgiverDbModel(
-                        "orgnummer",
-                        "juridisk",
-                        "orgnavn",
-                    )
+                    ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
                 coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns
                     listOf(
                         Sporsmal(
                             "ARBEIDSGIVER",
                             ShortName.ARBEIDSSITUASJON,
-                            Svar(
-                                sykmeldingId,
-                                null,
-                                Svartype.ARBEIDSSITUASJON,
-                                "ARBEIDSTAKER",
-                            ),
-                        ),
+                            Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                        )
                     )
 
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                     sykmeldingId,
-                    "123"
+                    "123",
                 )
 
                 coVerify(exactly = 1) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -147,7 +129,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                     sykmeldingId,
-                    "123"
+                    "123",
                 )
 
                 coVerify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -169,7 +151,7 @@ class MottattSykmeldingStatusServiceTest :
                 assertFailsWith<RuntimeException> {
                     mottattSykmeldingStatusService.handleStatusEvent(
                         sykmeldingId,
-                        opprettSendtStatusmelding()
+                        opprettSendtStatusmelding(),
                     )
                 }
                 coVerify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
@@ -187,7 +169,7 @@ class MottattSykmeldingStatusServiceTest :
                 assertFailsWith<RuntimeException> {
                     mottattSykmeldingStatusService.handleStatusEvent(
                         sykmeldingId,
-                        opprettBekreftStatusmelding()
+                        opprettBekreftStatusmelding(),
                     )
                 }
                 coVerify(exactly = 0) {
@@ -207,7 +189,7 @@ class MottattSykmeldingStatusServiceTest :
                 assertFailsWith<RuntimeException> {
                     mottattSykmeldingStatusService.handleStatusEvent(
                         sykmeldingId,
-                        opprettSlettetStatusmelding()
+                        opprettSlettetStatusmelding(),
                     )
                 }
                 coVerify(exactly = 0) { sykmeldingStatusService.slettSykmelding(any()) }
@@ -225,7 +207,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEvent(
                     sykmeldingId,
-                    opprettBekreftStatusmelding()
+                    opprettBekreftStatusmelding(),
                 )
 
                 coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
@@ -241,7 +223,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEvent(
                     sykmeldingId,
-                    opprettBekreftStatusmeldingAvvistSykmelding()
+                    opprettBekreftStatusmeldingAvvistSykmelding(),
                 )
 
                 coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
@@ -262,7 +244,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEvent(
                     sykmeldingId,
-                    opprettSendtStatusmelding(erSvarOppdatering = true)
+                    opprettSendtStatusmelding(erSvarOppdatering = true),
                 )
 
                 coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -281,7 +263,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEvent(
                     sykmeldingId,
-                    opprettSendtStatusmelding(erSvarOppdatering = false)
+                    opprettSendtStatusmelding(erSvarOppdatering = false),
                 )
 
                 coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -307,7 +289,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                     sykmeldingId,
-                    "123"
+                    "123",
                 )
 
                 coVerify {
@@ -323,12 +305,7 @@ val sykmeldingId = UUID.randomUUID().toString()
 
 private fun opprettSendtStatusmelding(erSvarOppdatering: Boolean = false) =
     SykmeldingStatusKafkaMessageDTO(
-        KafkaMetadataDTO(
-            sykmeldingId,
-            getNowTickMillisOffsetDateTime(),
-            "fnr",
-            "user",
-        ),
+        KafkaMetadataDTO(sykmeldingId, getNowTickMillisOffsetDateTime(), "fnr", "user"),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
@@ -339,65 +316,50 @@ private fun opprettSendtStatusmelding(erSvarOppdatering: Boolean = false) =
                     "tekst",
                     ShortNameKafkaDTO.ARBEIDSSITUASJON,
                     SvartypeKafkaDTO.ARBEIDSSITUASJON,
-                    "svar"
+                    "svar",
                 )
             ),
             erSvarOppdatering = erSvarOppdatering,
-            brukerSvar = createKomplettInnsendtSkjemaSvar()
+            brukerSvar = createKomplettInnsendtSkjemaSvar(),
         ),
     )
 
 private fun opprettBekreftStatusmelding() =
     SykmeldingStatusKafkaMessageDTO(
-        KafkaMetadataDTO(
-            sykmeldingId,
-            getNowTickMillisOffsetDateTime(),
-            "fnr",
-            "user",
-        ),
+        KafkaMetadataDTO(sykmeldingId, getNowTickMillisOffsetDateTime(), "fnr", "user"),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "BEKREFTET",
             null,
             emptyList(),
-            brukerSvar = createKomplettInnsendtSkjemaSvar()
+            brukerSvar = createKomplettInnsendtSkjemaSvar(),
         ),
     )
 
 private fun opprettBekreftStatusmeldingAvvistSykmelding() =
     SykmeldingStatusKafkaMessageDTO(
-        KafkaMetadataDTO(
-            sykmeldingId,
-            getNowTickMillisOffsetDateTime(),
-            "fnr",
-            "user",
-        ),
+        KafkaMetadataDTO(sykmeldingId, getNowTickMillisOffsetDateTime(), "fnr", "user"),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "BEKREFTET",
             null,
             null,
-            brukerSvar = null
+            brukerSvar = null,
         ),
     )
 
 private fun opprettSlettetStatusmelding() =
     SykmeldingStatusKafkaMessageDTO(
-        KafkaMetadataDTO(
-            sykmeldingId,
-            getNowTickMillisOffsetDateTime(),
-            "fnr",
-            "user",
-        ),
+        KafkaMetadataDTO(sykmeldingId, getNowTickMillisOffsetDateTime(), "fnr", "user"),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "SLETTET",
             null,
             emptyList(),
-            brukerSvar = null
+            brukerSvar = null,
         ),
     )
 
@@ -416,7 +378,7 @@ private fun opprettArbeidsgiverSykmelding(): ArbeidsgiverSykmelding =
                 "etternavn",
                 null,
                 AdresseDTO(null, null, null, null, null),
-                null
+                null,
             ),
         sykmeldingsperioder = emptyList(),
         arbeidsgiver = ArbeidsgiverAGDTO(null, null),

@@ -1,7 +1,7 @@
 package no.nav.syfo
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.syfo.metrics.PreAuthorizedApp
+import tools.jackson.module.kotlin.readValue
 
 data class Environment(
     val applicationPort: Int = getEnvVar("APPLICATION_PORT", "8080").toInt(),
@@ -37,7 +37,7 @@ data class Environment(
     val electorPath: String = getEnvVar("ELECTOR_PATH"),
     val juridiskVurderingTopic: String = "teamsykmelding.paragraf-i-kode",
     val preAuthorizedApp: List<PreAuthorizedApp> =
-        System.getenv("AZURE_APP_PRE_AUTHORIZED_APPS")?.let { objectMapper.readValue(it) }
+        System.getenv("AZURE_APP_PRE_AUTHORIZED_APPS")?.let { jsonMapper.readValue(it) }
             ?: emptyList(),
 ) {
     fun jdbcUrl(): String {
@@ -47,4 +47,5 @@ data class Environment(
 
 fun getEnvVar(varName: String, defaultValue: String? = null) =
     System.getenv(varName)
-        ?: defaultValue ?: throw RuntimeException("Missing required variable \"$varName\"")
+        ?: defaultValue
+        ?: throw RuntimeException("Missing required variable \"$varName\"")

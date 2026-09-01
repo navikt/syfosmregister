@@ -53,7 +53,4 @@ class DatebaseTimestampTest :
     })
 
 private fun behandlingsutfall(id: String) =
-    Behandlingsutfall(
-        id = id,
-        behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-    )
+    Behandlingsutfall(id = id, behandlingsutfall = ValidationResult(Status.OK, emptyList()))
