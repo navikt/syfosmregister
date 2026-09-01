@@ -8,7 +8,7 @@ import no.nav.syfo.db.DatabaseInterface
 
 suspend fun DatabaseInterface.lagreMottattSykmelding(
     sykmeldingsopplysninger: Sykmeldingsopplysninger,
-    sykmeldingsdokument: Sykmeldingsdokument
+    sykmeldingsdokument: Sykmeldingsdokument,
 ) =
     withContext(Dispatchers.IO) {
         connection.use { connection ->
@@ -34,7 +34,7 @@ private fun Connection.updateSykmeldingsdokument(sykmeldingsdokument: Sykmelding
     prepareStatement(
             """
             update SYKMELDINGSDOKUMENT set id = ?, sykmelding = ? where id = ?;
-            """,
+            """
         )
         .use {
             it.setString(1, sykmeldingsdokument.id)
@@ -67,7 +67,7 @@ private fun Connection.updateSykmeldingsopplysninger(
             partnerreferanse = ?,
             utenlandsk_sykmelding = ?
         where id = ?;
-    """,
+    """
         )
         .use {
             var i = 1
@@ -117,7 +117,7 @@ private fun Connection.opprettSykmeldingsopplysninger(
                 partnerreferanse,
                 utenlandsk_sykmelding)
             VALUES  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
+            """
         )
         .use {
             var i = 1
@@ -146,7 +146,7 @@ private fun Connection.opprettSykmeldingsdokument(sykmeldingsdokument: Sykmeldin
     prepareStatement(
             """
             INSERT INTO SYKMELDINGSDOKUMENT(id, sykmelding) VALUES  (?, ?)
-            """,
+            """
         )
         .use {
             it.setString(1, sykmeldingsdokument.id)
@@ -161,7 +161,7 @@ suspend fun DatabaseInterface.updateBehandlingsutfall(behandlingsutfall: Behandl
                 .prepareStatement(
                     """
            update behandlingsutfall set behandlingsutfall = ? where id = ?;
-        """,
+        """
                 )
                 .use {
                     it.setObject(1, behandlingsutfall.behandlingsutfall.toPGObject())
@@ -179,7 +179,7 @@ suspend fun DatabaseInterface.opprettBehandlingsutfall(behandlingsutfall: Behand
                 .prepareStatement(
                     """
                     INSERT INTO BEHANDLINGSUTFALL(id, behandlingsutfall) VALUES (?, ?)
-                """,
+                """
                 )
                 .use {
                     it.setString(1, behandlingsutfall.id)
@@ -200,7 +200,7 @@ suspend fun DatabaseInterface.erSykmeldingsopplysningerLagret(sykmeldingsid: Str
                 SELECT *
                 FROM SYKMELDINGSOPPLYSNINGER
                 WHERE id=?;
-                """,
+                """
                 )
                 .use {
                     it.setString(1, sykmeldingsid)
@@ -218,7 +218,7 @@ suspend fun DatabaseInterface.erBehandlingsutfallLagret(sykmeldingsid: String) =
                 SELECT *
                 FROM BEHANDLINGSUTFALL
                 WHERE id=?;
-                """,
+                """
                 )
                 .use {
                     it.setString(1, sykmeldingsid)

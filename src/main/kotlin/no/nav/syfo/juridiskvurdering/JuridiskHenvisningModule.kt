@@ -19,7 +19,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 fun Application.createAndStartConsumer(
     env: Environment,
     databaseInterface: DatabaseInterface,
-    applicationState: ApplicationState
+    applicationState: ApplicationState,
 ) {
 
     val kafkaConfig =
@@ -31,14 +31,14 @@ fun Application.createAndStartConsumer(
         KafkaConsumer(
             kafkaConfig.toConsumerConfig("juridisk-vurdering-consumer", StringDeserializer::class),
             StringDeserializer(),
-            StringDeserializer()
+            StringDeserializer(),
         )
 
     val juridiskVurderingKafkaConsumer =
         JuridiskVurderingKafkaConsumer(
             kafkaConsumer,
             JuridiskVurderingDB(databaseInterface),
-            env.juridiskVurderingTopic
+            env.juridiskVurderingTopic,
         )
 
     val job = GlobalScope.launch(Dispatchers.IO) { juridiskVurderingKafkaConsumer.start() }

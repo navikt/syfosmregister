@@ -34,8 +34,7 @@ class IdentendringService(
             val nyttFnr =
                 identListe
                     .find { it.type == IdentType.FOLKEREGISTERIDENT && it.gjeldende }
-                    ?.idnummer
-                    ?: throw IllegalStateException("Mangler gyldig fnr!")
+                    ?.idnummer ?: throw IllegalStateException("Mangler gyldig fnr!")
 
             val tidligereFnr =
                 identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
@@ -51,9 +50,7 @@ class IdentendringService(
                     sykmeldinger.filter {
                         it.status.statusEvent == STATUS_SENDT &&
                             finnSisteTom(it.sykmeldingsDokument.perioder)
-                                .isAfter(
-                                    LocalDate.now().minusMonths(4),
-                                )
+                                .isAfter(LocalDate.now().minusMonths(4))
                     }
                 log.info("Resender ${sendteSykmeldingerSisteFireMnd.size} sendte sykmeldinger")
                 sendteSykmeldingerSisteFireMnd.forEach {
@@ -93,7 +90,7 @@ class IdentendringService(
 
     private suspend fun getKafkaMessage(
         sykmelding: SykmeldingDbModelUtenBehandlingsutfall,
-        nyttFnr: String
+        nyttFnr: String,
     ): SykmeldingKafkaMessage {
         val sendtSykmelding = sykmelding.toArbeidsgiverSykmelding()
         val alleSpm = database.getAlleSpm(sykmelding.id)
@@ -120,9 +117,9 @@ class IdentendringService(
                         shortName = ShortNameKafkaDTO.ARBEIDSSITUASJON,
                         svartype = SvartypeKafkaDTO.ARBEIDSSITUASJON,
                         svar = "ARBEIDSTAKER",
-                    ),
+                    )
                 ),
-                brukerSvar = alleSpm
+                brukerSvar = alleSpm,
             )
         return SykmeldingKafkaMessage(sendtSykmelding, metadata, sendEvent)
     }

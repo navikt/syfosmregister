@@ -81,7 +81,7 @@ fun getSykmeldingDto(perioder: List<SykmeldingsperiodeDTO> = getPerioder()): Syk
                 "APEN",
                 getNowTickMillisOffsetDateTime(),
                 null,
-                emptyList()
+                emptyList(),
             ),
         behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
         medisinskVurdering = getMedisinskVurdering(),
@@ -139,7 +139,7 @@ fun getPerioder(): List<SykmeldingsperiodeDTO> {
             null,
             PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
             null,
-            false
+            false,
         )
     )
 }
@@ -154,14 +154,14 @@ fun getGradertePerioder(): List<SykmeldingsperiodeDTO> {
             null,
             PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
             null,
-            false
+            false,
         )
     )
 }
 
 fun getSykmeldingerDBmodel(
     skjermet: Boolean = false,
-    perioder: List<Periode> = emptyList()
+    perioder: List<Periode> = emptyList(),
 ): SykmeldingDbModel {
     return SykmeldingDbModel(
         id = "123",
@@ -215,11 +215,7 @@ fun getSykmeldingerDBmodel(
                         Adresse(null, null, null, null, null),
                         null,
                     ),
-                kontaktMedPasient =
-                    KontaktMedPasient(
-                        LocalDate.now(),
-                        "Begrunnelse",
-                    ),
+                kontaktMedPasient = KontaktMedPasient(LocalDate.now(), "Begrunnelse"),
                 utdypendeOpplysninger = emptyMap(),
                 msgId = "msgid",
                 pasientAktoerId = "aktorId",
@@ -239,7 +235,7 @@ fun getPeriode(fom: LocalDate, tom: LocalDate, gradert: Gradert? = null): Period
         aktivitetIkkeMulig =
             AktivitetIkkeMulig(
                 medisinskArsak = MedisinskArsak("beskrivelse", emptyList()),
-                arbeidsrelatertArsak = null
+                arbeidsrelatertArsak = null,
             ),
         gradert = gradert,
         behandlingsdager = null,
@@ -252,7 +248,7 @@ fun getSykmeldingerDBmodelEgenmeldt(
     hovediagnosekode: String = "kode",
     bidiagnoser: List<Diagnose> = emptyList(),
     avsenderSystem: AvsenderSystem = AvsenderSystem("Nobody", "versjon"),
-    perioder: List<Periode> = emptyList()
+    perioder: List<Periode> = emptyList(),
 ): SykmeldingDbModel {
     return SykmeldingDbModel(
         id = "123",
@@ -306,11 +302,7 @@ fun getSykmeldingerDBmodelEgenmeldt(
                         Adresse(null, null, null, null, null),
                         null,
                     ),
-                kontaktMedPasient =
-                    KontaktMedPasient(
-                        LocalDate.now(),
-                        "Begrunnelse",
-                    ),
+                kontaktMedPasient = KontaktMedPasient(LocalDate.now(), "Begrunnelse"),
                 utdypendeOpplysninger = emptyMap(),
                 msgId = "msgid",
                 pasientAktoerId = "aktorId",
@@ -362,7 +354,7 @@ fun getPapirsykmeldingDbModel(
                             behandlingsdager = null,
                             gradert = null,
                             reisetilskudd = false,
-                        ),
+                        )
                     ),
                 prognose = null,
                 utdypendeOpplysninger = emptyMap(),

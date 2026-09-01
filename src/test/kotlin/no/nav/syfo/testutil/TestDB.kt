@@ -1,6 +1,5 @@
 package no.nav.syfo.testutil
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
 import java.sql.Connection
@@ -15,6 +14,7 @@ import no.nav.syfo.Environment
 import no.nav.syfo.db.Database
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.model.Adresse
 import no.nav.syfo.model.AktivitetIkkeMulig
 import no.nav.syfo.model.AnnenFraversArsak
@@ -40,12 +40,12 @@ import no.nav.syfo.model.Sykmelding
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
-import no.nav.syfo.objectMapper
 import no.nav.syfo.persistering.Behandlingsutfall
 import no.nav.syfo.persistering.Sykmeldingsdokument
 import no.nav.syfo.persistering.Sykmeldingsopplysninger
 import no.nav.syfo.sykmelding.db.Merknad
 import org.testcontainers.containers.PostgreSQLContainer
+import tools.jackson.module.kotlin.readValue
 
 class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:14")
 
@@ -103,7 +103,7 @@ suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<Tidl
                     SELECT *
                     FROM tidligere_arbeidsgiver 
                     WHERE sykmelding_id = ?
-                    """,
+                    """
                 )
                 .use { preparedStatement ->
                     preparedStatement.setString(1, sykmeldingId)
@@ -114,7 +114,7 @@ suspend fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<Tidl
 
 data class TidligereArbeidsgiver(
     val sykmeldingId: String,
-    val tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+    val tidligereArbeidsgiver: TidligereArbeidsgiverDTO,
 )
 
 private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
@@ -122,8 +122,8 @@ private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
         sykmeldingId = getString("sykmelding_id"),
         tidligereArbeidsgiver =
             getString("tidligere_arbeidsgiver").let {
-                objectMapper.readValue<TidligereArbeidsgiverDTO>(it)
-            }
+                jsonMapper.readValue<TidligereArbeidsgiverDTO>(it)
+            },
     )
 
 fun Connection.getMerknaderForId(id: String): List<Merknad>? = use {
@@ -132,7 +132,7 @@ fun Connection.getMerknaderForId(id: String): List<Merknad>? = use {
                     SELECT merknader 
                     FROM sykmeldingsopplysninger
                     where id = ?
-            """,
+            """
         )
         .use { ps ->
             ps.setString(1, id)
@@ -164,7 +164,7 @@ fun Connection.getSykmeldingsopplysninger(id: String): Sykmeldingsopplysninger? 
                 utenlandsk_sykmelding
             FROM SYKMELDINGSOPPLYSNINGER 
             WHERE id = ?;
-        """,
+        """
             )
             .use {
                 it.setString(1, id)
@@ -192,18 +192,18 @@ private fun ResultSet.toSykmeldingsopplysninger(): Sykmeldingsopplysninger {
         tssid = getString("tss_id"),
         merknader =
             getString("merknader")?.let {
-                objectMapper.readValue<List<no.nav.syfo.model.Merknad>>(it)
+                jsonMapper.readValue<List<no.nav.syfo.model.Merknad>>(it)
             },
         partnerreferanse = getString("partnerreferanse"),
         utenlandskSykmelding =
             getString("utenlandsk_sykmelding")?.let {
-                objectMapper.readValue<UtenlandskSykmelding>(it)
+                jsonMapper.readValue<UtenlandskSykmelding>(it)
             },
     )
 }
 
 private fun ResultSet.tilMerknadliste(): List<Merknad>? {
-    return getString("merknader")?.let { objectMapper.readValue<List<Merknad>>(it) }
+    return getString("merknader")?.let { jsonMapper.readValue<List<Merknad>>(it) }
 }
 
 val testSykmeldingsopplysninger =
@@ -243,11 +243,7 @@ val testSykmeldingsdokument =
                         yrkesbetegnelse = "aktiv",
                         stillingsprosent = 100,
                     ),
-                avsenderSystem =
-                    AvsenderSystem(
-                        navn = "avsenderSystem",
-                        versjon = "versjon-1.0",
-                    ),
+                avsenderSystem = AvsenderSystem(navn = "avsenderSystem", versjon = "versjon-1.0"),
                 behandler =
                     Behandler(
                         fornavn = "Fornavn",
@@ -270,10 +266,7 @@ val testSykmeldingsdokument =
                 behandletTidspunkt = getNowTickMillisLocalDateTime(),
                 id = "uuid",
                 kontaktMedPasient =
-                    KontaktMedPasient(
-                        kontaktDato = null,
-                        begrunnelseIkkeKontakt = null,
-                    ),
+                    KontaktMedPasient(kontaktDato = null, begrunnelseIkkeKontakt = null),
                 medisinskVurdering =
                     MedisinskVurdering(
                         hovedDiagnose = Diagnose("2.16.578.1.12.4.1.1.7170", "Z01", "Brukket fot"),
@@ -301,7 +294,7 @@ val testSykmeldingsdokument =
                             behandlingsdager = null,
                             gradert = Gradert(false, 0),
                             reisetilskudd = false,
-                        ),
+                        )
                     ),
                 prognose =
                     Prognose(
@@ -311,7 +304,7 @@ val testSykmeldingsdokument =
                             egetArbeidPaSikt = false,
                             annetArbeidPaSikt = false,
                             arbeidFOM = null,
-                            vurderingsdato = null
+                            vurderingsdato = null,
                         ),
                         ErIkkeIArbeid(false, null, null),
                     ),
@@ -332,32 +325,29 @@ fun getUtdypendeOpplysninger(): Map<String, Map<String, SporsmalSvar>> {
         SporsmalSvar(
             sporsmal = "Beskriv kort sykehistorie, symptomer og funn i dagens situasjon.",
             svar = "Veldig syk med masse feber.",
-            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
         )
     map62["6.2.2"] =
         SporsmalSvar(
             sporsmal = "sporsaml",
             svar = "svar",
-            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
         )
     map62["6.2.3"] =
         SporsmalSvar(
             sporsmal = "sporsmal",
             svar = "svar",
-            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
         )
     map62["6.2.4"] =
         SporsmalSvar(
             sporsmal = "sporsmal",
             svar = "svar",
-            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER)
+            restriksjoner = listOf(SvarRestriksjon.SKJERMET_FOR_ARBEIDSGIVER),
         )
     map["6.2"] = map62
     return map
 }
 
 val testBehandlingsutfall =
-    Behandlingsutfall(
-        id = "uuid",
-        behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-    )
+    Behandlingsutfall(id = "uuid", behandlingsutfall = ValidationResult(Status.OK, emptyList()))

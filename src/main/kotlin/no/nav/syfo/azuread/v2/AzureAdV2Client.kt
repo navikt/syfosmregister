@@ -22,40 +22,30 @@ class AzureAdV2Client(
 ) {
 
     /** Returns a non-obo access token authenticated using app specific client credentials */
-    suspend fun getAccessToken(
-        scope: String,
-    ): AzureAdV2Token? {
+    suspend fun getAccessToken(scope: String): AzureAdV2Token? {
         return azureAdV2Cache.getToken(scope)
             ?: getClientSecretAccessToken(scope)?.let { azureAdV2Cache.putValue(scope, it) }
     }
 
-    private suspend fun getClientSecretAccessToken(
-        scope: String,
-    ): AzureAdV2Token? {
+    private suspend fun getClientSecretAccessToken(scope: String): AzureAdV2Token? {
         return getOboAccessToken(
                 Parameters.build {
                     append("client_id", azureAppClientId)
                     append("client_secret", azureAppClientSecret)
                     append("scope", scope)
                     append("grant_type", "client_credentials")
-                },
+                }
             )
             ?.toAzureAdV2Token()
     }
 
     /** Returns a obo-token for a given user */
-    suspend fun getOnBehalfOfToken(
-        scope: String,
-        token: String,
-    ): AzureAdV2Token? {
+    suspend fun getOnBehalfOfToken(scope: String, token: String): AzureAdV2Token? {
         return azureAdV2Cache.getToken(token)
             ?: getOboAccessToken(token, scope)?.let { azureAdV2Cache.putValue(token, it) }
     }
 
-    private suspend fun getOboAccessToken(
-        token: String,
-        scopeClientId: String,
-    ): AzureAdV2Token? {
+    private suspend fun getOboAccessToken(token: String, scopeClientId: String): AzureAdV2Token? {
         return getOboAccessToken(
                 Parameters.build {
                     append("client_id", azureAppClientId)
@@ -65,14 +55,12 @@ class AzureAdV2Client(
                     append("assertion", token)
                     append("scope", scopeClientId)
                     append("requested_token_use", "on_behalf_of")
-                },
+                }
             )
             ?.toAzureAdV2Token()
     }
 
-    private suspend fun getOboAccessToken(
-        formParameters: Parameters,
-    ): AzureAdV2TokenResponse? {
+    private suspend fun getOboAccessToken(formParameters: Parameters): AzureAdV2TokenResponse? {
         return try {
             val response: HttpResponse =
                 httpClient.post(azureTokenEndpoint) {
@@ -83,13 +71,13 @@ class AzureAdV2Client(
         } catch (e: ClientRequestException) {
             log.warn(
                 "Client error while requesting AzureAdAccessToken with statusCode=${e.response.status.value}",
-                e
+                e,
             )
             return null
         } catch (e: ServerResponseException) {
             log.error(
                 "Server error while requesting AzureAdAccessToken with statusCode=${e.response.status.value}",
-                e
+                e,
             )
             return null
         } catch (e: Exception) {

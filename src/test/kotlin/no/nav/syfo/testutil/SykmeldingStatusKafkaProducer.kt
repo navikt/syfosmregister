@@ -18,7 +18,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 
 class SykmeldingStatusKafkaProducer(
     private val kafkaProducer: KafkaProducer<String, SykmeldingStatusKafkaMessageDTO>,
-    private val topicName: String
+    private val topicName: String,
 ) {
     suspend fun send(sykmeldingStatusKafkaEventDTO: SykmeldingStatusKafkaEventDTO, fnr: String) {
 
@@ -28,7 +28,7 @@ class SykmeldingStatusKafkaProducer(
                     sykmeldingStatusKafkaEventDTO.sykmeldingId,
                     OffsetDateTime.now(ZoneOffset.UTC),
                     fnr,
-                    "syfosmregister"
+                    "syfosmregister",
                 ),
                 sykmeldingStatusKafkaEventDTO,
             )
@@ -39,7 +39,7 @@ class SykmeldingStatusKafkaProducer(
                         ProducerRecord(
                             topicName,
                             sykmeldingStatusKafkaEventDTO.sykmeldingId,
-                            sykmeldingStatusKafkaMessageDTO
+                            sykmeldingStatusKafkaMessageDTO,
                         )
                     )
                     .get()
@@ -47,7 +47,7 @@ class SykmeldingStatusKafkaProducer(
         } catch (e: Exception) {
             log.error(
                 "Kunne ikke skrive til status-topic for sykmeldingid ${sykmeldingStatusKafkaEventDTO.sykmeldingId}: {}",
-                e.message
+                e.message,
             )
             throw e
         }

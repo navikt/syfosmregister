@@ -22,7 +22,7 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
             SykmeldingStatusEvent(
                 sykmeldingSendEvent.sykmeldingId,
                 sykmeldingSendEvent.timestamp,
-                StatusEvent.SENDT
+                StatusEvent.SENDT,
             ),
     ) {
         database.registrerSendt(sykmeldingSendEvent, sykmeldingStatusEvent)
@@ -34,14 +34,14 @@ class SykmeldingStatusService(private val database: DatabaseInterface) {
             SykmeldingStatusEvent(
                 sykmeldingBekreftEvent.sykmeldingId,
                 sykmeldingBekreftEvent.timestamp,
-                StatusEvent.BEKREFTET
+                StatusEvent.BEKREFTET,
             ),
-        tidligereArbeidsgiver: TidligereArbeidsgiverKafkaDTO?
+        tidligereArbeidsgiver: TidligereArbeidsgiverKafkaDTO?,
     ) {
         database.registrerBekreftet(
             sykmeldingBekreftEvent,
             sykmeldingStatusEvent,
-            tidligereArbeidsgiver
+            tidligereArbeidsgiver,
         )
     }
 

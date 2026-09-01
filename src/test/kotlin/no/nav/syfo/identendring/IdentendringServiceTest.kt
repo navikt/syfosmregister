@@ -65,7 +65,7 @@ class IdentendringServiceTest :
                         Ident(
                             idnummer = "1234",
                             gjeldende = true,
-                            type = IdentType.FOLKEREGISTERIDENT
+                            type = IdentType.FOLKEREGISTERIDENT,
                         ),
                         Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
                         Ident(idnummer = "2222", gjeldende = false, type = IdentType.AKTORID),
@@ -80,13 +80,13 @@ class IdentendringServiceTest :
                         Ident(
                             idnummer = "1234",
                             gjeldende = true,
-                            type = IdentType.FOLKEREGISTERIDENT
+                            type = IdentType.FOLKEREGISTERIDENT,
                         ),
                         Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
                         Ident(
                             idnummer = "2222",
                             gjeldende = false,
-                            type = IdentType.FOLKEREGISTERIDENT
+                            type = IdentType.FOLKEREGISTERIDENT,
                         ),
                     )
 
@@ -104,12 +104,12 @@ class IdentendringServiceTest :
                         Ident(
                             idnummer = "1234",
                             gjeldende = true,
-                            type = IdentType.FOLKEREGISTERIDENT
+                            type = IdentType.FOLKEREGISTERIDENT,
                         ),
                         Ident(
                             idnummer = gammeltFnr,
                             gjeldende = false,
-                            type = IdentType.FOLKEREGISTERIDENT
+                            type = IdentType.FOLKEREGISTERIDENT,
                         ),
                     )
 
@@ -121,7 +121,7 @@ class IdentendringServiceTest :
                     gammeltFnr = gammeltFnr,
                     idNySykmelding = idNySykmelding,
                     idSendtSykmelding = idSendtSykmelding,
-                    idGammelSendtSykmelding = idGammelSendtSykmelding
+                    idGammelSendtSykmelding = idGammelSendtSykmelding,
                 )
 
                 coEvery { pdlService.getPdlPerson(any()) } returns
@@ -146,20 +146,20 @@ class IdentendringServiceTest :
                     gammeltFnr = gammeltFnr,
                     idNySykmelding = idNySykmelding,
                     idSendtSykmelding = idSendtSykmelding,
-                    idGammelSendtSykmelding = idGammelSendtSykmelding
+                    idGammelSendtSykmelding = idGammelSendtSykmelding,
                 )
                 val identListe =
                     listOf(
                         Ident(
                             idnummer = nyttFnr,
                             gjeldende = true,
-                            type = IdentType.FOLKEREGISTERIDENT
+                            type = IdentType.FOLKEREGISTERIDENT,
                         ),
                         Ident(idnummer = "1111", gjeldende = true, type = IdentType.AKTORID),
                         Ident(
                             idnummer = gammeltFnr,
                             gjeldende = false,
-                            type = IdentType.FOLKEREGISTERIDENT
+                            type = IdentType.FOLKEREGISTERIDENT,
                         ),
                     )
 
@@ -190,33 +190,31 @@ suspend fun forberedTestsykmeldinger(
     gammeltFnr: String,
     idNySykmelding: String,
     idSendtSykmelding: String,
-    idGammelSendtSykmelding: String
+    idGammelSendtSykmelding: String,
 ) {
     database.lagreMottattSykmelding(
         testSykmeldingsopplysninger.copy(id = idNySykmelding, pasientFnr = gammeltFnr),
-        testSykmeldingsdokument.copy(id = idNySykmelding)
+        testSykmeldingsdokument.copy(id = idNySykmelding),
     )
     database.registerStatus(
         SykmeldingStatusEvent(
             idNySykmelding,
-            testSykmeldingsopplysninger.mottattTidspunkt.atOffset(
-                ZoneOffset.UTC,
-            ),
+            testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC),
             StatusEvent.APEN,
-        ),
+        )
     )
     database.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idNySykmelding))
 
     database.lagreMottattSykmelding(
         testSykmeldingsopplysninger.copy(id = idSendtSykmelding, pasientFnr = gammeltFnr),
-        testSykmeldingsdokument.copy(id = idSendtSykmelding)
+        testSykmeldingsdokument.copy(id = idSendtSykmelding),
     )
     database.registerStatus(
         SykmeldingStatusEvent(
             idSendtSykmelding,
             getNowTickMillisOffsetDateTime().minusDays(10),
             StatusEvent.APEN,
-        ),
+        )
     )
     database.registrerSendt(
         SykmeldingSendEvent(
@@ -227,15 +225,15 @@ suspend fun forberedTestsykmeldinger(
                 Sporsmal(
                     "Arbeidssituasjon",
                     ShortName.ARBEIDSSITUASJON,
-                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
+                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
                 )
             ),
-            brukerSvar = createKomplettInnsendtSkjemaSvar()
+            brukerSvar = createKomplettInnsendtSkjemaSvar(),
         ),
         SykmeldingStatusEvent(
             idSendtSykmelding,
             getNowTickMillisOffsetDateTime(),
-            StatusEvent.SENDT
+            StatusEvent.SENDT,
         ),
     )
     database.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idSendtSykmelding))
@@ -261,8 +259,8 @@ suspend fun forberedTestsykmeldinger(
                                 behandlingsdager = null,
                                 gradert = Gradert(false, 0),
                                 reisetilskudd = false,
-                            ),
-                        ),
+                            )
+                        )
                 ),
         ),
     )
@@ -271,7 +269,7 @@ suspend fun forberedTestsykmeldinger(
             idGammelSendtSykmelding,
             getNowTickMillisOffsetDateTime().minusMonths(8),
             StatusEvent.APEN,
-        ),
+        )
     )
     database.registrerSendt(
         SykmeldingSendEvent(
@@ -282,15 +280,15 @@ suspend fun forberedTestsykmeldinger(
                 Sporsmal(
                     "Arbeidssituasjon",
                     ShortName.ARBEIDSSITUASJON,
-                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER")
+                    Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
                 )
             ),
-            brukerSvar = createKomplettInnsendtSkjemaSvar()
+            brukerSvar = createKomplettInnsendtSkjemaSvar(),
         ),
         SykmeldingStatusEvent(
             idGammelSendtSykmelding,
             getNowTickMillisOffsetDateTime().minusMonths(6),
-            StatusEvent.SENDT
+            StatusEvent.SENDT,
         ),
     )
     database.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = idGammelSendtSykmelding))

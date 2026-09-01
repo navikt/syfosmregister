@@ -1,15 +1,15 @@
 package no.nav.syfo.juridiskvurdering
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import no.nav.syfo.objectMapper
+import no.nav.syfo.jsonMapper
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.slf4j.LoggerFactory
+import tools.jackson.module.kotlin.readValue
 
 class JuridiskVurderingKafkaConsumer(
     val kafkaConsumer: KafkaConsumer<String, String>,
@@ -45,7 +45,7 @@ class JuridiskVurderingKafkaConsumer(
         records.forEach { record ->
             try {
                 val juridiskVurderingResult =
-                    objectMapper.readValue<JuridiskVurderingResult>(record.value())
+                    jsonMapper.readValue<JuridiskVurderingResult>(record.value())
                 juridiskVurderingResult.juridiskeVurderinger
                     .filter {
                         it.juridiskHenvisning.lovverk == Lovverk.FOLKETRYGDLOVEN &&
@@ -55,13 +55,13 @@ class JuridiskVurderingKafkaConsumer(
                     .forEach { vurdering ->
                         juridiskVurderingDB.insertOrUpdate(
                             vurdering,
-                            vurdering.input.toTilbakedateringInputs()
+                            vurdering.input.toTilbakedateringInputs(),
                         )
                     }
             } catch (ex: Exception) {
                 log.error(
                     "Error processing record with offset: ${record.offset()}, on partition: ${record.partition()}",
-                    ex
+                    ex,
                 )
                 throw ex
             }

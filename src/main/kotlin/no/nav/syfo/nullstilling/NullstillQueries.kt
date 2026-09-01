@@ -23,7 +23,7 @@ private fun deleteSykmeldingsopplysninger(connection: Connection, sykmeldingId: 
         .prepareStatement(
             """
             delete from sykmeldingsopplysninger where id = ? 
-        """,
+        """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -35,7 +35,7 @@ private fun deleteSykmeldingsdokument(connection: Connection, sykmeldingId: Stri
         .prepareStatement(
             """
             delete from sykmeldingsdokument where id = ? 
-        """,
+        """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -47,7 +47,7 @@ private fun deleteSykmeldingstatus(connection: Connection, sykmeldingId: String)
         .prepareStatement(
             """
             delete from sykmeldingstatus where sykmelding_id = ? 
-        """,
+        """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -59,7 +59,7 @@ private fun deleteSvar(connection: Connection, sykmeldingId: String) =
         .prepareStatement(
             """
             delete from svar where sykmelding_id = ? 
-        """,
+        """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -71,7 +71,7 @@ private fun deleteArbeidsgiver(connection: Connection, sykmeldingId: String) =
         .prepareStatement(
             """
             delete from arbeidsgiver where sykmelding_id = ?
-        """,
+        """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -79,11 +79,7 @@ private fun deleteArbeidsgiver(connection: Connection, sykmeldingId: String) =
         }
 
 private fun deleteBehandlingsutfall(connection: Connection, sykmeldingId: String) =
-    connection
-        .prepareStatement(
-            """delete from behandlingsutfall where id = ?""",
-        )
-        .use {
-            it.setString(1, sykmeldingId)
-            it.execute()
-        }
+    connection.prepareStatement("""delete from behandlingsutfall where id = ?""").use {
+        it.setString(1, sykmeldingId)
+        it.execute()
+    }

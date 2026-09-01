@@ -1,63 +1,57 @@
 package no.nav.syfo.juridiskvurdering
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FunSpec
-import no.nav.syfo.objectMapper
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import org.amshove.kluent.shouldBeEqualTo
+import tools.jackson.module.kotlin.readValue
 
 class JuridiskVurderingDBTest :
-    FunSpec(
-        {
-            val db = TestDB.database
-            val juridiskVurderingDb = JuridiskVurderingDB(db)
-            afterTest { db.connection.dropData() }
+    FunSpec({
+        val db = TestDB.database
+        val juridiskVurderingDb = JuridiskVurderingDB(db)
+        afterTest { db.connection.dropData() }
 
-            afterSpec { TestDB.stop() }
+        afterSpec { TestDB.stop() }
 
-            context("Test at JuridiskVurdering persisteres og hentes ut riktig") {
-                val vurdering = objectMapper.readValue<JuridiskVurdering>(jsonVurdering)
-                val minimalVurdering =
-                    objectMapper.readValue<JuridiskVurdering>(jsonVurderingMinimal)
-                val withINcorrectTime =
-                    objectMapper.readValue<JuridiskVurdering>(jsonVurderingNotCorretTime)
+        context("Test at JuridiskVurdering persisteres og hentes ut riktig") {
+            val vurdering = jsonMapper.readValue<JuridiskVurdering>(jsonVurdering)
+            val minimalVurdering = jsonMapper.readValue<JuridiskVurdering>(jsonVurderingMinimal)
+            val withINcorrectTime =
+                jsonMapper.readValue<JuridiskVurdering>(jsonVurderingNotCorretTime)
 
-                val nyVurdering = objectMapper.readValue<JuridiskVurdering>(jsonNyVersjon)
-                juridiskVurderingDb.insertOrUpdate(
-                    withINcorrectTime,
-                    withINcorrectTime.input.toTilbakedateringInputs()
-                )
-                juridiskVurderingDb.insertOrUpdate(
-                    minimalVurdering,
-                    minimalVurdering.input.toTilbakedateringInputs()
-                )
-                juridiskVurderingDb.insertOrUpdate(
-                    vurdering,
-                    vurdering.input.toTilbakedateringInputs()
-                )
+            val nyVurdering = jsonMapper.readValue<JuridiskVurdering>(jsonNyVersjon)
+            juridiskVurderingDb.insertOrUpdate(
+                withINcorrectTime,
+                withINcorrectTime.input.toTilbakedateringInputs(),
+            )
+            juridiskVurderingDb.insertOrUpdate(
+                minimalVurdering,
+                minimalVurdering.input.toTilbakedateringInputs(),
+            )
+            juridiskVurderingDb.insertOrUpdate(vurdering, vurdering.input.toTilbakedateringInputs())
 
-                val inputs = vurdering.input.toTilbakedateringInputs()
-                val forlengelseAv = inputs.forlengelseAv
-                val ettersending = inputs.ettersendingAv
+            val inputs = vurdering.input.toTilbakedateringInputs()
+            val forlengelseAv = inputs.forlengelseAv
+            val ettersending = inputs.ettersendingAv
 
-                forlengelseAv shouldBeEqualTo "fab84f88-97cb-43ca-a8c0-8eaf2564734a"
-                ettersending shouldBeEqualTo "adsf"
+            forlengelseAv shouldBeEqualTo "fab84f88-97cb-43ca-a8c0-8eaf2564734a"
+            ettersending shouldBeEqualTo "adsf"
 
-                juridiskVurderingDb.insertOrUpdate(
-                    nyVurdering,
-                    nyVurdering.input.toTilbakedateringInputs(),
-                )
+            juridiskVurderingDb.insertOrUpdate(
+                nyVurdering,
+                nyVurdering.input.toTilbakedateringInputs(),
+            )
 
-                val nyInputs = nyVurdering.input.toTilbakedateringInputs()
-                val nyForlengelseAv = nyInputs.forlengelseAv
-                val nyEttersending = nyInputs.ettersendingAv
+            val nyInputs = nyVurdering.input.toTilbakedateringInputs()
+            val nyForlengelseAv = nyInputs.forlengelseAv
+            val nyEttersending = nyInputs.ettersendingAv
 
-                nyForlengelseAv shouldBeEqualTo "fab84f88-97cb-43ca-a8c0-8eaf2564734a"
-                nyEttersending shouldBeEqualTo "abcd"
-            }
-        },
-    )
+            nyForlengelseAv shouldBeEqualTo "fab84f88-97cb-43ca-a8c0-8eaf2564734a"
+            nyEttersending shouldBeEqualTo "abcd"
+        }
+    })
 
 val jsonVurderingNotCorretTime =
     """

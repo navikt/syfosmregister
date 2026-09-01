@@ -48,19 +48,19 @@ class PdlAktorConsumer(
                         is InactiveIdentException -> {
                             log.warn(
                                 "New ident is inactive in PDL, unsubscribing and waiting $DELAY_ON_ERROR_SECONDS seconds for retry",
-                                ex
+                                ex,
                             )
                         }
                         is PersonNotFoundException -> {
                             log.warn(
                                 "Person not found in PDL, unsubscribing and waiting $DELAY_ON_ERROR_SECONDS seconds for retry",
-                                ex
+                                ex,
                             )
                         }
                         else -> {
                             log.error(
                                 "Error running kafka consumer for pdl-aktor, unsubscribing and waiting $DELAY_ON_ERROR_SECONDS seconds for retry",
-                                ex
+                                ex,
                             )
                         }
                     }

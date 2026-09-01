@@ -43,7 +43,7 @@ class MottattSykmeldingStatusService(
     @WithSpan
     suspend fun handleStatusEventForResentSykmelding(
         @SpanAttribute sykmeldingId: String,
-        fnr: String
+        fnr: String,
     ) {
         val sykmeldingStatusKafkaEventDTO =
             withContext(Dispatchers.IO) {
@@ -101,14 +101,11 @@ class MottattSykmeldingStatusService(
         sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO?,
     ) {
         log.info(
-            "Got status update kafka topic, sykmeldingId: $sykmeldingId, status: ${sykmeldingStatusKafkaMessage?.event?.statusEvent}",
+            "Got status update kafka topic, sykmeldingId: $sykmeldingId, status: ${sykmeldingStatusKafkaMessage?.event?.statusEvent}"
         )
         try {
             val span = Span.current()
-            span.setAttribute(
-                "sykmeldingId",
-                sykmeldingId,
-            )
+            span.setAttribute("sykmeldingId", sykmeldingId)
 
             when (sykmeldingStatusKafkaMessage?.event?.statusEvent) {
                 STATUS_SENDT -> {
@@ -141,17 +138,11 @@ class MottattSykmeldingStatusService(
         val latestStatus = sykmeldingStatusService.getLatestSykmeldingStatus(sykmeldingId)
 
         if (latestStatus == null) {
-            log.warn(
-                "Sykmelding med id $sykmeldingId er allerede slettet",
-            )
+            log.warn("Sykmelding med id $sykmeldingId er allerede slettet")
         }
 
-        tombstoneProducer.tombstoneSykmelding(
-            sykmeldingId,
-        )
-        sykmeldingStatusService.slettSykmelding(
-            sykmeldingId,
-        )
+        tombstoneProducer.tombstoneSykmelding(sykmeldingId)
+        sykmeldingStatusService.slettSykmelding(sykmeldingId)
     }
 
     private suspend fun handleSendtSykmelding(
@@ -159,7 +150,7 @@ class MottattSykmeldingStatusService(
     ) {
         val latestStatus =
             sykmeldingStatusService.getLatestSykmeldingStatus(
-                sykmeldingStatusKafkaMessage.event.sykmeldingId,
+                sykmeldingStatusKafkaMessage.event.sykmeldingId
             )
 
         if (
@@ -214,9 +205,7 @@ class MottattSykmeldingStatusService(
         sykmeldingStatusKafkaMessage: SykmeldingStatusKafkaMessageDTO
     ): SykmeldingKafkaMessage? {
         return sykmeldingStatusService
-            .getArbeidsgiverSykmelding(
-                sykmeldingStatusKafkaMessage.event.sykmeldingId,
-            )
+            .getArbeidsgiverSykmelding(sykmeldingStatusKafkaMessage.event.sykmeldingId)
             ?.let {
                 val sendEvent = sykmeldingStatusKafkaMessage.event
                 val metadata = sykmeldingStatusKafkaMessage.kafkaMetadata
@@ -236,10 +225,7 @@ class MottattSykmeldingStatusService(
                 sykmeldingStatusKafkaMessage.event.sykmeldingId,
                 sykmeldingStatusKafkaMessage.event.timestamp,
                 sykmeldingStatusKafkaMessage.event.sporsmals?.map {
-                    KafkaModelMapper.toSporsmal(
-                        it,
-                        sykmeldingStatusKafkaMessage.event.sykmeldingId,
-                    )
+                    KafkaModelMapper.toSporsmal(it, sykmeldingStatusKafkaMessage.event.sykmeldingId)
                 },
                 brukerSvar = sykmeldingStatusKafkaMessage.event.brukerSvar,
             )
@@ -265,7 +251,7 @@ class MottattSykmeldingStatusService(
     ) {
         val lastStatus =
             sykmeldingStatusService.getLatestSykmeldingStatus(
-                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId,
+                sykmeldingStatusKafkaMessage.kafkaMetadata.sykmeldingId
             )
 
         if (
@@ -273,7 +259,7 @@ class MottattSykmeldingStatusService(
                 lastStatus.timestamp.isBefore(sykmeldingStatusKafkaMessage.event.timestamp)
         ) {
             bekreftetSykmeldingKafkaProducer.tombstoneSykmelding(
-                sykmeldingStatusKafkaMessage.event.sykmeldingId,
+                sykmeldingStatusKafkaMessage.event.sykmeldingId
             )
         }
     }
@@ -315,7 +301,7 @@ class MottattSykmeldingStatusService(
 
     private fun getArbeidsgiverStatus(
         sykmeldingId: String,
-        event: StatusEvent
+        event: StatusEvent,
     ): ArbeidsgiverDbModel? {
         return when (event) {
             StatusEvent.SENDT -> databaseInterface.getArbeidsgiverStatus(sykmeldingId)

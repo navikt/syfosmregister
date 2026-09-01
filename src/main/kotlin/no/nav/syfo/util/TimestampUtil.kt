@@ -10,7 +10,7 @@ class TimestampUtil private constructor() {
 
         fun getMinTime(
             mottattDato: LocalDateTime,
-            currentTime: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
+            currentTime: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC),
         ): OffsetDateTime {
             val sykmeldingTime = OffsetDateTime.of(mottattDato, ZoneOffset.UTC)
             return if (sykmeldingTime.isBefore(currentTime)) {

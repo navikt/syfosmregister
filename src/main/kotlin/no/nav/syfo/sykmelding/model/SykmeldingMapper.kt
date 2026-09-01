@@ -43,7 +43,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(
     sporsmal: List<Sporsmal>,
     isPasient: Boolean = false,
     ikkeTilgangTilDiagnose: Boolean,
-    fullBehandler: Boolean = true
+    fullBehandler: Boolean = true,
 ): SykmeldingDTO {
     val skjermetForPasient = sykmeldingsDokument.skjermesForPasient
     val skalFjerneSensitivInformasjon = (isPasient && skjermetForPasient) || ikkeTilgangTilDiagnose
@@ -106,11 +106,7 @@ internal fun SykmeldingDbModel.toSykmeldingDTO(
 }
 
 fun Sporsmal.toSporsmalDTO(): SporsmalDTO {
-    return SporsmalDTO(
-        tekst = tekst,
-        svar = svar.toDTO(),
-        shortName = shortName.toDTO(),
-    )
+    return SporsmalDTO(tekst = tekst, svar = svar.toDTO(), shortName = shortName.toDTO())
 }
 
 private fun ShortName.toDTO(): ShortNameDTO {
@@ -125,10 +121,7 @@ private fun ShortName.toDTO(): ShortNameDTO {
 }
 
 private fun Svar.toDTO(): SvarDTO {
-    return SvarDTO(
-        svar = svar,
-        svarType = svartype.toDTO(),
-    )
+    return SvarDTO(svar = svar, svarType = svartype.toDTO())
 }
 
 private fun Svartype.toDTO(): SvartypeDTO {
@@ -149,7 +142,7 @@ fun StatusDbModel.toSykmeldingStatusDTO(sporsmal: List<SporsmalDTO>): Sykmelding
         statusEvent,
         statusTimestamp,
         arbeidsgiver?.toArbeidsgiverStatusDTO(),
-        sporsmal
+        sporsmal,
     )
 }
 
@@ -159,7 +152,7 @@ private fun ArbeidsgiverDbModel.toArbeidsgiverStatusDTO(): ArbeidsgiverStatusDTO
 
 fun toUtdypendeOpplysninger(
     utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>>,
-    isPasient: Boolean
+    isPasient: Boolean,
 ): Map<String, Map<String, SporsmalSvarDTO>> {
     if (isPasient) {
         return utdypendeOpplysninger.mapValues {
@@ -340,10 +333,7 @@ private fun MedisinskVurdering.toMedisinskVurderingDTO(): MedisinskVurderingDTO 
 }
 
 private fun AnnenFraversArsak.toDTO(): AnnenFraversArsakDTO {
-    return AnnenFraversArsakDTO(
-        beskrivelse = beskrivelse,
-        grunn = grunn.map { it.toDTO() },
-    )
+    return AnnenFraversArsakDTO(beskrivelse = beskrivelse, grunn = grunn.map { it.toDTO() })
 }
 
 private fun AnnenFraverGrunn.toDTO(): AnnenFraverGrunnDTO {

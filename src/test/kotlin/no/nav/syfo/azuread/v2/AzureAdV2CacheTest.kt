@@ -14,7 +14,7 @@ class AzureAdV2CacheTest :
                 val azureAdToken =
                     AzureAdV2Token(
                         "accessToken",
-                        OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(10)
+                        OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(10),
                     )
                 azureAdCache.putValue("token", azureAdToken)
                 val cache = azureAdCache.getToken("token")
@@ -24,7 +24,7 @@ class AzureAdV2CacheTest :
                 val azureAdToken =
                     AzureAdV2Token(
                         "accessToken",
-                        OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(10)
+                        OffsetDateTime.now(ZoneOffset.UTC).minusSeconds(10),
                     )
                 azureAdCache.putValue("token", azureAdToken)
                 val cache = azureAdCache.getToken("token")

@@ -1,6 +1,5 @@
 package no.nav.syfo.sykmelding.status
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
@@ -11,14 +10,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.syfo.db.DatabaseInterface
 import no.nav.syfo.db.toList
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.log
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
 import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
-import no.nav.syfo.objectMapper
 import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
 import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import org.postgresql.util.PGobject
+import tools.jackson.module.kotlin.readValue
 
 suspend fun DatabaseInterface.hentSykmeldingStatuser(
     sykmeldingId: String
@@ -48,7 +48,7 @@ suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingSt
             if (
                 !connection.hasNewerStatus(
                     sykmeldingStatusEvent.sykmeldingId,
-                    sykmeldingStatusEvent.timestamp
+                    sykmeldingStatusEvent.timestamp,
                 )
             ) {
                 connection.slettAlleSvar(sykmeldingStatusEvent.sykmeldingId)
@@ -60,7 +60,7 @@ suspend fun DatabaseInterface.registerStatus(sykmeldingStatusEvent: SykmeldingSt
 
 suspend fun DatabaseInterface.registrerSendt(
     sykmeldingSendEvent: SykmeldingSendEvent,
-    sykmeldingStatusEvent: SykmeldingStatusEvent
+    sykmeldingStatusEvent: SykmeldingStatusEvent,
 ) =
     withContext(Dispatchers.IO) {
         connection.use { connection ->
@@ -79,7 +79,7 @@ private fun Connection.slettTidligereArbeidsgiver(sykmeldingId: String) =
     prepareStatement(
             """
             DELETE FROM tidligere_arbeidsgiver WHERE sykmelding_id=?;
-            """,
+            """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -96,7 +96,7 @@ suspend fun DatabaseInterface.registrerBekreftet(
             if (
                 !connection.hasNewerStatus(
                     sykmeldingStatusEvent.sykmeldingId,
-                    sykmeldingStatusEvent.timestamp
+                    sykmeldingStatusEvent.timestamp,
                 )
             ) {
                 connection.slettGamleSvarHvisFinnesFraFor(sykmeldingBekreftEvent.sykmeldingId)
@@ -104,7 +104,7 @@ suspend fun DatabaseInterface.registrerBekreftet(
                 if (tidligereArbeidsgiver != null) {
                     connection.registerTidligereArbeidsgiver(
                         sykmeldingStatusEvent.sykmeldingId,
-                        tidligereArbeidsgiver
+                        tidligereArbeidsgiver,
                     )
                 }
                 sykmeldingBekreftEvent.brukerSvar?.let {
@@ -133,9 +133,9 @@ private fun Connection.insertAlleSpm(alleSpm: KomplettInnsendtSkjemaSvar, sykmel
                 alleSpm.let {
                     PGobject().apply {
                         type = "json"
-                        value = objectMapper.writeValueAsString(it)
+                        value = jsonMapper.writeValueAsString(it)
                     }
-                }
+                },
             )
             ps.executeUpdate()
         }
@@ -145,7 +145,7 @@ private fun Connection.hasNewerStatus(sykmeldingId: String, timestamp: OffsetDat
     prepareStatement(
             """
         SELECT 1 FROM sykmeldingstatus WHERE sykmelding_id = ? and timestamp > ?
-        """,
+        """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -159,7 +159,7 @@ private fun Connection.getTidligereArbeidsgiver(sykmeldingId: String): List<Tidl
                     SELECT *
                     FROM tidligere_arbeidsgiver 
                     WHERE sykmelding_id = ?
-                    """,
+                    """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -177,7 +177,7 @@ private fun Connection.getAlleSpm(sykmeldingId: String) =
             ps.executeQuery().let {
                 when (it.next()) {
                     true ->
-                        objectMapper.readValue<KomplettInnsendtSkjemaSvar>(it.getString("alle_spm"))
+                        jsonMapper.readValue<KomplettInnsendtSkjemaSvar>(it.getString("alle_spm"))
                     false -> null
                 }
             }
@@ -185,7 +185,7 @@ private fun Connection.getAlleSpm(sykmeldingId: String) =
 
 data class TidligereArbeidsgiver(
     val sykmeldingId: String,
-    val tidligereArbeidsgiver: TidligereArbeidsgiverDTO
+    val tidligereArbeidsgiver: TidligereArbeidsgiverDTO,
 )
 
 private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
@@ -193,8 +193,8 @@ private fun ResultSet.tilTidligereArbeidsgiverliste(): TidligereArbeidsgiver =
         sykmeldingId = getString("sykmelding_id"),
         tidligereArbeidsgiver =
             getString("tidligere_arbeidsgiver").let {
-                objectMapper.readValue<TidligereArbeidsgiverDTO>(it)
-            }
+                jsonMapper.readValue<TidligereArbeidsgiverDTO>(it)
+            },
     )
 
 private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<SykmeldingStatusEvent> =
@@ -209,7 +209,7 @@ private fun Connection.getSykmeldingstatuser(sykmeldingId: String): List<Sykmeld
             INNER JOIN sykmeldingsopplysninger AS opplysninger ON status.sykmelding_id = opplysninger.id
             INNER JOIN behandlingsutfall AS utfall ON status.sykmelding_id = utfall.id 
         WHERE status.sykmelding_id = ?
-    """,
+    """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -222,7 +222,7 @@ private fun ResultSet.toSykmeldingStatusEvent(): SykmeldingStatusEvent {
         timestamp = getTimestamp("timestamp").toInstant().atOffset(ZoneOffset.UTC),
         event = tilStatusEvent(getString("event")),
         erAvvist =
-            objectMapper
+            jsonMapper
                 .readValue(getString("behandlingsutfall"), ValidationResult::class.java)
                 .status == Status.INVALID,
         erEgenmeldt = getString("epj_system_navn") == "Egenmeldt",
@@ -241,7 +241,7 @@ private fun Connection.svarFinnesFraFor(sykmeldingId: String): Boolean =
     prepareStatement(
             """
                 SELECT 1 FROM svar WHERE sykmelding_id=?;
-                """,
+                """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -252,7 +252,7 @@ fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) =
     prepareStatement(
             """
                 INSERT INTO sykmeldingstatus(sykmelding_id, event, timestamp) VALUES (?, ?, ?) ON CONFLICT DO NOTHING
-                """,
+                """
         )
         .use {
             it.setString(1, sykmeldingStatusEvent.sykmeldingId)
@@ -263,12 +263,12 @@ fun Connection.registerStatus(sykmeldingStatusEvent: SykmeldingStatusEvent) =
 
 fun Connection.registerTidligereArbeidsgiver(
     sykmeldingId: String,
-    tidligereArbeidsgiver: TidligereArbeidsgiverKafkaDTO
+    tidligereArbeidsgiver: TidligereArbeidsgiverKafkaDTO,
 ) =
     prepareStatement(
             """
                 INSERT INTO tidligere_arbeidsgiver(sykmelding_id, tidligere_arbeidsgiver) VALUES (?, ?) ON CONFLICT DO NOTHING
-                """,
+                """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -280,7 +280,7 @@ private fun Connection.lagreArbeidsgiverStatus(sykmeldingSendEvent: SykmeldingSe
     prepareStatement(
             """
                 INSERT INTO arbeidsgiver(sykmelding_id, orgnummer, juridisk_orgnummer, navn) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING
-                """,
+                """
         )
         .use {
             it.setString(1, sykmeldingSendEvent.sykmeldingId)
@@ -307,7 +307,7 @@ fun Connection.slettBrukerSvar(sykmeldingId: String) =
     prepareStatement(
             """
                 DELETE FROM status_all_spm WHERE sykmelding_id=?;
-                """,
+                """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -348,7 +348,7 @@ private fun Connection.finnSporsmal(sporsmal: Sporsmal): Int? =
                 SELECT sporsmal.id
                 FROM sporsmal
                 WHERE shortName=? AND tekst=?;
-                """,
+                """
         )
         .use {
             it.setString(1, sporsmal.shortName.name)
@@ -361,7 +361,7 @@ private fun Connection.lagreSvar(sporsmalId: Int, svar: Svar) =
     prepareStatement(
             """
                 INSERT INTO svar(sykmelding_id, sporsmal_id, svartype, svar) VALUES (?, ?, ?, ?)
-                """,
+                """
         )
         .use {
             it.setString(1, svar.sykmeldingId)
@@ -375,7 +375,7 @@ private fun Connection.slettArbeidsgiver(sykmeldingId: String) =
     prepareStatement(
             """
                 DELETE FROM arbeidsgiver WHERE sykmelding_id=?;
-                """,
+                """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -386,7 +386,7 @@ private fun Connection.slettSvar(sykmeldingId: String) =
     prepareStatement(
             """
                 DELETE FROM svar WHERE sykmelding_id=?;
-                """,
+                """
         )
         .use {
             it.setString(1, sykmeldingId)
@@ -410,5 +410,5 @@ private fun tilStatusEvent(status: String): StatusEvent {
 private fun TidligereArbeidsgiverKafkaDTO.toPGObject() =
     PGobject().also {
         it.type = "json"
-        it.value = objectMapper.writeValueAsString(this)
+        it.value = jsonMapper.writeValueAsString(this)
     }

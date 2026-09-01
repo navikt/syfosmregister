@@ -30,13 +30,13 @@ class RedusertArbeidsgiverPeriodeKtTest :
                     aktivitetIkkeMulig =
                         AktivitetIkkeMulig(
                             medisinskArsak = MedisinskArsak("beskrivelse", emptyList()),
-                            arbeidsrelatertArsak = null
+                            arbeidsrelatertArsak = null,
                         ),
                     gradert = null,
                     behandlingsdager = null,
                     reisetilskudd = false,
                     avventendeInnspillTilArbeidsgiver = null,
-                ),
+                )
             )
         val periodeUtenforKoronaregler =
             listOf(
@@ -46,13 +46,13 @@ class RedusertArbeidsgiverPeriodeKtTest :
                     aktivitetIkkeMulig =
                         AktivitetIkkeMulig(
                             medisinskArsak = MedisinskArsak("beskrivelse", emptyList()),
-                            arbeidsrelatertArsak = null
+                            arbeidsrelatertArsak = null,
                         ),
                     gradert = null,
                     behandlingsdager = null,
                     reisetilskudd = false,
                     avventendeInnspillTilArbeidsgiver = null,
-                ),
+                )
             )
         val perioderUtenforOgInnenforKoronaregler =
             listOf(
@@ -62,7 +62,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                     aktivitetIkkeMulig =
                         AktivitetIkkeMulig(
                             medisinskArsak = MedisinskArsak("beskrivelse", emptyList()),
-                            arbeidsrelatertArsak = null
+                            arbeidsrelatertArsak = null,
                         ),
                     gradert = null,
                     behandlingsdager = null,
@@ -75,7 +75,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                     aktivitetIkkeMulig =
                         AktivitetIkkeMulig(
                             medisinskArsak = MedisinskArsak("beskrivelse", emptyList()),
-                            arbeidsrelatertArsak = null
+                            arbeidsrelatertArsak = null,
                         ),
                     gradert = null,
                     behandlingsdager = null,
@@ -93,15 +93,15 @@ class RedusertArbeidsgiverPeriodeKtTest :
                             medisinskArsak =
                                 no.nav.syfo.sykmelding.db.MedisinskArsak(
                                     "beskrivelse",
-                                    emptyList()
+                                    emptyList(),
                                 ),
-                            arbeidsrelatertArsak = null
+                            arbeidsrelatertArsak = null,
                         ),
                     gradert = null,
                     behandlingsdager = null,
                     reisetilskudd = false,
                     avventendeInnspillTilArbeidsgiver = null,
-                ),
+                )
             )
         val dbPeriodeUtenforKoronaregler =
             listOf(
@@ -113,15 +113,15 @@ class RedusertArbeidsgiverPeriodeKtTest :
                             medisinskArsak =
                                 no.nav.syfo.sykmelding.db.MedisinskArsak(
                                     "beskrivelse",
-                                    emptyList()
+                                    emptyList(),
                                 ),
-                            arbeidsrelatertArsak = null
+                            arbeidsrelatertArsak = null,
                         ),
                     gradert = null,
                     behandlingsdager = null,
                     reisetilskudd = false,
                     avventendeInnspillTilArbeidsgiver = null,
-                ),
+                )
             )
         val dbPerioderUtenforOgInnenforKoronaregler =
             listOf(
@@ -133,9 +133,9 @@ class RedusertArbeidsgiverPeriodeKtTest :
                             medisinskArsak =
                                 no.nav.syfo.sykmelding.db.MedisinskArsak(
                                     "beskrivelse",
-                                    emptyList()
+                                    emptyList(),
                                 ),
-                            arbeidsrelatertArsak = null
+                            arbeidsrelatertArsak = null,
                         ),
                     gradert = null,
                     behandlingsdager = null,
@@ -150,9 +150,9 @@ class RedusertArbeidsgiverPeriodeKtTest :
                             medisinskArsak =
                                 no.nav.syfo.sykmelding.db.MedisinskArsak(
                                     "beskrivelse",
-                                    emptyList()
+                                    emptyList(),
                                 ),
-                            arbeidsrelatertArsak = null
+                            arbeidsrelatertArsak = null,
                         ),
                     gradert = null,
                     behandlingsdager = null,
@@ -196,7 +196,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                         annenFraversArsak =
                             AnnenFraversArsak(
                                 "beskrivelse",
-                                listOf(AnnenFraverGrunn.ARBEIDSRETTET_TILTAK)
+                                listOf(AnnenFraverGrunn.ARBEIDSRETTET_TILTAK),
                             )
                     )
                     .getHarRedusertArbeidsgiverperiode(periodeInnenforKoronaregler) shouldBe false
@@ -263,7 +263,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                         annenFraversArsak =
                             AnnenFraversArsakDB(
                                 "beskrivelse",
-                                listOf(AnnenFraversGrunnDB.ARBEIDSRETTET_TILTAK)
+                                listOf(AnnenFraversGrunnDB.ARBEIDSRETTET_TILTAK),
                             )
                     )
                     .getHarRedusertArbeidsgiverperiode(dbPeriodeInnenforKoronaregler) shouldBe false
@@ -274,7 +274,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
                         annenFraversArsak =
                             AnnenFraversArsakDB(
                                 "beskrivelse",
-                                listOf(AnnenFraversGrunnDB.SMITTEFARE)
+                                listOf(AnnenFraversGrunnDB.SMITTEFARE),
                             )
                     )
                     .getHarRedusertArbeidsgiverperiode(dbPeriodeInnenforKoronaregler) shouldBe true
@@ -389,7 +389,7 @@ class RedusertArbeidsgiverPeriodeKtTest :
 private fun getMedisinskVurdering(
     diagnoseKode: String? = null,
     bidiagnoseKode: String? = null,
-    annenFraversArsak: AnnenFraversArsak? = null
+    annenFraversArsak: AnnenFraversArsak? = null,
 ): MedisinskVurdering {
     val diagnose = diagnoseKode?.let { Diagnose("system", diagnoseKode, "tekst") }
     val bidiagnose = mutableListOf<Diagnose>()
@@ -409,7 +409,7 @@ private fun getMedisinskVurdering(
 private fun getMedisinskVurderingDB(
     diagnoseKode: String? = null,
     bidiagnoseKode: String? = null,
-    annenFraversArsak: AnnenFraversArsakDB? = null
+    annenFraversArsak: AnnenFraversArsakDB? = null,
 ): MedisinskVurderingDB {
     val diagnose = diagnoseKode?.let { DiagnoseDB("system", diagnoseKode, "tekst") }
     val bidiagnose = mutableListOf<DiagnoseDB>()

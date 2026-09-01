@@ -36,13 +36,13 @@ class SykmeldingStatusConsumerServiceTest :
                 sendtSykmeldingKafkaProducer,
                 bekreftSykmeldingKafkaProducer,
                 tombstoneProducer,
-                database
+                database,
             )
         val sykmeldingStatusConsumerService =
             SykmeldingStatusConsumerService(
                 sykmeldingStatusKafkaConsumer,
                 applicationState,
-                mottattSykmeldingStatusService
+                mottattSykmeldingStatusService,
             )
 
         context("Test retry") {

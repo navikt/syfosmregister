@@ -78,7 +78,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
             SykmeldingStatusConsumerService(
                 consumer,
                 applicationState,
-                mottattSykmeldingStatusService
+                mottattSykmeldingStatusService,
             )
 
         afterTest { clearAllMocks() }
@@ -114,7 +114,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                             sykmelidngId,
                             timestamp,
                             STATUS_APEN,
-                            brukerSvar = null
+                            brukerSvar = null,
                         )
                     kafkaProducer.send(sykmeldingApenEvent, fnr)
                 }
@@ -151,7 +151,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_APEN,
                         null,
                         null,
-                        brukerSvar = null
+                        brukerSvar = null,
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns null
                 coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
@@ -185,7 +185,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_APEN,
                         null,
                         null,
-                        brukerSvar = null
+                        brukerSvar = null,
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
@@ -227,7 +227,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_APEN,
                         null,
                         null,
-                        brukerSvar = null
+                        brukerSvar = null,
                     )
                 val sykmeldingBekreftEvent =
                     SykmeldingStatusKafkaEventDTO(
@@ -236,7 +236,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_BEKREFTET,
                         null,
                         emptyList(),
-                        brukerSvar = null
+                        brukerSvar = null,
                     )
                 val sykmeldingApenEvent2 =
                     SykmeldingStatusKafkaEventDTO(
@@ -245,32 +245,22 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_APEN,
                         null,
                         null,
-                        brukerSvar = null
+                        brukerSvar = null,
                     )
                 coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns
-                    mockkClass(
-                        ArbeidsgiverSykmelding::class,
-                    )
+                    mockkClass(ArbeidsgiverSykmelding::class)
                 coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } returns
                     Unit
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     null andThen
-                    SykmeldingStatusEvent(
-                        sykmeldingId,
-                        timestamp,
-                        StatusEvent.APEN,
-                    ) andThen
-                    SykmeldingStatusEvent(
-                        sykmeldingId,
-                        timestamp,
-                        StatusEvent.BEKREFTET,
-                    )
+                    SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.APEN) andThen
+                    SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.BEKREFTET)
 
                 coEvery { sykmeldingStatusService.registrerStatus(any()) } answers
                     {
                         val lastBekreftet = sykmeldingStatusEvent?.event == StatusEvent.APEN
                         sykmeldingStatusEvent = args[0] as SykmeldingStatusEvent
-                        if (lastBekreftet && sykmeldingStatusEvent?.event == StatusEvent.APEN) {
+                        if (lastBekreftet && sykmeldingStatusEvent.event == StatusEvent.APEN) {
                             applicationState.alive = false
                             applicationState.ready = false
                         }
@@ -284,11 +274,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 sykmeldingStatusConsumerService.start()
 
                 sykmeldingStatusEvent shouldBeEqualTo
-                    SykmeldingStatusEvent(
-                        sykmeldingId,
-                        timestamp.plusSeconds(2),
-                        StatusEvent.APEN,
-                    )
+                    SykmeldingStatusEvent(sykmeldingId, timestamp.plusSeconds(2), StatusEvent.APEN)
                 coVerify(exactly = 1) { bekreftSykmeldingKafkaProducer.sendSykmelding(any()) }
                 coVerify(exactly = 1) {
                     bekreftSykmeldingKafkaProducer.tombstoneSykmelding(sykmeldingId)
@@ -314,14 +300,12 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 ShortNameKafkaDTO.ARBEIDSSITUASJON,
                                 SvartypeKafkaDTO.ARBEIDSSITUASJON,
                                 "svar",
-                            ),
+                            )
                         ),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns
-                    mockkClass(
-                        ArbeidsgiverSykmelding::class,
-                    )
+                    mockkClass(ArbeidsgiverSykmelding::class)
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
                         sykmeldingId,
@@ -352,9 +336,9 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 "tekst",
                                 ShortName.ARBEIDSSITUASJON,
                                 Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "svar"),
-                            ),
+                            )
                         ),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 sykmeldingStatusEvent shouldBeEqualTo
                     SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.SENDT)
@@ -373,10 +357,10 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 "sporsmal",
                                 ShortNameKafkaDTO.ARBEIDSSITUASJON,
                                 SvartypeKafkaDTO.ARBEIDSSITUASJON,
-                                "svar"
+                                "svar",
                             )
                         ),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 var counter = 0
                 coEvery { consumer.poll() } answers
@@ -441,11 +425,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                 sykmeldingStatusConsumerService.start()
 
                 sykmeldingStatusEvent shouldBeEqualTo
-                    SykmeldingStatusEvent(
-                        sykmeldingId,
-                        timestamp,
-                        StatusEvent.AVBRUTT,
-                    )
+                    SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.AVBRUTT)
                 coVerify(exactly = 1) {
                     sykmeldingStatusService.registrerStatus(sykmeldingStatusEvent!!)
                 }
@@ -464,18 +444,12 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_BEKREFTET,
                         null,
                         emptyList(),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
-                    SykmeldingStatusEvent(
-                        sykmeldingId,
-                        timestamp,
-                        StatusEvent.APEN,
-                    )
+                    SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.APEN)
                 coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns
-                    mockkClass(
-                        ArbeidsgiverSykmelding::class,
-                    )
+                    mockkClass(ArbeidsgiverSykmelding::class)
                 coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
                     {
                         sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
@@ -498,14 +472,10 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         sykmeldingId,
                         timestamp,
                         emptyList(),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 sykmeldingStatusEvent shouldBeEqualTo
-                    SykmeldingStatusEvent(
-                        sykmeldingId,
-                        timestamp,
-                        StatusEvent.BEKREFTET,
-                    )
+                    SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.BEKREFTET)
             }
 
             test("Test BEKREFTET til BEKREFTET") {
@@ -521,7 +491,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         STATUS_BEKREFTET,
                         null,
                         emptyList(),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
@@ -530,9 +500,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         StatusEvent.BEKREFTET,
                     )
                 coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns
-                    mockkClass(
-                        ArbeidsgiverSykmelding::class,
-                    )
+                    mockkClass(ArbeidsgiverSykmelding::class)
                 coEvery { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) } answers
                     {
                         sykmeldingBekreftEvent = args[0] as SykmeldingBekreftEvent
@@ -555,14 +523,10 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         sykmeldingId,
                         timestamp,
                         emptyList(),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 sykmeldingStatusEvent shouldBeEqualTo
-                    SykmeldingStatusEvent(
-                        sykmeldingId,
-                        timestamp,
-                        StatusEvent.BEKREFTET,
-                    )
+                    SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.BEKREFTET)
             }
 
             test("Test BEKREFTET til SENDT") {
@@ -582,7 +546,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 "tekst",
                                 ShortNameKafkaDTO.ARBEIDSSITUASJON,
                                 SvartypeKafkaDTO.ARBEIDSSITUASJON,
-                                "svar"
+                                "svar",
                             ),
                             SporsmalOgSvarKafkaDTO(
                                 "Er det Din Leder som skal følge deg opp mens du er syk?",
@@ -591,7 +555,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                                 "JA",
                             ),
                         ),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
                     SykmeldingStatusEvent(
@@ -601,9 +565,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                     )
 
                 coEvery { sykmeldingStatusService.getArbeidsgiverSykmelding(any()) } returns
-                    mockkClass(
-                        ArbeidsgiverSykmelding::class,
-                    )
+                    mockkClass(ArbeidsgiverSykmelding::class)
                 coEvery { sykmeldingStatusService.registrerSendt(any(), any()) } answers
                     {
                         sykmeldingSendEvent = args[0] as SykmeldingSendEvent
@@ -643,11 +605,7 @@ class SykmeldingStatusConsumerServiceKafkaTest :
                         brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     )
                 sykmeldingStatusEvent shouldBeEqualTo
-                    SykmeldingStatusEvent(
-                        sykmeldingId,
-                        timestamp,
-                        StatusEvent.SENDT,
-                    )
+                    SykmeldingStatusEvent(sykmeldingId, timestamp, StatusEvent.SENDT)
             }
         }
     })

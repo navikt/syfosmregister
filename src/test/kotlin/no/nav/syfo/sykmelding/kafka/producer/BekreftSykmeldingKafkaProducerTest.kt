@@ -29,7 +29,7 @@ class BekreftSykmeldingKafkaProducerTest :
         val properties =
             kafkaconfig.toConsumerConfig(
                 "${environment.applicationName}-consumer",
-                JacksonKafkaDeserializer::class
+                JacksonKafkaDeserializer::class,
             )
         properties.let { it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1" }
         val kafkaTestReader = KafkaTestReader<SykmeldingKafkaMessage>()
@@ -37,7 +37,7 @@ class BekreftSykmeldingKafkaProducerTest :
             KafkaConsumer(
                 properties,
                 StringDeserializer(),
-                JacksonKafkaDeserializer(SykmeldingKafkaMessage::class)
+                JacksonKafkaDeserializer(SykmeldingKafkaMessage::class),
             )
         kafkaConsumer.subscribe(listOf("${environment.applicationName}-syfo-bekreft-sykmelding"))
 
@@ -47,7 +47,7 @@ class BekreftSykmeldingKafkaProducerTest :
                     SykmeldingKafkaMessage(
                         getArbeidsgiverSykmelding("1"),
                         getKafkaMetadata("1"),
-                        getSykmeldingStatusEvent("1")
+                        getSykmeldingStatusEvent("1"),
                     )
                 )
                 val messages = kafkaTestReader.getMessagesFromTopic(kafkaConsumer, 1)
@@ -66,7 +66,7 @@ class BekreftSykmeldingKafkaProducerTest :
                     SykmeldingKafkaMessage(
                         getArbeidsgiverSykmelding("2"),
                         getKafkaMetadata("2"),
-                        getSykmeldingStatusEvent("2")
+                        getSykmeldingStatusEvent("2"),
                     )
                 )
                 kafkaProducer.tombstoneSykmelding("2")

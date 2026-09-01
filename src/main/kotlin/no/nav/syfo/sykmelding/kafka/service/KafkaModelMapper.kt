@@ -31,7 +31,7 @@ class KafkaModelMapper private constructor() {
             return Sporsmal(
                 sporsmal.tekst,
                 toShortName(sporsmal.shortName),
-                toSvar(sporsmal, sykmeldingId)
+                toSvar(sporsmal, sykmeldingId),
             )
         }
 
@@ -39,13 +39,13 @@ class KafkaModelMapper private constructor() {
             return SykmeldingStatusEvent(
                 event.sykmeldingId,
                 event.timestamp,
-                toStatusEvent(event.statusEvent)
+                toStatusEvent(event.statusEvent),
             )
         }
 
         private fun toSvar(
             arbeidsgiverSporsmal: SporsmalOgSvarKafkaDTO,
-            sykmeldingId: String
+            sykmeldingId: String,
         ): Svar {
             return Svar(
                 sykmeldingId,
@@ -73,10 +73,10 @@ class KafkaModelMapper private constructor() {
                         TidligereArbeidsgiverKafkaDTO(
                             orgNavn = it.orgNavn,
                             orgnummer = it.orgnummer,
-                            sykmeldingsId = it.sykmeldingsId
+                            sykmeldingsId = it.sykmeldingsId,
                         )
                     },
-                brukerSvar = alleSpm
+                brukerSvar = alleSpm,
             )
 
         private fun toSvartype(svartype: SvartypeKafkaDTO): Svartype {

@@ -83,7 +83,7 @@ private fun AktivitetIkkeMulig?.toAktivitetIkkeMuligAGDTO(): AktivitetIkkeMuligA
         null -> null
         else ->
             AktivitetIkkeMuligAGDTO(
-                arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDTO(),
+                arbeidsrelatertArsak = arbeidsrelatertArsak.toArbeidsRelatertArsakDTO()
             )
     }
 }
@@ -112,11 +112,7 @@ private fun toArbeidsrelatertArsakTypeDTO(
 private fun Gradert?.toGradertDTO(): GradertDTO? {
     return when (this) {
         null -> null
-        else ->
-            GradertDTO(
-                grad = grad,
-                reisetilskudd = reisetilskudd,
-            )
+        else -> GradertDTO(grad = grad, reisetilskudd = reisetilskudd)
     }
 }
 
@@ -133,22 +129,17 @@ private fun Behandler.toBehandlerAGDTO(): BehandlerAGDTO {
                 adresse.postnummer,
                 adresse.kommune,
                 adresse.postboks,
-                adresse.land
+                adresse.land,
             ),
     )
 }
 
 private fun Arbeidsgiver.toArbeidsgiverAGDTO(): ArbeidsgiverAGDTO {
-    return ArbeidsgiverAGDTO(
-        navn = navn,
-        yrkesbetegnelse = yrkesbetegnelse,
-    )
+    return ArbeidsgiverAGDTO(navn = navn, yrkesbetegnelse = yrkesbetegnelse)
 }
 
 private fun KontaktMedPasient.toKontaktMedPasientAGDTO(): KontaktMedPasientAGDTO {
-    return KontaktMedPasientAGDTO(
-        kontaktDato = kontaktDato,
-    )
+    return KontaktMedPasientAGDTO(kontaktDato = kontaktDato)
 }
 
 private fun Prognose?.toPrognoseAGDTO(): PrognoseAGDTO? {

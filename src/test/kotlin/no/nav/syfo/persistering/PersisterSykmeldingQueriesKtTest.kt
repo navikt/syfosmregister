@@ -28,7 +28,7 @@ class PersisterSykmeldingQueriesKtTest :
 
             db.lagreMottattSykmelding(
                 sykmeldingsOpplysninger,
-                testSykmeldingsdokument.copy(id = sykmeldingsId)
+                testSykmeldingsdokument.copy(id = sykmeldingsId),
             )
             val fromDb = db.connection.getSykmeldingsopplysninger(id = sykmeldingsId)
 

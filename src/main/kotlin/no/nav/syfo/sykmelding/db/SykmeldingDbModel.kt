@@ -72,16 +72,9 @@ data class MedisinskVurdering(
     val annenFraversArsak: AnnenFraversArsak?,
 )
 
-data class Diagnose(
-    val system: String,
-    val kode: String,
-    val tekst: String?,
-)
+data class Diagnose(val system: String, val kode: String, val tekst: String?)
 
-data class AnnenFraversArsak(
-    val beskrivelse: String?,
-    val grunn: List<AnnenFraverGrunn>,
-)
+data class AnnenFraversArsak(val beskrivelse: String?, val grunn: List<AnnenFraverGrunn>)
 
 data class Arbeidsgiver(
     val harArbeidsgiver: HarArbeidsgiver,
@@ -93,7 +86,7 @@ data class Arbeidsgiver(
 enum class HarArbeidsgiver(
     val codeValue: String,
     val text: String,
-    val oid: String = "2.16.578.1.12.4.1.1.8130"
+    val oid: String = "2.16.578.1.12.4.1.1.8130",
 ) {
     EN_ARBEIDSGIVER("1", "Én arbeidsgiver"),
     FLERE_ARBEIDSGIVERE("2", "Flere arbeidsgivere"),
@@ -128,15 +121,12 @@ data class ArbeidsrelatertArsak(
     val arsak: List<ArbeidsrelatertArsakType>,
 )
 
-data class MedisinskArsak(
-    val beskrivelse: String?,
-    val arsak: List<MedisinskArsakType>,
-)
+data class MedisinskArsak(val beskrivelse: String?, val arsak: List<MedisinskArsakType>)
 
 enum class ArbeidsrelatertArsakType(
     val codeValue: String,
     val text: String,
-    val oid: String = "2.16.578.1.12.4.1.1.8132"
+    val oid: String = "2.16.578.1.12.4.1.1.8132",
 ) {
     MANGLENDE_TILRETTELEGGING("1", "Manglende tilrettelegging på arbeidsplassen"),
     ANNET("9", "Annet"),
@@ -145,7 +135,7 @@ enum class ArbeidsrelatertArsakType(
 enum class MedisinskArsakType(
     val codeValue: String,
     val text: String,
-    val oid: String = "2.16.578.1.12.4.1.1.8133"
+    val oid: String = "2.16.578.1.12.4.1.1.8133",
 ) {
     TILSTAND_HINDRER_AKTIVITET("1", "Helsetilstanden hindrer pasienten i å være i aktivitet"),
     AKTIVITET_FORVERRER_TILSTAND("2", "Aktivitet vil forverre helsetilstanden"),
@@ -153,10 +143,7 @@ enum class MedisinskArsakType(
     ANNET("9", "Annet"),
 }
 
-data class Gradert(
-    val reisetilskudd: Boolean,
-    val grad: Int,
-)
+data class Gradert(val reisetilskudd: Boolean, val grad: Int)
 
 data class Prognose(
     val arbeidsforEtterPeriode: Boolean,
@@ -178,15 +165,9 @@ data class ErIkkeIArbeid(
     val vurderingsdato: LocalDate?,
 )
 
-data class MeldingTilNAV(
-    val bistandUmiddelbart: Boolean,
-    val beskrivBistand: String?,
-)
+data class MeldingTilNAV(val bistandUmiddelbart: Boolean, val beskrivBistand: String?)
 
-data class KontaktMedPasient(
-    val kontaktDato: LocalDate?,
-    val begrunnelseIkkeKontakt: String?,
-)
+data class KontaktMedPasient(val kontaktDato: LocalDate?, val begrunnelseIkkeKontakt: String?)
 
 data class Behandler(
     val fornavn: String,
@@ -208,10 +189,7 @@ data class Adresse(
     val land: String?,
 )
 
-data class AvsenderSystem(
-    val navn: String,
-    val versjon: String,
-)
+data class AvsenderSystem(val navn: String, val versjon: String)
 
 data class SporsmalSvar(
     val sporsmal: String?,
@@ -222,7 +200,7 @@ data class SporsmalSvar(
 enum class SvarRestriksjon(
     val codeValue: String,
     val text: String,
-    val oid: String = "2.16.578.1.12.4.1.1.8134"
+    val oid: String = "2.16.578.1.12.4.1.1.8134",
 ) {
     SKJERMET_FOR_ARBEIDSGIVER("A", "Informasjonen skal ikke vises arbeidsgiver"),
     SKJERMET_FOR_PASIENT("P", "Informasjonen skal ikke vises pasient"),
@@ -232,39 +210,36 @@ enum class SvarRestriksjon(
 enum class AnnenFraverGrunn(
     val codeValue: String,
     val text: String,
-    val oid: String = "2.16.578.1.12.4.1.1.8131"
+    val oid: String = "2.16.578.1.12.4.1.1.8131",
 ) {
     GODKJENT_HELSEINSTITUSJON("1", "Når vedkommende er innlagt i en godkjent helseinstitusjon"),
     BEHANDLING_FORHINDRER_ARBEID(
         "2",
-        "Når vedkommende er under behandling og legen erklærer at behandlingen gjør det nødvendig at vedkommende ikke arbeider"
+        "Når vedkommende er under behandling og legen erklærer at behandlingen gjør det nødvendig at vedkommende ikke arbeider",
     ),
     ARBEIDSRETTET_TILTAK("3", "Når vedkommende deltar på et arbeidsrettet tiltak"),
     MOTTAR_TILSKUDD_GRUNNET_HELSETILSTAND(
         "4",
-        "Når vedkommende på grunn av sykdom, skade eller lyte får tilskott når vedkommende på grunn av sykdom, skade eller lyte får tilskott"
+        "Når vedkommende på grunn av sykdom, skade eller lyte får tilskott når vedkommende på grunn av sykdom, skade eller lyte får tilskott",
     ),
     NODVENDIG_KONTROLLUNDENRSOKELSE(
         "5",
-        "Når vedkommende er til nødvendig kontrollundersøkelse som krever minst 24 timers fravær, reisetid medregnet"
+        "Når vedkommende er til nødvendig kontrollundersøkelse som krever minst 24 timers fravær, reisetid medregnet",
     ),
     SMITTEFARE(
         "6",
-        "Når vedkommende myndighet har nedlagt forbud mot at han eller hun arbeider på grunn av smittefare"
+        "Når vedkommende myndighet har nedlagt forbud mot at han eller hun arbeider på grunn av smittefare",
     ),
     ABORT("7", "Når vedkommende er arbeidsufør som følge av svangerskapsavbrudd"),
     UFOR_GRUNNET_BARNLOSHET(
         "8",
-        "Når vedkommende er arbeidsufør som følge av behandling for barnløshet"
+        "Når vedkommende er arbeidsufør som følge av behandling for barnløshet",
     ),
     DONOR("9", "Når vedkommende er donor eller er under vurdering som donor"),
     BEHANDLING_STERILISERING(
         "10",
-        "Når vedkommende er arbeidsufør som følge av behandling i forbindelse med sterilisering"
+        "Når vedkommende er arbeidsufør som følge av behandling i forbindelse med sterilisering",
     ),
 }
 
-data class Merknad(
-    val type: String,
-    val beskrivelse: String?,
-)
+data class Merknad(val type: String, val beskrivelse: String?)

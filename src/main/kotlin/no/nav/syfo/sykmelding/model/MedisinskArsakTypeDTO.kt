@@ -3,7 +3,7 @@ package no.nav.syfo.sykmelding.model
 enum class MedisinskArsakTypeDTO(
     val codeValue: String,
     val text: String,
-    val oid: String = "2.16.578.1.12.4.1.1.8133"
+    val oid: String = "2.16.578.1.12.4.1.1.8133",
 ) {
     TILSTAND_HINDRER_AKTIVITET("1", "Helsetilstanden hindrer pasienten i å være i aktivitet"),
     AKTIVITET_FORVERRER_TILSTAND("2", "Aktivitet vil forverre helsetilstanden"),

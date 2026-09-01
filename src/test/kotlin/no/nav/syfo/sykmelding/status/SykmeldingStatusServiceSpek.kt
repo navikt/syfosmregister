@@ -35,7 +35,7 @@ class SykmeldingStatusServiceSpek :
                     testSykmeldingsopplysninger.id,
                     testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC),
                     StatusEvent.APEN,
-                ),
+                )
             )
             database.opprettBehandlingsutfall(testBehandlingsutfall)
         }
@@ -62,7 +62,7 @@ class SykmeldingStatusServiceSpek :
                         "uuid",
                         getNowTickMillisOffsetDateTime().plusMonths(1).plusSeconds(10),
                         StatusEvent.SENDT,
-                    ),
+                    )
                 )
                 val sykmeldingstatuser = sykmeldingStatusService.getLatestSykmeldingStatus("uuid")
                 sykmeldingstatuser shouldNotBe null
@@ -73,17 +73,14 @@ class SykmeldingStatusServiceSpek :
 
             test("Status skal vises som avvist hvis sykmelding er avvist") {
                 val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
-                val copySykmeldingopplysning =
-                    testSykmeldingsopplysninger.copy(
-                        id = "uuid2",
-                    )
+                val copySykmeldingopplysning = testSykmeldingsopplysninger.copy(id = "uuid2")
                 database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument)
                 database.registerStatus(
                     SykmeldingStatusEvent(
                         copySykmeldingopplysning.id,
                         copySykmeldingopplysning.mottattTidspunkt.atOffset(ZoneOffset.UTC),
                         StatusEvent.APEN,
-                    ),
+                    )
                 )
                 database.opprettBehandlingsutfall(
                     Behandlingsutfall(
@@ -93,7 +90,7 @@ class SykmeldingStatusServiceSpek :
                                 Status.INVALID,
                                 listOf(RuleInfo("navn", "message", "message", Status.INVALID)),
                             ),
-                    ),
+                    )
                 )
 
                 val sykmeldingstatuser = sykmeldingStatusService.getLatestSykmeldingStatus("uuid2")
@@ -104,17 +101,14 @@ class SykmeldingStatusServiceSpek :
             test("Status skal vises som egenmeldt hvis sykmelding er egenmelding") {
                 val copySykmeldingDokument = testSykmeldingsdokument.copy(id = "uuid2")
                 val copySykmeldingopplysning =
-                    testSykmeldingsopplysninger.copy(
-                        id = "uuid2",
-                        epjSystemNavn = "Egenmeldt",
-                    )
+                    testSykmeldingsopplysninger.copy(id = "uuid2", epjSystemNavn = "Egenmeldt")
                 database.lagreMottattSykmelding(copySykmeldingopplysning, copySykmeldingDokument)
                 database.registerStatus(
                     SykmeldingStatusEvent(
                         copySykmeldingopplysning.id,
                         copySykmeldingopplysning.mottattTidspunkt.atOffset(ZoneOffset.UTC),
                         StatusEvent.APEN,
-                    ),
+                    )
                 )
                 database.opprettBehandlingsutfall(testBehandlingsutfall.copy(id = "uuid2"))
 
@@ -129,7 +123,7 @@ class SykmeldingStatusServiceSpek :
                         Sporsmal(
                             "tekst",
                             ShortName.FORSIKRING,
-                            Svar("uuid", 1, Svartype.JA_NEI, "NEI")
+                            Svar("uuid", 1, Svartype.JA_NEI, "NEI"),
                         )
                     )
                 sykmeldingStatusService.registrerBekreftet(
@@ -139,9 +133,9 @@ class SykmeldingStatusServiceSpek :
                             .atOffset(ZoneOffset.UTC)
                             .minusSeconds(1),
                         sporsmal,
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     ),
-                    tidligereArbeidsgiver = null
+                    tidligereArbeidsgiver = null,
                 )
                 val savedSporsmals = database.connection.use { it.hentSporsmalOgSvar("uuid") }
                 val alleSpm = database.getAlleSpm("uuid")
@@ -155,7 +149,7 @@ class SykmeldingStatusServiceSpek :
                         Sporsmal(
                             "tekst",
                             ShortName.FORSIKRING,
-                            Svar("uuid", 1, Svartype.JA_NEI, "NEI")
+                            Svar("uuid", 1, Svartype.JA_NEI, "NEI"),
                         )
                     )
                 sykmeldingStatusService.registrerBekreftet(
@@ -165,9 +159,9 @@ class SykmeldingStatusServiceSpek :
                             .atOffset(ZoneOffset.UTC)
                             .plusSeconds(1),
                         sporsmal,
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     ),
-                    tidligereArbeidsgiver = null
+                    tidligereArbeidsgiver = null,
                 )
                 val savedSporsmals = database.hentSporsmalOgSvar("uuid")
                 val alleSpm = database.getAlleSpm("uuid")
@@ -181,7 +175,7 @@ class SykmeldingStatusServiceSpek :
                         Sporsmal(
                             "tekst",
                             ShortName.FORSIKRING,
-                            Svar("uuid", 1, Svartype.JA_NEI, "NEI")
+                            Svar("uuid", 1, Svartype.JA_NEI, "NEI"),
                         )
                     )
                 sykmeldingStatusService.registrerBekreftet(
@@ -191,9 +185,9 @@ class SykmeldingStatusServiceSpek :
                             .atOffset(ZoneOffset.UTC)
                             .plusSeconds(1),
                         sporsmal,
-                        brukerSvar = null
+                        brukerSvar = null,
                     ),
-                    tidligereArbeidsgiver = null
+                    tidligereArbeidsgiver = null,
                 )
                 sykmeldingStatusService.registrerStatus(
                     SykmeldingStatusEvent(
@@ -202,7 +196,7 @@ class SykmeldingStatusServiceSpek :
                             .atOffset(ZoneOffset.UTC)
                             .plusSeconds(2),
                         StatusEvent.APEN,
-                    ),
+                    )
                 )
                 val savedSporsmal2 = database.connection.use { it.hentSporsmalOgSvar("uuid") }
                 savedSporsmal2.size shouldBeEqualTo 0
@@ -212,14 +206,14 @@ class SykmeldingStatusServiceSpek :
                 database.connection.dropData()
                 database.lagreMottattSykmelding(
                     testSykmeldingsopplysninger,
-                    testSykmeldingsdokument
+                    testSykmeldingsdokument,
                 )
                 database.registerStatus(
                     SykmeldingStatusEvent(
                         testSykmeldingsopplysninger.id,
                         testSykmeldingsopplysninger.mottattTidspunkt.atOffset(ZoneOffset.UTC),
                         StatusEvent.APEN,
-                    ),
+                    )
                 )
                 database.registrerSendt(
                     SykmeldingSendEvent(
@@ -231,16 +225,16 @@ class SykmeldingStatusServiceSpek :
                             testSykmeldingsopplysninger.id,
                             "orgnummer",
                             null,
-                            "Bedrift"
+                            "Bedrift",
                         ),
                         listOf(
                             Sporsmal(
                                 "Arbeidssituasjon",
                                 ShortName.ARBEIDSSITUASJON,
                                 Svar("uuid", 1, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
-                            ),
+                            )
                         ),
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     ),
                     SykmeldingStatusEvent(
                         testSykmeldingsopplysninger.id,
@@ -282,10 +276,10 @@ class SykmeldingStatusServiceSpek :
                             testSykmeldingsopplysninger.id,
                             "orgnummer",
                             null,
-                            "Bedrift"
+                            "Bedrift",
                         ),
                         sporsmal,
-                        brukerSvar = createKomplettInnsendtSkjemaSvar()
+                        brukerSvar = createKomplettInnsendtSkjemaSvar(),
                     ),
                     SykmeldingStatusEvent(
                         testSykmeldingsopplysninger.id,
