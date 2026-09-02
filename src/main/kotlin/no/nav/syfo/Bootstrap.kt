@@ -52,7 +52,10 @@ import org.slf4j.LoggerFactory
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.jacksonMapperBuilder
 
-val jsonMapper: JsonMapper = jacksonMapperBuilder().build()
+val jsonMapper: JsonMapper =
+    jacksonMapperBuilder()
+        .disable(tools.jackson.databind.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+        .build()
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
 val securelog: Logger = LoggerFactory.getLogger("securelog")
