@@ -17,19 +17,28 @@ spec:
             envVarPrefix: DB
             users:
               - name: macgyver
+              - name: tsm-migrator
         diskAutoresize: true
         highAvailability: true
         diskType: SSD
         insights:
           enabled: true
         flags:
+          - name: cloudsql.enable_pgaudit
+            value: "true"
+          - name: pgaudit.log
+            value: "write,ddl,role"
+          - name: pgaudit.log_parameter
+            value: "on"
           - name: cloudsql.logical_decoding
             value: "on"
   image: {{ image }}
   replicas:
     min: 3
-    max: 7
-    cpuThresholdPercentage: 80
+    max: 8
+    scalingStrategy:
+      cpu:
+        thresholdPercentage: 90
   port: 8080
   liveness:
     path: /internal/is_alive
@@ -45,13 +54,19 @@ spec:
   prometheus:
     enabled: true
     path: /internal/prometheus
+  observability:
+    autoInstrumentation:
+      enabled: true
+      runtime: java
+    logging:
+      destinations:
+        - id: loki
   resources:
     limits:
-      cpu: 500m
-      memory: 750Mi
+      memory: 2000Mi
     requests:
-      cpu: 100m
-      memory: 500Mi
+      cpu: 200m
+      memory: 1200Mi
   kafka:
     pool: nav-prod
   azure:
@@ -67,7 +82,9 @@ spec:
         - host: kafka-schema-registry.nais.adeo.no
         - host: pdl-api.prod-fss-pub.nais.io
       rules:
-        - application: syfo-tilgangskontroll
+        - application: logging
+          namespace: nais-system
+        - application: istilgangskontroll
           namespace: teamsykefravr
           cluster: prod-gcp
     inbound:
@@ -86,8 +103,6 @@ spec:
           cluster: prod-gcp
         - application: sparenaproxy
         - application: syfosmregler
-        - application: syfosmpapirregler
-        - application: smregistrering-backend
         - application: syfosminfotrygd
         - application: smoppslag
           cluster: prod-fss
@@ -98,8 +113,8 @@ spec:
         - application: macgyver
   leaderElection: true
   env:
-    - name: SYFOTILGANGSKONTROLL_SCOPE
-      value: api://prod-gcp.teamsykefravr.syfo-tilgangskontroll/.default
+    - name: ISTILGANGSKONTROLL_SCOPE
+      value: api://prod-gcp.teamsykefravr.istilgangskontroll/.default
     - name: KAFKA_CLIENT_ID
       value: syfosmregister
     - name: PDL_GRAPHQL_PATH

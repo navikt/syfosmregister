@@ -5,7 +5,19 @@
             <provider class="net.logstash.logback.composite.loggingevent.ArgumentsJsonProvider" />
         </encoder>
     </appender>
+	<appender name="secure_log" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>team-logs.nais-system:5170</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>
+                {"google_cloud_project":"${GOOGLE_CLOUD_PROJECT}","nais_namespace_name":"${NAIS_NAMESPACE}","nais_pod_name":"${NAIS_POD_NAME}","nais_container_name":"${NAIS_APP_NAME}"}
+            </customFields>
+            <includeContext>false</includeContext>
+        </encoder>
+    </appender>
 
+    <logger name="securelog" level="INFO" additivity="false">
+        <appender-ref ref="secure_log" />
+    </logger>
     <logger name="no.nav" level="INFO"/>
     <logger name="org.apache.kafka" level="WARN" />
     <logger name="com.zaxxer.hikari.pool" level="INFO" />

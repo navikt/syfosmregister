@@ -13,7 +13,7 @@ internal class TimestampUtilTest :
             val timestamp =
                 TimestampUtil.getMinTime(
                     mottattTimestamp,
-                    OffsetDateTime.of(mottattTimestamp, ZoneOffset.UTC)
+                    OffsetDateTime.of(mottattTimestamp, ZoneOffset.UTC),
                 )
 
             mottattTimestamp shouldBeEqualTo timestamp.toLocalDateTime()

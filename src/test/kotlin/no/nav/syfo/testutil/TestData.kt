@@ -2,10 +2,10 @@ package no.nav.syfo.testutil
 
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import no.nav.helse.diagnosekoder.Diagnosekoder
 import no.nav.syfo.Environment
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.db.Adresse
 import no.nav.syfo.sykmelding.db.AktivitetIkkeMulig
 import no.nav.syfo.sykmelding.db.Arbeidsgiver
@@ -22,6 +22,13 @@ import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.StatusDbModel
 import no.nav.syfo.sykmelding.db.Sykmelding
 import no.nav.syfo.sykmelding.db.SykmeldingDbModel
+import no.nav.syfo.sykmelding.kafka.model.Arbeidssituasjon
+import no.nav.syfo.sykmelding.kafka.model.Blad
+import no.nav.syfo.sykmelding.kafka.model.FiskereSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.JaEllerNei
+import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
+import no.nav.syfo.sykmelding.kafka.model.LottOgHyre
+import no.nav.syfo.sykmelding.kafka.model.SporsmalSvar
 import no.nav.syfo.sykmelding.model.AdresseDTO
 import no.nav.syfo.sykmelding.model.AnnenFraversArsakDTO
 import no.nav.syfo.sykmelding.model.BehandlerDTO
@@ -39,12 +46,12 @@ import no.nav.syfo.sykmelding.papir.db.PapirsykmeldingDbModel
 fun getEnvironment(): Environment {
     return Environment(
         cluster = "",
-        syfoTilgangskontrollUrl = "",
+        istilgangskontrollUrl = "",
         clientIdV2 = "clientid",
         clientSecretV2 = "",
         jwkKeysUrlV2 = "",
         jwtIssuerV2 = "assureissuer",
-        syfotilgangskontrollScope = "",
+        istilgangskontrollScope = "",
         azureTokenEndpoint = "",
         pdlGraphqlPath = "",
         pdlScope = "scope",
@@ -74,7 +81,7 @@ fun getSykmeldingDto(perioder: List<SykmeldingsperiodeDTO> = getPerioder()): Syk
                 "APEN",
                 getNowTickMillisOffsetDateTime(),
                 null,
-                emptyList()
+                emptyList(),
             ),
         behandlingsutfall = BehandlingsutfallDTO(RegelStatusDTO.OK, emptyList()),
         medisinskVurdering = getMedisinskVurdering(),
@@ -132,7 +139,7 @@ fun getPerioder(): List<SykmeldingsperiodeDTO> {
             null,
             PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
             null,
-            false
+            false,
         )
     )
 }
@@ -147,14 +154,14 @@ fun getGradertePerioder(): List<SykmeldingsperiodeDTO> {
             null,
             PeriodetypeDTO.AKTIVITET_IKKE_MULIG,
             null,
-            false
+            false,
         )
     )
 }
 
 fun getSykmeldingerDBmodel(
     skjermet: Boolean = false,
-    perioder: List<Periode> = emptyList()
+    perioder: List<Periode> = emptyList(),
 ): SykmeldingDbModel {
     return SykmeldingDbModel(
         id = "123",
@@ -208,11 +215,7 @@ fun getSykmeldingerDBmodel(
                         Adresse(null, null, null, null, null),
                         null,
                     ),
-                kontaktMedPasient =
-                    KontaktMedPasient(
-                        LocalDate.now(),
-                        "Begrunnelse",
-                    ),
+                kontaktMedPasient = KontaktMedPasient(LocalDate.now(), "Begrunnelse"),
                 utdypendeOpplysninger = emptyMap(),
                 msgId = "msgid",
                 pasientAktoerId = "aktorId",
@@ -232,7 +235,7 @@ fun getPeriode(fom: LocalDate, tom: LocalDate, gradert: Gradert? = null): Period
         aktivitetIkkeMulig =
             AktivitetIkkeMulig(
                 medisinskArsak = MedisinskArsak("beskrivelse", emptyList()),
-                arbeidsrelatertArsak = null
+                arbeidsrelatertArsak = null,
             ),
         gradert = gradert,
         behandlingsdager = null,
@@ -245,7 +248,7 @@ fun getSykmeldingerDBmodelEgenmeldt(
     hovediagnosekode: String = "kode",
     bidiagnoser: List<Diagnose> = emptyList(),
     avsenderSystem: AvsenderSystem = AvsenderSystem("Nobody", "versjon"),
-    perioder: List<Periode> = emptyList()
+    perioder: List<Periode> = emptyList(),
 ): SykmeldingDbModel {
     return SykmeldingDbModel(
         id = "123",
@@ -299,11 +302,7 @@ fun getSykmeldingerDBmodelEgenmeldt(
                         Adresse(null, null, null, null, null),
                         null,
                     ),
-                kontaktMedPasient =
-                    KontaktMedPasient(
-                        LocalDate.now(),
-                        "Begrunnelse",
-                    ),
+                kontaktMedPasient = KontaktMedPasient(LocalDate.now(), "Begrunnelse"),
                 utdypendeOpplysninger = emptyMap(),
                 msgId = "msgid",
                 pasientAktoerId = "aktorId",
@@ -355,7 +354,7 @@ fun getPapirsykmeldingDbModel(
                             behandlingsdager = null,
                             gradert = null,
                             reisetilskudd = false,
-                        ),
+                        )
                     ),
                 prognose = null,
                 utdypendeOpplysninger = emptyMap(),
@@ -385,3 +384,22 @@ fun getPapirsykmeldingDbModel(
             ),
     )
 }
+
+fun createKomplettInnsendtSkjemaSvar() =
+    KomplettInnsendtSkjemaSvar(
+        erOpplysningeneRiktige = SporsmalSvar("riktig", JaEllerNei.JA),
+        harForsikring = SporsmalSvar("har forsikring", JaEllerNei.JA),
+        arbeidsgiverOrgnummer = SporsmalSvar("orgnummer", "123456789"),
+        arbeidssituasjon = SporsmalSvar("Har arbeidsgiver", Arbeidssituasjon.ARBEIDSTAKER),
+        harBruktEgenmelding = SporsmalSvar("egenmelding?", JaEllerNei.NEI),
+        riktigNarmesteLeder = SporsmalSvar("RiktigNL", JaEllerNei.JA),
+        egenmeldingsdager = SporsmalSvar("egenmeldingsdager", emptyList()),
+        egenmeldingsperioder = null,
+        uriktigeOpplysninger = SporsmalSvar("hvilken?", emptyList()),
+        harBruktEgenmeldingsdager = SporsmalSvar("egenmeldingsdager?", JaEllerNei.JA),
+        fisker =
+            FiskereSvarKafkaDTO(
+                SporsmalSvar("Blad", Blad.A),
+                lottOgHyre = SporsmalSvar("logg og eller hyre?", LottOgHyre.HYRE),
+            ),
+    )

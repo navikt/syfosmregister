@@ -1,9 +1,13 @@
 package no.nav.syfo.sykmelding.kafka.service
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import no.nav.syfo.application.ApplicationState
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
 import no.nav.syfo.sykmelding.kafka.consumer.SykmeldingStatusKafkaConsumer
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
 import org.slf4j.LoggerFactory
 
 class SykmeldingStatusConsumerService(
@@ -23,9 +27,8 @@ class SykmeldingStatusConsumerService(
                 run()
             } catch (ex: Exception) {
                 log.error(
-                    "Error reading status from aiven topic, trying again in {} milliseconds, error {}",
-                    DELAY_START,
-                    ex.message,
+                    "Error reading status from aiven topic, trying again in $DELAY_START milliseconds",
+                    ex,
                 )
                 sykmeldingStatusKafkaConsumer.unsubscribe()
             }
@@ -37,16 +40,22 @@ class SykmeldingStatusConsumerService(
         sykmeldingStatusKafkaConsumer.subscribe()
         while (applicationState.ready) {
             val kafkaEvents = sykmeldingStatusKafkaConsumer.poll()
-            kafkaEvents.forEach { handleStatusEvent(it) }
+            kafkaEvents.forEach { handleStatusEvent(it.first, it.second) }
             if (kafkaEvents.isNotEmpty()) {
                 sykmeldingStatusKafkaConsumer.commitSync()
             }
-            delay(100)
         }
     }
 
-    private suspend fun handleStatusEvent(it: SykmeldingStatusKafkaMessageDTO) {
-        log.info("Mottatt sykmelding status ${it.event.sykmeldingId}")
-        mottattSykmeldingStatusService.handleStatusEvent(it)
+    @WithSpan
+    private suspend fun handleStatusEvent(
+        sykmeldingId: String,
+        event: SykmeldingStatusKafkaMessageDTO?,
+    ) {
+        coroutineScope {
+            launch(Dispatchers.IO) {
+                mottattSykmeldingStatusService.handleStatusEvent(sykmeldingId, event)
+            }
+        }
     }
 }

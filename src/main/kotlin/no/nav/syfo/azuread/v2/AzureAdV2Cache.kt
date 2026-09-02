@@ -22,11 +22,7 @@ class AzureAdV2Cache {
         val key = getSha256Key(token)
         return cache.getIfPresent(key)?.let {
             when (it.expires.isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
-                true ->
-                    cache.invalidate(key).let {
-                        log.info("Token in cache has expired")
-                        null
-                    }
+                true -> null
                 else -> it
             }
         }

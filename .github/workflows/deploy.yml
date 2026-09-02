@@ -1,9 +1,16 @@
-name: Deploy to dev and prod
+name: Deploy app to dev and prod
 on: push
+
+permissions:
+  actions: read
+  contents: write
+  security-events: write
+  packages: write
+  id-token: write
 
 jobs:
   jar-app:
-    uses: navikt/teamsykmelding-github-actions-workflows/.github/workflows/jar-app.yaml@main
+    uses: navikt/teamsykmelding-github-actions-workflows/.github/workflows/jar-app-25.yaml@main
     secrets: inherit
     with:
       app: syfosmregister

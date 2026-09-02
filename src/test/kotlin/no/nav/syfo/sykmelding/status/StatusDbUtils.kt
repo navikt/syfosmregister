@@ -13,7 +13,7 @@ fun DatabaseInterface.finnSvarForSykmelding(sykmeldingId: String): List<Sporsmal
                 FROM svar as SVAR
                      INNER JOIN sporsmal as SPM on SVAR.sporsmal_id = SPM.id
                 WHERE sykmelding_id=?;
-                """,
+                """
             )
             .use {
                 it.setString(1, sykmeldingId)

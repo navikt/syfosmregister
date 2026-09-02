@@ -36,9 +36,9 @@ class Database(private val env: Environment, retries: Long = 30, sleepTime: Long
                             idleTimeout = 10000
                             maxLifetime = 300000
                             isAutoCommit = false
-                            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+                            transactionIsolation = "TRANSACTION_READ_COMMITTED"
                             validate()
-                        },
+                        }
                     )
                 connected = true
             } catch (ex: HikariPool.PoolInitializationException) {

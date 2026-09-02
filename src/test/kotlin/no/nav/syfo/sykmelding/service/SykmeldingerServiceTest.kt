@@ -66,7 +66,7 @@ class SykmeldingerServiceTest :
                         null,
                         null,
                         listOf("AVBRUTT"),
-                        null
+                        null,
                     )
                 sykmeldinger.size shouldBeEqualTo 1
                 sykmeldinger[0].sykmeldingStatus.statusEvent shouldBeEqualTo "AVBRUTT"
@@ -94,7 +94,7 @@ class SykmeldingerServiceTest :
                         null,
                         null,
                         null,
-                        fullBehandler = false
+                        fullBehandler = false,
                     )
                 sykmeldinger.size shouldBeEqualTo 2
                 sykmeldinger.first().behandler.fornavn shouldBeEqualTo "fornavn"
@@ -123,7 +123,7 @@ class SykmeldingerServiceTest :
                         null,
                         null,
                         null,
-                        fullBehandler = true
+                        fullBehandler = true,
                     )
                 sykmeldinger.size shouldBeEqualTo 2
                 sykmeldinger.first().behandler.fornavn shouldBeEqualTo "fornavn"
@@ -151,7 +151,7 @@ class SykmeldingerServiceTest :
                         null,
                         null,
                         listOf("AVBRUTT", "APEN"),
-                        null
+                        null,
                     )
                 sykmeldinger.size shouldBeEqualTo 2
                 sykmeldinger[0].sykmeldingStatus.statusEvent shouldBeEqualTo "APEN"
@@ -179,7 +179,7 @@ class SykmeldingerServiceTest :
                         null,
                         null,
                         null,
-                        listOf("AVBRUTT")
+                        listOf("AVBRUTT"),
                     )
                 sykmeldinger.size shouldBeEqualTo 1
                 sykmeldinger[0].sykmeldingStatus.statusEvent shouldBeEqualTo "APEN"
@@ -206,7 +206,7 @@ class SykmeldingerServiceTest :
                         null,
                         null,
                         null,
-                        listOf("AVBRUTT", "APEN")
+                        listOf("AVBRUTT", "APEN"),
                     )
                 sykmeldinger.size shouldBeEqualTo 0
             }
@@ -228,10 +228,10 @@ class SykmeldingerServiceTest :
                                     listOf(
                                         Merknad(
                                             type = "UGYLDIG_TILBAKEDATERING",
-                                            beskrivelse = null
-                                        ),
-                                    ),
-                            ),
+                                            beskrivelse = null,
+                                        )
+                                    )
+                            )
                     )
                 val sykmeldinger = sykmeldingerService.getUserSykmelding(sykmeldingId, null, null)
                 sykmeldinger.size shouldBeEqualTo 1
@@ -265,12 +265,8 @@ class SykmeldingerServiceTest :
                 coEvery { database.getSykmeldinger(any()) } returns
                     listOf(
                         getSykmeldingerDBmodelEgenmeldt(
-                            avsenderSystem =
-                                AvsenderSystem(
-                                    "Egenmeldt",
-                                    "versjon",
-                                ),
-                        ),
+                            avsenderSystem = AvsenderSystem("Egenmeldt", "versjon")
+                        )
                     )
                 val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
                 sykmeldinger.size shouldBeEqualTo 1
@@ -284,12 +280,8 @@ class SykmeldingerServiceTest :
                 coEvery { database.getSykmeldinger(any()) } returns
                     listOf(
                         getSykmeldingerDBmodelEgenmeldt(
-                            avsenderSystem =
-                                AvsenderSystem(
-                                    "Papirsykmelding",
-                                    "versjon",
-                                ),
-                        ),
+                            avsenderSystem = AvsenderSystem("Papirsykmelding", "versjon")
+                        )
                     )
                 val sykmeldinger = sykmeldingerService.getInternalSykmeldinger(sykmeldingId)
                 sykmeldinger.size shouldBeEqualTo 1
@@ -319,7 +311,7 @@ class SykmeldingerServiceTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
+                                )
                             ),
                     )
                 val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
@@ -339,7 +331,7 @@ class SykmeldingerServiceTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
+                                )
                             ),
                     )
                 val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
@@ -359,7 +351,7 @@ class SykmeldingerServiceTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
+                                )
                             ),
                     )
                 val sykmelding = sykmeldingerService.getSykmeldingMedId(sykmeldingId)
@@ -377,15 +369,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         LocalDate.of(2020, 1, 1),
-                        LocalDate.of(2020, 3, 1)
+                        LocalDate.of(2020, 3, 1),
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -398,15 +390,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         LocalDate.of(2020, 2, 9),
-                        null
+                        null,
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -419,15 +411,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         LocalDate.of(2020, 2, 16),
-                        null
+                        null,
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -440,15 +432,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         LocalDate.of(2020, 2, 20),
-                        null
+                        null,
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -461,15 +453,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         LocalDate.of(2020, 2, 21),
-                        null
+                        null,
                     )
                 sykmeldinger.size shouldBeEqualTo 0
             }
@@ -488,14 +480,14 @@ class SykmeldingerServiceTest :
                                         fom = LocalDate.of(2020, 2, 21),
                                         tom = LocalDate.of(2020, 2, 21),
                                     ),
-                                ),
-                        ),
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         LocalDate.of(2020, 2, 21),
-                        null
+                        null,
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -508,15 +500,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         null,
-                        LocalDate.of(2020, 2, 21)
+                        LocalDate.of(2020, 2, 21),
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -529,15 +521,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         null,
-                        LocalDate.of(2020, 2, 20)
+                        LocalDate.of(2020, 2, 20),
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -550,15 +542,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         null,
-                        LocalDate.of(2020, 2, 15)
+                        LocalDate.of(2020, 2, 15),
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -571,15 +563,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         null,
-                        LocalDate.of(2020, 2, 10)
+                        LocalDate.of(2020, 2, 10),
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -592,15 +584,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         null,
-                        LocalDate.of(2020, 2, 9)
+                        LocalDate.of(2020, 2, 9),
                     )
                 sykmeldinger.size shouldBeEqualTo 0
             }
@@ -618,14 +610,14 @@ class SykmeldingerServiceTest :
                                         fom = LocalDate.of(2020, 2, 5),
                                         tom = LocalDate.of(2020, 2, 9),
                                     ),
-                                ),
-                        ),
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         null,
-                        LocalDate.of(2020, 2, 9)
+                        LocalDate.of(2020, 2, 9),
                     )
                 sykmeldinger.size shouldBeEqualTo 1
             }
@@ -639,9 +631,9 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
@@ -660,9 +652,9 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
@@ -681,9 +673,9 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
@@ -703,15 +695,15 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
                         sykmeldingId,
                         LocalDate.of(2019, 2, 5),
-                        LocalDate.of(2020, 2, 9)
+                        LocalDate.of(2020, 2, 9),
                     )
                 sykmeldinger.size shouldBeEqualTo 0
             }
@@ -724,9 +716,9 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
@@ -751,8 +743,8 @@ class SykmeldingerServiceTest :
                                         fom = LocalDate.of(2020, 2, 21),
                                         tom = LocalDate.of(2020, 2, 21),
                                     ),
-                                ),
-                        ),
+                                )
+                        )
                     )
                 val sykmeldinger =
                     sykmeldingerService.getUserSykmelding(
@@ -775,9 +767,9 @@ class SykmeldingerServiceTest :
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
                                         gradert = Gradert(false, 50),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
 
                 val sykmeldtStatus =
@@ -800,8 +792,8 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
+                                    )
+                                )
                         ),
                         getSykmeldingerDBmodel(
                             perioder =
@@ -810,8 +802,8 @@ class SykmeldingerServiceTest :
                                         fom = LocalDate.of(2019, 2, 10),
                                         tom = LocalDate.of(2019, 2, 20),
                                         gradert = Gradert(false, 50),
-                                    ),
-                                ),
+                                    )
+                                )
                         ),
                     )
 
@@ -835,9 +827,9 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
 
                 val sykmeldtStatus =
@@ -855,9 +847,9 @@ class SykmeldingerServiceTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 2, 10),
                                         tom = LocalDate.of(2020, 2, 20),
-                                    ),
-                                ),
-                        ),
+                                    )
+                                )
+                        )
                     )
 
                 val sykmeldtStatus =
@@ -902,7 +894,7 @@ class SykmeldingerServiceTest :
                                         tom = LocalDate.of(2020, 2, 25),
                                         gradert = Gradert(false, 50),
                                     ),
-                                ),
+                                )
                         ),
                         getSykmeldingerDBmodel(
                             perioder =
@@ -911,8 +903,8 @@ class SykmeldingerServiceTest :
                                         fom = LocalDate.of(2019, 2, 10),
                                         tom = LocalDate.of(2019, 2, 20),
                                         gradert = Gradert(false, 50),
-                                    ),
-                                ),
+                                    )
+                                )
                         ),
                     )
 

@@ -1,17 +1,13 @@
 package no.nav.syfo
 
 import com.auth0.jwk.JwkProviderBuilder
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.engine.apache.Apache
-import io.ktor.client.engine.apache.ApacheEngineConfig
+import io.ktor.client.engine.apache5.Apache5
+import io.ktor.client.engine.apache5.Apache5EngineConfig
 import io.prometheus.client.hotspot.DefaultExports
-import java.net.URL
+import java.net.URI
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.CoroutineScope
@@ -39,10 +35,8 @@ import no.nav.syfo.sykmelding.kafka.KafkaFactory
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaConsumerAivenPdlAktor
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getKafkaStatusConsumerAiven
 import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getMottattSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.KafkaFactory.Companion.getSykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
 import no.nav.syfo.sykmelding.kafka.service.SykmeldingStatusConsumerService
-import no.nav.syfo.sykmelding.service.BehandlingsutfallService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingConsumerService
 import no.nav.syfo.sykmelding.service.MottattSykmeldingService
 import no.nav.syfo.sykmelding.service.SykmeldingerService
@@ -55,16 +49,16 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.jacksonMapperBuilder
 
-val objectMapper: ObjectMapper =
-    ObjectMapper().apply {
-        registerKotlinModule()
-        registerModule(JavaTimeModule())
-        configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-    }
+val jsonMapper: JsonMapper =
+    jacksonMapperBuilder()
+        .disable(tools.jackson.databind.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+        .build()
 
 val log: Logger = LoggerFactory.getLogger("nav.syfo.syfosmregister")
+val securelog: Logger = LoggerFactory.getLogger("securelog")
 
 @DelicateCoroutinesApi
 @ExperimentalTime
@@ -72,15 +66,15 @@ fun main() {
     val environment = Environment()
 
     val jwkProviderAadV2 =
-        JwkProviderBuilder(URL(environment.jwkKeysUrlV2))
-            .cached(10, 24, TimeUnit.HOURS)
+        JwkProviderBuilder(URI.create(environment.jwkKeysUrlV2).toURL())
+            .cached(10, Duration.ofHours(24))
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
     val wellKnownTokenX = getWellKnownTokenX(environment.tokenXWellKnownUrl)
     val jwkProviderTokenX =
-        JwkProviderBuilder(URL(wellKnownTokenX.jwks_uri))
-            .cached(10, 24, TimeUnit.HOURS)
+        JwkProviderBuilder(URI.create(wellKnownTokenX.jwks_uri).toURL())
+            .cached(10, Duration.ofHours(24))
             .rateLimited(10, 1, TimeUnit.MINUTES)
             .build()
 
@@ -90,67 +84,47 @@ fun main() {
 
     DefaultExports.initialize()
 
-    val kafkaBaseConfigAiven =
-        KafkaUtils.getAivenKafkaConfig().also {
-            it.let {
-                it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
-                it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
-            }
-        }
-
     val sykmeldingStatusService = SykmeldingStatusService(database)
 
-    val sykmeldingStatusKafkaConsumerAiven =
-        getKafkaStatusConsumerAiven(kafkaBaseConfigAiven, environment)
+    val sykmeldingStatusKafkaConsumerAiven = getKafkaStatusConsumerAiven(environment)
 
     val receivedSykmeldingKafkaConsumerAiven =
         KafkaConsumer<String, String>(
-            kafkaBaseConfigAiven
+            KafkaUtils.getAivenKafkaConfig("received-sykmelding-consumer")
+                .also {
+                    it.let {
+                        it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = "1"
+                        it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none"
+                    }
+                }
                 .toConsumerConfig(
                     "${environment.applicationName}-gcp-consumer",
-                    valueDeserializer = StringDeserializer::class
+                    valueDeserializer = StringDeserializer::class,
                 )
-                .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
+                .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" }
         )
 
-    val behandlingsutfallKafkaConsumerAiven =
-        KafkaConsumer<String, String>(
-            kafkaBaseConfigAiven
-                .toConsumerConfig(
-                    "${environment.applicationName}-gcp-consumer",
-                    valueDeserializer = StringDeserializer::class
-                )
-                .also { it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "none" },
-        )
-    val behandlingsutfallService =
-        BehandlingsutfallService(
-            applicationState = applicationState,
-            kafkaAivenConsumer = behandlingsutfallKafkaConsumerAiven,
-            env = environment,
-            database = database,
-        )
-
-    val config: HttpClientConfig<ApacheEngineConfig>.() -> Unit = {
+    val config: HttpClientConfig<Apache5EngineConfig>.() -> Unit = {
         setupJacksonSerialization()
         handleResponseException()
         setupRetry()
         expectSuccess = true
     }
 
-    val httpClient = HttpClient(Apache, config)
+    val httpClient = HttpClient(Apache5, config)
     val azureAdV2Client =
         AzureAdV2Client(
             environment.clientIdV2,
             environment.clientSecretV2,
             environment.azureTokenEndpoint,
-            httpClient
+            httpClient,
         )
     val tilgangskontrollService =
         TilgangskontrollService(
             azureAdV2Client,
             httpClient,
-            environment.syfoTilgangskontrollUrl,
-            environment.syfotilgangskontrollScope
+            environment.istilgangskontrollUrl,
+            environment.istilgangskontrollScope,
         )
 
     val pdlClient =
@@ -166,18 +140,17 @@ fun main() {
     val pdlService = PdlPersonService(pdlClient, azureAdV2Client, environment.pdlScope)
 
     val sykmeldingerService = SykmeldingerService(database)
-    val sendtSykmeldingKafkaProducer =
-        KafkaFactory.getSendtSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
+    val sendtSykmeldingKafkaProducer = KafkaFactory.getSendtSykmeldingKafkaProducer(environment)
     val bekreftSykmeldingKafkaProducer =
-        KafkaFactory.getBekreftetSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment)
-    val tombstoneProducer = KafkaFactory.getTombstoneProducer(kafkaBaseConfigAiven, environment)
+        KafkaFactory.getBekreftetSykmeldingKafkaProducer(environment)
+    val tombstoneProducer = KafkaFactory.getTombstoneProducer(environment)
     val mottattSykmeldingStatusService =
         MottattSykmeldingStatusService(
             sykmeldingStatusService,
             sendtSykmeldingKafkaProducer,
             bekreftSykmeldingKafkaProducer,
             tombstoneProducer,
-            database
+            database,
         )
 
     val leaderElection = LeaderElection(httpClient, environment.electorPath)
@@ -196,11 +169,9 @@ fun main() {
         MottattSykmeldingService(
             database = database,
             env = environment,
-            sykmeldingStatusKafkaProducer =
-                getSykmeldingStatusKafkaProducer(kafkaBaseConfigAiven, environment),
-            mottattSykmeldingKafkaProducer =
-                getMottattSykmeldingKafkaProducer(kafkaBaseConfigAiven, environment),
+            mottattSykmeldingKafkaProducer = getMottattSykmeldingKafkaProducer(environment),
             mottattSykmeldingStatusService = mottattSykmeldingStatusService,
+            sykmeldingStatusService = sykmeldingStatusService,
         )
     val sykmeldingStatusConsumerService =
         SykmeldingStatusConsumerService(
@@ -229,11 +200,11 @@ fun main() {
         )
 
     pdlAktorConsumer.startConsumer()
+
     launchListeners(
         applicationState = applicationState,
         sykmeldingStatusConsumerService = sykmeldingStatusConsumerService,
         mottattSykmeldingConsumerService = mottattSykmeldingConsumerService,
-        behandlingsutfallService = behandlingsutfallService,
     )
 
     ApplicationServer(applicationEngine, applicationState).start()
@@ -242,7 +213,7 @@ fun main() {
 @DelicateCoroutinesApi
 fun createListener(
     applicationState: ApplicationState,
-    action: suspend CoroutineScope.() -> Unit
+    action: suspend CoroutineScope.() -> Unit,
 ): Job =
     GlobalScope.launch(Dispatchers.IO) {
         try {
@@ -251,7 +222,7 @@ fun createListener(
             log.error(
                 "En uhåndtert feil oppstod, applikasjonen restarter {}",
                 fields(e.loggingMeta),
-                e.cause
+                e.cause,
             )
         } catch (ex: Exception) {
             log.error("Noe gikk galt", ex.cause)
@@ -266,9 +237,7 @@ fun launchListeners(
     applicationState: ApplicationState,
     sykmeldingStatusConsumerService: SykmeldingStatusConsumerService,
     mottattSykmeldingConsumerService: MottattSykmeldingConsumerService,
-    behandlingsutfallService: BehandlingsutfallService,
 ) {
     createListener(applicationState) { mottattSykmeldingConsumerService.start() }
-    createListener(applicationState) { behandlingsutfallService.start() }
     createListener(applicationState) { sykmeldingStatusConsumerService.start() }
 }

@@ -35,6 +35,7 @@ class KafkaTest {
                     JacksonNullableKafkaSerializer::class.java
                 it[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
                 it[ConsumerConfig.AUTO_OFFSET_RESET_CONFIG] = "earliest"
+                it[ConsumerConfig.MAX_POLL_RECORDS_CONFIG] = 1
             }
             return kafkaConfig
         }

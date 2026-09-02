@@ -1,13 +1,12 @@
 package no.nav.syfo.sykmelding.model
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.core.spec.style.FunSpec
 import java.time.LocalDate
+import no.nav.helse.diagnosekoder.Diagnosekoder
+import no.nav.syfo.jsonMapper
 import no.nav.syfo.model.RuleInfo
 import no.nav.syfo.model.Status
 import no.nav.syfo.model.ValidationResult
-import no.nav.syfo.objectMapper
-import no.nav.syfo.sm.Diagnosekoder
 import no.nav.syfo.sykmelding.db.AnnenFraverGrunn
 import no.nav.syfo.sykmelding.db.AnnenFraversArsak
 import no.nav.syfo.sykmelding.db.Diagnose
@@ -15,6 +14,7 @@ import no.nav.syfo.sykmelding.db.SporsmalSvar
 import no.nav.syfo.testutil.getPeriode
 import no.nav.syfo.testutil.getSykmeldingerDBmodel
 import org.amshove.kluent.shouldBeEqualTo
+import tools.jackson.module.kotlin.readValue
 
 class SykmeldingMapperKtTest :
     FunSpec({
@@ -28,16 +28,16 @@ class SykmeldingMapperKtTest :
         context("Test SykmeldingMapper") {
             test("Test map utdypendeOpplysninger - ikke pasient") {
                 val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>> =
-                    objectMapper.readValue(utdypendeopplysningerJson)
+                    jsonMapper.readValue(utdypendeopplysningerJson)
                 val mappedMap = toUtdypendeOpplysninger(utdypendeOpplysninger, false)
-                mappedOpplysningerJson shouldBeEqualTo objectMapper.writeValueAsString(mappedMap)
+                mappedOpplysningerJson shouldBeEqualTo jsonMapper.writeValueAsString(mappedMap)
             }
             test("Test map utdypendeOpplysninger - pasient") {
                 val utdypendeOpplysninger: Map<String, Map<String, SporsmalSvar>> =
-                    objectMapper.readValue(utdypendeopplysningerJson)
+                    jsonMapper.readValue(utdypendeopplysningerJson)
                 val mappedMap = toUtdypendeOpplysninger(utdypendeOpplysninger, true)
                 mappedeOpplysningerJsonPasient shouldBeEqualTo
-                    objectMapper.writeValueAsString(mappedMap)
+                    jsonMapper.writeValueAsString(mappedMap)
             }
             test("test map har ikke redusert arbeidsgiverperiode") {
                 val sykmeldingDto =
@@ -47,8 +47,8 @@ class SykmeldingMapperKtTest :
                                     getPeriode(
                                         fom = LocalDate.of(2020, 3, 10),
                                         tom = LocalDate.of(2020, 3, 20),
-                                    ),
-                                ),
+                                    )
+                                )
                         )
                         .toSykmeldingDTO(sporsmal = emptyList(), ikkeTilgangTilDiagnose = false)
                 sykmeldingDto.harRedusertArbeidsgiverperiode shouldBeEqualTo false
@@ -61,8 +61,8 @@ class SykmeldingMapperKtTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
-                            ),
+                                )
+                            )
                     )
                 val sykmeldingMedSmittefare =
                     sykmeldingDbModel.copy(
@@ -73,18 +73,16 @@ class SykmeldingMapperKtTest :
                                         annenFraversArsak =
                                             AnnenFraversArsak(
                                                 null,
-                                                listOf(
-                                                    AnnenFraverGrunn.SMITTEFARE,
-                                                ),
-                                            ),
-                                    ),
-                            ),
+                                                listOf(AnnenFraverGrunn.SMITTEFARE),
+                                            )
+                                    )
+                            )
                     )
 
                 val sykmeldingDto =
                     sykmeldingMedSmittefare.toSykmeldingDTO(
                         sporsmal = emptyList(),
-                        ikkeTilgangTilDiagnose = false
+                        ikkeTilgangTilDiagnose = false,
                     )
                 sykmeldingDto.harRedusertArbeidsgiverperiode shouldBeEqualTo true
             }
@@ -98,8 +96,8 @@ class SykmeldingMapperKtTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
-                            ),
+                                )
+                            )
                     )
                 val sykmeldingMedSmittefare =
                     sykmeldingDbModel.copy(
@@ -111,17 +109,17 @@ class SykmeldingMapperKtTest :
                                             AnnenFraversArsak(
                                                 null,
                                                 listOf(
-                                                    AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID,
+                                                    AnnenFraverGrunn.BEHANDLING_FORHINDRER_ARBEID
                                                 ),
-                                            ),
-                                    ),
-                            ),
+                                            )
+                                    )
+                            )
                     )
 
                 val sykmeldingDto =
                     sykmeldingMedSmittefare.toSykmeldingDTO(
                         sporsmal = emptyList(),
-                        ikkeTilgangTilDiagnose = false
+                        ikkeTilgangTilDiagnose = false,
                     )
                 sykmeldingDto.harRedusertArbeidsgiverperiode shouldBeEqualTo false
             }
@@ -165,7 +163,7 @@ class SykmeldingMapperKtTest :
                                 "sender",
                                 "user",
                                 "rulename",
-                                RegelStatusDTO.MANUAL_PROCESSING
+                                RegelStatusDTO.MANUAL_PROCESSING,
                             ),
                             RegelinfoDTO("sender2", "user2", "rulename2", RegelStatusDTO.INVALID),
                         ),
@@ -182,18 +180,16 @@ class SykmeldingMapperKtTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
-                            ),
+                                )
+                            )
                     )
                 val sykmeldingMedUtdypendeOpplysninger =
                     sykmeldingDbModel.copy(
                         sykmeldingsDokument =
                             sykmeldingDbModel.sykmeldingsDokument.copy(
                                 utdypendeOpplysninger =
-                                    objectMapper.readValue(
-                                        utdypendeopplysningerJson,
-                                    ),
-                            ),
+                                    jsonMapper.readValue(utdypendeopplysningerJson)
+                            )
                     )
 
                 val mappetSykmelding =
@@ -219,7 +215,7 @@ class SykmeldingMapperKtTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
+                                )
                             ),
                     )
                 val sykmeldingMedUtdypendeOpplysninger =
@@ -227,10 +223,8 @@ class SykmeldingMapperKtTest :
                         sykmeldingsDokument =
                             sykmeldingDbModel.sykmeldingsDokument.copy(
                                 utdypendeOpplysninger =
-                                    objectMapper.readValue(
-                                        utdypendeopplysningerJson,
-                                    ),
-                            ),
+                                    jsonMapper.readValue(utdypendeopplysningerJson)
+                            )
                     )
 
                 val mappetSykmelding =
@@ -256,7 +250,7 @@ class SykmeldingMapperKtTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
+                                )
                             ),
                     )
                 val sykmeldingMedUtdypendeOpplysninger =
@@ -264,10 +258,8 @@ class SykmeldingMapperKtTest :
                         sykmeldingsDokument =
                             sykmeldingDbModel.sykmeldingsDokument.copy(
                                 utdypendeOpplysninger =
-                                    objectMapper.readValue(
-                                        utdypendeopplysningerJson,
-                                    ),
-                            ),
+                                    jsonMapper.readValue(utdypendeopplysningerJson)
+                            )
                     )
 
                 val mappetSykmelding =
@@ -293,7 +285,7 @@ class SykmeldingMapperKtTest :
                                 getPeriode(
                                     fom = LocalDate.of(2020, 3, 10),
                                     tom = LocalDate.of(2020, 3, 20),
-                                ),
+                                )
                             ),
                     )
                 val sykmeldingMedUtdypendeOpplysninger =
@@ -301,10 +293,8 @@ class SykmeldingMapperKtTest :
                         sykmeldingsDokument =
                             sykmeldingDbModel.sykmeldingsDokument.copy(
                                 utdypendeOpplysninger =
-                                    objectMapper.readValue(
-                                        utdypendeopplysningerJson,
-                                    ),
-                            ),
+                                    jsonMapper.readValue(utdypendeopplysningerJson)
+                            )
                     )
 
                 val mappetSykmelding =
@@ -320,11 +310,7 @@ class SykmeldingMapperKtTest :
                 mappetSykmelding.medisinskVurdering shouldBeEqualTo
                     MedisinskVurderingDTO(
                         hovedDiagnose =
-                            DiagnoseDTO(
-                                "L87",
-                                "ICPC-2",
-                                "Bursitt/tendinitt/synovitt IKA",
-                            ),
+                            DiagnoseDTO("L87", "ICPC-2", "Bursitt/tendinitt/synovitt IKA"),
                         biDiagnoser = emptyList(),
                         annenFraversArsak = null,
                         svangerskap = false,
@@ -333,7 +319,7 @@ class SykmeldingMapperKtTest :
                     )
                 mappetSykmelding.meldingTilNAV shouldBeEqualTo
                     MeldingTilNavDTO(true, "Masse bistand")
-                objectMapper.writeValueAsString(
+                jsonMapper.writeValueAsString(
                     mappetSykmelding.utdypendeOpplysninger
                 ) shouldBeEqualTo mappedOpplysningerJson
             }
@@ -342,7 +328,7 @@ class SykmeldingMapperKtTest :
                     Diagnose(
                         system = Diagnosekoder.ICPC2_CODE,
                         kode = "Y80",
-                        tekst = "KNUSNINGSSKADE BEKKEN (M)"
+                        tekst = "KNUSNINGSSKADE BEKKEN (M)",
                     )
 
                 val diagnose = diagnoseFraDb.toDiagnoseDTO()

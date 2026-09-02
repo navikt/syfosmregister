@@ -7,12 +7,12 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.Headers
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson3.jackson
 
 data class ResponseData(
     val httpStatusCode: HttpStatusCode,
     val content: String,
-    val headers: Headers = headersOf("Content-Type", listOf("application/json"))
+    val headers: Headers = headersOf("Content-Type", listOf("application/json")),
 )
 
 class HttpClientTest {
@@ -28,7 +28,7 @@ class HttpClientTest {
                     respond(
                         responseData!!.content,
                         responseData!!.httpStatusCode,
-                        responseData!!.headers
+                        responseData!!.headers,
                     )
                 }
             }

@@ -8,7 +8,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import no.nav.syfo.application.ApplicationState
 import no.nav.syfo.application.leaderelection.LeaderElection
 import no.nav.syfo.identendring.model.Ident
@@ -49,19 +48,19 @@ class PdlAktorConsumer(
                         is InactiveIdentException -> {
                             log.warn(
                                 "New ident is inactive in PDL, unsubscribing and waiting $DELAY_ON_ERROR_SECONDS seconds for retry",
-                                ex
+                                ex,
                             )
                         }
                         is PersonNotFoundException -> {
                             log.warn(
                                 "Person not found in PDL, unsubscribing and waiting $DELAY_ON_ERROR_SECONDS seconds for retry",
-                                ex
+                                ex,
                             )
                         }
                         else -> {
                             log.error(
                                 "Error running kafka consumer for pdl-aktor, unsubscribing and waiting $DELAY_ON_ERROR_SECONDS seconds for retry",
-                                ex
+                                ex,
                             )
                         }
                     }
@@ -76,11 +75,9 @@ class PdlAktorConsumer(
         kafkaConsumerAiven.subscribe(listOf(aivenTopic))
         log.info("Starting consuming topic $aivenTopic")
         while (applicationState.ready && leaderElection.isLeader()) {
-            withContext(Dispatchers.IO) {
-                kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
-                    if (it.value() != null) {
-                        handleIdent(it)
-                    }
+            kafkaConsumerAiven.poll(Duration.ofSeconds(POLL_DURATION_SECONDS)).forEach {
+                if (it.value() != null) {
+                    handleIdent(it)
                 }
             }
         }

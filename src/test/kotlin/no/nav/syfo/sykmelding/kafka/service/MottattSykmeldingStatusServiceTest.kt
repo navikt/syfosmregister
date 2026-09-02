@@ -15,16 +15,18 @@ import no.nav.syfo.model.sykmelding.arbeidsgiver.ArbeidsgiverSykmelding
 import no.nav.syfo.model.sykmelding.arbeidsgiver.BehandlerAGDTO
 import no.nav.syfo.model.sykmelding.arbeidsgiver.KontaktMedPasientAGDTO
 import no.nav.syfo.model.sykmelding.model.AdresseDTO
-import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
-import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
-import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaMessageDTO
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
 import no.nav.syfo.sykmelding.db.getArbeidsgiverStatus
 import no.nav.syfo.sykmelding.db.hentSporsmalOgSvar
+import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
+import no.nav.syfo.sykmelding.kafka.model.ShortNameKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SporsmalOgSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaMessageDTO
+import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
 import no.nav.syfo.sykmelding.kafka.producer.BekreftSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
 import no.nav.syfo.sykmelding.kafka.producer.SykmeldingTombstoneProducer
@@ -35,6 +37,7 @@ import no.nav.syfo.sykmelding.status.Svar
 import no.nav.syfo.sykmelding.status.Svartype
 import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
 import no.nav.syfo.sykmelding.status.SykmeldingStatusService
+import no.nav.syfo.testutil.createKomplettInnsendtSkjemaSvar
 import no.nav.syfo.testutil.getNowTickMillisOffsetDateTime
 
 class MottattSykmeldingStatusServiceTest :
@@ -73,24 +76,15 @@ class MottattSykmeldingStatusServiceTest :
                         Sporsmal(
                             "ARBEIDSGIVER",
                             ShortName.ARBEIDSSITUASJON,
-                            Svar(
-                                sykmeldingId,
-                                null,
-                                Svartype.ARBEIDSSITUASJON,
-                                "ARBEIDSTAKER",
-                            ),
-                        ),
+                            Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                        )
                     )
                 coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns
-                    ArbeidsgiverDbModel(
-                        "orgnummer",
-                        "juridisk",
-                        "orgnavn",
-                    )
+                    ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
 
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                     sykmeldingId,
-                    "123"
+                    "123",
                 )
 
                 coVerify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -105,28 +99,19 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 coEvery { databaseInterface.getArbeidsgiverStatus(any()) } returns
-                    ArbeidsgiverDbModel(
-                        "orgnummer",
-                        "juridisk",
-                        "orgnavn",
-                    )
+                    ArbeidsgiverDbModel("orgnummer", "juridisk", "orgnavn")
                 coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns
                     listOf(
                         Sporsmal(
                             "ARBEIDSGIVER",
                             ShortName.ARBEIDSSITUASJON,
-                            Svar(
-                                sykmeldingId,
-                                null,
-                                Svartype.ARBEIDSSITUASJON,
-                                "ARBEIDSTAKER",
-                            ),
-                        ),
+                            Svar(sykmeldingId, null, Svartype.ARBEIDSSITUASJON, "ARBEIDSTAKER"),
+                        )
                     )
 
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                     sykmeldingId,
-                    "123"
+                    "123",
                 )
 
                 coVerify(exactly = 1) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -144,7 +129,7 @@ class MottattSykmeldingStatusServiceTest :
 
                 mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                     sykmeldingId,
-                    "123"
+                    "123",
                 )
 
                 coVerify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -164,7 +149,10 @@ class MottattSykmeldingStatusServiceTest :
                     RuntimeException("Noe gikk galt")
 
                 assertFailsWith<RuntimeException> {
-                    mottattSykmeldingStatusService.handleStatusEvent(opprettSendtStatusmelding())
+                    mottattSykmeldingStatusService.handleStatusEvent(
+                        sykmeldingId,
+                        opprettSendtStatusmelding(),
+                    )
                 }
                 coVerify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
             }
@@ -179,9 +167,14 @@ class MottattSykmeldingStatusServiceTest :
                     RuntimeException("Noe gikk galt")
 
                 assertFailsWith<RuntimeException> {
-                    mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
+                    mottattSykmeldingStatusService.handleStatusEvent(
+                        sykmeldingId,
+                        opprettBekreftStatusmelding(),
+                    )
                 }
-                coVerify(exactly = 0) { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify(exactly = 0) {
+                    sykmeldingStatusService.registrerBekreftet(any(), any(), any())
+                }
             }
             test("SLETTET") {
                 coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
@@ -194,7 +187,10 @@ class MottattSykmeldingStatusServiceTest :
                     RuntimeException("Noe gikk galt")
 
                 assertFailsWith<RuntimeException> {
-                    mottattSykmeldingStatusService.handleStatusEvent(opprettSlettetStatusmelding())
+                    mottattSykmeldingStatusService.handleStatusEvent(
+                        sykmeldingId,
+                        opprettSlettetStatusmelding(),
+                    )
                 }
                 coVerify(exactly = 0) { sykmeldingStatusService.slettSykmelding(any()) }
             }
@@ -209,9 +205,12 @@ class MottattSykmeldingStatusServiceTest :
                         StatusEvent.APEN,
                     )
 
-                mottattSykmeldingStatusService.handleStatusEvent(opprettBekreftStatusmelding())
+                mottattSykmeldingStatusService.handleStatusEvent(
+                    sykmeldingId,
+                    opprettBekreftStatusmelding(),
+                )
 
-                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 coVerify { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
             }
             test("Bekreft avvist sykmelding oppdaterer kun database") {
@@ -223,10 +222,11 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 mottattSykmeldingStatusService.handleStatusEvent(
-                    opprettBekreftStatusmeldingAvvistSykmelding()
+                    sykmeldingId,
+                    opprettBekreftStatusmeldingAvvistSykmelding(),
                 )
 
-                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any()) }
+                coVerify { sykmeldingStatusService.registrerBekreftet(any(), any(), any()) }
                 coVerify(exactly = 0) { bekreftetSykmeldingKafkaProducer.sendSykmelding(any()) }
             }
         }
@@ -243,7 +243,8 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 mottattSykmeldingStatusService.handleStatusEvent(
-                    opprettSendtStatusmelding(erSvarOppdatering = true)
+                    sykmeldingId,
+                    opprettSendtStatusmelding(erSvarOppdatering = true),
                 )
 
                 coVerify(exactly = 1) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
@@ -261,11 +262,41 @@ class MottattSykmeldingStatusServiceTest :
                     )
 
                 mottattSykmeldingStatusService.handleStatusEvent(
-                    opprettSendtStatusmelding(erSvarOppdatering = false)
+                    sykmeldingId,
+                    opprettSendtStatusmelding(erSvarOppdatering = false),
                 )
 
                 coVerify(exactly = 0) { sendtSykmeldingKafkaProducer.sendSykmelding(any()) }
                 coVerify(exactly = 0) { sykmeldingStatusService.registrerSendt(any(), any()) }
+            }
+        }
+
+        context("Tester resending av tidligerearbeidsgiver sykmeldingStatusKafkaMessage") {
+            test("sender med tidligere arbeidsgiver på sykmelding som allerede er bekreftet") {
+                coEvery { sykmeldingStatusService.getLatestSykmeldingStatus(any()) } returns
+                    SykmeldingStatusEvent(
+                        sykmeldingId,
+                        getNowTickMillisOffsetDateTime(),
+                        StatusEvent.BEKREFTET,
+                    )
+
+                val tidligereArbeidsgiverDto =
+                    TidligereArbeidsgiverKafkaDTO("orgnamn", "orgnummer", sykmeldingId)
+                coEvery { sykmeldingStatusService.getTidligereArbeidsgiver(any()) } returns
+                    TidligereArbeidsgiverDTO("orgnamn", "orgnummer", sykmeldingId)
+
+                coEvery { databaseInterface.hentSporsmalOgSvar(any()) } returns emptyList()
+
+                mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
+                    sykmeldingId,
+                    "123",
+                )
+
+                coVerify {
+                    bekreftetSykmeldingKafkaProducer.sendSykmelding(
+                        match { it.event.tidligereArbeidsgiver == tidligereArbeidsgiverDto }
+                    )
+                }
             }
         }
     })
@@ -274,77 +305,61 @@ val sykmeldingId = UUID.randomUUID().toString()
 
 private fun opprettSendtStatusmelding(erSvarOppdatering: Boolean = false) =
     SykmeldingStatusKafkaMessageDTO(
-        KafkaMetadataDTO(
-            sykmeldingId,
-            getNowTickMillisOffsetDateTime(),
-            "fnr",
-            "user",
-        ),
+        KafkaMetadataDTO(sykmeldingId, getNowTickMillisOffsetDateTime(), "fnr", "user"),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "SENDT",
-            ArbeidsgiverStatusDTO("9999", null, "Arbeidsplassen AS"),
+            ArbeidsgiverStatusKafkaDTO("9999", null, "Arbeidsplassen AS"),
             listOf(
-                SporsmalOgSvarDTO(
+                SporsmalOgSvarKafkaDTO(
                     "tekst",
-                    ShortNameDTO.ARBEIDSSITUASJON,
-                    SvartypeDTO.ARBEIDSSITUASJON,
-                    "svar"
+                    ShortNameKafkaDTO.ARBEIDSSITUASJON,
+                    SvartypeKafkaDTO.ARBEIDSSITUASJON,
+                    "svar",
                 )
             ),
             erSvarOppdatering = erSvarOppdatering,
+            brukerSvar = createKomplettInnsendtSkjemaSvar(),
         ),
     )
 
 private fun opprettBekreftStatusmelding() =
     SykmeldingStatusKafkaMessageDTO(
-        KafkaMetadataDTO(
-            sykmeldingId,
-            getNowTickMillisOffsetDateTime(),
-            "fnr",
-            "user",
-        ),
+        KafkaMetadataDTO(sykmeldingId, getNowTickMillisOffsetDateTime(), "fnr", "user"),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "BEKREFTET",
             null,
             emptyList(),
+            brukerSvar = createKomplettInnsendtSkjemaSvar(),
         ),
     )
 
 private fun opprettBekreftStatusmeldingAvvistSykmelding() =
     SykmeldingStatusKafkaMessageDTO(
-        KafkaMetadataDTO(
-            sykmeldingId,
-            getNowTickMillisOffsetDateTime(),
-            "fnr",
-            "user",
-        ),
+        KafkaMetadataDTO(sykmeldingId, getNowTickMillisOffsetDateTime(), "fnr", "user"),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "BEKREFTET",
             null,
             null,
+            brukerSvar = null,
         ),
     )
 
 private fun opprettSlettetStatusmelding() =
     SykmeldingStatusKafkaMessageDTO(
-        KafkaMetadataDTO(
-            sykmeldingId,
-            getNowTickMillisOffsetDateTime(),
-            "fnr",
-            "user",
-        ),
+        KafkaMetadataDTO(sykmeldingId, getNowTickMillisOffsetDateTime(), "fnr", "user"),
         SykmeldingStatusKafkaEventDTO(
             sykmeldingId,
             getNowTickMillisOffsetDateTime(),
             "SLETTET",
             null,
             emptyList(),
+            brukerSvar = null,
         ),
     )
 
@@ -363,7 +378,7 @@ private fun opprettArbeidsgiverSykmelding(): ArbeidsgiverSykmelding =
                 "etternavn",
                 null,
                 AdresseDTO(null, null, null, null, null),
-                null
+                null,
             ),
         sykmeldingsperioder = emptyList(),
         arbeidsgiver = ArbeidsgiverAGDTO(null, null),

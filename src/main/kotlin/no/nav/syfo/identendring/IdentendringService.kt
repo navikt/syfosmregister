@@ -6,22 +6,23 @@ import no.nav.syfo.identendring.model.Ident
 import no.nav.syfo.identendring.model.IdentType
 import no.nav.syfo.log
 import no.nav.syfo.metrics.NYTT_FNR_COUNTER
-import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
-import no.nav.syfo.model.sykmeldingstatus.KafkaMetadataDTO
-import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
-import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.pdl.error.InactiveIdentException
 import no.nav.syfo.pdl.service.PdlPersonService
 import no.nav.syfo.sykmelding.db.Periode
 import no.nav.syfo.sykmelding.db.SykmeldingDbModelUtenBehandlingsutfall
 import no.nav.syfo.sykmelding.db.getSykmeldingerMedIdUtenBehandlingsutfallForFnr
 import no.nav.syfo.sykmelding.db.updateFnr
+import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.KafkaMetadataDTO
+import no.nav.syfo.sykmelding.kafka.model.STATUS_SENDT
+import no.nav.syfo.sykmelding.kafka.model.ShortNameKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SporsmalOgSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
 import no.nav.syfo.sykmelding.kafka.model.SykmeldingKafkaMessage
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
 import no.nav.syfo.sykmelding.kafka.model.toArbeidsgiverSykmelding
 import no.nav.syfo.sykmelding.kafka.producer.SendtSykmeldingKafkaProducer
+import no.nav.syfo.sykmelding.status.getAlleSpm
 
 class IdentendringService(
     private val database: DatabaseInterface,
@@ -33,8 +34,7 @@ class IdentendringService(
             val nyttFnr =
                 identListe
                     .find { it.type == IdentType.FOLKEREGISTERIDENT && it.gjeldende }
-                    ?.idnummer
-                    ?: throw IllegalStateException("Mangler gyldig fnr!")
+                    ?.idnummer ?: throw IllegalStateException("Mangler gyldig fnr!")
 
             val tidligereFnr =
                 identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
@@ -50,9 +50,7 @@ class IdentendringService(
                     sykmeldinger.filter {
                         it.status.statusEvent == STATUS_SENDT &&
                             finnSisteTom(it.sykmeldingsDokument.perioder)
-                                .isAfter(
-                                    LocalDate.now().minusMonths(4),
-                                )
+                                .isAfter(LocalDate.now().minusMonths(4))
                     }
                 log.info("Resender ${sendteSykmeldingerSisteFireMnd.size} sendte sykmeldinger")
                 sendteSykmeldingerSisteFireMnd.forEach {
@@ -90,11 +88,12 @@ class IdentendringService(
         return true
     }
 
-    private fun getKafkaMessage(
+    private suspend fun getKafkaMessage(
         sykmelding: SykmeldingDbModelUtenBehandlingsutfall,
-        nyttFnr: String
+        nyttFnr: String,
     ): SykmeldingKafkaMessage {
         val sendtSykmelding = sykmelding.toArbeidsgiverSykmelding()
+        val alleSpm = database.getAlleSpm(sykmelding.id)
         val metadata =
             KafkaMetadataDTO(
                 sykmeldingId = sykmelding.id,
@@ -107,19 +106,20 @@ class IdentendringService(
                 metadata.sykmeldingId,
                 metadata.timestamp,
                 STATUS_SENDT,
-                ArbeidsgiverStatusDTO(
+                ArbeidsgiverStatusKafkaDTO(
                     sykmelding.status.arbeidsgiver!!.orgnummer,
                     sykmelding.status.arbeidsgiver.juridiskOrgnummer,
                     sykmelding.status.arbeidsgiver.orgNavn,
                 ),
                 listOf(
-                    SporsmalOgSvarDTO(
+                    SporsmalOgSvarKafkaDTO(
                         tekst = "Jeg er sykmeldt fra",
-                        shortName = ShortNameDTO.ARBEIDSSITUASJON,
-                        svartype = SvartypeDTO.ARBEIDSSITUASJON,
+                        shortName = ShortNameKafkaDTO.ARBEIDSSITUASJON,
+                        svartype = SvartypeKafkaDTO.ARBEIDSSITUASJON,
                         svar = "ARBEIDSTAKER",
-                    ),
+                    )
                 ),
+                brukerSvar = alleSpm,
             )
         return SykmeldingKafkaMessage(sendtSykmelding, metadata, sendEvent)
     }

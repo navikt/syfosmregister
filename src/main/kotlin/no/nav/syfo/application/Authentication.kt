@@ -3,10 +3,8 @@ package no.nav.syfo.application
 import com.auth0.jwk.JwkProvider
 import io.ktor.http.auth.HttpAuthHeader
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.Principal
 import io.ktor.server.auth.jwt.JWTCredential
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
@@ -36,7 +34,7 @@ fun Application.setupAuth(
                             APP_ID_PATH_COUNTER.labels(
                                     app.team,
                                     app.appName,
-                                    getLabel(this.request.path())
+                                    getLabel(this.request.path()),
                                 )
                                 .inc()
                         } else {
@@ -50,10 +48,11 @@ fun Application.setupAuth(
         }
         jwt(name = "tokenx") {
             authHeader {
-                if (it.getToken() == null) {
-                    return@authHeader null
-                }
-                return@authHeader HttpAuthHeader.Single("Bearer", it.getToken()!!)
+                val token: String =
+                    it.request.header("Authorization")?.removePrefix("Bearer ")
+                        ?: return@authHeader null
+
+                return@authHeader HttpAuthHeader.Single("Bearer", token)
             }
             verifier(jwkProviderTokenX, tokenXIssuer)
             validate { credentials ->
@@ -61,10 +60,7 @@ fun Application.setupAuth(
                     hasClientIdAudience(credentials, environment.clientIdTokenX) &&
                         erNiva4(credentials) -> {
                         val principal = JWTPrincipal(credentials.payload)
-                        BrukerPrincipal(
-                            fnr = finnFnrFraToken(principal),
-                            principal = principal,
-                        )
+                        BrukerPrincipal(fnr = finnFnrFraToken(principal), principal = principal)
                     }
                     else -> unauthorized(credentials)
                 }
@@ -73,20 +69,13 @@ fun Application.setupAuth(
     }
 }
 
-fun ApplicationCall.getToken(): String? {
-    if (request.header("Authorization") != null) {
-        return request.header("Authorization")!!.removePrefix("Bearer ")
-    }
-    return request.cookies.get(name = "selvbetjening-idtoken")
-}
-
 fun harTilgang(credentials: JWTCredential, clientId: String): Boolean {
     val appid: String = credentials.payload.getClaim("azp").asString()
     log.debug("authorization attempt for $appid")
     return credentials.payload.audience.contains(clientId)
 }
 
-fun unauthorized(credentials: JWTCredential): Principal? {
+fun unauthorized(credentials: JWTCredential): Unit? {
     log.warn(
         "Auth: Unexpected audience for jwt {}, {}",
         StructuredArguments.keyValue("issuer", credentials.payload.issuer),
@@ -116,7 +105,4 @@ fun finnFnrFraToken(principal: JWTPrincipal): String {
     }
 }
 
-data class BrukerPrincipal(
-    val fnr: String,
-    val principal: JWTPrincipal,
-) : Principal
+data class BrukerPrincipal(val fnr: String, val principal: JWTPrincipal)

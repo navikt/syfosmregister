@@ -29,7 +29,7 @@ class DatebaseTimestampTest :
                     testSykmeldingsdokument.copy(id = "123"),
                 )
                 db.registerStatus(sykmeldingStatusEvent)
-                db.connection.opprettBehandlingsutfall(behandlingsutfall("123"))
+                db.opprettBehandlingsutfall(behandlingsutfall("123"))
                 val statuser = db.hentSykmeldingStatuser("123")
                 statuser.size shouldBeEqualTo 1
                 statuser[0].timestamp shouldBeEqualTo timestamp
@@ -44,7 +44,7 @@ class DatebaseTimestampTest :
                     testSykmeldingsdokument.copy(id = "1234"),
                 )
                 db.registerStatus(sykmeldingStatusEvent)
-                db.connection.opprettBehandlingsutfall(behandlingsutfall("1234"))
+                db.opprettBehandlingsutfall(behandlingsutfall("1234"))
                 val statuser = db.hentSykmeldingStatuser("1234")
                 statuser.size shouldBeEqualTo 1
                 statuser[0].timestamp shouldBeEqualTo timestamp
@@ -53,7 +53,4 @@ class DatebaseTimestampTest :
     })
 
 private fun behandlingsutfall(id: String) =
-    Behandlingsutfall(
-        id = id,
-        behandlingsutfall = ValidationResult(Status.OK, emptyList()),
-    )
+    Behandlingsutfall(id = id, behandlingsutfall = ValidationResult(Status.OK, emptyList()))

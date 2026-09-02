@@ -1,28 +1,25 @@
 package no.nav.syfo.sykmelding.kafka.service
 
-import no.nav.syfo.model.sykmeldingstatus.ArbeidsgiverStatusDTO
-import no.nav.syfo.model.sykmeldingstatus.STATUS_APEN
-import no.nav.syfo.model.sykmeldingstatus.STATUS_AVBRUTT
-import no.nav.syfo.model.sykmeldingstatus.STATUS_BEKREFTET
-import no.nav.syfo.model.sykmeldingstatus.STATUS_SENDT
-import no.nav.syfo.model.sykmeldingstatus.STATUS_SLETTET
-import no.nav.syfo.model.sykmeldingstatus.STATUS_UTGATT
-import no.nav.syfo.model.sykmeldingstatus.ShortNameDTO
-import no.nav.syfo.model.sykmeldingstatus.SporsmalOgSvarDTO
-import no.nav.syfo.model.sykmeldingstatus.SvartypeDTO
-import no.nav.syfo.model.sykmeldingstatus.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.model.sykmelding.model.TidligereArbeidsgiverDTO
 import no.nav.syfo.sykmelding.db.ArbeidsgiverDbModel
-import no.nav.syfo.sykmelding.status.ArbeidsgiverStatus
-import no.nav.syfo.sykmelding.status.ShortName
-import no.nav.syfo.sykmelding.status.Sporsmal
-import no.nav.syfo.sykmelding.status.StatusEvent
-import no.nav.syfo.sykmelding.status.Svar
-import no.nav.syfo.sykmelding.status.Svartype
-import no.nav.syfo.sykmelding.status.SykmeldingStatusEvent
+import no.nav.syfo.sykmelding.kafka.model.ArbeidsgiverStatusKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.KomplettInnsendtSkjemaSvar
+import no.nav.syfo.sykmelding.kafka.model.STATUS_APEN
+import no.nav.syfo.sykmelding.kafka.model.STATUS_AVBRUTT
+import no.nav.syfo.sykmelding.kafka.model.STATUS_BEKREFTET
+import no.nav.syfo.sykmelding.kafka.model.STATUS_SENDT
+import no.nav.syfo.sykmelding.kafka.model.STATUS_SLETTET
+import no.nav.syfo.sykmelding.kafka.model.STATUS_UTGATT
+import no.nav.syfo.sykmelding.kafka.model.ShortNameKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SporsmalOgSvarKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SvartypeKafkaDTO
+import no.nav.syfo.sykmelding.kafka.model.SykmeldingStatusKafkaEventDTO
+import no.nav.syfo.sykmelding.kafka.model.TidligereArbeidsgiverKafkaDTO
+import no.nav.syfo.sykmelding.status.*
 
 class KafkaModelMapper private constructor() {
     companion object {
-        fun toArbeidsgiverStatus(sykmeldingId: String, arbeidsgiver: ArbeidsgiverStatusDTO) =
+        fun toArbeidsgiverStatus(sykmeldingId: String, arbeidsgiver: ArbeidsgiverStatusKafkaDTO) =
             ArbeidsgiverStatus(
                 sykmeldingId,
                 arbeidsgiver.orgnummer,
@@ -30,11 +27,11 @@ class KafkaModelMapper private constructor() {
                 arbeidsgiver.orgNavn,
             )
 
-        fun toSporsmal(sporsmal: SporsmalOgSvarDTO, sykmeldingId: String): Sporsmal {
+        fun toSporsmal(sporsmal: SporsmalOgSvarKafkaDTO, sykmeldingId: String): Sporsmal {
             return Sporsmal(
                 sporsmal.tekst,
                 toShortName(sporsmal.shortName),
-                toSvar(sporsmal, sykmeldingId)
+                toSvar(sporsmal, sykmeldingId),
             )
         }
 
@@ -42,11 +39,14 @@ class KafkaModelMapper private constructor() {
             return SykmeldingStatusEvent(
                 event.sykmeldingId,
                 event.timestamp,
-                toStatusEvent(event.statusEvent)
+                toStatusEvent(event.statusEvent),
             )
         }
 
-        private fun toSvar(arbeidsgiverSporsmal: SporsmalOgSvarDTO, sykmeldingId: String): Svar {
+        private fun toSvar(
+            arbeidsgiverSporsmal: SporsmalOgSvarKafkaDTO,
+            sykmeldingId: String,
+        ): Svar {
             return Svar(
                 sykmeldingId,
                 sporsmalId = null,
@@ -59,6 +59,8 @@ class KafkaModelMapper private constructor() {
             status: SykmeldingStatusEvent,
             arbeidsgiverStatus: ArbeidsgiverDbModel?,
             sporsmal: List<Sporsmal>,
+            tidligereArbeidsgiver: TidligereArbeidsgiverDTO?,
+            alleSpm: KomplettInnsendtSkjemaSvar?,
         ) =
             SykmeldingStatusKafkaEventDTO(
                 sykmeldingId = status.sykmeldingId,
@@ -66,25 +68,34 @@ class KafkaModelMapper private constructor() {
                 statusEvent = status.event.name,
                 arbeidsgiver = toArbeidsgiverStatusDto(arbeidsgiverStatus),
                 sporsmals = sporsmal.map { toSporsmalOgSvar(it) },
+                tidligereArbeidsgiver =
+                    tidligereArbeidsgiver?.let {
+                        TidligereArbeidsgiverKafkaDTO(
+                            orgNavn = it.orgNavn,
+                            orgnummer = it.orgnummer,
+                            sykmeldingsId = it.sykmeldingsId,
+                        )
+                    },
+                brukerSvar = alleSpm,
             )
 
-        private fun toSvartype(svartype: SvartypeDTO): Svartype {
+        private fun toSvartype(svartype: SvartypeKafkaDTO): Svartype {
             return when (svartype) {
-                SvartypeDTO.ARBEIDSSITUASJON -> Svartype.ARBEIDSSITUASJON
-                SvartypeDTO.PERIODER -> Svartype.PERIODER
-                SvartypeDTO.JA_NEI -> Svartype.JA_NEI
-                SvartypeDTO.DAGER -> Svartype.DAGER
+                SvartypeKafkaDTO.ARBEIDSSITUASJON -> Svartype.ARBEIDSSITUASJON
+                SvartypeKafkaDTO.PERIODER -> Svartype.PERIODER
+                SvartypeKafkaDTO.JA_NEI -> Svartype.JA_NEI
+                SvartypeKafkaDTO.DAGER -> Svartype.DAGER
             }
         }
 
-        private fun toShortName(shortName: ShortNameDTO): ShortName {
+        private fun toShortName(shortName: ShortNameKafkaDTO): ShortName {
             return when (shortName) {
-                ShortNameDTO.ARBEIDSSITUASJON -> ShortName.ARBEIDSSITUASJON
-                ShortNameDTO.NY_NARMESTE_LEDER -> ShortName.NY_NARMESTE_LEDER
-                ShortNameDTO.FRAVAER -> ShortName.FRAVAER
-                ShortNameDTO.PERIODE -> ShortName.PERIODE
-                ShortNameDTO.FORSIKRING -> ShortName.FORSIKRING
-                ShortNameDTO.EGENMELDINGSDAGER -> ShortName.EGENMELDINGSDAGER
+                ShortNameKafkaDTO.ARBEIDSSITUASJON -> ShortName.ARBEIDSSITUASJON
+                ShortNameKafkaDTO.NY_NARMESTE_LEDER -> ShortName.NY_NARMESTE_LEDER
+                ShortNameKafkaDTO.FRAVAER -> ShortName.FRAVAER
+                ShortNameKafkaDTO.PERIODE -> ShortName.PERIODE
+                ShortNameKafkaDTO.FORSIKRING -> ShortName.FORSIKRING
+                ShortNameKafkaDTO.EGENMELDINGSDAGER -> ShortName.EGENMELDINGSDAGER
             }
         }
 
@@ -100,9 +111,9 @@ class KafkaModelMapper private constructor() {
             }
         }
 
-        private fun toArbeidsgiverStatusDto(it: ArbeidsgiverDbModel?): ArbeidsgiverStatusDTO? {
+        private fun toArbeidsgiverStatusDto(it: ArbeidsgiverDbModel?): ArbeidsgiverStatusKafkaDTO? {
             return it?.let {
-                ArbeidsgiverStatusDTO(
+                ArbeidsgiverStatusKafkaDTO(
                     orgnummer = it.orgnummer,
                     juridiskOrgnummer = it.juridiskOrgnummer,
                     orgNavn = it.orgNavn,
@@ -110,8 +121,8 @@ class KafkaModelMapper private constructor() {
             }
         }
 
-        private fun toSporsmalOgSvar(it: Sporsmal): SporsmalOgSvarDTO {
-            return SporsmalOgSvarDTO(
+        private fun toSporsmalOgSvar(it: Sporsmal): SporsmalOgSvarKafkaDTO {
+            return SporsmalOgSvarKafkaDTO(
                 tekst = it.tekst,
                 shortName = toShortNameDto(it.shortName),
                 svartype = toSvartypeDto(it.svar.svartype),
@@ -119,23 +130,23 @@ class KafkaModelMapper private constructor() {
             )
         }
 
-        private fun toSvartypeDto(svartype: Svartype): SvartypeDTO {
+        private fun toSvartypeDto(svartype: Svartype): SvartypeKafkaDTO {
             return when (svartype) {
-                Svartype.ARBEIDSSITUASJON -> SvartypeDTO.ARBEIDSSITUASJON
-                Svartype.PERIODER -> SvartypeDTO.PERIODER
-                Svartype.JA_NEI -> SvartypeDTO.JA_NEI
-                Svartype.DAGER -> SvartypeDTO.DAGER
+                Svartype.ARBEIDSSITUASJON -> SvartypeKafkaDTO.ARBEIDSSITUASJON
+                Svartype.PERIODER -> SvartypeKafkaDTO.PERIODER
+                Svartype.JA_NEI -> SvartypeKafkaDTO.JA_NEI
+                Svartype.DAGER -> SvartypeKafkaDTO.DAGER
             }
         }
 
-        private fun toShortNameDto(shortName: ShortName): ShortNameDTO {
+        private fun toShortNameDto(shortName: ShortName): ShortNameKafkaDTO {
             return when (shortName) {
-                ShortName.ARBEIDSSITUASJON -> ShortNameDTO.ARBEIDSSITUASJON
-                ShortName.NY_NARMESTE_LEDER -> ShortNameDTO.NY_NARMESTE_LEDER
-                ShortName.FRAVAER -> ShortNameDTO.FRAVAER
-                ShortName.PERIODE -> ShortNameDTO.PERIODE
-                ShortName.FORSIKRING -> ShortNameDTO.FORSIKRING
-                ShortName.EGENMELDINGSDAGER -> ShortNameDTO.EGENMELDINGSDAGER
+                ShortName.ARBEIDSSITUASJON -> ShortNameKafkaDTO.ARBEIDSSITUASJON
+                ShortName.NY_NARMESTE_LEDER -> ShortNameKafkaDTO.NY_NARMESTE_LEDER
+                ShortName.FRAVAER -> ShortNameKafkaDTO.FRAVAER
+                ShortName.PERIODE -> ShortNameKafkaDTO.PERIODE
+                ShortName.FORSIKRING -> ShortNameKafkaDTO.FORSIKRING
+                ShortName.EGENMELDINGSDAGER -> ShortNameKafkaDTO.EGENMELDINGSDAGER
             }
         }
     }

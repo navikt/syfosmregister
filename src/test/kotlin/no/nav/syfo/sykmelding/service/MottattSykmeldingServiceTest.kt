@@ -13,8 +13,8 @@ import no.nav.syfo.model.Merknad
 import no.nav.syfo.model.UtenlandskSykmelding
 import no.nav.syfo.persistering.erSykmeldingsopplysningerLagret
 import no.nav.syfo.sykmelding.kafka.producer.MottattSykmeldingKafkaProducer
-import no.nav.syfo.sykmelding.kafka.producer.SykmeldingStatusKafkaProducer
 import no.nav.syfo.sykmelding.kafka.service.MottattSykmeldingStatusService
+import no.nav.syfo.sykmelding.status.SykmeldingStatusService
 import no.nav.syfo.testutil.TestDB
 import no.nav.syfo.testutil.dropData
 import no.nav.syfo.testutil.getMerknaderForId
@@ -31,23 +31,18 @@ class MottattSykmeldingServiceTest :
         val applicationState = ApplicationState(alive = true, ready = true)
 
         val mottattSykmeldingKafkaProducer = mockk<MottattSykmeldingKafkaProducer>(relaxed = true)
-        val sykmeldingStatusKafkaProducer = mockk<SykmeldingStatusKafkaProducer>(relaxed = true)
         val mottattSykmeldingStatusService = mockk<MottattSykmeldingStatusService>(relaxed = true)
+        val sykmeldingStatusService = mockk<SykmeldingStatusService>(relaxed = true)
         val mottattSykmeldingService =
             MottattSykmeldingService(
                 env = environment,
                 database = database,
                 mottattSykmeldingKafkaProducer = mottattSykmeldingKafkaProducer,
-                sykmeldingStatusKafkaProducer = sykmeldingStatusKafkaProducer,
                 mottattSykmeldingStatusService = mottattSykmeldingStatusService,
+                sykmeldingStatusService = sykmeldingStatusService,
             )
         val loggingMeta =
-            LoggingMeta(
-                sykmeldingId = "123",
-                msgId = "123",
-                mottakId = "123",
-                orgNr = "123",
-            )
+            LoggingMeta(sykmeldingId = "123", msgId = "123", mottakId = "123", orgNr = "123")
         afterTest {
             clearAllMocks()
             database.connection.dropData()
@@ -67,12 +62,12 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
 
                 coVerify(exactly = 2) {
@@ -81,7 +76,7 @@ class MottattSykmeldingServiceTest :
                 coVerify(exactly = 1) {
                     mottattSykmeldingStatusService.handleStatusEventForResentSykmelding(
                         receivedSykmelding.sykmelding.id,
-                        receivedSykmelding.personNrPasient
+                        receivedSykmelding.personNrPasient,
                     )
                 }
             }
@@ -94,10 +89,10 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
 
-                val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
+                val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
                 lagretSykmelding shouldBe true
                 coVerify(exactly = 1) {
                     mottattSykmeldingKafkaProducer.sendMottattSykmelding(any())
@@ -115,7 +110,7 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
 
                 val merknader = database.connection.getMerknaderForId("1")
@@ -133,10 +128,10 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.manuellSykmeldingTopic
+                    environment.manuellSykmeldingTopic,
                 )
 
-                val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
+                val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
                 lagretSykmelding shouldBe true
                 coVerify(exactly = 1) {
                     mottattSykmeldingKafkaProducer.sendMottattSykmelding(any())
@@ -149,10 +144,10 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.avvistSykmeldingTopic
+                    environment.avvistSykmeldingTopic,
                 )
 
-                val lagretSykmelding = database.connection.erSykmeldingsopplysningerLagret("1")
+                val lagretSykmelding = database.erSykmeldingsopplysningerLagret("1")
                 lagretSykmelding shouldBe true
                 coVerify(exactly = 0) {
                     mottattSykmeldingKafkaProducer.sendMottattSykmelding(any())
@@ -167,7 +162,7 @@ class MottattSykmeldingServiceTest :
                 mottattSykmeldingService.handleMessageSykmelding(
                     receivedSykmelding,
                     loggingMeta,
-                    environment.okSykmeldingTopic
+                    environment.okSykmeldingTopic,
                 )
 
                 val lagretSykmelding = database.connection.getSykmeldingsopplysninger("1")
@@ -193,8 +188,6 @@ private fun mockEnvironment(environment: Environment) {
         "${environment.applicationName}-statustopic"
     every { environment.okSykmeldingTopic } returns
         "${environment.applicationName}-oksykmeldingtopic"
-    every { environment.behandlingsUtfallTopic } returns
-        "${environment.applicationName}-behandlingsutfallAiven"
     every { environment.avvistSykmeldingTopic } returns
         "${environment.applicationName}-avvisttopiclAiven"
     every { environment.manuellSykmeldingTopic } returns

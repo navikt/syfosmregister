@@ -2,19 +2,13 @@ package no.nav.syfo.application
 
 import com.auth0.jwk.JwkProvider
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson3.jackson
 import io.ktor.server.application.*
 import io.ktor.server.auth.authenticate
-import io.ktor.server.engine.ApplicationEngine
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.http.content.staticResources
-import io.ktor.server.netty.Netty
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
@@ -25,6 +19,7 @@ import java.util.UUID
 import no.nav.syfo.Environment
 import no.nav.syfo.application.api.registerNaisApi
 import no.nav.syfo.db.DatabaseInterface
+import no.nav.syfo.juridiskvurdering.createAndStartConsumer
 import no.nav.syfo.metrics.monitorHttpRequests
 import no.nav.syfo.sykmelding.internal.api.registrerInternalSykmeldingApiV2
 import no.nav.syfo.sykmelding.internal.tilgang.TilgangskontrollService
@@ -43,7 +38,7 @@ fun createApplicationEngine(
     jwkProviderAadV2: JwkProvider,
     sykmeldingerService: SykmeldingerService,
     tilgangskontrollService: TilgangskontrollService,
-): ApplicationEngine =
+): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> =
     embeddedServer(Netty, env.applicationPort) {
         setup(
             tokenXIssuer,
@@ -53,7 +48,7 @@ fun createApplicationEngine(
             applicationState,
             sykmeldingerService,
             tilgangskontrollService,
-            database
+            database,
         )
     }
 
@@ -65,15 +60,11 @@ private fun Application.setup(
     applicationState: ApplicationState,
     sykmeldingerService: SykmeldingerService,
     tilgangskontrollService: TilgangskontrollService,
-    database: DatabaseInterface
+    database: DatabaseInterface,
 ) {
     install(ContentNegotiation) {
         jackson {
-            registerKotlinModule()
-            registerModule(JavaTimeModule())
-            configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-            configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            changeDefaultPropertyInclusion { it.withValueInclusion(JsonInclude.Include.NON_NULL) }
         }
     }
     setupAuth(
@@ -97,16 +88,13 @@ private fun Application.setup(
     }
 
     routing {
-        if (env.cluster == "dev-gcp") {
-            staticResources("/api/v1/docs/", "api") { default("api/index.html") }
-        }
         route("internal") { registerNaisApi(applicationState) }
         route("/api/v2") {
             authenticate("azureadv2") {
                 registrerSykmeldingServiceuserApiV2(sykmeldingerService)
                 registrerInternalSykmeldingApiV2(sykmeldingerService, tilgangskontrollService)
                 registrerServiceuserPapirsykmeldingApi(
-                    papirsykmeldingService = PapirsykmeldingService(database),
+                    papirsykmeldingService = PapirsykmeldingService(database)
                 )
             }
         }
@@ -114,5 +102,8 @@ private fun Application.setup(
             authenticate("tokenx") { registrerSykmeldingApiV2(sykmeldingerService) }
         }
     }
+
+    createAndStartConsumer(env, database, applicationState)
+
     intercept(ApplicationCallPipeline.Monitoring, monitorHttpRequests())
 }

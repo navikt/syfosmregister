@@ -9,7 +9,7 @@ import org.apache.kafka.clients.producer.ProducerRecord
 
 abstract class TombstoneKafkaProducer(
     protected val kafkaProducer: KafkaProducer<String, SykmeldingKafkaMessage?>,
-    protected val topic: String
+    protected val topic: String,
 ) {
     suspend fun tombstoneSykmelding(sykmeldingId: String) {
         withContext(Dispatchers.IO) {
@@ -19,7 +19,7 @@ abstract class TombstoneKafkaProducer(
             } catch (e: Exception) {
                 log.error(
                     "Kunne ikke skrive tombstone til bekreft-topic for sykmeldingid $sykmeldingId: {}",
-                    e.message
+                    e.message,
                 )
                 throw e
             }

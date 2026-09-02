@@ -19,7 +19,7 @@ class BekreftSykmeldingKafkaProducer(
                         ProducerRecord(
                             topic,
                             sykmeldingKafkaMessage.sykmelding.id,
-                            sykmeldingKafkaMessage
+                            sykmeldingKafkaMessage,
                         )
                     )
                     .get()
