@@ -107,9 +107,6 @@ spec:
         - application: smoppslag
           cluster: prod-fss
           namespace: risk
-        - application: syfooppfolgingsplanservice
-          namespace: team-esyfo
-          cluster: prod-fss
         - application: macgyver
   ingresses:
     - "https://smregister.intern.nav.no"

@@ -109,9 +109,6 @@ spec:
           namespace: risk
           cluster: dev-fss
         - application: teamsykmelding-mock
-        - application: syfooppfolgingsplanservice
-          namespace: team-esyfo
-          cluster: dev-fss
         - application: macgyver
           namespace: teamsykmelding
           cluster: dev-gcp
