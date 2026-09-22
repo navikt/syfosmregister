@@ -108,8 +108,6 @@ spec:
           cluster: prod-fss
           namespace: risk
         - application: macgyver
-  ingresses:
-    - "https://smregister.intern.nav.no"
   leaderElection: true
   env:
     - name: ISTILGANGSKONTROLL_SCOPE
