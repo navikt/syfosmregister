@@ -47,7 +47,7 @@ import no.nav.syfo.sykmelding.db.Merknad
 import org.testcontainers.containers.PostgreSQLContainer
 import tools.jackson.module.kotlin.readValue
 
-class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:14")
+class PsqlContainer : PostgreSQLContainer<PsqlContainer>("postgres:16")
 
 class TestDB private constructor() {
 
