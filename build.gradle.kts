@@ -5,7 +5,6 @@ version = "1.0.0"
 
 val javaVersion = JvmTarget.JVM_25
 
-
 val coroutinesVersion = "1.9.0"
 val jacksonVersion = "3.2.2"
 val confluentVersion = "8.1.1"
@@ -21,10 +20,9 @@ val hikariVersion = "6.0.0"
 val vaultJavaDriveVersion = "3.1.0"
 val mockkVersion = "1.13.12"
 val nimbusdsVersion = "9.41.1"
-val testContainerKafkaVersion = "1.20.1"
 val caffeineVersion = "3.1.8"
 val kotlinVersion = "2.4.10"
-val testContainerVersion = "1.21.3"
+val testContainerVersion = "2.0.5"
 val ktfmtVersion = "0.56"
 val avroVersion = "1.12.0"
 val diagnosekoderVersion = "1.2026.0"
@@ -39,9 +37,6 @@ plugins {
 application {
     mainClass.set("no.nav.syfo.BootstrapKt")
 }
-
-
-
 
 repositories {
     mavenCentral()
@@ -104,9 +99,9 @@ dependencies {
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion") {
         exclude(group = "org.eclipse.jetty")
     }
-    testImplementation("org.testcontainers:postgresql:$testContainerVersion")
+    testImplementation("org.testcontainers:testcontainers-postgresql:$testContainerVersion")
+    testImplementation("org.testcontainers:testcontainers-kafka:$testContainerVersion")
     testImplementation("com.nimbusds:nimbus-jose-jwt:$nimbusdsVersion")
-    testImplementation("org.testcontainers:kafka:$testContainerKafkaVersion")
 
 }
 
