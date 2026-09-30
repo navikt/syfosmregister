@@ -5,34 +5,34 @@ version = "1.0.0"
 
 val javaVersion = JvmTarget.JVM_25
 
-val coroutinesVersion = "1.9.0"
-val jacksonVersion = "3.2.2"
+val coroutinesVersion = "1.11.0"
+val jacksonVersion = "3.2.3"
 val confluentVersion = "8.1.1"
 val kluentVersion = "1.73"
-val kotestVersion = "6.2.4"
+val kotestVersion = "6.2.5"
 val ktorVersion = "3.6.0"
 val logbackVersion = "1.6.3"
 val logstashEncoderVersion = "9.0"
 val prometheusVersion = "0.16.0"
-val postgresVersion = "42.7.7"
-val flywayVersion = "10.18.1"
-val hikariVersion = "6.0.0"
+val postgresVersion = "42.7.13"
+val flywayVersion = "13.7.0"
+val hikariVersion = "7.1.0"
 val vaultJavaDriveVersion = "3.1.0"
-val mockkVersion = "1.13.12"
-val nimbusdsVersion = "9.41.1"
-val caffeineVersion = "3.1.8"
-val kotlinVersion = "2.4.10"
+val mockkVersion = "1.14.11"
+val nimbusdsVersion = "10.10"
+val caffeineVersion = "3.3.0"
+val kotlinVersion = "2.4.20"
 val testContainerVersion = "2.0.5"
 val ktfmtVersion = "0.56"
 val avroVersion = "1.12.0"
 val diagnosekoderVersion = "1.2026.0"
-val opentelemetryVersion = "2.8.0"
+val opentelemetryVersion = "2.31.1"
 
 plugins {
     id("application")
-    id("com.diffplug.spotless") version "8.10.1"
-    kotlin("jvm") version "2.4.10"
-    id("com.gradleup.shadow") version "8.3.8"
+    id("com.diffplug.spotless") version "8.10.2"
+    kotlin("jvm") version "2.4.20"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 application {
     mainClass.set("no.nav.syfo.BootstrapKt")
