@@ -30,6 +30,8 @@ To build locally and run the integration tests you can simply run
 or on windows 
 `gradlew.bat shadowJar`
 
+The application JAR merges Kotlin module metadata and Flyway plugin service descriptors while excluding other duplicate resources.
+
 #### Creating a docker image
 Creating a docker image should be as simple as 
 ``` bash
@@ -52,11 +54,9 @@ docker-compose up
 
 For information on connecting to dev og prod DB see: [Postgres GCP](https://doc.nais.io/cli/commands/postgres/)
 
-### Upgrading the gradle wrapper
-Find the newest version of gradle here: https://gradle.org/releases/ Then run this command:
-
+### Upgrading the Gradle wrapper version to latest
 ``` bash
-./gradlew wrapper --gradle-version $gradleVersjon
+./gradlew :wrapper --gradle-version latest
 ```
 
 ### Swagger api doc

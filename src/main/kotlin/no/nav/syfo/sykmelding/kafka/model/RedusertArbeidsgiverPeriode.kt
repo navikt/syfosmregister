@@ -17,8 +17,9 @@ val koronaAndreTilDato: LocalDate = LocalDate.of(2022, Month.JULY, 1)
 fun MedisinskVurderingDB.getHarRedusertArbeidsgiverperiode(
     sykmeldingsperioder: List<Periode>
 ): Boolean {
-    val sykmeldingsperioderInnenforKoronaregler =
-        sykmeldingsperioder.filter { periodeErInnenforKoronaregler(it.fom, it.tom) }
+    val sykmeldingsperioderInnenforKoronaregler = sykmeldingsperioder.filter {
+        periodeErInnenforKoronaregler(it.fom, it.tom)
+    }
     if (sykmeldingsperioderInnenforKoronaregler.isEmpty()) {
         return false
     }
@@ -43,8 +44,9 @@ private fun MedisinskVurderingDB.checkSmittefare() =
 fun MedisinskVurdering.getHarRedusertArbeidsgiverperiode(
     sykmeldingsperioder: List<no.nav.syfo.model.Periode>
 ): Boolean {
-    val sykmeldingsperioderInnenforKoronaregler =
-        sykmeldingsperioder.filter { periodeErInnenforKoronaregler(it.fom, it.tom) }
+    val sykmeldingsperioderInnenforKoronaregler = sykmeldingsperioder.filter {
+        periodeErInnenforKoronaregler(it.fom, it.tom)
+    }
     if (sykmeldingsperioderInnenforKoronaregler.isEmpty()) {
         return false
     }

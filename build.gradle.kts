@@ -5,34 +5,33 @@ version = "1.0.0"
 
 val javaVersion = JvmTarget.JVM_25
 
-val coroutinesVersion = "1.9.0"
-val jacksonVersion = "3.2.2"
+val coroutinesVersion = "1.11.0"
+val jacksonVersion = "3.3.0"
 val confluentVersion = "8.1.1"
 val kluentVersion = "1.73"
-val kotestVersion = "6.2.4"
-val ktorVersion = "3.6.0"
-val logbackVersion = "1.6.3"
+val kotestVersion = "6.2.7"
+val ktorVersion = "3.6.1"
+val logbackVersion = "1.6.8"
 val logstashEncoderVersion = "9.0"
 val prometheusVersion = "0.16.0"
-val postgresVersion = "42.7.7"
-val flywayVersion = "10.18.1"
-val hikariVersion = "6.0.0"
-val vaultJavaDriveVersion = "3.1.0"
-val mockkVersion = "1.13.12"
-val nimbusdsVersion = "9.41.1"
-val caffeineVersion = "3.1.8"
-val kotlinVersion = "2.4.10"
+val postgresVersion = "42.7.15"
+val flywayVersion = "13.13.0"
+val hikariVersion = "7.1.0"
+val mockkVersion = "1.14.12"
+val nimbusdsVersion = "10.10"
+val caffeineVersion = "3.3.1"
+val kotlinVersion = "2.4.21"
 val testContainerVersion = "2.0.5"
-val ktfmtVersion = "0.56"
+val ktfmtVersion = "0.64"
 val avroVersion = "1.12.0"
 val diagnosekoderVersion = "1.2026.0"
-val opentelemetryVersion = "2.8.0"
+val opentelemetryVersion = "2.34.0"
 
 plugins {
     id("application")
-    id("com.diffplug.spotless") version "8.10.1"
-    kotlin("jvm") version "2.4.10"
-    id("com.gradleup.shadow") version "8.3.8"
+    id("com.diffplug.spotless") version "8.12.0"
+    kotlin("jvm") version "2.4.21"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 application {
     mainClass.set("no.nav.syfo.BootstrapKt")
@@ -109,9 +108,10 @@ dependencies {
 tasks {
 
     shadowJar {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
         mergeServiceFiles {
-             setPath("META-INF/services/org.flywaydb.core.extensibility.Plugin")
-         }
+            include("META-INF/services/org.flywaydb.core.extensibility.Plugin")
+        }
         archiveBaseName.set("app")
         archiveClassifier.set("")
         isZip64 = true
