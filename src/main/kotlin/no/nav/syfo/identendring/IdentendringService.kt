@@ -36,22 +36,21 @@ class IdentendringService(
                     .find { it.type == IdentType.FOLKEREGISTERIDENT && it.gjeldende }
                     ?.idnummer ?: throw IllegalStateException("Mangler gyldig fnr!")
 
-            val tidligereFnr =
-                identListe.filter { it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende }
-            val sykmeldinger =
-                tidligereFnr.flatMap {
-                    database.getSykmeldingerMedIdUtenBehandlingsutfallForFnr(it.idnummer)
-                }
+            val tidligereFnr = identListe.filter {
+                it.type == IdentType.FOLKEREGISTERIDENT && !it.gjeldende
+            }
+            val sykmeldinger = tidligereFnr.flatMap {
+                database.getSykmeldingerMedIdUtenBehandlingsutfallForFnr(it.idnummer)
+            }
 
             if (sykmeldinger.isNotEmpty()) {
                 sjekkPDL(nyttFnr)
 
-                val sendteSykmeldingerSisteFireMnd =
-                    sykmeldinger.filter {
-                        it.status.statusEvent == STATUS_SENDT &&
-                            finnSisteTom(it.sykmeldingsDokument.perioder)
-                                .isAfter(LocalDate.now().minusMonths(4))
-                    }
+                val sendteSykmeldingerSisteFireMnd = sykmeldinger.filter {
+                    it.status.statusEvent == STATUS_SENDT &&
+                        finnSisteTom(it.sykmeldingsDokument.perioder)
+                            .isAfter(LocalDate.now().minusMonths(4))
+                }
                 log.info("Resender ${sendteSykmeldingerSisteFireMnd.size} sendte sykmeldinger")
                 sendteSykmeldingerSisteFireMnd.forEach {
                     sendtSykmeldingKafkaProducer.sendSykmelding(getKafkaMessage(it, nyttFnr))

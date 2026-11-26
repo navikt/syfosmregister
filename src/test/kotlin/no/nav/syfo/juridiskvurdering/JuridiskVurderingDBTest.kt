@@ -79,7 +79,7 @@ val jsonVurderingNotCorretTime =
       "tidsstempel": "2023-08-21T11:48:34.280790096",
       "utfall": "VILKAR_OPPFYLT"
     }
-"""
+    """
         .trimIndent()
 
 val jsonVurderingMinimal =
@@ -108,7 +108,7 @@ val jsonVurderingMinimal =
       "tidsstempel": "2025-02-04T13:36:17.061501826Z",
       "utfall": "VILKAR_OPPFYLT"
     }
-"""
+    """
         .trimIndent()
 
 val jsonVurdering =
@@ -175,7 +175,7 @@ val jsonVurdering =
       "tidsstempel": "2025-02-04T13:36:17.061501826Z",
       "utfall": "VILKAR_OPPFYLT"
     }
-"""
+    """
         .trimIndent()
 
 val jsonNyVersjon =
@@ -223,5 +223,5 @@ val jsonNyVersjon =
       "tidsstempel": "2025-02-04T13:36:17.061501826Z",
       "utfall": "VILKAR_OPPFYLT"
     }
-"""
+    """
         .trimIndent()

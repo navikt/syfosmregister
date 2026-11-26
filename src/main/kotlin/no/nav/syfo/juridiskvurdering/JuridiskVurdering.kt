@@ -11,7 +11,7 @@ import tools.jackson.databind.annotation.JsonDeserialize
 
 class ZonedDateTimeDeserializer : ValueDeserializer<ZonedDateTime>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ZonedDateTime {
-        val timestamp = p.text
+        val timestamp = p.string
         return try {
             ZonedDateTime.parse(timestamp)
         } catch (e: Exception) {
