@@ -108,13 +108,9 @@ dependencies {
 tasks {
 
     shadowJar {
-        filesMatching(
-            listOf("META-INF/*.kotlin_module", "META-INF/services/org.flywaydb.core.extensibility.Plugin")
-        ) {
-            duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        }
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
         mergeServiceFiles {
-            path = "META-INF/services/org.flywaydb.core.extensibility.Plugin"
+            include("META-INF/services/org.flywaydb.core.extensibility.Plugin")
         }
         archiveBaseName.set("app")
         archiveClassifier.set("")
